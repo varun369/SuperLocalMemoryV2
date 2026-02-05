@@ -863,7 +863,121 @@ if __name__ == "__main__":
         stats = store.get_stats()
         print(json.dumps(stats, indent=2))
 
+    elif command == "add":
+        # Parse content and options
+        if len(sys.argv) < 3:
+            print("Error: Content required")
+            print("Usage: python memory_store_v2.py add <content> [--project <path>] [--tags tag1,tag2]")
+            sys.exit(1)
+
+        content = sys.argv[2]
+        project_path = None
+        tags = []
+
+        i = 3
+        while i < len(sys.argv):
+            if sys.argv[i] == '--project' and i + 1 < len(sys.argv):
+                project_path = sys.argv[i + 1]
+                i += 2
+            elif sys.argv[i] == '--tags' and i + 1 < len(sys.argv):
+                tags = [t.strip() for t in sys.argv[i + 1].split(',')]
+                i += 2
+            else:
+                i += 1
+
+        mem_id = store.add_memory(content, project_path=project_path, tags=tags)
+        print(f"Memory added with ID: {mem_id}")
+
+    elif command == "search":
+        if len(sys.argv) < 3:
+            print("Error: Search query required")
+            print("Usage: python memory_store_v2.py search <query>")
+            sys.exit(1)
+
+        query = sys.argv[2]
+        results = store.search(query, limit=5)
+
+        if not results:
+            print("No results found.")
+        else:
+            for r in results:
+                print(f"\n[{r['id']}] Score: {r['score']:.2f}")
+                if r.get('project_name'):
+                    print(f"Project: {r['project_name']}")
+                if r.get('tags'):
+                    print(f"Tags: {', '.join(r['tags'])}")
+                print(f"Content: {r['content'][:200]}...")
+                print(f"Created: {r['created_at']}")
+
+    elif command == "recent":
+        limit = int(sys.argv[2]) if len(sys.argv) > 2 else 10
+        results = store.get_recent(limit)
+
+        if not results:
+            print("No memories found.")
+        else:
+            for r in results:
+                print(f"\n[{r['id']}] {r['created_at']}")
+                if r.get('project_name'):
+                    print(f"Project: {r['project_name']}")
+                if r.get('tags'):
+                    print(f"Tags: {', '.join(r['tags'])}")
+                print(f"Content: {r['content'][:200]}...")
+
+    elif command == "list":
+        limit = int(sys.argv[2]) if len(sys.argv) > 2 else 10
+        results = store.get_recent(limit)
+
+        if not results:
+            print("No memories found.")
+        else:
+            for r in results:
+                print(f"[{r['id']}] {r['content'][:100]}...")
+
+    elif command == "get":
+        if len(sys.argv) < 3:
+            print("Error: Memory ID required")
+            print("Usage: python memory_store_v2.py get <id>")
+            sys.exit(1)
+
+        mem_id = int(sys.argv[2])
+        memory = store.get_memory(mem_id)
+
+        if not memory:
+            print(f"Memory {mem_id} not found.")
+        else:
+            print(f"\nID: {memory['id']}")
+            print(f"Content: {memory['content']}")
+            if memory.get('summary'):
+                print(f"Summary: {memory['summary']}")
+            if memory.get('project_name'):
+                print(f"Project: {memory['project_name']}")
+            if memory.get('tags'):
+                print(f"Tags: {', '.join(memory['tags'])}")
+            print(f"Created: {memory['created_at']}")
+            print(f"Importance: {memory['importance']}")
+            print(f"Access Count: {memory['access_count']}")
+
+    elif command == "context":
+        if len(sys.argv) < 3:
+            print("Error: Query required")
+            print("Usage: python memory_store_v2.py context <query>")
+            sys.exit(1)
+
+        query = sys.argv[2]
+        context = store.export_for_context(query)
+        print(context)
+
+    elif command == "delete":
+        if len(sys.argv) < 3:
+            print("Error: Memory ID required")
+            print("Usage: python memory_store_v2.py delete <id>")
+            sys.exit(1)
+
+        mem_id = int(sys.argv[2])
+        store.delete_memory(mem_id)
+        print(f"Memory {mem_id} deleted.")
+
     else:
-        # V1 commands - delegate to standard handling
-        print(f"Command '{command}' - use V1 CLI interface or import as module.")
-        print("Run without arguments to see full command list.")
+        print(f"Unknown command: {command}")
+        print("Run without arguments to see available commands.")
