@@ -307,6 +307,7 @@ If SuperLocalMemory saves you time, consider supporting its development:
 - 🐛 **Report bugs** — [open an issue](https://github.com/varun369/SuperLocalMemoryV2/issues)
 - 💡 **Suggest features** — [start a discussion](https://github.com/varun369/SuperLocalMemoryV2/discussions)
 - ☕ **Buy me a coffee** — [buymeacoffee.com/varunpratah](https://buymeacoffee.com/varunpratah)
+- 💸 **PayPal** — [paypal.me/varunpratapbhardwaj](https://paypal.me/varunpratapbhardwaj)
 - 💖 **Sponsor** — [GitHub Sponsors](https://github.com/sponsors/varun369)
 
 ---
