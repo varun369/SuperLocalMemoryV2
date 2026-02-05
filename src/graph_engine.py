@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
-GraphEngine - Knowledge Graph Clustering for SuperLocalMemory
+GraphEngine - Knowledge Graph Clustering for SuperLocalMemory V2
+
+Copyright (c) 2026 Varun Pratap Bhardwaj
+Licensed under MIT License
+Repository: https://github.com/varun369/SuperLocalMemoryV2
 
 Implements GraphRAG with Leiden community detection to:
 - Extract entities from memories (TF-IDF keyword extraction)
@@ -9,7 +13,14 @@ Implements GraphRAG with Leiden community detection to:
 - Enable graph traversal for related memory discovery
 
 All processing is local - no external APIs.
+
+LIMITS:
+- MAX_MEMORIES_FOR_GRAPH: 5000 (prevents O(n²) explosion)
+- For larger datasets, use incremental updates
 """
+
+# SECURITY: Graph build limits to prevent resource exhaustion
+MAX_MEMORIES_FOR_GRAPH = 5000
 
 import sqlite3
 import json
@@ -478,6 +489,9 @@ class GraphEngine:
 
         Returns:
             Dictionary with build statistics
+
+        Raises:
+            ValueError: If too many memories (>5000) for safe processing
         """
         start_time = time.time()
         logger.info("Starting full graph build...")
@@ -486,12 +500,21 @@ class GraphEngine:
         cursor = conn.cursor()
 
         try:
-            # Clear existing graph data
-            cursor.execute('DELETE FROM graph_edges')
-            cursor.execute('DELETE FROM graph_nodes')
-            cursor.execute('DELETE FROM graph_clusters')
-            cursor.execute('UPDATE memories SET cluster_id = NULL')
-            conn.commit()
+            # First check if required tables exist
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            existing_tables = {row[0] for row in cursor.fetchall()}
+
+            required_tables = {'memories', 'graph_edges', 'graph_nodes', 'graph_clusters'}
+            missing_tables = required_tables - existing_tables
+
+            if missing_tables:
+                logger.error(f"Missing required tables: {missing_tables}")
+                return {
+                    'success': False,
+                    'error': 'database_not_initialized',
+                    'message': f"Database not initialized. Missing tables: {', '.join(missing_tables)}",
+                    'fix': "Run 'superlocalmemoryv2:status' first to initialize the database, or add some memories."
+                }
 
             # Load all memories
             memories = cursor.execute('''
@@ -499,13 +522,43 @@ class GraphEngine:
                 ORDER BY id
             ''').fetchall()
 
+            if len(memories) == 0:
+                logger.warning("No memories found")
+                return {
+                    'success': False,
+                    'error': 'no_memories',
+                    'message': 'No memories found in database.',
+                    'fix': "Add some memories first: superlocalmemoryv2:remember 'Your content here'"
+                }
+
             if len(memories) < 2:
                 logger.warning("Need at least 2 memories to build graph")
                 return {
                     'success': False,
-                    'message': 'Need at least 2 memories',
-                    'memories': len(memories)
+                    'error': 'insufficient_memories',
+                    'message': 'Need at least 2 memories to build knowledge graph.',
+                    'memories': len(memories),
+                    'fix': "Add more memories: superlocalmemoryv2:remember 'Your content here'"
                 }
+
+            # SECURITY: Prevent O(n²) explosion for large datasets
+            if len(memories) > MAX_MEMORIES_FOR_GRAPH:
+                logger.error(f"Too many memories for graph build: {len(memories)}")
+                return {
+                    'success': False,
+                    'error': 'too_many_memories',
+                    'message': f"Graph build limited to {MAX_MEMORIES_FOR_GRAPH} memories for performance.",
+                    'memories': len(memories),
+                    'limit': MAX_MEMORIES_FOR_GRAPH,
+                    'fix': "Use incremental updates or reduce memory count with compression."
+                }
+
+            # Clear existing graph data
+            cursor.execute('DELETE FROM graph_edges')
+            cursor.execute('DELETE FROM graph_nodes')
+            cursor.execute('DELETE FROM graph_clusters')
+            cursor.execute('UPDATE memories SET cluster_id = NULL')
+            conn.commit()
 
             logger.info(f"Processing {len(memories)} memories")
 

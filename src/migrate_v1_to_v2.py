@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 """
+SuperLocalMemory V2 - Intelligent Local Memory System
+Copyright (c) 2026 Varun Pratap Bhardwaj
+Licensed under MIT License
+
+Repository: https://github.com/varun369/SuperLocalMemoryV2
+Author: Varun Pratap Bhardwaj (Solution Architect)
+
+NOTICE: This software is protected by MIT License.
+Attribution must be preserved in all copies or derivatives.
+"""
+
+"""
 SuperLocalMemory V1 to V2 Migration Script
 
 Safely migrates the memory database from V1 schema to V2 architecture.
