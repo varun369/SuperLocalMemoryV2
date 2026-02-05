@@ -33,6 +33,20 @@
 
 ---
 
+> **📢 Coming Soon:** [SuperLocalMemory V3](https://github.com/varun369/SuperLocalMemoryV3) with `npm install -g superlocalmemory` for even easier installation!
+> **Using V2?** You're in the right place. V2 remains fully supported with all features.
+
+## Choose Your Version
+
+| Version | Installation | Best For |
+|---------|--------------|----------|
+| **[V3 (Coming Soon)](https://github.com/varun369/SuperLocalMemoryV3)** | `npm install -g superlocalmemory` | Most users - One-command install |
+| **V2 (Current)** | `git clone` + `./install.sh` | Advanced users - Manual control |
+
+Both versions have identical features and performance. V3 adds professional npm distribution.
+
+---
+
 ## The Problem
 
 Every time you start a new Claude session:
