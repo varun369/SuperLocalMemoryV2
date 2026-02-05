@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 """
+SuperLocalMemory V2 - Intelligent Local Memory System
+Copyright (c) 2026 Varun Pratap Bhardwaj
+Licensed under MIT License
+
+Repository: https://github.com/varun369/SuperLocalMemoryV2
+Author: Varun Pratap Bhardwaj (Solution Architect)
+
+NOTICE: This software is protected by MIT License.
+Attribution must be preserved in all copies or derivatives.
+"""
+
+"""
 MemoryStore V2 - Extended Memory System with Tree and Graph Support
 Maintains backward compatibility with V1 API while adding:
 - Tree hierarchy (parent_id, tree_path, depth)
@@ -178,6 +190,12 @@ class MemoryStoreV2:
         """Generate hash for deduplication."""
         return hashlib.sha256(content.encode()).hexdigest()[:32]
 
+    # SECURITY: Input validation limits
+    MAX_CONTENT_SIZE = 1_000_000    # 1MB max content
+    MAX_SUMMARY_SIZE = 10_000       # 10KB max summary
+    MAX_TAG_LENGTH = 50             # 50 chars per tag
+    MAX_TAGS = 20                   # 20 tags max
+
     def add_memory(
         self,
         content: str,
@@ -194,19 +212,46 @@ class MemoryStoreV2:
         Add a new memory with V2 enhancements.
 
         Args:
-            content: Memory content (required)
-            summary: Optional summary
+            content: Memory content (required, max 1MB)
+            summary: Optional summary (max 10KB)
             project_path: Project absolute path
             project_name: Human-readable project name
-            tags: List of tags
+            tags: List of tags (max 20 tags, 50 chars each)
             category: High-level category (e.g., "frontend", "backend")
             parent_id: Parent memory ID for hierarchical nesting
             memory_type: Type of memory ('session', 'long-term', 'reference')
-            importance: Importance score (1-10)
+
+        Raises:
+            TypeError: If content is not a string
+            ValueError: If content is empty or exceeds size limits
 
         Returns:
             Memory ID (int), or existing ID if duplicate detected
         """
+        # SECURITY: Input validation
+        if not isinstance(content, str):
+            raise TypeError("Content must be a string")
+
+        content = content.strip()
+        if not content:
+            raise ValueError("Content cannot be empty")
+
+        if len(content) > self.MAX_CONTENT_SIZE:
+            raise ValueError(f"Content exceeds maximum size of {self.MAX_CONTENT_SIZE} bytes")
+
+        if summary and len(summary) > self.MAX_SUMMARY_SIZE:
+            raise ValueError(f"Summary exceeds maximum size of {self.MAX_SUMMARY_SIZE} bytes")
+
+        if tags:
+            if len(tags) > self.MAX_TAGS:
+                raise ValueError(f"Too many tags (max {self.MAX_TAGS})")
+            for tag in tags:
+                if len(tag) > self.MAX_TAG_LENGTH:
+                    raise ValueError(f"Tag '{tag[:20]}...' exceeds max length of {self.MAX_TAG_LENGTH}")
+
+        if importance < 1 or importance > 10:
+            importance = max(1, min(10, importance))  # Clamp to valid range
+
         content_hash = self._content_hash(content)
 
         conn = sqlite3.connect(self.db_path)

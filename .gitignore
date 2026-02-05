@@ -44,3 +44,6 @@ Thumbs.db
 # Test outputs
 test-output/
 test-results/
+
+# Internal planning documents - NOT for public distribution
+docs/plans/

@@ -2,10 +2,12 @@
 
 **Standalone intelligent memory system with knowledge graphs, pattern learning, and intelligent organization.**
 
-[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Local First](https://img.shields.io/badge/local-first-green.svg)](https://github.com)
-[![Standalone](https://img.shields.io/badge/standalone-system-orange.svg)](https://github.com)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Local First](https://img.shields.io/badge/local--first-100%25-brightgreen)](https://github.com/varun369/SuperLocalMemoryV2)
+[![Zero Setup](https://img.shields.io/badge/setup-5%20minutes-orange)](https://github.com/varun369/SuperLocalMemoryV2)
+
+**Created by [Varun Pratap Bhardwaj](https://github.com/varun369)** | [Report Issues](https://github.com/varun369/SuperLocalMemoryV2/issues)
 
 ---
 
@@ -28,6 +30,20 @@ SuperLocalMemory V2 is a **standalone intelligent memory system** that builds a 
 - Works with any AI assistant via API/CLI
 - Works standalone via terminal commands
 - No dependencies on external services
+
+### Feature Comparison
+
+| Feature | Mem0 | Zep | Khoj | MCP Servers | **SuperLocalMemory V2** |
+|---------|------|-----|------|-------------|------------------------|
+| Zero Setup Required | ❌ | ❌ | ❌ | ⚠️ | ✅ |
+| 4-Layer Architecture | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Pattern Learning | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Multi-Profile Support | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Progressive Compression | ❌ | ❌ | ❌ | ❌ | ✅ |
+| 100% Local | ⚠️ | ⚠️ | ⚠️ | ✅ | ✅ |
+| Claude CLI Native | ❌ | ❌ | ❌ | MCP | ✅ Skills |
+
+**SuperLocalMemory V2 is the only solution offering all these features together.**
 
 ---
 
@@ -361,10 +377,12 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## Author
 
-**Varun Pratap Bhardwaj**
-*Solution Architect*
+**Varun Pratap Bhardwaj** - Solution Architect
 
-SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
+- GitHub: [@varun369](https://github.com/varun369)
+- Repository: [SuperLocalMemoryV2](https://github.com/varun369/SuperLocalMemoryV2)
+
+If you find this project useful, please give it a star on GitHub!
 
 ---
 

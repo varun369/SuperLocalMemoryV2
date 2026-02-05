@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 """
+SuperLocalMemory V2 - Intelligent Local Memory System
+Copyright (c) 2026 Varun Pratap Bhardwaj
+Licensed under MIT License
+
+Repository: https://github.com/varun369/SuperLocalMemoryV2
+Author: Varun Pratap Bhardwaj (Solution Architect)
+
+NOTICE: This software is protected by MIT License.
+Attribution must be preserved in all copies or derivatives.
+"""
+
+"""
 SuperLocalMemory V2 - FastAPI UI Server
 Provides REST endpoints for memory visualization and exploration.
 """
@@ -637,9 +649,11 @@ if __name__ == "__main__":
     print("API Documentation: http://localhost:8000/docs")
     print("\nPress Ctrl+C to stop\n")
 
+    # SECURITY: Bind to localhost only to prevent network exposure
+    # For network access, use a reverse proxy with authentication
     uvicorn.run(
         app,
-        host="0.0.0.0",
+        host="127.0.0.1",  # localhost only - NEVER use 0.0.0.0 without auth
         port=8000,
         log_level="info"
     )

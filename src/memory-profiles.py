@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 """
+SuperLocalMemory V2 - Intelligent Local Memory System
+Copyright (c) 2026 Varun Pratap Bhardwaj
+Licensed under MIT License
+
+Repository: https://github.com/varun369/SuperLocalMemoryV2
+Author: Varun Pratap Bhardwaj (Solution Architect)
+
+NOTICE: This software is protected by MIT License.
+Attribution must be preserved in all copies or derivatives.
+"""
+
+"""
 SuperLocalMemory V2 - Profile Management System
 
 Allows users to maintain separate memory databases for different contexts/personalities:
@@ -72,8 +84,29 @@ class ProfileManager:
             json.dump(config, f, indent=2)
 
     def _get_profile_path(self, profile_name):
-        """Get directory path for a profile."""
-        return self.profiles_dir / profile_name
+        """Get directory path for a profile with security validation."""
+        import re
+
+        # SECURITY: Validate profile name to prevent path traversal
+        if not profile_name:
+            raise ValueError("Profile name cannot be empty")
+
+        if not re.match(r'^[a-zA-Z0-9_-]+$', profile_name):
+            raise ValueError("Invalid profile name. Use only letters, numbers, dash, underscore.")
+
+        if len(profile_name) > 50:
+            raise ValueError("Profile name too long (max 50 characters)")
+
+        if profile_name in ['.', '..', 'default']:
+            raise ValueError(f"Reserved profile name: {profile_name}")
+
+        path = (self.profiles_dir / profile_name).resolve()
+
+        # SECURITY: Ensure path stays within profiles directory
+        if not str(path).startswith(str(self.profiles_dir.resolve())):
+            raise ValueError("Invalid profile path - path traversal detected")
+
+        return path
 
     def _get_main_files(self):
         """Get list of main memory system files to copy."""
