@@ -146,17 +146,54 @@ python3 -c "import numpy" 2>/dev/null && echo "✓ numpy (Vector Operations)" ||
 python3 -c "import igraph" 2>/dev/null && echo "✓ python-igraph (Clustering)" || echo "○ python-igraph not installed (optional)"
 python3 -c "import fastapi" 2>/dev/null && echo "✓ fastapi (UI Server)" || echo "○ fastapi not installed (optional)"
 
+# Auto-configure PATH
+echo ""
+echo "Configuring PATH..."
+
+# Detect shell
+SHELL_CONFIG=""
+if [ -n "$ZSH_VERSION" ]; then
+    SHELL_CONFIG="${HOME}/.zshrc"
+elif [ -n "$BASH_VERSION" ]; then
+    SHELL_CONFIG="${HOME}/.bashrc"
+else
+    # Fallback: check which shell config exists
+    if [ -f "${HOME}/.zshrc" ]; then
+        SHELL_CONFIG="${HOME}/.zshrc"
+    elif [ -f "${HOME}/.bashrc" ]; then
+        SHELL_CONFIG="${HOME}/.bashrc"
+    else
+        # Create .zshrc if nothing exists (macOS default)
+        SHELL_CONFIG="${HOME}/.zshrc"
+        touch "${SHELL_CONFIG}"
+    fi
+fi
+
+# Check if PATH already configured
+PATH_EXPORT="export PATH=\"\${HOME}/.claude-memory/bin:\${PATH}\""
+if grep -q ".claude-memory/bin" "${SHELL_CONFIG}" 2>/dev/null; then
+    echo "○ PATH already configured in ${SHELL_CONFIG}"
+else
+    # Add PATH export to shell config
+    echo "" >> "${SHELL_CONFIG}"
+    echo "# SuperLocalMemory V2 - Added by installer on $(date '+%Y-%m-%d')" >> "${SHELL_CONFIG}"
+    echo "${PATH_EXPORT}" >> "${SHELL_CONFIG}"
+    echo "✓ PATH configured in ${SHELL_CONFIG}"
+fi
+
+# Add to current session PATH
+export PATH="${HOME}/.claude-memory/bin:${PATH}"
+echo "✓ Commands available in current session"
+
 # Summary
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  Installation Complete!                                       ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
-echo "To use CLI commands, add this to your ~/.zshrc or ~/.bashrc:"
+echo "✓ Commands are now globally available!"
 echo ""
-echo "  export PATH=\"\${HOME}/.claude-memory/bin:\${PATH}\""
-echo ""
-echo "Then run: source ~/.zshrc  (or ~/.bashrc)"
+echo "  You can use them immediately:"
 echo ""
 echo "Available commands:"
 echo "  superlocalmemoryv2:remember  - Save a new memory"
@@ -166,9 +203,10 @@ echo "  superlocalmemoryv2:status    - Check system status"
 echo "  superlocalmemoryv2:profile   - Manage memory profiles"
 echo "  superlocalmemoryv2:reset     - Reset memory database"
 echo ""
-echo "Quick start:"
-echo "  1. superlocalmemoryv2:remember 'My first memory'"
-echo "  2. superlocalmemoryv2:recall 'first'"
+echo "Quick start (try now):"
+echo "  superlocalmemoryv2:status"
+echo "  superlocalmemoryv2:remember 'My first memory'"
+echo "  superlocalmemoryv2:recall 'first'"
 echo ""
 echo "For optional features (Knowledge Graph, Pattern Learning):"
 echo "  pip install scikit-learn numpy python-igraph leidenalg"
