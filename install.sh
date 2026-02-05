@@ -220,12 +220,55 @@ echo "  superlocalmemoryv2:status"
 echo "  superlocalmemoryv2:remember 'My first memory'"
 echo "  superlocalmemoryv2:recall 'first'"
 echo ""
-echo "For optional features (Knowledge Graph, Pattern Learning):"
-echo "  pip install scikit-learn numpy python-igraph leidenalg"
+# Optional: Offer to install UI dependencies
 echo ""
-echo "For UI Server:"
-echo "  pip install fastapi uvicorn"
-echo "  python ~/.claude-memory/api_server.py"
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  Optional: Web UI & Advanced Features                        ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
+echo ""
+echo "SuperLocalMemory V2 includes optional advanced features:"
+echo "  • Web UI with graph visualization (FastAPI + D3.js)"
+echo "  • Knowledge Graph (GraphRAG)"
+echo "  • Pattern Learning (xMemory-style)"
+echo "  • Multi-tier compression"
+echo ""
+echo "Install optional dependencies now? (y/N)"
+read -r INSTALL_OPTIONAL
+
+if [[ "$INSTALL_OPTIONAL" =~ ^[Yy]$ ]]; then
+    echo ""
+    echo "Installing optional dependencies..."
+
+    # Detect pip installation method
+    if pip3 install --help | grep -q "break-system-packages"; then
+        PIP_FLAGS="--break-system-packages"
+    else
+        PIP_FLAGS=""
+    fi
+
+    echo "  Installing: scikit-learn, numpy, python-igraph, leidenalg, fastapi, uvicorn..."
+    pip3 install $PIP_FLAGS scikit-learn numpy python-igraph leidenalg fastapi uvicorn
+
+    if [ $? -eq 0 ]; then
+        echo "✓ Optional dependencies installed successfully"
+        echo ""
+        echo "Start Web UI:"
+        echo "  python3 ~/.claude-memory/api_server.py"
+        echo "  Then open: http://127.0.0.1:8000"
+    else
+        echo "⚠️  Installation failed. You can install manually later:"
+        echo "  pip3 install scikit-learn numpy python-igraph leidenalg fastapi uvicorn"
+    fi
+else
+    echo ""
+    echo "Skipping optional dependencies."
+    echo ""
+    echo "To install later:"
+    echo "  For advanced features: pip3 install scikit-learn numpy python-igraph leidenalg"
+    echo "  For Web UI: pip3 install fastapi uvicorn"
+    echo "  Start UI: python3 ~/.claude-memory/api_server.py"
+fi
+
 echo ""
 echo "Documentation: https://github.com/varun369/SuperLocalMemoryV2"
 echo "Author: Varun Pratap Bhardwaj"
