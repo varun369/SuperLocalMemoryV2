@@ -72,10 +72,11 @@ SuperLocalMemory V2 is a **standalone intelligent memory system** that builds a 
 
 ### Installation
 
+**Mac/Linux:**
 ```bash
 # Clone the repository
 git clone https://github.com/varun369/SuperLocalMemoryV2.git
-cd SuperLocalMemoryV2-repo
+cd SuperLocalMemoryV2
 
 # Run installation script
 ./install.sh
@@ -85,10 +86,24 @@ echo 'export PATH="${HOME}/.claude-memory/bin:${PATH}"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
+**Windows (PowerShell):**
+```powershell
+# Clone the repository
+git clone https://github.com/varun369/SuperLocalMemoryV2.git
+cd SuperLocalMemoryV2
+
+# Run installation script (right-click PowerShell > Run as Administrator)
+.\install.ps1
+
+# Add CLI commands to your PATH (add to PowerShell profile)
+$env:PATH += ";$env:USERPROFILE\.claude-memory\bin"
+```
+
 **Requirements:**
-- Python 3.8+
+- Python 3.8+ ([Download](https://python.org))
 - SQLite3 (usually pre-installed)
 - Standard library only (no external dependencies for core features)
+- Works on: macOS, Linux, Windows 10/11
 
 ### 5-Minute Setup
 
