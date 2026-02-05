@@ -1,0 +1,46 @@
+# Personal data - NEVER commit these
+memory.db
+*.db
+!demo-memory.db  # Exception: demo database is safe for distribution
+backups/
+profiles/
+vectors/
+cold-storage/
+jobs/
+profiles.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Test outputs
+test-output/
+test-results/

@@ -1,0 +1,3 @@
+#!/bin/bash
+# SuperLocalMemory V2 - Profile Management Command Wrapper
+node ~/.claude-memory/hooks/memory-profile-skill.js "$@"

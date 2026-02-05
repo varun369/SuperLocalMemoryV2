@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "database": "memory.db",
+  "embedding_model": "local-tfidf",
+  "max_context_tokens": 4000,
+  "auto_capture": true,
+  "search_results_limit": 5,
+  "created_at": "",
+  "owner": "",
+  "compression": {
+    "enabled": true,
+    "tier2_threshold_days": 30,
+    "tier3_threshold_days": 90,
+    "cold_storage_threshold_days": 365,
+    "preserve_high_importance": true,
+    "preserve_recently_accessed": true
+  }
+}

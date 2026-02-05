@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperLocalMemory V2 - Knowledge Graph Explorer</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            opacity: 0.8;
+        }
+
+        #graph-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 600px;
+            position: relative;
+        }
+
+        .node {
+            cursor: pointer;
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+
+        .link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+        }
+
+        .node-label {
+            font-size: 10px;
+            pointer-events: none;
+            fill: #333;
+        }
+
+        .memory-table {
+            font-size: 0.9rem;
+        }
+
+        .memory-content {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .badge-importance {
+            min-width: 30px;
+        }
+
+        .search-box {
+            border-radius: 20px;
+        }
+
+        .cluster-card {
+            border-left: 4px solid;
+            margin-bottom: 1rem;
+        }
+
+        .entity-badge {
+            margin: 2px;
+            font-size: 0.8rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .tooltip-custom {
+            position: absolute;
+            padding: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            border-radius: 5px;
+            pointer-events: none;
+            font-size: 12px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .timeline-chart {
+            min-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark mb-4">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-diagram-3"></i> SuperLocalMemory V2
+            </span>
+            <div class="d-flex">
+                <span class="text-white-50">Knowledge Graph Explorer</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Stats Overview -->
+        <div class="row mb-4" id="stats-container">
+            <div class="col-md-3">
+                <div class="card stat-card text-center p-3">
+                    <i class="bi bi-journal-text stat-icon text-primary"></i>
+                    <h3 class="mt-2 mb-0" id="stat-memories">0</h3>
+                    <small class="text-muted">Total Memories</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card text-center p-3">
+                    <i class="bi bi-collection stat-icon text-success"></i>
+                    <h3 class="mt-2 mb-0" id="stat-clusters">0</h3>
+                    <small class="text-muted">Clusters</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card text-center p-3">
+                    <i class="bi bi-diagram-2 stat-icon text-info"></i>
+                    <h3 class="mt-2 mb-0" id="stat-nodes">0</h3>
+                    <small class="text-muted">Graph Nodes</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card text-center p-3">
+                    <i class="bi bi-arrows-angle-expand stat-icon text-warning"></i>
+                    <h3 class="mt-2 mb-0" id="stat-edges">0</h3>
+                    <small class="text-muted">Connections</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Tabs -->
+        <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="graph-tab" data-bs-toggle="tab" data-bs-target="#graph-pane">
+                    <i class="bi bi-diagram-3"></i> Knowledge Graph
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="memories-tab" data-bs-toggle="tab" data-bs-target="#memories-pane">
+                    <i class="bi bi-list-ul"></i> Memories
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="clusters-tab" data-bs-toggle="tab" data-bs-target="#clusters-pane">
+                    <i class="bi bi-collection"></i> Clusters
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="patterns-tab" data-bs-toggle="tab" data-bs-target="#patterns-pane">
+                    <i class="bi bi-puzzle"></i> Patterns
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline-pane">
+                    <i class="bi bi-clock-history"></i> Timeline
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Graph Visualization -->
+            <div class="tab-pane fade show active" id="graph-pane">
+                <div class="card p-3 mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="mb-0">Force-Directed Knowledge Graph</h5>
+                            <small class="text-muted">Nodes = Memories | Links = Semantic Similarity</small>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-sm btn-outline-primary" onclick="loadGraph()">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                            <select class="form-select form-select-sm d-inline-block w-auto" id="graph-max-nodes" onchange="loadGraph()">
+                                <option value="50">50 nodes</option>
+                                <option value="100" selected>100 nodes</option>
+                                <option value="200">200 nodes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="graph-container"></div>
+            </div>
+
+            <!-- Memories List -->
+            <div class="tab-pane fade" id="memories-pane">
+                <div class="card p-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control search-box" id="search-query" placeholder="Search memories...">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="filter-category">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="filter-project">
+                                <option value="">All Projects</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100" onclick="searchMemories()">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card p-3">
+                    <div id="memories-list" class="table-responsive">
+                        <div class="loading">Loading memories...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clusters -->
+            <div class="tab-pane fade" id="clusters-pane">
+                <div class="card p-3">
+                    <h5 class="mb-3">Knowledge Clusters</h5>
+                    <div id="clusters-list">
+                        <div class="loading">Loading clusters...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patterns -->
+            <div class="tab-pane fade" id="patterns-pane">
+                <div class="card p-3">
+                    <h5 class="mb-3">Learned Patterns</h5>
+                    <div id="patterns-list">
+                        <div class="loading">Loading patterns...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="tab-pane fade" id="timeline-pane">
+                <div class="card p-3">
+                    <h5 class="mb-3">Memory Creation Timeline</h5>
+                    <div id="timeline-chart" class="timeline-chart">
+                        <div class="loading">Loading timeline...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <script src="static/app.js"></script>
+</body>
+</html>

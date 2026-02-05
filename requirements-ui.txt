@@ -1,0 +1,14 @@
+# SuperLocalMemory V2 - UI Server Requirements
+
+# FastAPI and ASGI server
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+
+# Required for core memory system
+scikit-learn==1.4.0
+numpy==1.26.3
+
+# Optional: Graph clustering (if not already installed)
+# python-igraph==0.11.3
+# leidenalg==0.10.2

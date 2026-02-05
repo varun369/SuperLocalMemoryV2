@@ -1,0 +1,3 @@
+#!/bin/bash
+# SuperLocalMemory V2 - Reset Command Wrapper
+node ~/.claude-memory/hooks/memory-reset-skill.js "$@"

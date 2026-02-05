@@ -1,0 +1,3 @@
+#!/bin/bash
+# SuperLocalMemory V2 - Recall (Search Memories) Command Wrapper
+node ~/.claude-memory/hooks/memory-recall-skill.js "$@"
