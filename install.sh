@@ -150,20 +150,32 @@ python3 -c "import fastapi" 2>/dev/null && echo "✓ fastapi (UI Server)" || ech
 echo ""
 echo "Configuring PATH..."
 
-# Detect shell
+# Detect user's default shell (not installer script's shell)
+USER_SHELL="${SHELL:-/bin/bash}"
 SHELL_CONFIG=""
-if [ -n "$ZSH_VERSION" ]; then
+
+if [[ "$USER_SHELL" == *"zsh"* ]]; then
     SHELL_CONFIG="${HOME}/.zshrc"
-elif [ -n "$BASH_VERSION" ]; then
-    SHELL_CONFIG="${HOME}/.bashrc"
+    # Create .zshrc if it doesn't exist
+    touch "${SHELL_CONFIG}" 2>/dev/null
+elif [[ "$USER_SHELL" == *"bash"* ]]; then
+    # For bash, prefer .bash_profile on macOS, .bashrc on Linux
+    if [[ "$(uname)" == "Darwin" ]] && [ -f "${HOME}/.bash_profile" ]; then
+        SHELL_CONFIG="${HOME}/.bash_profile"
+    else
+        SHELL_CONFIG="${HOME}/.bashrc"
+        touch "${SHELL_CONFIG}" 2>/dev/null
+    fi
 else
-    # Fallback: check which shell config exists
+    # Fallback: check which config exists
     if [ -f "${HOME}/.zshrc" ]; then
         SHELL_CONFIG="${HOME}/.zshrc"
+    elif [ -f "${HOME}/.bash_profile" ]; then
+        SHELL_CONFIG="${HOME}/.bash_profile"
     elif [ -f "${HOME}/.bashrc" ]; then
         SHELL_CONFIG="${HOME}/.bashrc"
     else
-        # Create .zshrc if nothing exists (macOS default)
+        # Default to zsh on modern macOS
         SHELL_CONFIG="${HOME}/.zshrc"
         touch "${SHELL_CONFIG}"
     fi
