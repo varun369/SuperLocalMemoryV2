@@ -11,7 +11,7 @@ const path = require('path');
 const execFileAsync = promisify(execFile);
 
 async function memoryRecallSkill() {
-  const memoryScript = path.join(process.env.HOME, '.claude-memory', 'memory_store.py');
+  const memoryScript = path.join(process.env.HOME, '.claude-memory', 'memory_store_v2.py');
   const args = process.argv.slice(2);
 
   // Show help if no args or --help
