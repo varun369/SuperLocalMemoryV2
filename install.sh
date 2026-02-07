@@ -9,7 +9,7 @@
 set -e
 
 INSTALL_DIR="${HOME}/.claude-memory"
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 
 # Print banner
 echo ""
@@ -244,13 +244,20 @@ if [ -f "${REPO_DIR}/mcp_server.py" ]; then
 fi
 
 # Detect Claude Desktop
-if [ -d "${HOME}/Library/Application Support/Claude" ]; then
+if [ -d "${HOME}/Library/Application Support/Claude" ] || [ -d "${HOME}/.config/Claude" ]; then
     DETECTED_TOOLS+=("Claude Desktop")
 
     if [ -f "${REPO_DIR}/configs/claude-desktop-mcp.json" ]; then
+        # Determine config path based on OS
+        if [ -d "${HOME}/Library/Application Support/Claude" ]; then
+            CONFIG_PATH="${HOME}/Library/Application Support/Claude/claude_desktop_config.json"
+        else
+            CONFIG_PATH="${HOME}/.config/Claude/claude_desktop_config.json"
+        fi
+
         configure_mcp "Claude Desktop" \
             "${REPO_DIR}/configs/claude-desktop-mcp.json" \
-            "${HOME}/Library/Application Support/Claude/claude_desktop_config.json"
+            "${CONFIG_PATH}"
     fi
 fi
 
@@ -339,20 +346,30 @@ if [ -d "${HOME}/.perplexity" ]; then
     fi
 fi
 
-# Detect ChatGPT Desktop (macOS)
-if [ -d "${HOME}/Library/Application Support/ChatGPT" ]; then
+# Detect ChatGPT Desktop (macOS/Linux)
+if [ -d "${HOME}/Library/Application Support/ChatGPT" ] || [ -d "${HOME}/.config/ChatGPT" ]; then
     DETECTED_TOOLS+=("ChatGPT Desktop")
 
     if [ -f "${REPO_DIR}/configs/chatgpt-desktop-mcp.json" ]; then
+        # Determine config path based on OS
+        if [ -d "${HOME}/Library/Application Support/ChatGPT" ]; then
+            CONFIG_PATH="${HOME}/Library/Application Support/ChatGPT/mcp_config.json"
+        else
+            CONFIG_PATH="${HOME}/.config/ChatGPT/mcp_config.json"
+        fi
+
         configure_mcp "ChatGPT Desktop" \
             "${REPO_DIR}/configs/chatgpt-desktop-mcp.json" \
-            "${HOME}/Library/Application Support/ChatGPT/mcp_config.json"
+            "${CONFIG_PATH}"
     fi
 fi
 
-# Detect Cody (VS Code extension)
-if [ -d "${HOME}/.vscode/extensions" ]; then
-    if ls "${HOME}/.vscode/extensions" | grep -q "sourcegraph.cody"; then
+# Detect Cody (VS Code extension) - Works on macOS/Linux/Windows
+if [ -d "${HOME}/.vscode/extensions" ] || [ -d "${HOME}/.config/Code/User/extensions" ]; then
+    EXTENSIONS_DIR="${HOME}/.vscode/extensions"
+    [ -d "${HOME}/.config/Code/User/extensions" ] && EXTENSIONS_DIR="${HOME}/.config/Code/User/extensions"
+
+    if ls "${EXTENSIONS_DIR}" 2>/dev/null | grep -q "sourcegraph.cody"; then
         DETECTED_TOOLS+=("Cody (manual)")
         echo "  ○ Cody detected - manual setup required"
         echo "    See: docs/MCP-MANUAL-SETUP.md#cody-vs-codejetbrains"

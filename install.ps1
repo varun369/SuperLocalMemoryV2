@@ -1,5 +1,5 @@
 # ============================================================================
-# SuperLocalMemory V2 Installation Script (Windows PowerShell)
+# SuperLocalMemory V2.2.0 - Windows Installation Script (PowerShell)
 # Copyright (c) 2026 Varun Pratap Bhardwaj
 # Licensed under MIT License
 # Repository: https://github.com/varun369/SuperLocalMemoryV2
@@ -7,113 +7,142 @@
 
 $ErrorActionPreference = "Stop"
 
-$INSTALL_DIR = "$env:USERPROFILE\.claude-memory"
+$INSTALL_DIR = Join-Path $env:USERPROFILE ".claude-memory"
 $REPO_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # Print banner
 Write-Host ""
-Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║  SuperLocalMemory V2 - Installation (Windows)                ║" -ForegroundColor Cyan
-Write-Host "║  by Varun Pratap Bhardwaj                                    ║" -ForegroundColor Cyan
-Write-Host "║  https://github.com/varun369/SuperLocalMemoryV2              ║" -ForegroundColor Cyan
-Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host "=================================================================="
+Write-Host "  SuperLocalMemory V2.2.0 - Windows Installation                 "
+Write-Host "  by Varun Pratap Bhardwaj                                       "
+Write-Host "  https://github.com/varun369/SuperLocalMemoryV2                 "
+Write-Host "=================================================================="
 Write-Host ""
 
 # Check Python version
 Write-Host "Checking Python version..."
 try {
-    $pythonVersion = python --version 2>&1
-    if ($pythonVersion -match "Python (\d+)\.(\d+)") {
-        $major = [int]$Matches[1]
-        $minor = [int]$Matches[2]
-        if ($major -lt 3 -or ($major -eq 3 -and $minor -lt 8)) {
-            Write-Host "✗ Error: Python 3.8+ required (found $pythonVersion)" -ForegroundColor Red
-            exit 1
-        }
-        Write-Host "✓ $pythonVersion" -ForegroundColor Green
+    $PYTHON_VERSION = & python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>&1
+    $PYTHON_MAJOR = & python -c "import sys; print(sys.version_info.major)" 2>&1
+    $PYTHON_MINOR = & python -c "import sys; print(sys.version_info.minor)" 2>&1
+
+    if ([int]$PYTHON_MAJOR -lt 3 -or ([int]$PYTHON_MAJOR -eq 3 -and [int]$PYTHON_MINOR -lt 8)) {
+        Write-Host "ERROR: Python 3.8+ required (found $PYTHON_VERSION)" -ForegroundColor Red
+        exit 1
     }
+    Write-Host "OK Python $PYTHON_VERSION" -ForegroundColor Green
 } catch {
-    Write-Host "✗ Error: Python not found. Install from https://python.org" -ForegroundColor Red
+    Write-Host "ERROR: Python not found in PATH" -ForegroundColor Red
+    Write-Host "Install Python 3.8+ from https://www.python.org/downloads/" -ForegroundColor Yellow
+    Write-Host "Make sure to check 'Add Python to PATH' during installation" -ForegroundColor Yellow
     exit 1
 }
 
 # Create installation directory
 Write-Host ""
 Write-Host "Creating installation directory..."
-if (!(Test-Path $INSTALL_DIR)) {
+if (-not (Test-Path $INSTALL_DIR)) {
     New-Item -ItemType Directory -Path $INSTALL_DIR -Force | Out-Null
 }
-Write-Host "✓ Directory: $INSTALL_DIR" -ForegroundColor Green
+Write-Host "OK Directory: $INSTALL_DIR" -ForegroundColor Green
 
 # Copy source files
 Write-Host ""
 Write-Host "Copying source files..."
-Copy-Item -Path "$REPO_DIR\src\*" -Destination $INSTALL_DIR -Recurse -Force
-Write-Host "✓ Source files copied" -ForegroundColor Green
+$srcDir = Join-Path $REPO_DIR "src"
+if (Test-Path $srcDir) {
+    Copy-Item -Path (Join-Path $srcDir "*") -Destination $INSTALL_DIR -Recurse -Force
+    Write-Host "OK Source files copied" -ForegroundColor Green
+} else {
+    Write-Host "WARNING: Source directory not found, skipping" -ForegroundColor Yellow
+}
 
 # Copy hooks
 Write-Host "Copying hooks..."
-$hooksDir = "$INSTALL_DIR\hooks"
-if (!(Test-Path $hooksDir)) {
-    New-Item -ItemType Directory -Path $hooksDir -Force | Out-Null
+$hooksDir = Join-Path $REPO_DIR "hooks"
+$installHooksDir = Join-Path $INSTALL_DIR "hooks"
+if (-not (Test-Path $installHooksDir)) {
+    New-Item -ItemType Directory -Path $installHooksDir -Force | Out-Null
 }
-if (Test-Path "$REPO_DIR\hooks") {
-    $hookFiles = Get-ChildItem "$REPO_DIR\hooks" -ErrorAction SilentlyContinue
-    if ($hookFiles) {
-        Copy-Item -Path "$REPO_DIR\hooks\*" -Destination $hooksDir -Recurse -Force
-        Write-Host "✓ Hooks copied" -ForegroundColor Green
-    } else {
-        Write-Host "○ No hooks to copy" -ForegroundColor Yellow
-    }
+if (Test-Path $hooksDir) {
+    Copy-Item -Path (Join-Path $hooksDir "*") -Destination $installHooksDir -Recurse -Force
+    Write-Host "OK Hooks copied" -ForegroundColor Green
 } else {
-    Write-Host "○ No hooks directory" -ForegroundColor Yellow
+    Write-Host "INFO: No hooks to copy" -ForegroundColor Yellow
 }
 
 # Copy CLI wrappers
 Write-Host "Copying CLI wrappers..."
-$binDir = "$INSTALL_DIR\bin"
-if (!(Test-Path $binDir)) {
-    New-Item -ItemType Directory -Path $binDir -Force | Out-Null
+$binDir = Join-Path $REPO_DIR "bin"
+$installBinDir = Join-Path $INSTALL_DIR "bin"
+if (-not (Test-Path $installBinDir)) {
+    New-Item -ItemType Directory -Path $installBinDir -Force | Out-Null
 }
-Copy-Item -Path "$REPO_DIR\bin\*" -Destination $binDir -Recurse -Force
-Write-Host "✓ CLI wrappers installed" -ForegroundColor Green
+if (Test-Path $binDir) {
+    Copy-Item -Path (Join-Path $binDir "*") -Destination $installBinDir -Recurse -Force
+    Write-Host "OK CLI wrappers installed" -ForegroundColor Green
+}
 
 # Copy API server
-if (Test-Path "$REPO_DIR\api_server.py") {
-    Copy-Item -Path "$REPO_DIR\api_server.py" -Destination $INSTALL_DIR -Force
-    Write-Host "✓ API server copied" -ForegroundColor Green
+$apiServerPath = Join-Path $REPO_DIR "api_server.py"
+if (Test-Path $apiServerPath) {
+    Copy-Item -Path $apiServerPath -Destination $INSTALL_DIR -Force
+    Write-Host "OK API server copied" -ForegroundColor Green
+}
+
+# Copy UI server
+$uiServerPath = Join-Path $REPO_DIR "ui_server.py"
+if (Test-Path $uiServerPath) {
+    Copy-Item -Path $uiServerPath -Destination $INSTALL_DIR -Force
+    Write-Host "OK UI server copied" -ForegroundColor Green
+}
+
+# Copy MCP server
+$mcpServerPath = Join-Path $REPO_DIR "mcp_server.py"
+if (Test-Path $mcpServerPath) {
+    Copy-Item -Path $mcpServerPath -Destination $INSTALL_DIR -Force
+    Write-Host "OK MCP Server installed" -ForegroundColor Green
 }
 
 # Copy config if not exists
-if (!(Test-Path "$INSTALL_DIR\config.json")) {
+$configPath = Join-Path $INSTALL_DIR "config.json"
+if (-not (Test-Path $configPath)) {
     Write-Host "Creating default config..."
-    Copy-Item -Path "$REPO_DIR\config.json" -Destination "$INSTALL_DIR\config.json" -Force
-    Write-Host "✓ Config created" -ForegroundColor Green
+    $repoConfigPath = Join-Path $REPO_DIR "config.json"
+    if (Test-Path $repoConfigPath) {
+        Copy-Item -Path $repoConfigPath -Destination $configPath -Force
+        Write-Host "OK Config created" -ForegroundColor Green
+    } else {
+        Write-Host "WARNING: config.json not found, using defaults" -ForegroundColor Yellow
+    }
 } else {
-    Write-Host "○ Config exists (keeping existing)" -ForegroundColor Yellow
+    Write-Host "INFO: Config exists (keeping existing)" -ForegroundColor Yellow
 }
 
 # Create necessary directories
 Write-Host ""
 Write-Host "Creating directories..."
-$dirs = @("backups", "profiles", "vectors", "cold-storage", "jobs")
-foreach ($dir in $dirs) {
-    $path = "$INSTALL_DIR\$dir"
-    if (!(Test-Path $path)) {
-        New-Item -ItemType Directory -Path $path -Force | Out-Null
+$directories = @("backups", "profiles", "vectors", "cold-storage", "jobs")
+foreach ($dir in $directories) {
+    $dirPath = Join-Path $INSTALL_DIR $dir
+    if (-not (Test-Path $dirPath)) {
+        New-Item -ItemType Directory -Path $dirPath -Force | Out-Null
     }
 }
-Write-Host "✓ Directories created" -ForegroundColor Green
+Write-Host "OK Directories created" -ForegroundColor Green
 
 # Initialize database
 Write-Host ""
 Write-Host "Initializing database..."
-try {
-    python "$INSTALL_DIR\setup_validator.py" --init 2>&1 | Out-Null
-    Write-Host "✓ Database initialized" -ForegroundColor Green
-} catch {
-    # Fallback: create basic tables
-    $initScript = @"
+$setupValidatorPath = Join-Path $INSTALL_DIR "setup_validator.py"
+if (Test-Path $setupValidatorPath) {
+    try {
+        & python $setupValidatorPath --init 2>$null | Out-Null
+        Write-Host "OK Database initialized" -ForegroundColor Green
+    } catch {
+        Write-Host "WARNING: Database init failed, creating basic schema..." -ForegroundColor Yellow
+        # Fallback: create basic database
+        & python -c @"
 import sqlite3
 from pathlib import Path
 db_path = Path.home() / '.claude-memory' / 'memory.db'
@@ -136,76 +165,148 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS memories (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_accessed TIMESTAMP,
     access_count INTEGER DEFAULT 0,
-    compressed_at TIMESTAMP,
-    tier INTEGER DEFAULT 1,
     cluster_id INTEGER
 )''')
-cursor.execute('CREATE TABLE IF NOT EXISTS graph_nodes (id INTEGER PRIMARY KEY, memory_id INTEGER UNIQUE, entities TEXT DEFAULT "[]", embedding_vector BLOB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
-cursor.execute('CREATE TABLE IF NOT EXISTS graph_edges (id INTEGER PRIMARY KEY, source_memory_id INTEGER, target_memory_id INTEGER, similarity REAL, relationship_type TEXT, shared_entities TEXT DEFAULT "[]", created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
-cursor.execute('CREATE TABLE IF NOT EXISTS graph_clusters (id INTEGER PRIMARY KEY, cluster_name TEXT, description TEXT, memory_count INTEGER DEFAULT 0, avg_importance REAL DEFAULT 5.0, top_entities TEXT DEFAULT "[]", created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
-cursor.execute('CREATE TABLE IF NOT EXISTS identity_patterns (id INTEGER PRIMARY KEY, pattern_type TEXT, pattern_key TEXT, pattern_value TEXT, confidence REAL DEFAULT 0.0, frequency INTEGER DEFAULT 1, last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
-cursor.execute('CREATE TABLE IF NOT EXISTS pattern_examples (id INTEGER PRIMARY KEY, pattern_id INTEGER, memory_id INTEGER, context TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
-cursor.execute('CREATE TABLE IF NOT EXISTS memory_tree (id INTEGER PRIMARY KEY, node_type TEXT, name TEXT, parent_id INTEGER, tree_path TEXT DEFAULT "/", depth INTEGER DEFAULT 0, memory_count INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
-cursor.execute('CREATE TABLE IF NOT EXISTS memory_archive (id INTEGER PRIMARY KEY, original_memory_id INTEGER, compressed_content TEXT, compression_type TEXT DEFAULT "tier2", original_size INTEGER, compressed_size INTEGER, archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
-cursor.execute('CREATE TABLE IF NOT EXISTS system_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)')
-cursor.execute("INSERT OR REPLACE INTO system_metadata (key, value) VALUES ('product', 'SuperLocalMemory V2'), ('author', 'Varun Pratap Bhardwaj'), ('repository', 'https://github.com/varun369/SuperLocalMemoryV2'), ('license', 'MIT'), ('schema_version', '2.0.0')")
+cursor.execute('CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT UNIQUE, project_path TEXT, started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, ended_at TIMESTAMP, summary TEXT)')
 conn.commit()
 conn.close()
 print('Database ready')
 "@
-    python -c $initScript
-    Write-Host "✓ Database initialized (fallback)" -ForegroundColor Green
+        Write-Host "OK Database initialized (fallback)" -ForegroundColor Green
+    }
+} else {
+    Write-Host "WARNING: setup_validator.py not found, skipping database init" -ForegroundColor Yellow
 }
 
 # Check optional dependencies
 Write-Host ""
 Write-Host "Checking optional dependencies..."
-$deps = @(
-    @{Name="scikit-learn"; Feature="Knowledge Graph"; Import="sklearn"},
-    @{Name="numpy"; Feature="Vector Operations"; Import="numpy"},
-    @{Name="python-igraph"; Feature="Clustering"; Import="igraph"},
-    @{Name="fastapi"; Feature="UI Server"; Import="fastapi"}
-)
-foreach ($dep in $deps) {
+$dependencies = @{
+    "sklearn" = "scikit-learn (Knowledge Graph)"
+    "numpy" = "numpy (Vector Operations)"
+    "igraph" = "python-igraph (Clustering)"
+    "fastapi" = "fastapi (UI Server)"
+}
+
+foreach ($module in $dependencies.Keys) {
     try {
-        python -c "import $($dep.Import)" 2>&1 | Out-Null
-        Write-Host "✓ $($dep.Name) ($($dep.Feature))" -ForegroundColor Green
+        & python -c "import $module" 2>$null
+        Write-Host "OK $($dependencies[$module])" -ForegroundColor Green
     } catch {
-        Write-Host "○ $($dep.Name) not installed (optional)" -ForegroundColor Yellow
+        Write-Host "INFO: $($dependencies[$module]) not installed (optional)" -ForegroundColor Yellow
     }
+}
+
+# Configure PATH
+Write-Host ""
+Write-Host "Configuring PATH..."
+$userPath = [Environment]::GetEnvironmentVariable("PATH", "User")
+if ($userPath -notlike "*$installBinDir*") {
+    $newPath = "$installBinDir;$userPath"
+    [Environment]::SetEnvironmentVariable("PATH", $newPath, "User")
+    Write-Host "OK PATH configured (restart terminal to use commands)" -ForegroundColor Green
+    $env:PATH = "$installBinDir;$env:PATH"
+} else {
+    Write-Host "INFO: PATH already configured" -ForegroundColor Yellow
 }
 
 # Summary
 Write-Host ""
-Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║  Installation Complete!                                       ║" -ForegroundColor Cyan
-Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host "=================================================================="
+Write-Host "  Installation Complete!                                         "
+Write-Host "=================================================================="
 Write-Host ""
-Write-Host "To use CLI commands, add this to your PowerShell profile:"
+Write-Host "OK Commands available after terminal restart!" -ForegroundColor Green
 Write-Host ""
-Write-Host '  $env:PATH += ";$env:USERPROFILE\.claude-memory\bin"' -ForegroundColor Yellow
+Write-Host "Quick start (restart terminal first):"
+Write-Host "  python $INSTALL_DIR\memory_store_v2.py"
 Write-Host ""
-Write-Host "Or run: notepad `$PROFILE"
+
+# Optional: Offer to install optional features
 Write-Host ""
-Write-Host "Available commands:"
-Write-Host "  superlocalmemoryv2:remember  - Save a new memory"
-Write-Host "  superlocalmemoryv2:recall    - Search memories"
-Write-Host "  superlocalmemoryv2:list      - List recent memories"
-Write-Host "  superlocalmemoryv2:status    - Check system status"
-Write-Host "  superlocalmemoryv2:profile   - Manage memory profiles"
-Write-Host "  superlocalmemoryv2:reset     - Reset memory database"
+Write-Host "=================================================================="
+Write-Host "  Optional Features Available                                    "
+Write-Host "=================================================================="
 Write-Host ""
-Write-Host "Quick start:"
-Write-Host "  1. superlocalmemoryv2:remember 'My first memory'"
-Write-Host "  2. superlocalmemoryv2:recall 'first'"
+Write-Host "SuperLocalMemory V2.2.0 includes optional features:"
 Write-Host ""
-Write-Host "For optional features (Knowledge Graph, Pattern Learning):"
-Write-Host "  pip install scikit-learn numpy python-igraph leidenalg"
+Write-Host "  1) Advanced Search (~1.5GB, 5-10 min)"
+Write-Host "     - Semantic search with sentence transformers"
+Write-Host "     - Vector similarity with HNSWLIB"
 Write-Host ""
-Write-Host "For UI Server:"
-Write-Host "  pip install fastapi uvicorn"
-Write-Host "  python $INSTALL_DIR\api_server.py"
+Write-Host "  2) Web Dashboard (~50MB, 1-2 min)"
+Write-Host "     - Graph visualization"
+Write-Host "     - API server (FastAPI)"
 Write-Host ""
-Write-Host "Documentation: https://github.com/varun369/SuperLocalMemoryV2" -ForegroundColor Cyan
-Write-Host "Author: Varun Pratap Bhardwaj" -ForegroundColor Cyan
+Write-Host "  3) Full Package (~1.5GB, 5-10 min)"
+Write-Host "     - Everything: Search + Dashboard"
+Write-Host ""
+Write-Host "  N) Skip (install later)"
+Write-Host ""
+$INSTALL_CHOICE = Read-Host "Choose option [1/2/3/N]"
+
+$requirementsDir = $REPO_DIR
+switch ($INSTALL_CHOICE) {
+    "1" {
+        Write-Host ""
+        Write-Host "Installing Advanced Search features..."
+        Write-Host "Downloading ~1.5GB (ML models)..." -ForegroundColor Yellow
+        $searchReqPath = Join-Path $requirementsDir "requirements-search.txt"
+        if (Test-Path $searchReqPath) {
+            & pip install -r $searchReqPath
+            Write-Host "OK Advanced Search installed successfully" -ForegroundColor Green
+        } else {
+            Write-Host "ERROR: requirements-search.txt not found" -ForegroundColor Red
+        }
+    }
+    "2" {
+        Write-Host ""
+        Write-Host "Installing Web Dashboard..."
+        Write-Host "Downloading ~50MB..." -ForegroundColor Yellow
+        $uiReqPath = Join-Path $requirementsDir "requirements-ui.txt"
+        if (Test-Path $uiReqPath) {
+            & pip install -r $uiReqPath
+            Write-Host "OK Web Dashboard installed successfully" -ForegroundColor Green
+            Write-Host ""
+            Write-Host "Start Web UI:"
+            Write-Host "  python $INSTALL_DIR\api_server.py"
+            Write-Host "  Then open: http://127.0.0.1:8000"
+        } else {
+            Write-Host "ERROR: requirements-ui.txt not found" -ForegroundColor Red
+        }
+    }
+    "3" {
+        Write-Host ""
+        Write-Host "Installing Full Package (Search + Dashboard)..."
+        Write-Host "Downloading ~1.5GB..." -ForegroundColor Yellow
+        $fullReqPath = Join-Path $requirementsDir "requirements-full.txt"
+        if (Test-Path $fullReqPath) {
+            & pip install -r $fullReqPath
+            Write-Host "OK Full package installed successfully" -ForegroundColor Green
+            Write-Host ""
+            Write-Host "All features enabled!"
+        } else {
+            Write-Host "ERROR: requirements-full.txt not found" -ForegroundColor Red
+        }
+    }
+    default {
+        Write-Host ""
+        Write-Host "Skipping optional features."
+        Write-Host ""
+        Write-Host "To install later:"
+        Write-Host "  Advanced Search: pip install -r requirements-search.txt"
+        Write-Host "  Web Dashboard:   pip install -r requirements-ui.txt"
+        Write-Host "  Full Package:    pip install -r requirements-full.txt"
+    }
+}
+
+Write-Host ""
+Write-Host "=================================================================="
+Write-Host "  ATTRIBUTION NOTICE (REQUIRED BY MIT LICENSE)                   "
+Write-Host "=================================================================="
+Write-Host "  Created by: Varun Pratap Bhardwaj                              "
+Write-Host "  Role: Solution Architect & Original Creator                    "
+Write-Host "  Repository: github.com/varun369/SuperLocalMemoryV2             "
+Write-Host "  License: MIT (attribution must be preserved)                   "
+Write-Host "=================================================================="
 Write-Host ""

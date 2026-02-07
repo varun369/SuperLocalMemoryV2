@@ -65,3 +65,30 @@ test_edge_cases.py
 RUN_ALL_TESTS.sh
 TEST_REPORT.md
 TESTING_COMPLETE.md
+
+# Internal task completion reports - NOT for public distribution
+TASK-*.md
+TASKS-*.md
+TASK_*.md
+COMPLETION*.md
+AGENT-*.md
+AGENT_*.md
+
+# Internal implementation summaries - NOT for public distribution
+IMPLEMENTATION-SUMMARY*.md
+MIGRATION*.md
+
+# Internal UAT reports - NOT for public distribution
+UAT_*.md
+EDGE_CASE*.md
+
+# Internal testing modules - NOT for public distribution
+test_new_modules.py
+test_search_engine.py
+test_ui_server.py
+verify_v2_2_0.py
+
+# Internal quickstart docs (redundant with official docs) - NOT for public distribution
+V2.2.0-QUICKSTART.md
+V2.2.0-README.txt
+UI_SERVER_QUICKSTART.md
