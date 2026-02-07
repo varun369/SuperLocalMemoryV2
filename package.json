@@ -1,0 +1,94 @@
+{
+  "name": "superlocalmemory",
+  "version": "2.1.0",
+  "description": "Your AI Finally Remembers You - Local-first intelligent memory system for AI assistants. Works with Claude, Cursor, Windsurf, Continue.dev, and 11+ AI tools. 100% local, zero cloud dependencies.",
+  "keywords": [
+    "ai-memory",
+    "claude-ai",
+    "cursor-ide",
+    "local-first",
+    "mcp-server",
+    "ai-assistant",
+    "memory-system",
+    "knowledge-graph",
+    "privacy-first",
+    "windsurf",
+    "continue-dev",
+    "cody",
+    "claude-desktop",
+    "ai-tools",
+    "memory-extension",
+    "local-ai"
+  ],
+  "author": {
+    "name": "Varun Pratap Bhardwaj",
+    "email": "varun369@users.noreply.github.com",
+    "url": "https://github.com/varun369"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/varun369/SuperLocalMemoryV2.git"
+  },
+  "homepage": "https://github.com/varun369/SuperLocalMemoryV2#readme",
+  "bugs": {
+    "url": "https://github.com/varun369/SuperLocalMemoryV2/issues"
+  },
+  "bin": {
+    "slm": "./bin/slm-npm",
+    "superlocalmemory": "./bin/slm-npm"
+  },
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js",
+    "preuninstall": "node scripts/preuninstall.js",
+    "test": "echo \"Run: npm install -g . && slm status\" && exit 0"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "files": [
+    "bin/",
+    "src/",
+    "hooks/",
+    "configs/",
+    "skills/",
+    "completions/",
+    "scripts/",
+    "mcp_server.py",
+    "install.sh",
+    "install.ps1",
+    "install-skills.sh",
+    "README.md",
+    "LICENSE",
+    "ATTRIBUTION.md",
+    "CHANGELOG.md",
+    "QUICKSTART.md",
+    "requirements.txt",
+    "requirements-core.txt"
+  ],
+  "preferGlobal": true,
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/varun369"
+  },
+  "maintainers": [
+    {
+      "name": "Varun Pratap Bhardwaj",
+      "email": "varun369@users.noreply.github.com",
+      "url": "https://github.com/varun369"
+    }
+  ],
+  "attribution": {
+    "creator": "Varun Pratap Bhardwaj",
+    "role": "Solution Architect & Original Creator",
+    "year": "2026",
+    "github": "https://github.com/varun369",
+    "required": "Attribution notice must be preserved in all copies and derivative works"
+  }
+}

@@ -1,0 +1,226 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Features - SuperLocalMemory V2"
+  description="Explore SuperLocalMemory V2's advanced features: hybrid search, knowledge graphs, pattern learning, multi-profile support, and universal integration across 11+ IDEs."
+>
+  <section style="padding: 4rem 0;">
+    <div class="container">
+      <h1 style="margin-bottom: 1rem;">Features</h1>
+      <p style="font-size: 1.125rem; color: var(--color-text-secondary); margin-bottom: 3rem;">
+        SuperLocalMemory V2 combines cutting-edge 2026 research with practical, production-ready features.
+      </p>
+
+      <!-- 9-Layer Architecture -->
+      <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 2rem; margin-bottom: 3rem;">
+        <h2 style="margin-bottom: 1.5rem;">🏗️ 9-Layer Universal Architecture</h2>
+        <p style="margin-bottom: 1.5rem;">Each layer enhances the previous one. The system degrades gracefully if advanced features aren't available.</p>
+
+        <div style="font-family: monospace; font-size: 0.875rem; line-height: 1.8; background: var(--color-bg-tertiary); padding: 1.5rem; border-radius: 8px; overflow-x: auto;">
+<pre style="margin: 0; background: none; padding: 0; border: none;">┌─────────────────────────────────────────────────────┐
+│ Layer 9: VISUALIZATION (v2.2.0)                    │
+│  Interactive dashboard, timeline, search explorer   │
+├─────────────────────────────────────────────────────┤
+│ Layer 8: HYBRID SEARCH (v2.2.0)                    │
+│  Semantic + FTS5 + Graph = 80ms with max accuracy  │
+├─────────────────────────────────────────────────────┤
+│ Layer 7: UNIVERSAL ACCESS                          │
+│  MCP + Skills + CLI (works everywhere)             │
+├─────────────────────────────────────────────────────┤
+│ Layer 6: MCP INTEGRATION                           │
+│  6 tools, 4 resources, 2 prompts                   │
+├─────────────────────────────────────────────────────┤
+│ Layer 5: SKILLS LAYER                              │
+│  6 universal slash-commands                        │
+├─────────────────────────────────────────────────────┤
+│ Layer 4: PATTERN LEARNING                          │
+│  Learns your coding style & preferences            │
+├─────────────────────────────────────────────────────┤
+│ Layer 3: KNOWLEDGE GRAPH                           │
+│  Auto-discovers relationships (Leiden clustering)  │
+├─────────────────────────────────────────────────────┤
+│ Layer 2: HIERARCHICAL INDEX                        │
+│  Tree structure for O(log n) navigation            │
+├─────────────────────────────────────────────────────┤
+│ Layer 1: RAW STORAGE                               │
+│  SQLite + FTS5 + TF-IDF vectors                    │
+└─────────────────────────────────────────────────────┘</pre>
+        </div>
+      </div>
+
+      <!-- Core Features -->
+      <h2 style="margin-bottom: 1.5rem;">Core Features</h2>
+
+      <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🔍 Hybrid Search (NEW v2.2.0)</h3>
+        <p style="margin-bottom: 1rem;">Combines three search strategies for maximum accuracy:</p>
+        <ul style="margin-bottom: 1rem;">
+          <li><strong>Semantic Search</strong> - TF-IDF + cosine similarity for conceptual queries (45ms)</li>
+          <li><strong>Full-Text Search</strong> - SQLite FTS5 with ranking for exact phrases (30ms)</li>
+          <li><strong>Graph-Enhanced</strong> - Knowledge graph traversal for related concepts (60ms)</li>
+          <li><strong>Hybrid Mode</strong> - All three combined for optimal results (80ms)</li>
+        </ul>
+        <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+          <strong>Performance:</strong> Sub-second search even with 5,000+ memories. 3.3x faster than v1.
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--color-accent); margin-bottom: 1rem;">📊 Visualization Dashboard (NEW v2.2.0)</h3>
+        <p style="margin-bottom: 1rem;">Interactive web-based UI for exploring memories visually:</p>
+        <ul style="margin-bottom: 1rem;">
+          <li><strong>Timeline View</strong> - See memories chronologically with importance indicators</li>
+          <li><strong>Search Explorer</strong> - Real-time semantic search with score visualization</li>
+          <li><strong>Graph Visualization</strong> - Interactive knowledge graph with clusters</li>
+          <li><strong>Statistics Dashboard</strong> - Memory trends, tag clouds, pattern insights</li>
+        </ul>
+        <pre><code>python ~/.claude-memory/ui_server.py
+# Opens at http://localhost:8000</code></pre>
+      </div>
+
+      <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🕸️ Knowledge Graph</h3>
+        <p style="margin-bottom: 1rem;">Auto-discovers relationships you didn't know existed:</p>
+        <ul style="margin-bottom: 1rem;">
+          <li><strong>TF-IDF Entity Extraction</strong> - Identifies important terms and concepts</li>
+          <li><strong>Leiden Clustering</strong> - Groups related memories into communities</li>
+          <li><strong>Auto-naming</strong> - Clusters get descriptive names ("Auth & Tokens", "Performance")</li>
+          <li><strong>Relationship Discovery</strong> - Finds connections between memories</li>
+        </ul>
+        <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px;">
+          <strong>Example:</strong> Search "authentication" and get JWT, OAuth, session management—even if never tagged together.
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🎯 Pattern Learning</h3>
+        <p style="margin-bottom: 1rem;">Learns your coding identity from your memories:</p>
+        <ul style="margin-bottom: 1rem;">
+          <li><strong>Framework Preferences</strong> - "You prefer React over Vue" (73% confidence)</li>
+          <li><strong>Coding Style</strong> - "Performance over readability" (58% confidence)</li>
+          <li><strong>Testing Approach</strong> - "Jest + React Testing Library" (65% confidence)</li>
+          <li><strong>API Style</strong> - "REST over GraphQL" (81% confidence)</li>
+        </ul>
+        <pre><code>python ~/.claude-memory/pattern_learner.py update
+python ~/.claude-memory/pattern_learner.py context 0.5</code></pre>
+      </div>
+
+      <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🌐 Universal Integration</h3>
+        <p style="margin-bottom: 1rem;">Three ways to access the same database:</p>
+        <div class="grid grid-3" style="gap: 1rem; margin-top: 1rem;">
+          <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px;">
+            <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">MCP Protocol</h4>
+            <p style="font-size: 0.875rem;">Real-time, IDE-integrated. Auto-configured for Cursor, Windsurf, Claude Desktop, Continue, and more.</p>
+          </div>
+          <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px;">
+            <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">Universal Skills</h4>
+            <p style="font-size: 0.875rem;">Slash commands for Claude Code, Continue.dev, Cody, Cursor, Windsurf.</p>
+          </div>
+          <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px;">
+            <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">CLI</h4>
+            <p style="font-size: 0.875rem;">Works in any terminal, scripts, automation. Simple <code>slm</code> command.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--color-accent); margin-bottom: 1rem;">👤 Multi-Profile Support</h3>
+        <p style="margin-bottom: 1rem;">Completely isolated contexts for different projects:</p>
+        <ul style="margin-bottom: 1rem;">
+          <li><strong>Work Profile</strong> - Day job memories and patterns</li>
+          <li><strong>Personal Profile</strong> - Side projects and learning</li>
+          <li><strong>Client Profiles</strong> - Separate for each client (no context bleeding)</li>
+        </ul>
+        <pre><code>slm switch-profile work
+slm switch-profile personal
+slm switch-profile client-acme</code></pre>
+      </div>
+
+      <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--color-accent); margin-bottom: 1rem;">💾 Progressive Compression</h3>
+        <p style="margin-bottom: 1rem;">3-tier storage system saves 60-96% space:</p>
+        <table style="margin-top: 1rem;">
+          <tr>
+            <th>Tier</th>
+            <th>Age</th>
+            <th>Compression</th>
+            <th>Savings</th>
+          </tr>
+          <tr>
+            <td><strong>Tier 1</strong></td>
+            <td>0-30 days</td>
+            <td>None</td>
+            <td>Active memories</td>
+          </tr>
+          <tr>
+            <td><strong>Tier 2</strong></td>
+            <td>30-90 days</td>
+            <td>Progressive summarization</td>
+            <td>60% savings</td>
+          </tr>
+          <tr>
+            <td><strong>Tier 3</strong></td>
+            <td>90+ days</td>
+            <td>JSON archival</td>
+            <td>96% savings</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Performance -->
+      <h2 style="margin-bottom: 1.5rem; margin-top: 3rem;">⚡ Performance</h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 3rem;">
+        <div class="card" style="text-align: center;">
+          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">&lt; 10ms</h3>
+          <p style="margin: 0;">Add Memory</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">80ms</h3>
+          <p style="margin: 0;">Hybrid Search</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">&lt; 2s</h3>
+          <p style="margin: 0;">Graph Build</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">&lt; 50MB</h3>
+          <p style="margin: 0;">RAM Usage</p>
+        </div>
+      </div>
+
+      <!-- Research-Based -->
+      <h2 style="margin-bottom: 1.5rem;">🔬 Built on Research</h2>
+      <div class="grid grid-2" style="margin-bottom: 3rem;">
+        <div class="card">
+          <h3>📄 PageIndex (Meta AI)</h3>
+          <p>Hierarchical memory organization with tree structures for O(log n) navigation.</p>
+        </div>
+        <div class="card">
+          <h3>🕸️ GraphRAG (Microsoft)</h3>
+          <p>Knowledge graph with Leiden clustering for community detection.</p>
+        </div>
+        <div class="card">
+          <h3>🎯 xMemory (Stanford)</h3>
+          <p>Identity pattern learning that understands your preferences.</p>
+        </div>
+        <div class="card">
+          <h3>⚡ A-RAG</h3>
+          <p>Multi-level retrieval with context awareness.</p>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div style="background: var(--color-bg-secondary); border: 2px solid var(--color-accent); border-radius: var(--border-radius); padding: 2rem; text-align: center;">
+        <h3 style="margin-bottom: 1rem;">Experience These Features</h3>
+        <p style="margin-bottom: 1.5rem;">Install SuperLocalMemory V2 in 5 minutes. All features included, free forever.</p>
+        <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener" class="btn">
+          ⭐ Star on GitHub & Get Started
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

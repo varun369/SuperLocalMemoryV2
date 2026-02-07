@@ -1,0 +1,396 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="SuperLocalMemory V2 - Your AI Finally Remembers You"
+  description="The only free, local-first AI memory system with universal architecture. Works with Claude, Cursor, Windsurf, VS Code, and 11+ IDEs. 100% local, 100% private, 100% free forever."
+>
+  <!-- Hero Section -->
+  <section style="padding: 4rem 0; text-align: center; background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-tertiary) 100%);">
+    <div class="container">
+      <div style="display: inline-block; padding: 0.5rem 1rem; background: var(--color-bg-tertiary); border: 1px solid var(--color-border); border-radius: 999px; margin-bottom: 1.5rem;">
+        <span style="color: var(--color-accent); font-weight: 600;">⚡ Created by Varun Pratap Bhardwaj</span>
+      </div>
+
+      <h1 style="font-size: 3rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+        Your AI Finally Remembers You
+      </h1>
+
+      <p style="font-size: 1.25rem; margin-bottom: 2rem; max-width: 700px; margin-left: auto; margin-right: auto;">
+        Stop re-explaining your codebase every session. <strong>100% local. Zero setup. Completely free.</strong>
+      </p>
+
+      <!-- Badges -->
+      <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem;">
+        <img src="https://img.shields.io/badge/python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.8+" />
+        <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License" />
+        <img src="https://img.shields.io/badge/local--first-100%25-brightgreen?style=flat-square" alt="100% Local" />
+        <img src="https://img.shields.io/badge/setup-5%20min-orange?style=flat-square" alt="5 Min Setup" />
+        <img src="https://img.shields.io/badge/platform-Mac%20%7C%20Linux%20%7C%20Windows-blue?style=flat-square" alt="Cross Platform" />
+        <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener">
+          <img src="https://img.shields.io/github/stars/varun369/SuperLocalMemoryV2?style=flat-square" alt="GitHub stars" />
+        </a>
+      </div>
+
+      <!-- CTA Buttons -->
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 3rem;">
+        <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener" class="btn">
+          ⭐ Star on GitHub
+        </a>
+        <a href="/SuperLocalMemoryV2/docs" class="btn btn-secondary">
+          📚 Documentation
+        </a>
+        <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/Quick-Start-Tutorial" target="_blank" rel="noopener" class="btn btn-secondary">
+          🚀 Quick Start
+        </a>
+      </div>
+
+      <!-- Quick Install -->
+      <div style="max-width: 600px; margin: 0 auto; background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem;">
+        <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">5-Minute Install</h3>
+        <pre style="margin: 0;"><code>git clone https://github.com/varun369/SuperLocalMemoryV2.git
+cd SuperLocalMemoryV2
+./install.sh</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- The Problem -->
+  <section style="padding: 4rem 0;">
+    <div class="container">
+      <h2 class="text-center" style="margin-bottom: 3rem;">The Problem</h2>
+
+      <div style="max-width: 700px; margin: 0 auto;">
+        <div class="card" style="background: var(--color-bg-tertiary);">
+          <p style="font-family: monospace; margin-bottom: 0.5rem;"><strong>You:</strong> "Remember that authentication bug we fixed last week?"</p>
+          <p style="font-family: monospace; margin-bottom: 0.5rem; color: var(--color-text-secondary);"><strong>Claude:</strong> "I don't have access to previous conversations..."</p>
+          <p style="font-family: monospace; color: var(--color-text-secondary);"><strong>You:</strong> *sighs and explains everything again*</p>
+        </div>
+
+        <p style="text-align: center; margin-top: 2rem; font-size: 1.1rem;">
+          <strong>AI assistants forget everything between sessions.</strong> You waste time re-explaining your project architecture, coding preferences, previous decisions, and debugging history.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- The Solution -->
+  <section style="padding: 4rem 0; background: var(--color-bg-secondary);">
+    <div class="container">
+      <h2 class="text-center" style="margin-bottom: 3rem;">The Solution</h2>
+
+      <div style="max-width: 700px; margin: 0 auto;">
+        <pre style="background: var(--color-bg-tertiary);"><code># Save a memory
+superlocalmemoryv2:remember "Fixed auth bug - JWT tokens were expiring too fast, increased to 24h"
+
+# Later, in a new session...
+superlocalmemoryv2:recall "auth bug"
+# ✓ Found: "Fixed auth bug - JWT tokens were expiring too fast, increased to 24h"</code></pre>
+
+        <p style="text-align: center; margin-top: 2rem; font-size: 1.25rem; font-weight: 600;">
+          Your AI now remembers everything. Forever. Locally. For free.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section style="padding: 4rem 0;">
+    <div class="container">
+      <h2 class="text-center" style="margin-bottom: 3rem;">Why SuperLocalMemory?</h2>
+
+      <div class="grid grid-3">
+        <div class="card">
+          <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🔐 100% Local</h3>
+          <p>Your data never leaves your machine. Zero cloud dependencies. GDPR/HIPAA compliant by default.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="color: var(--color-accent); margin-bottom: 1rem;">💰 100% Free</h3>
+          <p>No usage limits. No credit systems. No subscriptions. Free forever. Unlike Mem0 ($50/mo) or Zep ($50/mo).</p>
+        </div>
+
+        <div class="card">
+          <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🌐 Works Everywhere</h3>
+          <p>11+ IDEs supported: Claude Code, Cursor, Windsurf, VS Code, Aider, and more. One database, all tools.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🧠 Knowledge Graph</h3>
+          <p>Auto-discovers relationships between memories. Finds connections you didn't know existed.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🎯 Pattern Learning</h3>
+          <p>Learns your coding style, preferences, and terminology. AI matches your style automatically.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="color: var(--color-accent); margin-bottom: 1rem;">⚡ Lightning Fast</h3>
+          <p>80ms hybrid search. Sub-second graph builds. Tested up to 10,000 memories with linear scaling.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- IDE Support -->
+  <section style="padding: 4rem 0; background: var(--color-bg-secondary);">
+    <div class="container">
+      <h2 class="text-center" style="margin-bottom: 3rem;">Universal Integration</h2>
+      <p class="text-center" style="max-width: 800px; margin: 0 auto 3rem;">
+        SuperLocalMemory V2 is the <strong>ONLY</strong> memory system that works across ALL your tools with <strong>MCP (Model Context Protocol)</strong> integration.
+      </p>
+
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Integration</th>
+              <th>How It Works</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Claude Code</strong></td>
+              <td><span class="badge badge-success">✅ Native Skills</span></td>
+              <td><code>/superlocalmemoryv2:remember</code></td>
+            </tr>
+            <tr>
+              <td><strong>Cursor</strong></td>
+              <td><span class="badge badge-success">✅ MCP Integration</span></td>
+              <td>AI automatically uses memory tools</td>
+            </tr>
+            <tr>
+              <td><strong>Windsurf</strong></td>
+              <td><span class="badge badge-success">✅ MCP Integration</span></td>
+              <td>Native memory access</td>
+            </tr>
+            <tr>
+              <td><strong>Claude Desktop</strong></td>
+              <td><span class="badge badge-success">✅ MCP Integration</span></td>
+              <td>Built-in support</td>
+            </tr>
+            <tr>
+              <td><strong>VS Code + Continue</strong></td>
+              <td><span class="badge badge-success">✅ MCP + Skills</span></td>
+              <td><code>/slm-remember</code> or AI tools</td>
+            </tr>
+            <tr>
+              <td><strong>VS Code + Cody</strong></td>
+              <td><span class="badge badge-success">✅ Custom Commands</span></td>
+              <td><code>/slm-remember</code> commands</td>
+            </tr>
+            <tr>
+              <td><strong>Aider</strong></td>
+              <td><span class="badge badge-success">✅ Smart Wrapper</span></td>
+              <td><code>aider-smart</code> with auto-context</td>
+            </tr>
+            <tr>
+              <td><strong>Any Terminal</strong></td>
+              <td><span class="badge badge-success">✅ Universal CLI</span></td>
+              <td><code>slm remember "content"</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-center" style="margin-top: 2rem; font-size: 1.1rem;">
+        <strong>All three methods use the SAME local database.</strong> No data duplication, no conflicts.
+      </p>
+    </div>
+  </section>
+
+  <!-- Comparison Table -->
+  <section style="padding: 4rem 0;">
+    <div class="container">
+      <h2 class="text-center" style="margin-bottom: 3rem;">vs Alternatives</h2>
+
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Mem0</th>
+              <th>Zep</th>
+              <th>Personal.AI</th>
+              <th><strong>SuperLocalMemory V2</strong></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Price</strong></td>
+              <td>Usage-based</td>
+              <td>$50/mo</td>
+              <td>$33/mo</td>
+              <td><span class="badge badge-success">$0 forever</span></td>
+            </tr>
+            <tr>
+              <td><strong>Local-First</strong></td>
+              <td>❌ Cloud</td>
+              <td>❌ Cloud</td>
+              <td>❌ Cloud</td>
+              <td><span class="badge badge-success">✅ 100%</span></td>
+            </tr>
+            <tr>
+              <td><strong>IDE Support</strong></td>
+              <td>Limited</td>
+              <td>1-2</td>
+              <td>None</td>
+              <td><span class="badge badge-success">✅ 11+ IDEs</span></td>
+            </tr>
+            <tr>
+              <td><strong>MCP Integration</strong></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+              <td><span class="badge badge-success">✅ Native</span></td>
+            </tr>
+            <tr>
+              <td><strong>Pattern Learning</strong></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>Partial</td>
+              <td><span class="badge badge-success">✅ Full</span></td>
+            </tr>
+            <tr>
+              <td><strong>Knowledge Graphs</strong></td>
+              <td>✅</td>
+              <td>✅</td>
+              <td>❌</td>
+              <td><span class="badge badge-success">✅ Leiden Clustering</span></td>
+            </tr>
+            <tr>
+              <td><strong>Zero Setup</strong></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+              <td><span class="badge badge-success">✅ 5-min install</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-center" style="margin-top: 2rem;">
+        <a href="/SuperLocalMemoryV2/comparison" class="btn">See Detailed Comparison →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- Performance -->
+  <section style="padding: 4rem 0; background: var(--color-bg-secondary);">
+    <div class="container">
+      <h2 class="text-center" style="margin-bottom: 3rem;">Performance That Scales</h2>
+
+      <div class="grid grid-2">
+        <div>
+          <h3 style="margin-bottom: 1.5rem;">Benchmarks (v2.2.0)</h3>
+          <table>
+            <tr>
+              <td><strong>Add Memory</strong></td>
+              <td>&lt; 10ms</td>
+            </tr>
+            <tr>
+              <td><strong>Hybrid Search</strong></td>
+              <td>80ms</td>
+            </tr>
+            <tr>
+              <td><strong>Graph Build</strong></td>
+              <td>&lt; 2s (100 memories)</td>
+            </tr>
+            <tr>
+              <td><strong>Pattern Learning</strong></td>
+              <td>&lt; 2s</td>
+            </tr>
+          </table>
+        </div>
+
+        <div>
+          <h3 style="margin-bottom: 1.5rem;">Scalability</h3>
+          <table>
+            <tr>
+              <td><strong>100 memories</strong></td>
+              <td>35ms search, 30MB RAM</td>
+            </tr>
+            <tr>
+              <td><strong>500 memories</strong></td>
+              <td>45ms search, 50MB RAM</td>
+            </tr>
+            <tr>
+              <td><strong>1,000 memories</strong></td>
+              <td>55ms search, 80MB RAM</td>
+            </tr>
+            <tr>
+              <td><strong>5,000 memories</strong></td>
+              <td>85ms search, 150MB RAM</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <p class="text-center" style="margin-top: 2rem; font-size: 1.1rem;">
+        <strong>Tested up to 10,000 memories</strong> with linear scaling and no degradation.
+      </p>
+    </div>
+  </section>
+
+  <!-- Research-Based -->
+  <section style="padding: 4rem 0;">
+    <div class="container">
+      <h2 class="text-center" style="margin-bottom: 3rem;">Built on 2026 Research</h2>
+      <p class="text-center" style="max-width: 800px; margin: 0 auto 3rem;">
+        Not another simple key-value store. SuperLocalMemory implements <strong>cutting-edge memory architecture</strong>.
+      </p>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>📄 PageIndex (Meta AI)</h3>
+          <p>Hierarchical memory organization with tree structures and breadcrumbs for O(log n) lookups.</p>
+        </div>
+
+        <div class="card">
+          <h3>🕸️ GraphRAG (Microsoft)</h3>
+          <p>Knowledge graph with Leiden clustering. Auto-discovers relationships and communities.</p>
+        </div>
+
+        <div class="card">
+          <h3>🎯 xMemory (Stanford)</h3>
+          <p>Identity pattern learning. Understands your coding style, preferences, and terminology.</p>
+        </div>
+
+        <div class="card">
+          <h3>⚡ A-RAG</h3>
+          <p>Multi-level retrieval with context awareness. Hybrid search combining semantic, FTS5, and graph.</p>
+        </div>
+      </div>
+
+      <p class="text-center" style="margin-top: 2rem; font-size: 1.1rem;">
+        <strong>The only open-source implementation combining all four approaches.</strong>
+      </p>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section style="padding: 4rem 0; background: linear-gradient(135deg, var(--color-accent) 0%, #ec4899 100%); text-align: center;">
+    <div class="container">
+      <h2 style="color: white; margin-bottom: 1.5rem; font-size: 2.5rem;">Ready to Give Your AI a Memory?</h2>
+      <p style="color: white; font-size: 1.25rem; margin-bottom: 2rem; opacity: 0.9;">
+        Install in 5 minutes. Free forever. Works with 11+ IDEs.
+      </p>
+
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener" class="btn" style="background: white; color: var(--color-accent);">
+          ⭐ Star on GitHub
+        </a>
+        <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/Quick-Start-Tutorial" target="_blank" rel="noopener" class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+          🚀 Quick Start Guide
+        </a>
+      </div>
+
+      <p style="color: white; margin-top: 2rem; opacity: 0.8;">
+        Created by <a href="https://github.com/varun369" target="_blank" rel="noopener" style="color: white; text-decoration: underline;">Varun Pratap Bhardwaj</a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>

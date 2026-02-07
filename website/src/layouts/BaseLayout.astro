@@ -1,0 +1,100 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/SuperLocalMemoryV2/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonicalURL} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+
+    <!-- SEO Keywords -->
+    <meta name="keywords" content="local AI memory, claude memory extension, AI memory system free, alternative to Mem0, alternative to Zep, MCP integration, Model Context Protocol, Cursor IDE, Windsurf, VS Code AI memory" />
+    <meta name="author" content="Varun Pratap Bhardwaj" />
+
+    <!-- Robots -->
+    <meta name="robots" content="index, follow" />
+  </head>
+  <body>
+    <header>
+      <nav class="container" style="padding: 1.5rem 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <a href="/SuperLocalMemoryV2/" style="font-size: 1.25rem; font-weight: 600; color: var(--color-accent);">
+            🧠 SuperLocalMemory V2
+          </a>
+          <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
+            <a href="/SuperLocalMemoryV2/docs">Documentation</a>
+            <a href="/SuperLocalMemoryV2/features">Features</a>
+            <a href="/SuperLocalMemoryV2/comparison">vs Alternatives</a>
+            <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki" target="_blank" rel="noopener">Wiki</a>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer style="margin-top: 4rem; padding: 3rem 0; background: var(--color-bg-secondary); border-top: 1px solid var(--color-border);">
+      <div class="container">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+          <div>
+            <h4 style="color: var(--color-accent); margin-bottom: 1rem;">SuperLocalMemory V2</h4>
+            <p style="font-size: 0.875rem;">The only free, local-first AI memory system with universal architecture.</p>
+          </div>
+          <div>
+            <h4 style="margin-bottom: 1rem;">Resources</h4>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener">GitHub</a>
+              <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki" target="_blank" rel="noopener">Documentation</a>
+              <a href="https://github.com/varun369/SuperLocalMemoryV2/issues" target="_blank" rel="noopener">Issues</a>
+              <a href="https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>
+            </div>
+          </div>
+          <div>
+            <h4 style="margin-bottom: 1rem;">Support</h4>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <a href="https://buymeacoffee.com/varunpratah" target="_blank" rel="noopener">Buy Me a Coffee</a>
+              <a href="https://paypal.me/varunpratapbhardwaj" target="_blank" rel="noopener">PayPal</a>
+              <a href="https://github.com/sponsors/varun369" target="_blank" rel="noopener">GitHub Sponsors</a>
+            </div>
+          </div>
+        </div>
+        <div style="padding-top: 2rem; border-top: 1px solid var(--color-border); text-align: center; color: var(--color-text-secondary); font-size: 0.875rem;">
+          <p>Created by <a href="https://github.com/varun369" target="_blank" rel="noopener" style="color: var(--color-accent);">Varun Pratap Bhardwaj</a> • Licensed under MIT</p>
+          <p style="margin-top: 0.5rem;">100% local. 100% private. 100% yours.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

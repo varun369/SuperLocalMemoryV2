@@ -1,0 +1,73 @@
+#!/usr/bin/env node
+/**
+ * SuperLocalMemory V2 - NPM Global CLI Wrapper
+ *
+ * Copyright (c) 2026 Varun Pratap Bhardwaj
+ * Solution Architect & Original Creator
+ *
+ * Licensed under MIT License (see LICENSE file)
+ * Repository: https://github.com/varun369/SuperLocalMemoryV2
+ *
+ * ATTRIBUTION REQUIRED: This notice must be preserved in all copies.
+ */
+
+const { spawnSync } = require('child_process');
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
+
+// Installation directory
+const SLM_DIR = path.join(os.homedir(), '.claude-memory');
+
+// Check if SuperLocalMemory is installed
+if (!fs.existsSync(SLM_DIR)) {
+    console.error('Error: SuperLocalMemory V2 not installed at ' + SLM_DIR);
+    console.error('Installation should have run automatically via postinstall script.');
+    console.error('Please run manually:');
+
+    if (os.platform() === 'win32') {
+        console.error('  powershell -ExecutionPolicy Bypass -File "' + path.join(__dirname, '..', 'install.ps1') + '"');
+    } else {
+        console.error('  bash "' + path.join(__dirname, '..', 'install.sh') + '"');
+    }
+    process.exit(1);
+}
+
+// Platform-specific slm script path
+let slmScript;
+if (os.platform() === 'win32') {
+    slmScript = path.join(SLM_DIR, 'bin', 'slm.cmd');
+    if (!fs.existsSync(slmScript)) {
+        slmScript = path.join(SLM_DIR, 'bin', 'slm');
+    }
+} else {
+    slmScript = path.join(SLM_DIR, 'bin', 'slm');
+}
+
+// Check if slm script exists
+if (!fs.existsSync(slmScript)) {
+    console.error('Error: SLM CLI not found at ' + slmScript);
+    console.error('Installation may be incomplete. Please run install script manually.');
+    process.exit(1);
+}
+
+// Pass all arguments to the real slm command
+const args = process.argv.slice(2);
+
+// Use spawnSync for secure execution (no shell injection risk)
+let result;
+if (os.platform() === 'win32') {
+    // Windows: Use cmd or PowerShell
+    result = spawnSync(slmScript, args, {
+        stdio: 'inherit',
+        shell: true
+    });
+} else {
+    // Mac/Linux: Direct bash execution
+    result = spawnSync('bash', [slmScript, ...args], {
+        stdio: 'inherit'
+    });
+}
+
+// Exit with the same code as the child process
+process.exit(result.status || 0);

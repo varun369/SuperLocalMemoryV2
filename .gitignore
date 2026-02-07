@@ -12,6 +12,75 @@ profiles.json
 # Personal Claude Code configuration - NOT for public distribution
 CLAUDE.md
 
+# ============================================================================
+# MARKETING & STRATEGY FILES (Keep in /plans directory only)
+# ============================================================================
+
+# Strategy documents
+*STRATEGY*.md
+*-STRATEGY.md
+SEO-*.md
+MARKETING-*.md
+
+# Content creation drafts
+DIRECTORY-SUBMISSIONS.md
+REDDIT-POSTS.md
+HACKER-NEWS-POST.md
+DEVTO-*.md
+BLOG-POSTS.md
+blog-posts/
+
+# Tracking documents
+FIXES-*.md
+STATUS-SUMMARY-*.md
+DEPLOYMENT-*.md
+
+# NPM publishing guides (internal workflow)
+NPM-PUBLISHING-GUIDE.md
+NPM-DEPLOYMENT-CHECKLIST.md
+NPM-README-UPDATE.md
+NPM-PACKAGE-SUMMARY.md
+NPM-FILES-REFERENCE.md
+test-npm-package.sh
+
+# DMG/EXE build documentation (move to plans)
+DMG-BUILD-*.md
+DMG-QUICK-REFERENCE.md
+INSTALLER-*.md
+BUILD-INSTALLER.md
+WINDOWS-INSTALLER-*.md
+README-WINDOWS-INSTALLER.md
+test-dmg.sh
+
+# Website source (keep in website/ directory only)
+website/DEPLOY-NOW.md
+website/DEPLOYMENT.md
+website/VERIFICATION-CHECKLIST.md
+
+# ============================================================================
+# BUILD ARTIFACTS (Generated files, not source)
+# ============================================================================
+
+# DMG artifacts
+build/
+*.dmg
+SuperLocalMemory-*.dmg
+dist/
+
+# EXE artifacts
+*.exe
+SuperLocalMemory-Setup-*.exe
+*.sha256
+*.md5
+
+# NPM artifacts
+*.tgz
+package/
+
+# ============================================================================
+# DEVELOPMENT FILES
+# ============================================================================
+
 # Python cache
 __pycache__/
 *.pyc
@@ -48,16 +117,20 @@ Thumbs.db
 test-output/
 test-results/
 
-# Internal planning documents - NOT for public distribution
+# ============================================================================
+# INTERNAL DOCS (Not for public repo)
+# ============================================================================
+
+# Internal planning documents
 docs/plans/
 plans/
 
-# Internal strategy documents - NOT for public distribution (personal strategy)
+# Internal strategy documents
 ATTRIBUTION-IMPLEMENTATION-REPORT.md
 docs/ATTRIBUTION-PROTECTION-SUMMARY.md
 docs/UNIVERSAL-STRATEGY-2026.md
 
-# Internal testing infrastructure - NOT for public distribution (testing strategy)
+# Internal testing infrastructure
 comprehensive_test.py
 test_mcp_server.py
 test_skills.py
@@ -66,7 +139,7 @@ RUN_ALL_TESTS.sh
 TEST_REPORT.md
 TESTING_COMPLETE.md
 
-# Internal task completion reports - NOT for public distribution
+# Internal task completion reports
 TASK-*.md
 TASKS-*.md
 TASK_*.md
@@ -74,21 +147,21 @@ COMPLETION*.md
 AGENT-*.md
 AGENT_*.md
 
-# Internal implementation summaries - NOT for public distribution
+# Internal implementation summaries
 IMPLEMENTATION-SUMMARY*.md
 MIGRATION*.md
 
-# Internal UAT reports - NOT for public distribution
+# Internal UAT reports
 UAT_*.md
 EDGE_CASE*.md
 
-# Internal testing modules - NOT for public distribution
+# Internal testing modules
 test_new_modules.py
 test_search_engine.py
 test_ui_server.py
 verify_v2_2_0.py
 
-# Internal quickstart docs (redundant with official docs) - NOT for public distribution
+# Internal quickstart docs (redundant with official docs)
 V2.2.0-QUICKSTART.md
 V2.2.0-README.txt
 UI_SERVER_QUICKSTART.md

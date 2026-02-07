@@ -1,0 +1,440 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Comparison - SuperLocalMemory V2 vs Mem0, Zep, Personal.AI"
+  description="Detailed comparison of SuperLocalMemory V2 with Mem0, Zep, Personal.AI, Khoj, and Letta. See why SuperLocalMemory is the best free, local-first alternative."
+>
+  <section style="padding: 4rem 0;">
+    <div class="container">
+      <h1 style="margin-bottom: 1rem;">vs Alternatives</h1>
+      <p style="font-size: 1.125rem; color: var(--color-text-secondary); margin-bottom: 3rem;">
+        Detailed comparison with Mem0, Zep, Personal.AI, and other memory systems.
+      </p>
+
+      <!-- Executive Summary -->
+      <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 2rem; margin-bottom: 3rem;">
+        <h2 style="margin-bottom: 1.5rem;">Executive Summary</h2>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Solution</th>
+                <th>Best For</th>
+                <th>Pricing</th>
+                <th>Privacy</th>
+                <th>Setup</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background: var(--color-bg-tertiary);">
+                <td><strong>SuperLocalMemory V2</strong></td>
+                <td>Developers who want full control</td>
+                <td><span class="badge badge-success">$0 forever</span></td>
+                <td><span class="badge badge-success">100% local</span></td>
+                <td><span class="badge badge-success">5 min</span></td>
+              </tr>
+              <tr>
+                <td><strong>Mem0</strong></td>
+                <td>Teams needing managed service</td>
+                <td>$99-999/mo</td>
+                <td>Cloud-only</td>
+                <td>10 min</td>
+              </tr>
+              <tr>
+                <td><strong>Zep</strong></td>
+                <td>Enterprise with budget</td>
+                <td>$50-500/mo</td>
+                <td>Cloud-only</td>
+                <td>15 min</td>
+              </tr>
+              <tr>
+                <td><strong>Personal.AI</strong></td>
+                <td>Non-technical users</td>
+                <td>$33/mo</td>
+                <td>Cloud-only</td>
+                <td>5 min</td>
+              </tr>
+              <tr>
+                <td><strong>Khoj</strong></td>
+                <td>Self-hosters</td>
+                <td>Self-hosted</td>
+                <td>Partial</td>
+                <td>30-60 min</td>
+              </tr>
+              <tr>
+                <td><strong>Letta/MemGPT</strong></td>
+                <td>Researchers</td>
+                <td>Self-hosted</td>
+                <td>Local</td>
+                <td>60+ min</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Feature Comparison -->
+      <h2 style="margin-bottom: 1.5rem;">Feature Comparison</h2>
+      <div style="overflow-x: auto; margin-bottom: 3rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>SuperLocalMemory V2</th>
+              <th>Mem0</th>
+              <th>Zep</th>
+              <th>Personal.AI</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Price</strong></td>
+              <td><span class="badge badge-success">$0 forever</span></td>
+              <td>Usage-based</td>
+              <td>$50/mo</td>
+              <td>$33/mo</td>
+            </tr>
+            <tr>
+              <td><strong>Local-First</strong></td>
+              <td><span class="badge badge-success">✅ 100%</span></td>
+              <td>❌ Cloud</td>
+              <td>❌ Cloud</td>
+              <td>❌ Cloud</td>
+            </tr>
+            <tr>
+              <td><strong>IDE Support</strong></td>
+              <td><span class="badge badge-success">✅ 11+ IDEs</span></td>
+              <td>Limited</td>
+              <td>1-2</td>
+              <td>None</td>
+            </tr>
+            <tr>
+              <td><strong>MCP Integration</strong></td>
+              <td><span class="badge badge-success">✅ Native</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+            </tr>
+            <tr>
+              <td><strong>Universal Skills</strong></td>
+              <td><span class="badge badge-success">✅ 6 skills</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+            </tr>
+            <tr>
+              <td><strong>Pattern Learning</strong></td>
+              <td><span class="badge badge-success">✅ Full</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>Partial</td>
+            </tr>
+            <tr>
+              <td><strong>Knowledge Graphs</strong></td>
+              <td><span class="badge badge-success">✅ Leiden</span></td>
+              <td>✅ Basic</td>
+              <td>✅ Neo4j</td>
+              <td>❌</td>
+            </tr>
+            <tr>
+              <td><strong>Multi-Profile</strong></td>
+              <td><span class="badge badge-success">✅ Unlimited</span></td>
+              <td>Per-user only</td>
+              <td>Per-user only</td>
+              <td>❌</td>
+            </tr>
+            <tr>
+              <td><strong>Compression</strong></td>
+              <td><span class="badge badge-success">✅ 3-tier</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+            </tr>
+            <tr>
+              <td><strong>Zero Setup</strong></td>
+              <td><span class="badge badge-success">✅ 5 min</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- IDE Integration -->
+      <h2 style="margin-bottom: 1.5rem;">IDE Integration</h2>
+      <div style="overflow-x: auto; margin-bottom: 3rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>IDE/Tool</th>
+              <th>SuperLocalMemory V2</th>
+              <th>Mem0</th>
+              <th>Zep</th>
+              <th>Khoj</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Cursor</strong></td>
+              <td><span class="badge badge-success">✅ MCP Native</span></td>
+              <td>⚠️ API only</td>
+              <td>❌</td>
+              <td>❌</td>
+            </tr>
+            <tr>
+              <td><strong>Windsurf</strong></td>
+              <td><span class="badge badge-success">✅ MCP Native</span></td>
+              <td>⚠️ API only</td>
+              <td>❌</td>
+              <td>❌</td>
+            </tr>
+            <tr>
+              <td><strong>Claude Desktop</strong></td>
+              <td><span class="badge badge-success">✅ MCP Native</span></td>
+              <td>⚠️ API only</td>
+              <td>❌</td>
+              <td>❌</td>
+            </tr>
+            <tr>
+              <td><strong>VS Code</strong></td>
+              <td><span class="badge badge-success">✅ MCP + Skills</span></td>
+              <td>⚠️ Extension</td>
+              <td>❌</td>
+              <td>✅ Extension</td>
+            </tr>
+            <tr>
+              <td><strong>ChatGPT</strong></td>
+              <td><span class="badge badge-success">✅ MCP</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+            </tr>
+            <tr>
+              <td><strong>Aider CLI</strong></td>
+              <td><span class="badge badge-success">✅ Smart Wrapper</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+            </tr>
+            <tr>
+              <td><strong>Universal CLI</strong></td>
+              <td><span class="badge badge-success">✅ Full</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>⚠️ Limited</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Privacy & Security -->
+      <h2 style="margin-bottom: 1.5rem;">Privacy & Security</h2>
+      <div style="overflow-x: auto; margin-bottom: 3rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>SuperLocalMemory V2</th>
+              <th>Mem0</th>
+              <th>Zep</th>
+              <th>Khoj</th>
+              <th>Letta</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>100% Local</strong></td>
+              <td><span class="badge badge-success">✅</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>⚠️ Partial</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td><strong>No External API</strong></td>
+              <td><span class="badge badge-success">✅</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>⚠️ Optional</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td><strong>No Telemetry</strong></td>
+              <td><span class="badge badge-success">✅</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>✅</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td><strong>Self-Hosted</strong></td>
+              <td><span class="badge badge-success">✅</span></td>
+              <td>⚠️ Enterprise only</td>
+              <td>⚠️ Enterprise only</td>
+              <td>✅</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td><strong>GDPR Compliant</strong></td>
+              <td><span class="badge badge-success">✅ Inherent</span></td>
+              <td>⚠️ Requires config</td>
+              <td>⚠️ Requires config</td>
+              <td>✅</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td><strong>HIPAA Ready</strong></td>
+              <td><span class="badge badge-success">✅</span></td>
+              <td>⚠️ Enterprise only</td>
+              <td>⚠️ Enterprise only</td>
+              <td>⚠️ DIY</td>
+              <td>⚠️ DIY</td>
+            </tr>
+            <tr>
+              <td><strong>Air-Gap Capable</strong></td>
+              <td><span class="badge badge-success">✅</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>⚠️ Partial</td>
+              <td>✅</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Performance -->
+      <h2 style="margin-bottom: 1.5rem;">Performance Benchmarks</h2>
+      <div style="overflow-x: auto; margin-bottom: 3rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>SuperLocalMemory V2</th>
+              <th>Mem0</th>
+              <th>Zep</th>
+              <th>Khoj</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Search Latency</strong></td>
+              <td><span class="badge badge-success">45-80ms</span></td>
+              <td>200-500ms</td>
+              <td>100-300ms</td>
+              <td>500-1000ms</td>
+            </tr>
+            <tr>
+              <td><strong>Save Latency</strong></td>
+              <td><span class="badge badge-success">&lt; 10ms</span></td>
+              <td>100-200ms</td>
+              <td>100-200ms</td>
+              <td>200-400ms</td>
+            </tr>
+            <tr>
+              <td><strong>Offline Capable</strong></td>
+              <td><span class="badge badge-success">✅ Yes</span></td>
+              <td>❌ No</td>
+              <td>❌ No</td>
+              <td>⚠️ Partial</td>
+            </tr>
+            <tr>
+              <td><strong>Scalability</strong></td>
+              <td>5,000+ memories (local)</td>
+              <td>Unlimited (cloud)</td>
+              <td>Unlimited (cloud)</td>
+              <td>10,000+</td>
+            </tr>
+            <tr>
+              <td><strong>RAM Usage</strong></td>
+              <td><span class="badge badge-success">&lt; 50MB</span></td>
+              <td>N/A (cloud)</td>
+              <td>N/A (cloud)</td>
+              <td>~200MB</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pricing -->
+      <h2 style="margin-bottom: 1.5rem;">5-Year Cost Comparison</h2>
+      <div class="grid grid-2" style="margin-bottom: 3rem;">
+        <div class="card" style="border: 2px solid var(--color-success);">
+          <h3 style="color: var(--color-success); margin-bottom: 1rem;">SuperLocalMemory V2</h3>
+          <div style="font-size: 2.5rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-success);">$0</div>
+          <p style="margin-bottom: 1rem;">Forever. No hidden costs.</p>
+          <ul>
+            <li>Unlimited memories</li>
+            <li>Unlimited profiles</li>
+            <li>All features included</li>
+            <li>No quotas or limits</li>
+            <li>No credit card required</li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom: 1rem;">
+            <h4 style="margin-bottom: 0.5rem;">Mem0</h4>
+            <div style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">$5,940 - $59,940</div>
+            <p style="font-size: 0.875rem; margin: 0;">$99-999/mo × 60 months</p>
+          </div>
+
+          <div class="card" style="margin-bottom: 1rem;">
+            <h4 style="margin-bottom: 0.5rem;">Zep</h4>
+            <div style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">$3,000 - $30,000</div>
+            <p style="font-size: 0.875rem; margin: 0;">$50-500/mo × 60 months</p>
+          </div>
+
+          <div class="card">
+            <h4 style="margin-bottom: 0.5rem;">Personal.AI</h4>
+            <div style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">$1,980</div>
+            <p style="font-size: 0.875rem; margin: 0;">$33/mo × 60 months</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Why Choose SuperLocalMemory -->
+      <div style="background: var(--color-bg-secondary); border: 2px solid var(--color-accent); border-radius: var(--border-radius); padding: 2rem; margin-bottom: 3rem;">
+        <h2 style="margin-bottom: 1.5rem;">Why Choose SuperLocalMemory V2?</h2>
+        <div class="grid grid-2" style="gap: 1.5rem;">
+          <div>
+            <h3 style="color: var(--color-accent); margin-bottom: 1rem;">✅ You Should Choose It If:</h3>
+            <ul>
+              <li>You value <strong>privacy and data ownership</strong></li>
+              <li>You want <strong>zero ongoing costs</strong></li>
+              <li>You need <strong>universal IDE support</strong> (Cursor, Windsurf, Claude, VS Code, etc.)</li>
+              <li>You prefer <strong>local-first architecture</strong></li>
+              <li>You want <strong>pattern learning</strong> and identity profiles</li>
+              <li>You need <strong>GDPR/HIPAA compliance</strong></li>
+              <li>You work in <strong>air-gapped environments</strong></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 style="color: var(--color-text-secondary); margin-bottom: 1rem;">❌ Consider Alternatives If:</h3>
+            <ul>
+              <li>You need <strong>unlimited cloud storage</strong> (10,000+ memories)</li>
+              <li>You want a <strong>managed service</strong> with no setup</li>
+              <li>You need <strong>team collaboration</strong> features</li>
+              <li>You require <strong>enterprise SLA guarantees</strong></li>
+              <li>You prefer <strong>commercial support</strong> contracts</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div style="text-align: center; padding: 2rem; background: linear-gradient(135deg, var(--color-accent) 0%, #ec4899 100%); border-radius: var(--border-radius);">
+        <h2 style="color: white; margin-bottom: 1rem;">Ready to Switch?</h2>
+        <p style="color: white; margin-bottom: 1.5rem; opacity: 0.9;">
+          Install SuperLocalMemory V2 in 5 minutes. Free forever, 100% local, works everywhere.
+        </p>
+        <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener" class="btn" style="background: white; color: var(--color-accent);">
+          ⭐ Star on GitHub & Get Started
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
