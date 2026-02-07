@@ -507,13 +507,25 @@ class MemoryStoreV2:
 
     def _row_to_dict(self, row: tuple, score: float, match_type: str) -> Dict[str, Any]:
         """Convert database row to memory dictionary."""
+        # Backward compatibility: Handle both JSON array and comma-separated string tags
+        tags_raw = row[5]
+        if tags_raw:
+            try:
+                # Try parsing as JSON (v2.1.0+ format)
+                tags = json.loads(tags_raw)
+            except (json.JSONDecodeError, TypeError):
+                # Fall back to comma-separated string (v2.0.0 format)
+                tags = [t.strip() for t in str(tags_raw).split(',') if t.strip()]
+        else:
+            tags = []
+
         return {
             'id': row[0],
             'content': row[1],
             'summary': row[2],
             'project_path': row[3],
             'project_name': row[4],
-            'tags': json.loads(row[5]) if row[5] else [],
+            'tags': tags,
             'category': row[6],
             'parent_id': row[7],
             'tree_path': row[8],

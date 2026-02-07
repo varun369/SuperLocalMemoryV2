@@ -314,6 +314,132 @@ See [Multi-Profile Workflows](Multi-Profile-Workflows) for advanced usage.
 
 ---
 
+## Step 5: Explore Dashboard (NEW v2.2.0)
+
+**NEW:** SuperLocalMemory V2.2.0 includes an interactive web dashboard for visual exploration.
+
+### Launch Dashboard
+
+```bash
+# Start the visualization dashboard
+python ~/.claude-memory/dashboard.py
+
+# Opens at: http://localhost:8050
+```
+
+**Expected output:**
+```
+╔══════════════════════════════════════════════════════════════╗
+║  SuperLocalMemory V2.2.0 - Visualization Dashboard           ║
+╚══════════════════════════════════════════════════════════════╝
+
+✓ Database loaded: 3 memories
+✓ Knowledge graph loaded: 1 cluster, 15 entities
+✓ Pattern data loaded: 2 learned patterns
+
+🌐 Dashboard running at: http://localhost:8050
+```
+
+### Explore Four Views
+
+**1. Timeline View**
+```
+Navigate to: Timeline tab
+See: All 3 memories chronologically
+Features:
+  - Color-coded by importance
+  - Cluster badges
+  - Click to expand
+  - Filter by date range
+```
+
+**2. Search Explorer**
+```
+Navigate to: Search tab
+Type: "FastAPI"
+See: Real-time results with score bars
+Features:
+  - Live search (updates as you type)
+  - Visual relevance scores (0-100%)
+  - Strategy toggle (semantic/exact/graph/hybrid)
+  - Advanced filters
+```
+
+**3. Graph Visualization**
+```
+Navigate to: Graph tab
+See: Interactive knowledge graph
+Features:
+  - Zoom and pan
+  - Click clusters to explore
+  - Hover for details
+  - Drag nodes to rearrange
+```
+
+**4. Statistics Dashboard**
+```
+Navigate to: Statistics tab
+See: Memory trends and analytics
+Features:
+  - Memory trends (line chart)
+  - Tag cloud
+  - Importance distribution
+  - Pattern confidence scores
+```
+
+### Dashboard Features
+
+| Feature | Benefit |
+|---------|---------|
+| **Real-time updates** | Changes via CLI appear immediately |
+| **Dark mode** | Toggle in top-right corner |
+| **Keyboard shortcuts** | `Ctrl+1/2/3/4` for views, `Ctrl+F` for search |
+| **Responsive design** | Works on desktop, tablet, mobile |
+| **Export options** | Download results as JSON/CSV/PDF |
+
+### Install Dashboard Dependencies (If Needed)
+
+```bash
+# If dashboard fails to start
+pip install dash plotly pandas networkx
+
+# Or from requirements
+pip install -r ~/.claude-memory/requirements-dashboard.txt
+```
+
+### Use Cases with Dashboard
+
+**Daily Context Refresh:**
+```
+1. Open dashboard (http://localhost:8050)
+2. Timeline view → Filter: Last 7 days
+3. Scan memories chronologically
+4. Export as text for AI assistant
+Time: 2 minutes
+```
+
+**Discover Patterns:**
+```
+1. Statistics tab
+2. View tag cloud
+3. See most frequent topics
+4. Analyze pattern confidence
+Time: 3 minutes
+```
+
+**Explore Relationships:**
+```
+1. Graph tab
+2. Click "Authentication" cluster
+3. See all related memories
+4. Discover connections
+Time: 5 minutes
+```
+
+**[[Complete Dashboard Guide →|Visualization-Dashboard]]**
+
+---
+
 ## Next Steps
 
 Congratulations! You've completed the quick start tutorial.

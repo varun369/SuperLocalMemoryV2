@@ -440,54 +440,97 @@ echo "  slm status"
 echo "  slm remember 'My first memory'"
 echo "  slm recall 'first'"
 echo ""
-# Optional: Offer to install UI dependencies
+# Optional: Offer to install optional features
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║  Optional: Web UI & Advanced Features                        ║"
+echo "║  Optional Features Available                                  ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
-echo "SuperLocalMemory V2 includes optional advanced features:"
-echo "  • Web UI with graph visualization (FastAPI + D3.js)"
-echo "  • Knowledge Graph (GraphRAG)"
-echo "  • Pattern Learning (xMemory-style)"
-echo "  • Multi-tier compression"
+echo "SuperLocalMemory V2.2.0 includes optional features:"
 echo ""
-echo "Install optional dependencies now? (y/N)"
-read -r INSTALL_OPTIONAL
+echo "  1) Advanced Search (~1.5GB, 5-10 min)"
+echo "     • Semantic search with sentence transformers"
+echo "     • Vector similarity with HNSWLIB"
+echo "     • Better search quality"
+echo ""
+echo "  2) Web Dashboard (~50MB, 1-2 min)"
+echo "     • Graph visualization (D3.js)"
+echo "     • API server (FastAPI)"
+echo "     • Browser-based interface"
+echo ""
+echo "  3) Full Package (~1.5GB, 5-10 min)"
+echo "     • Everything: Search + Dashboard"
+echo ""
+echo "  N) Skip (install later)"
+echo ""
+echo -n "Choose option [1/2/3/N]: "
+read -r INSTALL_CHOICE
 
-if [[ "$INSTALL_OPTIONAL" =~ ^[Yy]$ ]]; then
-    echo ""
-    echo "Installing optional dependencies..."
-
-    # Detect pip installation method
-    if pip3 install --help | grep -q "break-system-packages"; then
-        PIP_FLAGS="--break-system-packages"
-    else
-        PIP_FLAGS=""
-    fi
-
-    echo "  Installing: scikit-learn, numpy, python-igraph, leidenalg, fastapi, uvicorn..."
-    pip3 install $PIP_FLAGS scikit-learn numpy python-igraph leidenalg fastapi uvicorn
-
-    if [ $? -eq 0 ]; then
-        echo "✓ Optional dependencies installed successfully"
-        echo ""
-        echo "Start Web UI:"
-        echo "  python3 ~/.claude-memory/api_server.py"
-        echo "  Then open: http://127.0.0.1:8000"
-    else
-        echo "⚠️  Installation failed. You can install manually later:"
-        echo "  pip3 install scikit-learn numpy python-igraph leidenalg fastapi uvicorn"
-    fi
+# Detect pip installation method
+if pip3 install --help | grep -q "break-system-packages"; then
+    PIP_FLAGS="--break-system-packages"
 else
-    echo ""
-    echo "Skipping optional dependencies."
-    echo ""
-    echo "To install later:"
-    echo "  For advanced features: pip3 install scikit-learn numpy python-igraph leidenalg"
-    echo "  For Web UI: pip3 install fastapi uvicorn"
-    echo "  Start UI: python3 ~/.claude-memory/api_server.py"
+    PIP_FLAGS=""
 fi
+
+case "$INSTALL_CHOICE" in
+    1)
+        echo ""
+        echo "Installing Advanced Search features..."
+        echo "⏳ Downloading ~1.5GB (ML models)..."
+        if pip3 install $PIP_FLAGS -r "${REPO_DIR}/requirements-search.txt"; then
+            echo "✓ Advanced Search installed successfully"
+            echo ""
+            echo "Search now uses semantic embeddings for better quality!"
+        else
+            echo "⚠️  Installation failed. Install manually later:"
+            echo "  pip3 install -r ${REPO_DIR}/requirements-search.txt"
+        fi
+        ;;
+    2)
+        echo ""
+        echo "Installing Web Dashboard..."
+        echo "⏳ Downloading ~50MB..."
+        if pip3 install $PIP_FLAGS -r "${REPO_DIR}/requirements-ui.txt"; then
+            echo "✓ Web Dashboard installed successfully"
+            echo ""
+            echo "Start Web UI:"
+            echo "  python3 ~/.claude-memory/api_server.py"
+            echo "  Then open: http://127.0.0.1:8000"
+        else
+            echo "⚠️  Installation failed. Install manually later:"
+            echo "  pip3 install -r ${REPO_DIR}/requirements-ui.txt"
+        fi
+        ;;
+    3)
+        echo ""
+        echo "Installing Full Package (Search + Dashboard)..."
+        echo "⏳ Downloading ~1.5GB (ML models + web server)..."
+        if pip3 install $PIP_FLAGS -r "${REPO_DIR}/requirements-full.txt"; then
+            echo "✓ Full package installed successfully"
+            echo ""
+            echo "All features enabled!"
+            echo "Start Web UI:"
+            echo "  python3 ~/.claude-memory/api_server.py"
+            echo "  Then open: http://127.0.0.1:8000"
+        else
+            echo "⚠️  Installation failed. Install manually later:"
+            echo "  pip3 install -r ${REPO_DIR}/requirements-full.txt"
+        fi
+        ;;
+    [Nn]|*)
+        echo ""
+        echo "Skipping optional features."
+        echo ""
+        echo "To install later:"
+        echo "  Advanced Search: pip3 install -r ${REPO_DIR}/requirements-search.txt"
+        echo "  Web Dashboard:   pip3 install -r ${REPO_DIR}/requirements-ui.txt"
+        echo "  Full Package:    pip3 install -r ${REPO_DIR}/requirements-full.txt"
+        echo ""
+        echo "Start Web UI (after installing):"
+        echo "  python3 ~/.claude-memory/api_server.py"
+        ;;
+esac
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"

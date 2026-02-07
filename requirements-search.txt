@@ -1,0 +1,24 @@
+# SuperLocalMemory V2.2.0 - Advanced Search Only
+# ============================================================================
+# This file includes ONLY advanced semantic search dependencies
+# Use this if you want better search quality without the web UI
+#
+# Download size: ~1.5GB (includes ML models)
+# Installation time: 5-10 minutes
+#
+# Install with: pip3 install -r requirements-search.txt
+# ============================================================================
+
+# Scikit-learn - TF-IDF vectorization and semantic search
+# Required for BM25 and hybrid search components
+scikit-learn>=1.0.0
+
+# NumPy - Numerical computing (dependency for scikit-learn)
+numpy>=1.21.0
+
+# Sentence Transformers - Semantic embeddings (optional)
+# Models: all-MiniLM-L6-v2 (384-dim, 80MB) downloaded on first use
+sentence-transformers>=2.2.0
+
+# HNSWLIB - Fast approximate nearest neighbor search (optional)
+hnswlib>=0.7.0

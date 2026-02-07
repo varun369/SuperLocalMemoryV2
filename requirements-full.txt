@@ -1,0 +1,28 @@
+# SuperLocalMemory V2.2.0 - Full Optional Dependencies
+# ============================================================================
+# This file includes ALL optional features:
+#   - Advanced semantic search with sentence transformers
+#   - Vector similarity with HNSWLIB
+#   - Web dashboard with FastAPI
+#   - API server with Uvicorn
+#
+# Download size: ~1.5GB (includes ML models)
+# Installation time: 5-10 minutes
+#
+# Install with: pip3 install -r requirements-full.txt
+# ============================================================================
+
+# Advanced Search - Sentence Transformers (~500MB models)
+sentence-transformers>=2.2.0
+
+# Vector Search - High-performance ANN
+hnswlib>=0.7.0
+
+# Web Dashboard - FastAPI Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.6
+
+# Performance - Optimized caching and serialization
+diskcache>=5.6.0
+orjson>=3.9.0

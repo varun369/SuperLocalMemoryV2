@@ -100,6 +100,84 @@ The installer automatically detects and configures:
 
 ---
 
+## 🎨 Start Visualization Dashboard (NEW v2.2.0)
+
+### Quick Start
+
+```bash
+# Launch the interactive web dashboard
+python ~/.claude-memory/dashboard.py
+
+# Opens at http://localhost:8050
+```
+
+**Expected output:**
+```
+╔══════════════════════════════════════════════════════════════╗
+║  SuperLocalMemory V2.2.0 - Visualization Dashboard           ║
+╚══════════════════════════════════════════════════════════════╝
+
+✓ Database loaded: 523 memories
+✓ Knowledge graph loaded: 8 clusters, 312 entities
+✓ Pattern data loaded: 24 learned patterns
+
+🌐 Dashboard running at: http://localhost:8050
+🔧 Press Ctrl+C to stop server
+```
+
+### Install Dashboard Dependencies
+
+**If dashboard fails to start**, install visualization dependencies:
+
+```bash
+# Install required packages
+pip install dash plotly pandas networkx
+
+# Or install from requirements file
+pip install -r ~/.claude-memory/requirements-dashboard.txt
+```
+
+### Dashboard Features
+
+| Feature | Description |
+|---------|-------------|
+| **📈 Timeline View** | See all memories chronologically with importance color-coding |
+| **🔍 Search Explorer** | Real-time semantic search with visual score bars |
+| **🕸️ Graph Visualization** | Interactive knowledge graph with clusters |
+| **📊 Statistics Dashboard** | Memory trends, tag clouds, pattern insights |
+| **🎯 Advanced Filters** | Filter by tags, importance, date range, clusters |
+| **🌓 Dark Mode** | Eye-friendly theme for extended use |
+
+### Configuration
+
+**Custom port:**
+```bash
+python ~/.claude-memory/dashboard.py --port 8080
+```
+
+**Specific profile:**
+```bash
+python ~/.claude-memory/dashboard.py --profile work
+```
+
+**Debug mode:**
+```bash
+python ~/.claude-memory/dashboard.py --debug
+```
+
+### Performance
+
+| Dataset Size | Dashboard Load | Timeline Render | Graph Draw |
+|--------------|----------------|-----------------|------------|
+| 100 memories | < 100ms | < 100ms | < 200ms |
+| 500 memories | < 300ms | < 200ms | < 500ms |
+| 1,000 memories | < 500ms | < 300ms | < 1s |
+| 5,000 memories | < 2s | < 1s | < 3s |
+
+**[[Complete Dashboard Guide →|Visualization-Dashboard]]**
+
+---
+
 ## 📁 Installation Directory
 
 Everything is installed to `~/.claude-memory/`:
@@ -270,17 +348,23 @@ slm status
 
 ---
 
-## 🆕 What's New in v2.1.0?
+## 🆕 What's New in v2.2.0?
 
-**Universal Integration:**
+**Visualization & Search Enhancements:**
+- ✅ **Interactive Web Dashboard** - Timeline, search, graph visualization, statistics
+- ✅ **Hybrid Search** - Combines semantic, FTS5, and graph for maximum accuracy
+- ✅ **Advanced Filters** - Multi-dimensional filtering across all views
+- ✅ **Dark Mode** - Eye-friendly theme for extended use
+- ✅ **Real-time Analytics** - Memory trends, tag clouds, pattern insights
+
+**v2.1.0 Features (Still Included):**
 - ✅ MCP server for 11+ IDEs
 - ✅ 6 universal skills
 - ✅ Universal CLI (`slm` command)
 - ✅ Auto-detection and configuration
-- ✅ Zero manual setup for major IDEs
 
 **Backward Compatible:**
-- ✅ All v2.0 commands still work
+- ✅ All v2.1 and v2.0 commands still work
 - ✅ Existing memories preserved
 - ✅ No breaking changes
 
@@ -288,11 +372,12 @@ slm status
 
 ## ⏭️ Next Steps
 
-1. [[MCP-Integration]] — Learn about IDE integration
-2. [[Universal-Skills]] — Master the 6 skills
-3. [[Quick-Start-Tutorial]] — Create your first memory
-4. [[Universal-Architecture]] — Understand the system
-5. [[CLI-Cheatsheet]] — Essential commands
+1. [[Visualization-Dashboard]] — Explore the interactive web UI (NEW v2.2.0)
+2. [[MCP-Integration]] — Learn about IDE integration
+3. [[Universal-Skills]] — Master the 6 skills
+4. [[Quick-Start-Tutorial]] — Create your first memory
+5. [[Universal-Architecture]] — Understand the 9-layer system
+6. [[CLI-Cheatsheet]] — Essential commands
 
 ---
 

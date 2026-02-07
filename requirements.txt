@@ -1,0 +1,10 @@
+# SuperLocalMemory V2 - Core Requirements
+# ============================================================================
+# SuperLocalMemory V2.2.0 has ZERO core dependencies
+# All functionality works with Python 3.8+ standard library only
+#
+# For optional advanced features, see:
+#   - requirements-full.txt     (all optional features)
+#   - requirements-ui.txt       (web dashboard only)
+#   - requirements-search.txt   (advanced search only)
+# ============================================================================
