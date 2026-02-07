@@ -858,10 +858,10 @@ async def get_patterns():
         conn.row_factory = dict_factory
         cursor = conn.cursor()
 
-        # Check if learned_patterns table exists
+        # Check if identity_patterns table exists
         cursor.execute("""
             SELECT name FROM sqlite_master
-            WHERE type='table' AND name='learned_patterns'
+            WHERE type='table' AND name='identity_patterns'
         """)
 
         if not cursor.fetchone():
@@ -875,9 +875,8 @@ async def get_patterns():
         cursor.execute("""
             SELECT
                 pattern_type, key, value, confidence,
-                evidence_count, last_updated
-            FROM learned_patterns
-            WHERE is_active = 1
+                evidence_count, updated_at as last_updated
+            FROM identity_patterns
             ORDER BY confidence DESC, evidence_count DESC
         """)
         patterns = cursor.fetchall()

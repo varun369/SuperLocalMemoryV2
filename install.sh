@@ -159,6 +159,56 @@ print('Database ready')
 " && echo "✓ Database initialized (fallback)"
 fi
 
+# Initialize knowledge graph and pattern learning
+echo ""
+echo "Initializing advanced features..."
+
+# Add sample memories if database is empty (for first-time users)
+MEMORY_COUNT=$(python3 -c "
+import sqlite3
+from pathlib import Path
+db_path = Path.home() / '.claude-memory' / 'memory.db'
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
+cursor.execute('SELECT COUNT(*) FROM memories')
+print(cursor.fetchone()[0])
+conn.close()
+" 2>/dev/null || echo "0")
+
+if [ "$MEMORY_COUNT" -eq 0 ]; then
+    echo "○ Adding sample memories for demonstration..."
+    python3 "${INSTALL_DIR}/memory_store_v2.py" add "SuperLocalMemory V2 is a local-first, privacy-focused memory system for AI assistants. All data stays on your machine." --tags "supermemory,system,intro" --importance 8 > /dev/null 2>&1 || true
+    python3 "${INSTALL_DIR}/memory_store_v2.py" add "Knowledge graph uses TF-IDF for entity extraction and Leiden clustering for community detection." --tags "architecture,graph" --importance 7 > /dev/null 2>&1 || true
+    python3 "${INSTALL_DIR}/memory_store_v2.py" add "Pattern learning analyzes your coding preferences, style, and terminology to provide better context." --tags "architecture,patterns" --importance 7 > /dev/null 2>&1 || true
+fi
+
+# Build knowledge graph (Layer 3)
+echo "○ Building knowledge graph..."
+if python3 "${INSTALL_DIR}/graph_engine.py" build > /dev/null 2>&1; then
+    echo "  ✓ Knowledge graph initialized"
+else
+    echo "  ⚠️  Graph build skipped (dependencies not installed)"
+fi
+
+# Run pattern learning (Layer 4)
+echo "○ Learning patterns..."
+if python3 "${INSTALL_DIR}/pattern_learner.py" update > /dev/null 2>&1; then
+    PATTERN_COUNT=$(python3 -c "
+import sqlite3
+from pathlib import Path
+db_path = Path.home() / '.claude-memory' / 'memory.db'
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
+cursor.execute('SELECT COUNT(*) FROM identity_patterns')
+count = cursor.fetchone()[0]
+conn.close()
+print(count)
+" 2>/dev/null || echo "0")
+    echo "  ✓ Pattern learning complete ($PATTERN_COUNT patterns found)"
+else
+    echo "  ⚠️  Pattern learning skipped (dependencies not installed)"
+fi
+
 # Check optional dependencies
 echo ""
 echo "Checking optional dependencies..."
