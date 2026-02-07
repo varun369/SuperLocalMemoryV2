@@ -30,7 +30,8 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 | Guide | Description |
 |-------|-------------|
 | [[Installation]] | 5-minute setup for Mac, Linux, Windows |
-| [Quick Start](https://github.com/varun369/SuperLocalMemoryV2#-quick-start) | Your first memory in 2 minutes |
+| [[Quick-Start-Tutorial]] | Your first memory in 2 minutes |
+| [[CLI-Cheatsheet]] | Copy-paste command reference |
 
 ### Core Concepts
 | Guide | Description |
@@ -38,21 +39,32 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 | [[Universal-Architecture]] | 7-layer universal architecture with MCP integration |
 | [[MCP-Integration]] | Model Context Protocol support for 11+ IDEs |
 | [[Universal-Skills]] | 6 agent skills and slash-commands system |
+| [[Knowledge-Graph-Guide]] | Auto-discovery of relationships |
+| [[Pattern-Learning-Explained]] | How it learns your coding style |
+| [[Multi-Profile-Workflows]] | Separate contexts for work/personal/clients |
 
 ### Reference
 | Guide | Description |
 |-------|-------------|
-| [CLI Commands](https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/CLI-COMMANDS-REFERENCE.md) | Complete command documentation |
+| [[CLI-Cheatsheet]] | Quick command reference |
+| [[Python-API]] | Programmatic access |
+| [[Configuration]] | Customization options |
 | [CHANGELOG](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) | Version history and release notes |
-| [Troubleshooting](https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/MCP-TROUBLESHOOTING.md) | Common issues and solutions |
+
+### Comparisons
+| Guide | Description |
+|-------|-------------|
+| [[Comparison-Deep-Dive]] | Detailed comparison with Mem0, Zep, Personal.AI |
+| [[Why-Local-Matters]] | Privacy, GDPR, and local-first benefits |
 
 ### Community
 | Guide | Description |
 |-------|-------------|
 | [[FAQ]] | Frequently asked questions |
+| [[Roadmap]] | Version history and planned features |
+| [Troubleshooting](https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/MCP-TROUBLESHOOTING.md) | Common issues and solutions |
 | [Contributing](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CONTRIBUTING.md) | How to contribute |
 | [Issues](https://github.com/varun369/SuperLocalMemoryV2/issues) | Report bugs or request features |
-| [Discussions](https://github.com/varun369/SuperLocalMemoryV2/discussions) | Community discussions |
 
 ---
 
