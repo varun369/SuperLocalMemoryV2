@@ -1,0 +1,184 @@
+#!/bin/bash
+# slm - Universal CLI wrapper for SuperLocalMemory V2
+# Simple commands that work in any terminal or script
+#
+# Copyright (c) 2026 Varun Pratap Bhardwaj
+# Licensed under MIT License
+#
+# This is a CONVENIENCE wrapper. Original commands still work:
+#   superlocalmemoryv2:remember, superlocalmemoryv2:recall, etc.
+
+set -e
+
+SLM_DIR="${HOME}/.claude-memory"
+
+# Check if SuperLocalMemory is installed
+if [ ! -d "$SLM_DIR" ]; then
+    echo "Error: SuperLocalMemory V2 not installed at $SLM_DIR"
+    echo "Please run: ./install.sh"
+    exit 1
+fi
+
+# Main command dispatcher
+case "$1" in
+    remember|save|store)
+        shift
+        # Calls existing command - no duplicate logic
+        "$SLM_DIR/bin/superlocalmemoryv2:remember" "$@"
+        ;;
+
+    recall|search|find)
+        shift
+        # Calls existing command - no duplicate logic
+        "$SLM_DIR/bin/superlocalmemoryv2:recall" "$@"
+        ;;
+
+    list|ls)
+        shift
+        # Calls existing command - no duplicate logic
+        "$SLM_DIR/bin/superlocalmemoryv2:list" "$@"
+        ;;
+
+    status|info|stats)
+        # Calls existing command - no duplicate logic
+        "$SLM_DIR/bin/superlocalmemoryv2:status"
+        ;;
+
+    profile)
+        shift
+        # Calls existing command - no duplicate logic
+        "$SLM_DIR/bin/superlocalmemoryv2:profile" "$@"
+        ;;
+
+    reset)
+        shift
+        # Calls existing command - no duplicate logic
+        "$SLM_DIR/bin/superlocalmemoryv2:reset" "$@"
+        ;;
+
+    context)
+        # NEW: Get context for current directory/project
+        project=$(basename "$PWD")
+        "$SLM_DIR/bin/superlocalmemoryv2:recall" "$project" --limit 5
+        ;;
+
+    graph)
+        shift
+        subcommand="$1"
+        shift
+        case "$subcommand" in
+            build)
+                python3 "$SLM_DIR/graph_engine.py" build "$@"
+                ;;
+            stats)
+                python3 "$SLM_DIR/graph_engine.py" stats "$@"
+                ;;
+            *)
+                echo "Usage: slm graph {build|stats}"
+                exit 1
+                ;;
+        esac
+        ;;
+
+    patterns)
+        shift
+        subcommand="$1"
+        shift
+        case "$subcommand" in
+            update)
+                python3 "$SLM_DIR/pattern_learner.py" update "$@"
+                ;;
+            list)
+                python3 "$SLM_DIR/pattern_learner.py" list "$@"
+                ;;
+            context)
+                python3 "$SLM_DIR/pattern_learner.py" context "$@"
+                ;;
+            *)
+                echo "Usage: slm patterns {update|list|context}"
+                exit 1
+                ;;
+        esac
+        ;;
+
+    help|--help|-h)
+        cat <<EOF
+SuperLocalMemory V2 - Universal CLI
+
+SIMPLE COMMANDS:
+  slm remember <content>    Save to memory
+  slm recall <query>        Search memories
+  slm list [N]             List N recent memories (default 10)
+  slm status               System status and statistics
+  slm context              Project context for current directory
+
+PROFILE MANAGEMENT:
+  slm profile list         List all profiles
+  slm profile create <name> Create new profile
+  slm profile switch <name> Switch to profile
+  slm profile delete <name> Delete profile
+  slm profile current      Show current profile
+
+KNOWLEDGE GRAPH:
+  slm graph build          Build/rebuild knowledge graph
+  slm graph stats          Show graph statistics
+
+PATTERN LEARNING:
+  slm patterns update      Learn patterns from memories
+  slm patterns list [threshold]  List learned patterns
+  slm patterns context [threshold]  Get coding identity context
+
+ADVANCED:
+  slm reset soft           Soft reset (clear memories)
+  slm reset hard --confirm Hard reset (nuclear option)
+
+ORIGINAL COMMANDS (still work):
+  superlocalmemoryv2:remember <content>
+  superlocalmemoryv2:recall <query>
+  superlocalmemoryv2:list [N]
+  superlocalmemoryv2:status
+  superlocalmemoryv2:profile <command>
+  superlocalmemoryv2:reset <type>
+
+EXAMPLES:
+  slm remember "Use FastAPI for REST APIs" --tags python,backend
+  slm recall "FastAPI patterns" --limit 5
+  slm context
+  slm graph build
+  slm patterns update
+  slm status
+
+DOCUMENTATION:
+  README: https://github.com/varun369/SuperLocalMemoryV2
+  Docs: ~/.claude-memory/docs/
+
+VERSION: 2.1.0-universal
+EOF
+        ;;
+
+    version|--version|-v)
+        echo "SuperLocalMemory V2 - Universal CLI"
+        echo "Version: 2.1.0-universal"
+        echo "Database: $SLM_DIR/memory.db"
+        ;;
+
+    *)
+        echo "SuperLocalMemory V2 - Universal CLI"
+        echo ""
+        echo "Usage: slm <command> [args]"
+        echo ""
+        echo "Commands:"
+        echo "  remember  - Save to memory"
+        echo "  recall    - Search memories"
+        echo "  list      - List recent memories"
+        echo "  status    - System status"
+        echo "  context   - Project context"
+        echo "  profile   - Manage profiles"
+        echo "  graph     - Knowledge graph operations"
+        echo "  patterns  - Pattern learning"
+        echo "  help      - Show detailed help"
+        echo ""
+        echo "Run 'slm help' for more information"
+        exit 1
+        ;;
+esac

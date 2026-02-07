@@ -9,6 +9,9 @@ cold-storage/
 jobs/
 profiles.json
 
+# Personal Claude Code configuration - NOT for public distribution
+CLAUDE.md
+
 # Python cache
 __pycache__/
 *.pyc
@@ -47,3 +50,4 @@ test-results/
 
 # Internal planning documents - NOT for public distribution
 docs/plans/
+plans/

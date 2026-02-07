@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "superlocalmemory-v2": {
+      "command": "python3",
+      "args": [
+        "{{INSTALL_DIR}}/mcp_server.py"
+      ],
+      "description": "SuperLocalMemory V2 - Local memory system with knowledge graphs and pattern learning"
+    }
+  }
+}

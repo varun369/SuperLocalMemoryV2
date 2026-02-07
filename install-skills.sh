@@ -155,6 +155,87 @@ done
 
 echo ""
 echo "=========================================="
+echo "Universal Skills Configuration"
+echo "=========================================="
+echo ""
+echo "Detecting other tools that support skills/commands..."
+echo ""
+
+# Detect and configure Continue.dev
+if [ -d "$HOME/.continue" ]; then
+    echo "✓ Continue.dev detected"
+
+    CONTINUE_CONFIG="$HOME/.continue/config.yaml"
+
+    if [ -f "$REPO_DIR/configs/continue-skills.yaml" ]; then
+        mkdir -p "$HOME/.continue"
+
+        if [ -f "$CONTINUE_CONFIG" ]; then
+            # Backup existing config
+            cp "$CONTINUE_CONFIG" "$CONTINUE_CONFIG.backup.$(date +%Y%m%d-%H%M%S)"
+            echo "  ✓ Backed up existing Continue.dev config"
+
+            # Check if our skills already added
+            if grep -q "slm-remember" "$CONTINUE_CONFIG" 2>/dev/null; then
+                echo "  ○ SuperLocalMemory skills already configured"
+            else
+                echo "  ○ Config exists - manual merge recommended"
+                echo "    See: $REPO_DIR/configs/continue-skills.yaml"
+                echo "    Append slash commands to: $CONTINUE_CONFIG"
+            fi
+        else
+            # Create new config with skills
+            cp "$REPO_DIR/configs/continue-skills.yaml" "$CONTINUE_CONFIG"
+            echo "  ✓ Continue.dev slash commands configured"
+            echo "    Available: /slm-remember, /slm-recall, /slm-list, /slm-status"
+        fi
+    fi
+fi
+
+# Detect and configure Cody
+if [ -d "$HOME/.vscode/extensions" ] && ls "$HOME/.vscode/extensions" 2>/dev/null | grep -q "sourcegraph.cody"; then
+    echo "✓ Cody (VS Code) detected"
+
+    if [ -f "$REPO_DIR/configs/cody-commands.json" ]; then
+        VSCODE_SETTINGS="$HOME/.vscode/settings.json"
+        mkdir -p "$HOME/.vscode"
+
+        if [ -f "$VSCODE_SETTINGS" ]; then
+            # Backup existing settings
+            cp "$VSCODE_SETTINGS" "$VSCODE_SETTINGS.backup.$(date +%Y%m%d-%H%M%S)"
+            echo "  ✓ Backed up existing VS Code settings"
+
+            # Check if our commands already added
+            if grep -q "slm-remember" "$VSCODE_SETTINGS" 2>/dev/null; then
+                echo "  ○ SuperLocalMemory commands already configured"
+            else
+                echo "  ○ Settings exist - manual merge recommended"
+                echo "    See: $REPO_DIR/configs/cody-commands.json"
+                echo "    Add custom commands to: $VSCODE_SETTINGS"
+            fi
+        else
+            # Create new settings with commands
+            cp "$REPO_DIR/configs/cody-commands.json" "$VSCODE_SETTINGS"
+            echo "  ✓ Cody custom commands configured"
+            echo "    Available: /slm-remember, /slm-recall, /slm-context"
+        fi
+    fi
+fi
+
+# Summary
+echo ""
+if [ -d "$HOME/.continue" ] || ([ -d "$HOME/.vscode/extensions" ] && ls "$HOME/.vscode/extensions" 2>/dev/null | grep -q "sourcegraph.cody"); then
+    echo "Universal integration configured! Your skills work in:"
+    [ -d "$HOME/.continue" ] && echo "  • Continue.dev (VS Code)"
+    ([ -d "$HOME/.vscode/extensions" ] && ls "$HOME/.vscode/extensions" 2>/dev/null | grep -q "sourcegraph.cody") && echo "  • Cody (VS Code)"
+    echo "  • Claude CLI (if installed)"
+else
+    echo "No additional tools detected."
+    echo "Skills configured for Claude CLI only."
+fi
+
+echo ""
+echo "=========================================="
 echo "Next Steps"
 echo "=========================================="
 echo ""

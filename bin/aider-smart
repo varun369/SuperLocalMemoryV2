@@ -1,0 +1,72 @@
+#!/bin/bash
+# aider-smart - Aider with SuperLocalMemory context injection
+#
+# Copyright (c) 2026 Varun Pratap Bhardwaj
+# Licensed under MIT License
+#
+# Automatically injects relevant project context from SuperLocalMemory
+# when launching Aider CLI for AI-assisted coding.
+
+set -e
+
+SLM_DIR="${HOME}/.claude-memory"
+
+# Check if Aider is installed
+if ! command -v aider &> /dev/null; then
+    echo "Error: Aider not found. Install: pip install aider-chat"
+    exit 1
+fi
+
+# Check if SuperLocalMemory is installed
+if [ ! -d "$SLM_DIR" ]; then
+    echo "Error: SuperLocalMemory V2 not installed"
+    echo "Install from: https://github.com/varun369/SuperLocalMemoryV2"
+    exit 1
+fi
+
+# Generate context from current project
+project=$(basename "$PWD")
+CONTEXT_FILE="/tmp/slm-aider-context-$$.txt"
+
+echo "🧠 Gathering project context from SuperLocalMemory..."
+echo ""
+
+# Get recent project memories
+if command -v slm &> /dev/null; then
+    # Use slm command if available
+    slm context > "$CONTEXT_FILE" 2>/dev/null || {
+        "$SLM_DIR/bin/superlocalmemoryv2:recall" "$project" --limit 5 > "$CONTEXT_FILE" 2>/dev/null || true
+    }
+else
+    # Fallback to direct command
+    "$SLM_DIR/bin/superlocalmemoryv2:recall" "$project" --limit 5 > "$CONTEXT_FILE" 2>/dev/null || true
+fi
+
+# Get coding patterns if available
+if [ -f "$SLM_DIR/pattern_learner.py" ]; then
+    echo "" >> "$CONTEXT_FILE"
+    echo "## Your Coding Patterns:" >> "$CONTEXT_FILE"
+    python3 "$SLM_DIR/pattern_learner.py" context 0.6 >> "$CONTEXT_FILE" 2>/dev/null || true
+fi
+
+# Launch Aider with context
+if [ -s "$CONTEXT_FILE" ] && [ "$(wc -l < "$CONTEXT_FILE")" -gt 1 ]; then
+    echo "✓ Context loaded from SuperLocalMemory"
+    echo ""
+
+    # Pass context to Aider
+    aider \
+        --read "$CONTEXT_FILE" \
+        --message "Context from SuperLocalMemory V2 loaded. I have access to your project's memory and coding patterns." \
+        "$@"
+else
+    echo "⚠ No context found for project: $project"
+    echo "  Use: slm remember \"project info\" to save context"
+    echo ""
+
+    # Launch Aider without context
+    aider "$@"
+fi
+
+# Cleanup
+rm -f "$CONTEXT_FILE"

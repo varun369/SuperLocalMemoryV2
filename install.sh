@@ -197,6 +197,138 @@ fi
 export PATH="${HOME}/.claude-memory/bin:${PATH}"
 echo "✓ Commands available in current session"
 
+# ============================================================================
+# UNIVERSAL INTEGRATION - Auto-detect and configure IDEs/CLI tools
+# ============================================================================
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  Universal Integration - Auto-Detection                      ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
+echo ""
+echo "Detecting installed tools..."
+echo ""
+
+DETECTED_TOOLS=()
+
+# Function to configure MCP for an IDE
+configure_mcp() {
+    local tool_name="$1"
+    local config_source="$2"
+    local config_dest="$3"
+
+    # Replace {{INSTALL_DIR}} with actual path
+    sed "s|{{INSTALL_DIR}}|${INSTALL_DIR}|g" "${config_source}" > /tmp/slm-config-$$.json
+
+    # Create config directory if needed
+    mkdir -p "$(dirname "${config_dest}")"
+
+    # Backup existing config
+    if [ -f "${config_dest}" ]; then
+        cp "${config_dest}" "${config_dest}.backup.$(date +%Y%m%d-%H%M%S)"
+        echo "  ✓ Backed up existing ${tool_name} config"
+    fi
+
+    # Install config
+    cp /tmp/slm-config-$$.json "${config_dest}"
+    rm /tmp/slm-config-$$.json
+
+    echo "  ✓ ${tool_name} MCP configured"
+}
+
+# Copy MCP server to install directory
+if [ -f "${REPO_DIR}/mcp_server.py" ]; then
+    cp "${REPO_DIR}/mcp_server.py" "${INSTALL_DIR}/"
+    chmod +x "${INSTALL_DIR}/mcp_server.py"
+    echo "✓ MCP Server installed"
+fi
+
+# Detect Claude Desktop
+if [ -d "${HOME}/Library/Application Support/Claude" ]; then
+    DETECTED_TOOLS+=("Claude Desktop")
+
+    if [ -f "${REPO_DIR}/configs/claude-desktop-mcp.json" ]; then
+        configure_mcp "Claude Desktop" \
+            "${REPO_DIR}/configs/claude-desktop-mcp.json" \
+            "${HOME}/Library/Application Support/Claude/claude_desktop_config.json"
+    fi
+fi
+
+# Detect Cursor
+if [ -d "${HOME}/.cursor" ] || command -v cursor &>/dev/null; then
+    DETECTED_TOOLS+=("Cursor")
+
+    if [ -f "${REPO_DIR}/configs/cursor-mcp.json" ]; then
+        configure_mcp "Cursor" \
+            "${REPO_DIR}/configs/cursor-mcp.json" \
+            "${HOME}/.cursor/mcp_settings.json"
+    fi
+fi
+
+# Detect Windsurf
+if [ -d "${HOME}/.windsurf" ] || command -v windsurf &>/dev/null; then
+    DETECTED_TOOLS+=("Windsurf")
+
+    if [ -f "${REPO_DIR}/configs/windsurf-mcp.json" ]; then
+        configure_mcp "Windsurf" \
+            "${REPO_DIR}/configs/windsurf-mcp.json" \
+            "${HOME}/.windsurf/mcp_settings.json"
+    fi
+fi
+
+# Detect VS Code with Continue
+if [ -d "${HOME}/.continue" ]; then
+    DETECTED_TOOLS+=("Continue.dev")
+
+    if [ -f "${REPO_DIR}/configs/continue-mcp.yaml" ]; then
+        # For Continue, append to config if exists, otherwise create
+        CONTINUE_CONFIG="${HOME}/.continue/config.yaml"
+        mkdir -p "${HOME}/.continue"
+
+        if [ -f "${CONTINUE_CONFIG}" ]; then
+            echo "  ○ Continue.dev config exists - manual merge recommended"
+            echo "    See: ${REPO_DIR}/configs/continue-mcp.yaml"
+        else
+            sed "s|{{INSTALL_DIR}}|${INSTALL_DIR}|g" "${REPO_DIR}/configs/continue-mcp.yaml" > "${CONTINUE_CONFIG}"
+            echo "  ✓ Continue.dev MCP configured"
+        fi
+    fi
+fi
+
+# Install MCP Python package if not present
+if ! python3 -c "import mcp" 2>/dev/null; then
+    echo ""
+    echo "Installing MCP SDK..."
+    pip3 install mcp --quiet 2>/dev/null && echo "✓ MCP SDK installed" || echo "○ MCP SDK install failed (manual install: pip3 install mcp)"
+fi
+
+# Install bash completions
+if [ -d "/usr/local/etc/bash_completion.d" ] && [ -f "${REPO_DIR}/completions/slm.bash" ]; then
+    sudo cp "${REPO_DIR}/completions/slm.bash" /usr/local/etc/bash_completion.d/slm 2>/dev/null && echo "✓ Bash completion installed" || true
+fi
+
+# Summary of detected tools
+echo ""
+if [ ${#DETECTED_TOOLS[@]} -gt 0 ]; then
+    echo "✓ Detected and configured:"
+    for tool in "${DETECTED_TOOLS[@]}"; do
+        echo "  • $tool"
+    done
+    echo ""
+    echo "These tools now have native access to SuperLocalMemory!"
+    echo "Restart them to use the new MCP integration."
+else
+    echo "○ No additional tools detected"
+    echo "  MCP server is available if you install Cursor, Windsurf, etc."
+fi
+
+echo ""
+echo "Universal CLI commands also available:"
+echo "  slm remember <content>  - Simple command (anywhere)"
+echo "  slm recall <query>      - Search from any terminal"
+echo "  slm status              - Check system status"
+echo ""
+
 # Summary
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
@@ -207,18 +339,24 @@ echo "✓ Commands are now globally available!"
 echo ""
 echo "  You can use them immediately:"
 echo ""
-echo "Available commands:"
+echo "Available commands (two ways to use them):"
+echo ""
+echo "OPTION 1: Original commands (still work):"
 echo "  superlocalmemoryv2:remember  - Save a new memory"
 echo "  superlocalmemoryv2:recall    - Search memories"
 echo "  superlocalmemoryv2:list      - List recent memories"
 echo "  superlocalmemoryv2:status    - Check system status"
-echo "  superlocalmemoryv2:profile   - Manage memory profiles"
-echo "  superlocalmemoryv2:reset     - Reset memory database"
+echo ""
+echo "OPTION 2: New simple commands:"
+echo "  slm remember <content>       - Save (simpler syntax)"
+echo "  slm recall <query>           - Search"
+echo "  slm list                     - List recent"
+echo "  slm status                   - System status"
 echo ""
 echo "Quick start (try now):"
-echo "  superlocalmemoryv2:status"
-echo "  superlocalmemoryv2:remember 'My first memory'"
-echo "  superlocalmemoryv2:recall 'first'"
+echo "  slm status"
+echo "  slm remember 'My first memory'"
+echo "  slm recall 'first'"
 echo ""
 # Optional: Offer to install UI dependencies
 echo ""

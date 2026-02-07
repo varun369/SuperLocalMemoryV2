@@ -16,6 +16,145 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.1.0-universal] - 2026-02-07
+
+### 🌐 Universal Integration - MAJOR UPDATE
+
+**SuperLocalMemory now works across ALL IDEs and CLI tools!**
+
+This release transforms SuperLocalMemory from Claude-Code-only to a universal memory system that integrates with 8+ tools while maintaining 100% backward compatibility.
+
+### ✨ Added - New Integrations
+
+**MCP (Model Context Protocol) Integration:**
+- ✅ Cursor IDE - Native MCP support with auto-configuration
+- ✅ Windsurf IDE - Full MCP integration
+- ✅ Claude Desktop - Built-in MCP server support
+- ✅ VS Code Continue - MCP tools accessible to AI
+- Auto-detection during installation
+- Zero manual configuration required
+
+**Enhanced Skills Support:**
+- ✅ Continue.dev - Slash commands (`/slm-remember`, `/slm-recall`)
+- ✅ Cody - Custom commands integrated
+- Auto-configuration for detected tools
+- Backward compatible with existing Claude Code skills
+
+**Universal CLI Wrapper:**
+- ✅ New `slm` command - Simple syntax for any terminal
+- ✅ `aider-smart` wrapper - Auto-context injection for Aider CLI
+- Works with any scripting environment
+- Bash and Zsh completion support
+
+### 📦 New Files
+
+**Core:**
+- `mcp_server.py` - Complete MCP server implementation (6 tools, 4 resources, 2 prompts)
+- `bin/slm` - Universal CLI wrapper
+- `bin/aider-smart` - Aider integration with auto-context
+
+**Configurations:**
+- `configs/claude-desktop-mcp.json` - Claude Desktop MCP config
+- `configs/cursor-mcp.json` - Cursor IDE MCP config
+- `configs/windsurf-mcp.json` - Windsurf IDE MCP config
+- `configs/continue-mcp.yaml` - Continue.dev MCP config
+- `configs/continue-skills.yaml` - Continue.dev slash commands
+- `configs/cody-commands.json` - Cody custom commands
+
+**Completions:**
+- `completions/slm.bash` - Bash autocomplete
+- `completions/slm.zsh` - Zsh autocomplete
+
+### 🔧 Enhanced
+
+**install.sh:**
+- Auto-detects installed IDEs (Cursor, Windsurf, Claude Desktop, Continue, Cody)
+- Auto-configures MCP server for detected tools
+- Installs MCP SDK if not present
+- Installs universal CLI wrapper
+- Configures shell completions
+- Zero breaking changes to existing installation
+
+**install-skills.sh:**
+- Detects Continue.dev and configures slash commands
+- Detects Cody and configures custom commands
+- Backs up existing configurations
+- Smart merging for existing configs
+
+**README.md:**
+- Added "Works Everywhere" section
+- Updated comparison table with universal integration
+- New CLI commands section (simple + original)
+- Auto-detection documentation
+
+### 🎯 User Experience
+
+**For Existing Users:**
+- ✅ Zero breaking changes - all existing commands work unchanged
+- ✅ Automatic upgrade path - just run `./install.sh`
+- ✅ New tools auto-configured during installation
+- ✅ Original skills preserved and functional
+
+**For New Users:**
+- ✅ One installation works everywhere
+- ✅ Auto-detects and configures all tools
+- ✅ Simple CLI commands (`slm remember`)
+- ✅ Zero manual configuration
+
+### 🏗️ Architecture
+
+**Three-Tier Access Model:**
+1. **MCP** (Modern) - Native IDE integration via Model Context Protocol
+2. **Skills** (Enhanced) - Slash commands in Claude, Continue, Cody
+3. **CLI** (Universal) - Simple commands that work anywhere
+
+**All tiers use the SAME local SQLite database** - no data duplication, no conflicts.
+
+### 📊 Compatibility Matrix
+
+| Tool | Integration Method | Status |
+|------|-------------------|--------|
+| Claude Code | Skills (unchanged) | ✅ |
+| Cursor | MCP Auto-configured | ✅ |
+| Windsurf | MCP Auto-configured | ✅ |
+| Claude Desktop | MCP Auto-configured | ✅ |
+| Continue.dev | MCP + Skills | ✅ |
+| Cody | Custom Commands | ✅ |
+| Aider | Smart Wrapper | ✅ |
+| Any Terminal | Universal CLI | ✅ |
+
+### 🔒 Backward Compatibility
+
+**100% backward compatible - nothing breaks:**
+- ✅ All existing skills work unchanged
+- ✅ All bash commands work unchanged
+- ✅ Database schema unchanged
+- ✅ Configuration format unchanged
+- ✅ Performance unchanged
+
+**Upgrade path:** Simply run `./install.sh` - new features auto-configure while preserving existing functionality.
+
+### 📝 Documentation
+
+**New Documentation:**
+- Universal integration implementation plan (15,000+ words)
+- Testing checklist (150+ test cases)
+- Progress tracking system
+- Per-tool quick-start guides
+
+**Updated Documentation:**
+- README.md - Universal positioning
+- INSTALL.md - Auto-detection details
+- CLI-COMMANDS-REFERENCE.md - New slm commands
+
+### 🎊 Credits
+
+This release was completed in a single day with parallel implementation streams, comprehensive testing, and zero breaking changes to existing functionality.
+
+**Philosophy:** Universal integration should be additive, not disruptive. Every existing user's workflow remains unchanged while gaining new capabilities automatically.
+
+---
+
 ## [2.0.0] - 2026-02-05
 
 ### Initial Release - Complete Rewrite

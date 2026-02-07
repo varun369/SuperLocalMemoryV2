@@ -109,6 +109,53 @@ superlocalmemoryv2:status
 
 ---
 
+## 🌐 Works Everywhere
+
+**SuperLocalMemory V2 is the ONLY memory system that works across ALL your tools:**
+
+### Supported IDEs & Tools
+
+| Tool | Integration | How It Works |
+|------|-------------|--------------|
+| **Claude Code** | ✅ Native Skills | `/superlocalmemoryv2:remember` |
+| **Cursor** | ✅ MCP Integration | AI automatically uses memory tools |
+| **Windsurf** | ✅ MCP Integration | Native memory access |
+| **Claude Desktop** | ✅ MCP Integration | Built-in support |
+| **VS Code + Continue** | ✅ MCP + Skills | `/slm-remember` or AI tools |
+| **VS Code + Cody** | ✅ Custom Commands | `/slm-remember` commands |
+| **Aider** | ✅ Smart Wrapper | `aider-smart` with auto-context |
+| **Any Terminal** | ✅ Universal CLI | `slm remember "content"` |
+
+### Three Ways to Access
+
+1. **MCP (Model Context Protocol)** - Auto-configured for Cursor, Windsurf, Claude Desktop
+   - AI assistants get natural access to your memory
+   - No manual commands needed
+   - "Remember that we use FastAPI" just works
+
+2. **Skills & Commands** - For Claude Code, Continue.dev, Cody
+   - `/superlocalmemoryv2:remember` in Claude Code
+   - `/slm-remember` in Continue.dev and Cody
+   - Familiar slash command interface
+
+3. **Universal CLI** - Works in any terminal or script
+   - `slm remember "content"` - Simple, clean syntax
+   - `slm recall "query"` - Search from anywhere
+   - `aider-smart` - Aider with auto-context injection
+
+**All three methods use the SAME local database.** No data duplication, no conflicts.
+
+### Auto-Detection
+
+Installation automatically detects and configures:
+- Existing IDEs (Cursor, Windsurf, VS Code)
+- Installed tools (Aider, Continue, Cody)
+- Shell environment (bash, zsh)
+
+**Zero manual configuration required.** It just works.
+
+---
+
 ## 💡 Why SuperLocalMemory?
 
 ### For Developers Who Use AI Daily
@@ -150,6 +197,12 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 
 | Feature | Mem0 | Zep | Khoj | Letta | **SuperLocalMemory V2** |
 |---------|------|-----|------|-------|------------------------|
+| **Works in Cursor** | Cloud Only | ❌ | ❌ | ❌ | ✅ **Local** |
+| **Works in Windsurf** | Cloud Only | ❌ | ❌ | ❌ | ✅ **Local** |
+| **Works in VS Code** | 3rd Party | ❌ | Partial | ❌ | ✅ **Native** |
+| **Works in Claude** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Works with Aider** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Universal CLI** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **4-Layer Architecture** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Pattern Learning** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Multi-Profile Support** | ❌ | ❌ | ❌ | Partial | ✅ |
@@ -159,7 +212,12 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 | **Progressive Compression** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Completely Free** | Limited | Limited | Partial | ✅ | ✅ |
 
-**No other solution offers ALL of these features together.** We checked. [See full research →](docs/COMPETITIVE-ANALYSIS.md)
+**SuperLocalMemory V2 is the ONLY solution that:**
+- ✅ Works across 8+ IDEs and CLI tools
+- ✅ Remains 100% local (no cloud dependencies)
+- ✅ Completely free with unlimited memories
+
+[See full competitive analysis →](docs/COMPETITIVE-ANALYSIS.md)
 
 ---
 

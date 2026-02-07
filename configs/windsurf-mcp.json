@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "superlocalmemory-v2": {
+      "command": "python3",
+      "args": [
+        "{{INSTALL_DIR}}/mcp_server.py"
+      ],
+      "transport": "stdio",
+      "description": "SuperLocalMemory V2 - 100% local memory system for AI assistants"
+    }
+  }
+}

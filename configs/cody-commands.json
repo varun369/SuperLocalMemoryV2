@@ -1,0 +1,29 @@
+{
+  "cody.customCommands": {
+    "slm-remember": {
+      "description": "Save selected text/code to SuperLocalMemory",
+      "prompt": "Save this to SuperLocalMemory with context: {{input}}",
+      "context": {
+        "selection": true
+      },
+      "mode": "ask",
+      "slashCommand": "/slm-remember"
+    },
+    "slm-recall": {
+      "description": "Search SuperLocalMemory for relevant context",
+      "prompt": "Search SuperLocalMemory for: {{input}}",
+      "mode": "ask",
+      "slashCommand": "/slm-recall"
+    },
+    "slm-context": {
+      "description": "Get project context from SuperLocalMemory",
+      "prompt": "Get context for current project from SuperLocalMemory",
+      "context": {
+        "currentFile": true,
+        "currentDir": true
+      },
+      "mode": "ask",
+      "slashCommand": "/slm-context"
+    }
+  }
+}
