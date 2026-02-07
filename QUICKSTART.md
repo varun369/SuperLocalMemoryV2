@@ -45,6 +45,8 @@ superlocalmemoryv2:status
 
 **Auto-Configuration:** The installer automatically detected and configured your installed IDEs (Cursor, Windsurf, VS Code, etc.). See [Universal Integration Guide](docs/UNIVERSAL-INTEGRATION.md) for details.
 
+**Other Apps:** Want to use SuperLocalMemory in ChatGPT, Perplexity, Zed, or other MCP-compatible tools? See [Manual MCP Setup Guide](docs/MCP-MANUAL-SETUP.md) for step-by-step instructions.
+
 ---
 
 ## Your First 5 Minutes

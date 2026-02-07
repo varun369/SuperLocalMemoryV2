@@ -154,6 +154,21 @@ Installation automatically detects and configures:
 
 **Zero manual configuration required.** It just works.
 
+### Manual Setup for Other Apps
+
+Want to use SuperLocalMemory in ChatGPT, Perplexity, Zed, or other MCP-compatible tools?
+
+**📘 Complete setup guide:** [docs/MCP-MANUAL-SETUP.md](docs/MCP-MANUAL-SETUP.md)
+
+Covers:
+- ChatGPT Desktop - Add via Settings → MCP
+- Perplexity - Configure via app settings
+- Zed Editor - JSON configuration
+- Cody - VS Code/JetBrains setup
+- Custom MCP clients - Python/HTTP integration
+
+All tools connect to the **same local database** - no data duplication.
+
 ---
 
 ## 💡 Why SuperLocalMemory?

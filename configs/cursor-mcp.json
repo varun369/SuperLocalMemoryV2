@@ -5,6 +5,10 @@
       "args": [
         "{{INSTALL_DIR}}/mcp_server.py"
       ],
+      "cwd": "{{INSTALL_DIR}}",
+      "env": {
+        "PYTHONPATH": "{{INSTALL_DIR}}"
+      },
       "description": "SuperLocalMemory V2 - Local memory system with knowledge graphs and pattern learning"
     }
   }

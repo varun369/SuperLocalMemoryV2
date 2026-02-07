@@ -295,6 +295,22 @@ if [ -d "${HOME}/.continue" ]; then
     fi
 fi
 
+# Detect Zed Editor
+if [ -d "${HOME}/.config/zed" ] || command -v zed &>/dev/null; then
+    DETECTED_TOOLS+=("Zed Editor (manual)")
+    echo "  ○ Zed Editor detected - manual setup required"
+    echo "    See: docs/MCP-MANUAL-SETUP.md#zed-editor"
+fi
+
+# Detect Cody (VS Code extension)
+if [ -d "${HOME}/.vscode/extensions" ]; then
+    if ls "${HOME}/.vscode/extensions" | grep -q "sourcegraph.cody"; then
+        DETECTED_TOOLS+=("Cody (manual)")
+        echo "  ○ Cody detected - manual setup required"
+        echo "    See: docs/MCP-MANUAL-SETUP.md#cody-vs-codejetbrains"
+    fi
+fi
+
 # Install MCP Python package if not present
 if ! python3 -c "import mcp" 2>/dev/null; then
     echo ""
@@ -327,6 +343,24 @@ echo "Universal CLI commands also available:"
 echo "  slm remember <content>  - Simple command (anywhere)"
 echo "  slm recall <query>      - Search from any terminal"
 echo "  slm status              - Check system status"
+echo ""
+
+# Manual setup guide for other tools
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  Manual Setup for Other Apps                                 ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
+echo ""
+echo "Want to use SuperLocalMemory in other apps?"
+echo ""
+echo "  • ChatGPT Desktop - Add via Settings → MCP"
+echo "  • Perplexity - Add via Settings → Integrations"
+echo "  • Zed Editor - Configure in settings.json"
+echo "  • Cody - Configure in VS Code settings"
+echo "  • Custom tools - See integration guide"
+echo ""
+echo "Full manual setup guide:"
+echo "  docs/MCP-MANUAL-SETUP.md"
+echo "  https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/MCP-MANUAL-SETUP.md"
 echo ""
 
 # Summary

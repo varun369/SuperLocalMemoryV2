@@ -5,6 +5,10 @@
       "args": [
         "{{INSTALL_DIR}}/mcp_server.py"
       ],
+      "cwd": "{{INSTALL_DIR}}",
+      "env": {
+        "PYTHONPATH": "{{INSTALL_DIR}}"
+      },
       "transport": "stdio",
       "description": "SuperLocalMemory V2 - 100% local memory system for AI assistants"
     }
