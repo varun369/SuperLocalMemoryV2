@@ -6,8 +6,7 @@
 
 ### 🚀 Getting Started
 - [[Installation]]
-- [[Quick-Start-Tutorial]]
-- [[CLI-Cheatsheet]]
+- [Quick Start](https://github.com/varun369/SuperLocalMemoryV2#-quick-start)
 
 ---
 
@@ -15,31 +14,20 @@
 - [[Universal-Architecture]]
 - [[MCP-Integration]]
 - [[Universal-Skills]]
-- [[Knowledge-Graph-Guide]]
-- [[Pattern-Learning-Explained]]
-- [[Multi-Profile-Workflows]]
 
 ---
 
 ### 📖 Reference
-- [[CLI-Command-Reference]]
-- [[Python-API]]
-- [[Configuration]]
-
----
-
-### 🆚 Comparisons
-- [[Comparison-Deep-Dive]]
-- [[Why-Local-Matters]]
+- [CLI Commands](https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/CLI-COMMANDS-REFERENCE.md)
+- [CHANGELOG](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md)
+- [Troubleshooting](https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/MCP-TROUBLESHOOTING.md)
 
 ---
 
 ### 👥 Community
 - [[FAQ]]
-- [[Troubleshooting]]
-- [[Contributing]]
-- [[Roadmap]]
-- [[Changelog]]
+- [Contributing](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CONTRIBUTING.md)
+- [Issues](https://github.com/varun369/SuperLocalMemoryV2/issues)
 
 ---
 

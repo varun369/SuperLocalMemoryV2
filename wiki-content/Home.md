@@ -30,33 +30,29 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 | Guide | Description |
 |-------|-------------|
 | [[Installation]] | 5-minute setup for Mac, Linux, Windows |
-| [[Quick-Start-Tutorial]] | Your first memory in 2 minutes |
-| [[CLI-Cheatsheet]] | Copy-paste command reference |
+| [Quick Start](https://github.com/varun369/SuperLocalMemoryV2#-quick-start) | Your first memory in 2 minutes |
 
 ### Core Concepts
 | Guide | Description |
 |-------|-------------|
-| [[Universal-Architecture]] | Universal architecture with MCP integration |
+| [[Universal-Architecture]] | 7-layer universal architecture with MCP integration |
 | [[MCP-Integration]] | Model Context Protocol support for 11+ IDEs |
-| [[Universal-Skills]] | 6 agent skills and slash-commands |
-| [[Knowledge-Graph-Guide]] | Auto-discovery of relationships |
-| [[Pattern-Learning-Explained]] | How it learns your coding style |
-| [[Multi-Profile-Workflows]] | Separate contexts for work/personal/clients |
+| [[Universal-Skills]] | 6 agent skills and slash-commands system |
 
 ### Reference
 | Guide | Description |
 |-------|-------------|
-| [[CLI-Command-Reference]] | Complete command documentation |
-| [[Python-API]] | Programmatic access |
-| [[Configuration]] | Customization options |
+| [CLI Commands](https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/CLI-COMMANDS-REFERENCE.md) | Complete command documentation |
+| [CHANGELOG](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) | Version history and release notes |
+| [Troubleshooting](https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/MCP-TROUBLESHOOTING.md) | Common issues and solutions |
 
 ### Community
 | Guide | Description |
 |-------|-------------|
 | [[FAQ]] | Frequently asked questions |
-| [[Troubleshooting]] | Common issues and solutions |
-| [[Contributing]] | How to contribute |
-| [[Roadmap]] | What's coming next |
+| [Contributing](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CONTRIBUTING.md) | How to contribute |
+| [Issues](https://github.com/varun369/SuperLocalMemoryV2/issues) | Report bugs or request features |
+| [Discussions](https://github.com/varun369/SuperLocalMemoryV2/discussions) | Community discussions |
 
 ---
 
@@ -97,7 +93,7 @@ superlocalmemoryv2:recall "auth bug"
 | **Knowledge Graphs** | ✅ | ✅ | ❌ | **✅ Leiden Clustering** |
 | **Zero Setup** | ❌ | ❌ | ❌ | **✅ 5-min install** |
 
-**SuperLocalMemory V2 is the ONLY solution with universal IDE support, full local operation, and zero cost.** Created by **Varun Pratap Bhardwaj** as an open-source alternative to expensive cloud services. [[See detailed comparison|Comparison-Deep-Dive]]
+**SuperLocalMemory V2 is the ONLY solution with universal IDE support, full local operation, and zero cost.** Created by **Varun Pratap Bhardwaj** as an open-source alternative to expensive cloud services.
 
 ---
 
