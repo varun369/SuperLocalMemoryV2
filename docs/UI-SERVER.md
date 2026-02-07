@@ -47,7 +47,7 @@ python create_demo_db.py
 ### 3. Start the Server
 
 ```bash
-python api_server.py
+python ui_server.py
 ```
 
 The server will start on **http://localhost:8000**
@@ -130,14 +130,14 @@ By default, the server uses:
 - Demo mode: `demo-memory.db` in the repo
 - Production: `~/.claude-memory/memory.db`
 
-To change the database path, modify `DB_PATH` in `api_server.py`.
+To change the database path, modify `DB_PATH` in `ui_server.py`.
 
 ### Server Port
 
 To change the port from 8000:
 
 ```python
-# In api_server.py, line ~650
+# In ui_server.py, line ~650
 uvicorn.run(app, host="0.0.0.0", port=8080)  # Change 8000 to 8080
 ```
 
@@ -165,7 +165,7 @@ app.add_middleware(
 ## Architecture
 
 ```
-api_server.py           # FastAPI backend (8 endpoints)
+ui_server.py           # FastAPI backend (8 endpoints)
 ui/
   ├── index.html        # Single-page UI
   └── app.js            # Frontend JavaScript (D3.js + Bootstrap)

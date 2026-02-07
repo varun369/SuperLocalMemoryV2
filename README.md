@@ -117,9 +117,9 @@ superlocalmemoryv2:status
 
 ```bash
 # Launch the interactive web UI
-python ~/.claude-memory/dashboard.py
+python3 ~/.claude-memory/ui_server.py
 
-# Opens at http://localhost:8050
+# Opens at http://localhost:8000
 # Features: Timeline view, search explorer, graph visualization
 ```
 

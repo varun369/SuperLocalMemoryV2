@@ -48,9 +48,9 @@ pip install -r requirements-dashboard.txt
 
 ```bash
 # Start the dashboard server
-python ~/.claude-memory/dashboard.py
+python ~/.claude-memory/ui_server.py
 
-# Dashboard opens at: http://localhost:8050
+# Dashboard opens at: http://localhost:8000
 ```
 
 **Expected output:**
@@ -63,7 +63,7 @@ python ~/.claude-memory/dashboard.py
 ✓ Knowledge graph loaded: 8 clusters, 312 entities
 ✓ Pattern data loaded: 24 learned patterns
 
-🌐 Dashboard running at: http://localhost:8050
+🌐 Dashboard running at: http://localhost:8000
 🔧 Press Ctrl+C to stop server
 
 [2026-02-07 14:30:00] Dash app starting...
@@ -73,17 +73,17 @@ python ~/.claude-memory/dashboard.py
 
 **Custom port:**
 ```bash
-python ~/.claude-memory/dashboard.py --port 8080
+python ~/.claude-memory/ui_server.py --port 8080
 ```
 
 **Specific profile:**
 ```bash
-python ~/.claude-memory/dashboard.py --profile work
+python ~/.claude-memory/ui_server.py --profile work
 ```
 
 **Debug mode:**
 ```bash
-python ~/.claude-memory/dashboard.py --debug
+python ~/.claude-memory/ui_server.py --debug
 ```
 
 ---
@@ -607,7 +607,7 @@ Result: Important React memories for specific project
 
 ```json
 {
-  "port": 8050,
+  "port": 8000,
   "host": "127.0.0.1",
   "theme": "auto",
   "default_view": "timeline",
@@ -738,10 +738,10 @@ pip install dash plotly pandas networkx
 **Solution:**
 ```bash
 # Use different port
-python ~/.claude-memory/dashboard.py --port 8051
+python ~/.claude-memory/ui_server.py --port 8051
 
 # Or kill existing process
-lsof -ti:8050 | xargs kill
+lsof -ti:8000 | xargs kill
 ```
 
 ### Slow graph rendering
@@ -770,7 +770,7 @@ python ~/.claude-memory/graph_engine.py build --min-similarity 0.5
 sqlite3 ~/.claude-memory/memory.db "SELECT COUNT(*) FROM memories;"
 
 # 2. Check profile
-python ~/.claude-memory/dashboard.py --profile default
+python ~/.claude-memory/ui_server.py --profile default
 
 # 3. Reinitialize database (if needed)
 slm status
@@ -987,8 +987,8 @@ The **Visualization Dashboard** transforms SuperLocalMemory from a command-line 
 
 **Launch in seconds:**
 ```bash
-python ~/.claude-memory/dashboard.py
-# http://localhost:8050
+python ~/.claude-memory/ui_server.py
+# http://localhost:8000
 ```
 
 **100% local. 100% private. 100% visual.**

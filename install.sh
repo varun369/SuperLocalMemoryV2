@@ -11,6 +11,27 @@ set -e
 INSTALL_DIR="${HOME}/.claude-memory"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 
+# Parse command line arguments
+NON_INTERACTIVE=false
+for arg in "$@"; do
+    case $arg in
+        --non-interactive|--auto|--yes|-y)
+            NON_INTERACTIVE=true
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --non-interactive, --auto, --yes, -y"
+            echo "                    Skip interactive prompts (for scripts/automation)"
+            echo "  --help, -h        Show this help message"
+            echo ""
+            exit 0
+            ;;
+    esac
+done
+
 # Print banner
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
@@ -458,30 +479,44 @@ echo "  slm remember 'My first memory'"
 echo "  slm recall 'first'"
 echo ""
 # Optional: Offer to install optional features
-echo ""
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║  Optional Features Available                                  ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
-echo ""
-echo "SuperLocalMemory V2.2.0 includes optional features:"
-echo ""
-echo "  1) Advanced Search (~1.5GB, 5-10 min)"
-echo "     • Semantic search with sentence transformers"
-echo "     • Vector similarity with HNSWLIB"
-echo "     • Better search quality"
-echo ""
-echo "  2) Web Dashboard (~50MB, 1-2 min)"
-echo "     • Graph visualization (D3.js)"
-echo "     • API server (FastAPI)"
-echo "     • Browser-based interface"
-echo ""
-echo "  3) Full Package (~1.5GB, 5-10 min)"
-echo "     • Everything: Search + Dashboard"
-echo ""
-echo "  N) Skip (install later)"
-echo ""
-echo -n "Choose option [1/2/3/N]: "
-read -r INSTALL_CHOICE
+if [ "$NON_INTERACTIVE" = true ]; then
+    INSTALL_CHOICE="N"
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║  Non-Interactive Mode: Skipping Optional Features            ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "To install optional features later:"
+    echo "  Advanced Search: pip3 install -r ${REPO_DIR}/requirements-search.txt"
+    echo "  Web Dashboard:   pip3 install -r ${REPO_DIR}/requirements-ui.txt"
+    echo "  Full Package:    pip3 install -r ${REPO_DIR}/requirements-full.txt"
+    echo ""
+else
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║  Optional Features Available                                  ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "SuperLocalMemory V2.2.0 includes optional features:"
+    echo ""
+    echo "  1) Advanced Search (~1.5GB, 5-10 min)"
+    echo "     • Semantic search with sentence transformers"
+    echo "     • Vector similarity with HNSWLIB"
+    echo "     • Better search quality"
+    echo ""
+    echo "  2) Web Dashboard (~50MB, 1-2 min)"
+    echo "     • Graph visualization (D3.js)"
+    echo "     • API server (FastAPI)"
+    echo "     • Browser-based interface"
+    echo ""
+    echo "  3) Full Package (~1.5GB, 5-10 min)"
+    echo "     • Everything: Search + Dashboard"
+    echo ""
+    echo "  N) Skip (install later)"
+    echo ""
+    echo -n "Choose option [1/2/3/N]: "
+    read -r INSTALL_CHOICE
+fi
 
 # Detect pip installation method
 if pip3 install --help | grep -q "break-system-packages"; then

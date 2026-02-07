@@ -580,7 +580,7 @@ async def get_graph(
 @app.get("/api/timeline")
 async def get_timeline(
     days: int = Query(30, ge=1, le=365),
-    group_by: str = Query("day", regex="^(day|week|month)$")
+    group_by: str = Query("day", pattern="^(day|week|month)$")
 ):
     """
     Get temporal view of memory creation with flexible grouping.
@@ -1199,7 +1199,7 @@ async def switch_profile(name: str):
 
 @app.get("/api/export")
 async def export_memories(
-    format: str = Query("json", regex="^(json|jsonl)$"),
+    format: str = Query("json", pattern="^(json|jsonl)$"),
     category: Optional[str] = None,
     project_name: Optional[str] = None
 ):
