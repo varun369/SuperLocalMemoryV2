@@ -4,21 +4,28 @@
 
 This guide gets you from installation to your first intelligent memory operations in under 5 minutes.
 
-**SuperLocalMemory V2 is a standalone system** - use it directly via terminal commands, integrate with Claude CLI, or connect to any AI assistant. No external dependencies required.
+**SuperLocalMemory V2.1.0-universal** is a universal memory system that works across 8+ IDEs and CLI tools with automatic configuration. No external dependencies required.
 
-## Two Ways to Use SuperLocalMemory V2
+## Three Ways to Use SuperLocalMemory V2
 
-Throughout this guide, you'll see commands shown in two formats:
+**Version 2.1.0-universal** offers multiple access methods - all using the same local database:
 
-1. **Claude CLI** - Convenient slash commands (requires optional skills installation)
-   - Example: `/superlocalmemoryv2:remember "text" --tags tag1,tag2`
-   - Install skills: `./install-skills.sh` (see [claude-skills/CLAUDE_CLI_INSTALLATION.md](claude-skills/CLAUDE_CLI_INSTALLATION.md))
+1. **MCP (Model Context Protocol)** - Auto-configured for Cursor, Windsurf, Claude Desktop
+   - AI assistants get natural memory access
+   - Just talk: "Remember that we use FastAPI"
+   - No manual commands needed
 
-2. **Terminal/Standalone** - Direct Python commands (works anywhere)
-   - Example: `python3 memory_store_v2.py add "text" --tags tag1,tag2`
+2. **Skills & Commands** - For Claude Code, Continue.dev, Cody
+   - Claude Code: `/superlocalmemoryv2:remember "text"`
+   - Continue.dev: `/slm-remember text`
+   - Cody: `/slm-remember` (with selection)
+
+3. **Universal CLI** - Works in any terminal or script
+   - Simple syntax: `slm remember "text"`
+   - Original commands still work: `superlocalmemoryv2:remember "text"`
    - No additional setup needed
 
-**Both methods work identically.** Choose what fits your workflow.
+**All three methods work identically and use the same database.** Choose what fits your workflow.
 
 ---
 
@@ -31,8 +38,12 @@ Before starting, ensure you've completed the installation:
 
 Verify installation:
 ```bash
-memory-status
+slm status
+# OR
+superlocalmemoryv2:status
 ```
+
+**Auto-Configuration:** The installer automatically detected and configured your installed IDEs (Cursor, Windsurf, VS Code, etc.). See [Universal Integration Guide](docs/UNIVERSAL-INTEGRATION.md) for details.
 
 ---
 
@@ -44,42 +55,41 @@ SuperLocalMemory V2 learns from your memories. Let's add some.
 
 **Choose your preferred method:**
 
-#### Option A: Claude CLI (if you installed skills)
+#### Option A: Universal CLI (Simple - Works Anywhere)
+
+```bash
+slm remember "Built React authentication using JWT tokens" --tags auth,react,security
+slm remember "Optimized database queries using indexes" --tags performance,database
+slm remember "Created user profile management with React hooks" --tags react,frontend,user-management
+slm remember "Implemented token refresh mechanism for security" --tags auth,security,tokens
+slm remember "Fixed N+1 query problem in API endpoints" --tags performance,api,database
+```
+
+#### Option B: Claude Code Skills
 
 ```bash
 /superlocalmemoryv2:remember "Built React authentication using JWT tokens" --tags auth,react,security
-
 /superlocalmemoryv2:remember "Optimized database queries using indexes" --tags performance,database
-
 /superlocalmemoryv2:remember "Created user profile management with React hooks" --tags react,frontend,user-management
-
 /superlocalmemoryv2:remember "Implemented token refresh mechanism for security" --tags auth,security,tokens
-
 /superlocalmemoryv2:remember "Fixed N+1 query problem in API endpoints" --tags performance,api,database
 ```
 
-#### Option B: Terminal/Standalone
+#### Option C: Cursor/Windsurf/Claude Desktop (MCP - Just Talk)
 
-```bash
-cd ~/.claude-memory
+If you're using Cursor, Windsurf, or Claude Desktop, you can simply tell the AI:
 
-# Add memories about different topics
-python3 memory_store_v2.py add "Built React authentication using JWT tokens" --tags auth,react,security
-
-python3 memory_store_v2.py add "Optimized database queries using indexes" --tags performance,database
-
-python3 memory_store_v2.py add "Created user profile management with React hooks" --tags react,frontend,user-management
-
-python3 memory_store_v2.py add "Implemented token refresh mechanism for security" --tags auth,security,tokens
-
-python3 memory_store_v2.py add "Fixed N+1 query problem in API endpoints" --tags performance,api,database
+```
+You: "Remember that we built React authentication using JWT tokens, focusing on auth, react, and security"
+AI: [Automatically calls remember() tool and saves memory]
+✓ Memory saved
 ```
 
 **What just happened?**
 - 5 memories stored in local SQLite database
 - Full-text search indexes created automatically
 - Tags assigned for organization
-- Both methods work identically
+- All methods work identically and use the same database
 
 ---
 

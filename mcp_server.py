@@ -47,8 +47,7 @@ except ImportError as e:
 
 # Initialize MCP server
 mcp = FastMCP(
-    name="SuperLocalMemory V2",
-    version="2.1.0-universal"
+    name="SuperLocalMemory V2"
 )
 
 # Database path

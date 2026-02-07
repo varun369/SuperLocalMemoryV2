@@ -9,6 +9,7 @@ This document provides a comprehensive technical overview of SuperLocalMemory V2
 ## Table of Contents
 
 - [System Overview](#system-overview)
+- [Universal Integration](#universal-integration)
 - [4-Layer Architecture](#4-layer-architecture)
 - [Component Details](#component-details)
 - [Data Flow](#data-flow)
@@ -40,6 +41,161 @@ Works independently or integrates with Claude CLI, GPT, local LLMs, or any AI as
 Simple Storage → Intelligent Organization → Adaptive Learning
      (SQLite)     (Graphs + Indexes)         (Pattern Recognition)
 ```
+
+---
+
+## Universal Integration
+
+**Version 2.1.0-universal** transforms SuperLocalMemory from Claude-Code-only to a universal memory system that works across 8+ IDEs and CLI tools with zero configuration.
+
+### Three-Tier Access Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    ACCESS METHODS                           │
+├─────────────────────────────────────────────────────────────┤
+│ TIER 1: MCP (Model Context Protocol)                       │
+│  • Cursor IDE - Native AI tool access                      │
+│  • Windsurf IDE - Built-in integration                     │
+│  • Claude Desktop - Direct MCP support                     │
+│  • Continue.dev - MCP context providers                    │
+├─────────────────────────────────────────────────────────────┤
+│ TIER 2: Skills & Commands                                  │
+│  • Claude Code - /superlocalmemoryv2:*                     │
+│  • Continue.dev - /slm-* slash commands                    │
+│  • Cody - Custom commands via settings                     │
+├─────────────────────────────────────────────────────────────┤
+│ TIER 3: Universal CLI                                      │
+│  • slm wrapper - Simple command syntax                     │
+│  • aider-smart - Auto-context injection                    │
+│  • Any terminal - Direct Python execution                  │
+└────────────────┬────────────────────────────────────────────┘
+                 │
+                 ▼
+         ┌───────────────────┐
+         │ SuperLocalMemory   │
+         │ Core (Unchanged)   │
+         │ memory.db (SQLite) │
+         └───────────────────┘
+```
+
+### MCP Server Implementation
+
+**File:** `mcp_server.py` (450+ lines)
+
+The MCP server provides native integration with modern AI tools:
+
+**6 Tools:**
+- `remember(content, tags, project)` - Save memories
+- `recall(query, limit)` - Search memories
+- `list_recent(limit)` - Recent memories
+- `get_status()` - System status
+- `build_graph()` - Build knowledge graph
+- `switch_profile(name)` - Change profile
+
+**4 Resources:**
+- `memory://recent` - Recent memories feed
+- `memory://stats` - System statistics
+- `memory://graph/clusters` - Graph clusters
+- `memory://patterns/identity` - Learned patterns
+
+**2 Prompts:**
+- `coding_identity_prompt` - User's coding style
+- `project_context_prompt` - Current project context
+
+**Transport Support:**
+- stdio (default) - For local IDE integration
+- HTTP - For remote/network access
+
+**Key Design:** Zero duplication - calls existing `memory_store_v2.py` functions
+
+### Auto-Detection System
+
+**File:** `install.sh` (enhanced)
+
+Installation automatically detects and configures:
+
+```bash
+# Detect installed tools
+[ -d "$HOME/Library/Application Support/Claude" ] && configure_claude_desktop
+[ -d "$HOME/.cursor" ] && configure_cursor
+[ -d "$HOME/.windsurf" ] && configure_windsurf
+[ -d "$HOME/.continue" ] && configure_continue
+```
+
+**For each detected tool:**
+1. Creates configuration from template
+2. Substitutes {{INSTALL_DIR}} with actual path
+3. Backs up existing configs
+4. Installs new config
+5. Reports success
+
+**Zero manual configuration required.**
+
+### Universal CLI Wrapper
+
+**File:** `bin/slm`
+
+Provides simple syntax for all operations:
+
+```bash
+slm remember "content"    # Calls superlocalmemoryv2:remember
+slm recall "query"        # Calls superlocalmemoryv2:recall
+slm list                  # Recent memories
+slm status                # System health
+slm profile list          # Profile management
+slm graph build           # Knowledge graph
+```
+
+**Implementation:** Bash wrapper routing to existing CLI commands - no duplicate logic
+
+### Backward Compatibility
+
+**100% backward compatible:**
+- All original commands work unchanged
+- Database schema unchanged
+- Profile system intact
+- Skills system unchanged
+- Zero breaking changes
+
+**Upgrade path:**
+1. Run `./install.sh`
+2. Auto-detection configures new tools
+3. Existing workflows continue working
+4. New capabilities available immediately
+
+### Integration Matrix
+
+| Tool | Integration Method | Configuration |
+|------|-------------------|---------------|
+| Claude Code | Skills (unchanged) | Existing |
+| Cursor | MCP stdio | Auto-detected |
+| Windsurf | MCP stdio | Auto-detected |
+| Claude Desktop | MCP stdio | Auto-detected |
+| Continue.dev | MCP + Skills | Auto-detected |
+| Cody | Custom commands | Auto-detected |
+| Aider | Smart wrapper | Always available |
+| Any terminal | slm wrapper | Always available |
+
+### Design Decision: Additive Architecture
+
+**Reasoning:**
+- New files only - zero modifications to core src/
+- Original commands unchanged
+- Optional MCP layer on top
+- Fallback to CLI if MCP unavailable
+- Single source of truth (memory.db)
+
+**Trade-offs:**
+- Slight code duplication in wrappers (bash + MCP)
+- More installation complexity (auto-detection)
+- Multiple access paths to same data
+
+**Benefits:**
+- Zero risk to existing users
+- Instant rollback (remove new files)
+- Easy testing (each tier independent)
+- Universal adoption without migration
 
 ---
 

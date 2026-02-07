@@ -1,55 +1,156 @@
 # SuperLocalMemory V2 - CLI Commands Reference
 
-**Quick reference for all standalone CLI commands**
+**Quick reference for all CLI commands**
 
-SuperLocalMemory V2 is a standalone system. These commands work independently via terminal. Optional Claude CLI integration available via plugin skills.
+**Version 2.1.0-universal** - Universal integration across 8+ IDEs and CLI tools
+
+SuperLocalMemory V2 offers three access methods:
+1. **Universal CLI** - Simple `slm` commands (NEW in v2.1.0)
+2. **Original CLI** - Full `superlocalmemoryv2:*` commands
+3. **MCP/Skills** - IDE-specific integration (auto-configured)
+
+All methods use the same local SQLite database.
 
 ---
 
-## 📊 Status & Information
+## 🎯 Universal CLI Commands (NEW)
+
+**Simple syntax for everyday use:**
+
+### Memory Operations
+
+```bash
+# Save memory
+slm remember "content" --tags tag1,tag2
+
+# Search memories
+slm recall "query"
+
+# List recent memories
+slm list
+
+# System status
+slm status
+
+# Get project context
+slm context
+```
+
+### Profile Management
+
+```bash
+# List profiles
+slm profile list
+
+# Create profile
+slm profile create work --description "Work projects"
+
+# Switch profile
+slm profile switch work
+
+# Delete profile
+slm profile delete old-project
+
+# Show current profile
+slm profile current
+```
+
+### Knowledge Graph
+
+```bash
+# Build graph
+slm graph build
+
+# View statistics
+slm graph stats
+
+# Find related memories
+slm graph related --id 5
+
+# View cluster
+slm graph cluster --id 1
+```
+
+### Pattern Learning
+
+```bash
+# Update patterns
+slm patterns update
+
+# List patterns
+slm patterns list 0.5
+
+# Get coding identity
+slm patterns context 0.7
+
+# Pattern statistics
+slm patterns stats
+```
+
+### Aider Integration
+
+```bash
+# Launch Aider with auto-context injection
+aider-smart "Add authentication to the API"
+
+# Regular Aider works too
+aider
+```
+
+---
+
+## 📊 Original CLI Commands (Still Supported)
+
+All original commands continue to work unchanged. Use these if you prefer explicit paths or are scripting.
 
 ### Check System Status
 ```bash
-~/.claude-memory/bin/memory-status
+superlocalmemoryv2:status
+# OR
+~/.claude-memory/bin/superlocalmemoryv2:status
 ```
 Shows: total memories, graph stats, clusters, patterns, database size
 
 ---
 
-## 👤 Profile Management
+## 👤 Profile Management (Original Commands)
 
 **Default profile is always available.** Use profiles to maintain separate memory contexts for different projects, clients, or AI personalities.
 
 ### List All Profiles
 ```bash
-~/.claude-memory/bin/memory-profile list
+superlocalmemoryv2:profile list
+# OR
+~/.claude-memory/bin/superlocalmemoryv2:profile list
 ```
 Shows all profiles with active marker (→)
 
 ### Show Current Active Profile
 ```bash
-~/.claude-memory/bin/memory-profile current
+superlocalmemoryv2:profile current
+# OR
+~/.claude-memory/bin/superlocalmemoryv2:profile current
 ```
 Shows current profile details and memory count
 
 ### Create New Profile
 ```bash
 # Empty profile
-~/.claude-memory/bin/memory-profile create work --description "Work projects"
+superlocalmemoryv2:profile create work --description "Work projects"
 
 # Copy from current profile
-~/.claude-memory/bin/memory-profile create personal --from-current
+superlocalmemoryv2:profile create personal --from-current
 ```
 
 ### Switch Profile
 ```bash
-~/.claude-memory/bin/memory-profile switch work
+superlocalmemoryv2:profile switch work
 ```
-**⚠️ If using Claude CLI integration, restart Claude CLI after switching. Standalone terminal usage requires no restart.**
+**⚠️ Restart your IDE after switching if using MCP integration.**
 
 ### Delete Profile
 ```bash
-~/.claude-memory/bin/memory-profile delete old-project
+superlocalmemoryv2:profile delete old-project
 ```
 - Cannot delete "default" profile
 - Cannot delete currently active profile
@@ -62,13 +163,17 @@ Shows current profile details and memory count
 
 ### Check Status First
 ```bash
-~/.claude-memory/bin/memory-status
+slm status
+# OR
+superlocalmemoryv2:status
 ```
 **Always check status before any reset operation!**
 
 ### Soft Reset
 ```bash
-~/.claude-memory/bin/memory-reset soft
+superlocalmemoryv2:reset soft
+# OR
+~/.claude-memory/bin/superlocalmemoryv2:reset soft
 ```
 - Clears all memories from current profile
 - Clears graph, patterns, tree structure
@@ -78,7 +183,9 @@ Shows current profile details and memory count
 
 ### Hard Reset
 ```bash
-~/.claude-memory/bin/memory-reset hard --confirm
+superlocalmemoryv2:reset hard --confirm
+# OR
+~/.claude-memory/bin/superlocalmemoryv2:reset hard --confirm
 ```
 - ⚠️ **NUCLEAR OPTION** ⚠️
 - Deletes entire database file
@@ -88,7 +195,9 @@ Shows current profile details and memory count
 
 ### Layer Reset (Surgical)
 ```bash
-~/.claude-memory/bin/memory-reset layer --layers graph patterns
+superlocalmemoryv2:reset layer --layers graph patterns
+# OR
+~/.claude-memory/bin/superlocalmemoryv2:reset layer --layers graph patterns
 ```
 Available layers:
 - `graph` - Clear graph nodes, edges, clusters
