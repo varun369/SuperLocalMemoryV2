@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-Example usage of GraphEngine for SuperLocalMemory
+SuperLocalMemory V2 - example_graph_usage.py
 
-Demonstrates how to:
-1. Build a knowledge graph from memories
-2. Find related memories
-3. Query clusters
-4. Add memories incrementally
+Copyright (c) 2026 Varun Pratap Bhardwaj
+Solution Architect & Original Creator
+
+Licensed under MIT License (see LICENSE file)
+Repository: https://github.com/varun369/SuperLocalMemoryV2
+
+ATTRIBUTION REQUIRED: This notice must be preserved in all copies.
 """
 
 import sys

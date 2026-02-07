@@ -516,6 +516,10 @@ if __name__ == "__main__":
     print("SuperLocalMemory V2 - MCP Server", file=sys.stderr)
     print("Version: 2.1.0-universal", file=sys.stderr)
     print("=" * 60, file=sys.stderr)
+    print("Created by: Varun Pratap Bhardwaj (Solution Architect)", file=sys.stderr)
+    print("Repository: https://github.com/varun369/SuperLocalMemoryV2", file=sys.stderr)
+    print("License: MIT (attribution required - see ATTRIBUTION.md)", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
     print("", file=sys.stderr)
     print(f"Transport: {args.transport}", file=sys.stderr)
 

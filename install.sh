@@ -297,9 +297,57 @@ fi
 
 # Detect Zed Editor
 if [ -d "${HOME}/.config/zed" ] || command -v zed &>/dev/null; then
-    DETECTED_TOOLS+=("Zed Editor (manual)")
-    echo "  ○ Zed Editor detected - manual setup required"
-    echo "    See: docs/MCP-MANUAL-SETUP.md#zed-editor"
+    DETECTED_TOOLS+=("Zed Editor")
+
+    if [ -f "${REPO_DIR}/configs/zed-mcp.json" ]; then
+        configure_mcp "Zed Editor" \
+            "${REPO_DIR}/configs/zed-mcp.json" \
+            "${HOME}/.config/zed/context_servers.json"
+    fi
+fi
+
+# Detect OpenCode
+if [ -d "${HOME}/.opencode" ]; then
+    DETECTED_TOOLS+=("OpenCode")
+
+    if [ -f "${REPO_DIR}/configs/opencode-mcp.json" ]; then
+        configure_mcp "OpenCode" \
+            "${REPO_DIR}/configs/opencode-mcp.json" \
+            "${HOME}/.opencode/mcp.json"
+    fi
+fi
+
+# Detect Antigravity (Gemini)
+if [ -d "${HOME}/.gemini/antigravity" ]; then
+    DETECTED_TOOLS+=("Antigravity")
+
+    if [ -f "${REPO_DIR}/configs/antigravity-mcp.json" ]; then
+        configure_mcp "Antigravity" \
+            "${REPO_DIR}/configs/antigravity-mcp.json" \
+            "${HOME}/.gemini/antigravity/mcp_config.json"
+    fi
+fi
+
+# Detect Perplexity
+if [ -d "${HOME}/.perplexity" ]; then
+    DETECTED_TOOLS+=("Perplexity")
+
+    if [ -f "${REPO_DIR}/configs/perplexity-mcp.json" ]; then
+        configure_mcp "Perplexity" \
+            "${REPO_DIR}/configs/perplexity-mcp.json" \
+            "${HOME}/.perplexity/mcp.json"
+    fi
+fi
+
+# Detect ChatGPT Desktop (macOS)
+if [ -d "${HOME}/Library/Application Support/ChatGPT" ]; then
+    DETECTED_TOOLS+=("ChatGPT Desktop")
+
+    if [ -f "${REPO_DIR}/configs/chatgpt-desktop-mcp.json" ]; then
+        configure_mcp "ChatGPT Desktop" \
+            "${REPO_DIR}/configs/chatgpt-desktop-mcp.json" \
+            "${HOME}/Library/Application Support/ChatGPT/mcp_config.json"
+    fi
 fi
 
 # Detect Cody (VS Code extension)
@@ -442,6 +490,14 @@ else
 fi
 
 echo ""
-echo "Documentation: https://github.com/varun369/SuperLocalMemoryV2"
-echo "Author: Varun Pratap Bhardwaj"
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  ATTRIBUTION NOTICE (REQUIRED BY MIT LICENSE)                ║"
+echo "╠══════════════════════════════════════════════════════════════╣"
+echo "║  Created by: Varun Pratap Bhardwaj                           ║"
+echo "║  Role: Solution Architect & Original Creator                 ║"
+echo "║  Repository: github.com/varun369/SuperLocalMemoryV2          ║"
+echo "║  License: MIT (attribution must be preserved)                ║"
+echo "║                                                              ║"
+echo "║  See ATTRIBUTION.md for full attribution requirements        ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""

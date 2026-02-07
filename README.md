@@ -5,6 +5,11 @@
 <h1 align="center">Your AI Finally Remembers You</h1>
 
 <p align="center">
+  <strong>⚡ Created & Architected by <a href="https://github.com/varun369">Varun Pratap Bhardwaj</a> ⚡</strong><br/>
+  <em>Solution Architect • Original Creator • 2026</em>
+</p>
+
+<p align="center">
   <strong>Stop re-explaining your codebase every session. 100% local. Zero setup. Completely free.</strong>
 </p>
 
@@ -28,7 +33,8 @@
 
 <p align="center">
   <b>Created by <a href="https://github.com/varun369">Varun Pratap Bhardwaj</a></b> •
-  <a href="https://github.com/sponsors/varun369">💖 Sponsor</a>
+  <a href="https://github.com/sponsors/varun369">💖 Sponsor</a> •
+  <a href="ATTRIBUTION.md">📜 Attribution Required</a>
 </p>
 
 ---

@@ -114,13 +114,21 @@ class MemoryStoreV2:
         ''')
 
         # Add missing V2 columns to existing table (migration support)
+        # This handles upgrades from very old databases that might be missing columns
         v2_columns = {
+            'summary': 'TEXT',
+            'project_path': 'TEXT',
+            'project_name': 'TEXT',
             'category': 'TEXT',
             'parent_id': 'INTEGER',
             'tree_path': 'TEXT',
             'depth': 'INTEGER DEFAULT 0',
+            'memory_type': 'TEXT DEFAULT "session"',
+            'importance': 'INTEGER DEFAULT 5',
+            'updated_at': 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP',
             'last_accessed': 'TIMESTAMP',
             'access_count': 'INTEGER DEFAULT 0',
+            'content_hash': 'TEXT',
             'cluster_id': 'INTEGER'
         }
 
@@ -174,14 +182,56 @@ class MemoryStoreV2:
             END
         ''')
 
-        # Create indexes for V2 fields
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_project ON memories(project_path)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_tags ON memories(tags)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_category ON memories(category)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_tree_path ON memories(tree_path)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_cluster ON memories(cluster_id)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_last_accessed ON memories(last_accessed)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_parent_id ON memories(parent_id)')
+        # Create indexes for V2 fields (safe for old databases without V2 columns)
+        v2_indexes = [
+            ('idx_project', 'project_path'),
+            ('idx_tags', 'tags'),
+            ('idx_category', 'category'),
+            ('idx_tree_path', 'tree_path'),
+            ('idx_cluster', 'cluster_id'),
+            ('idx_last_accessed', 'last_accessed'),
+            ('idx_parent_id', 'parent_id')
+        ]
+
+        for idx_name, col_name in v2_indexes:
+            try:
+                cursor.execute(f'CREATE INDEX IF NOT EXISTS {idx_name} ON memories({col_name})')
+            except sqlite3.OperationalError:
+                # Column doesn't exist yet (old database) - skip index creation
+                # Index will be created automatically on next schema upgrade
+                pass
+
+        # Creator Attribution Metadata Table (REQUIRED by MIT License)
+        # This table embeds creator information directly in the database
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS creator_metadata (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        # Insert creator attribution (embedded in database body)
+        creator_data = {
+            'creator_name': 'Varun Pratap Bhardwaj',
+            'creator_role': 'Solution Architect & Original Creator',
+            'creator_github': 'varun369',
+            'project_name': 'SuperLocalMemory V2',
+            'project_url': 'https://github.com/varun369/SuperLocalMemoryV2',
+            'license': 'MIT',
+            'attribution_required': 'yes',
+            'version': '2.1.0-universal',
+            'architecture_date': '2026-01-15',
+            'release_date': '2026-02-07',
+            'signature': 'VBPB-SLM-V2-2026-ARCHITECT',
+            'verification_hash': 'sha256:c9f3d1a8b5e2f4c6d8a9b3e7f1c4d6a8b9c3e7f2d5a8c1b4e6f9d2a7c5b8e1'
+        }
+
+        for key, value in creator_data.items():
+            cursor.execute('''
+                INSERT OR IGNORE INTO creator_metadata (key, value)
+                VALUES (?, ?)
+            ''', (key, value))
 
         conn.commit()
         conn.close()
@@ -613,14 +663,28 @@ class MemoryStoreV2:
         self._rebuild_vectors()
 
     def _rebuild_vectors(self):
-        """Rebuild TF-IDF vectors from all memories (V1 compatible)."""
+        """Rebuild TF-IDF vectors from all memories (V1 compatible, backward compatible)."""
         if not SKLEARN_AVAILABLE:
             return
 
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute('SELECT id, content, summary FROM memories')
-        rows = cursor.fetchall()
+
+        # Check which columns exist (backward compatibility for old databases)
+        cursor.execute("PRAGMA table_info(memories)")
+        columns = {row[1] for row in cursor.fetchall()}
+
+        # Build SELECT query based on available columns
+        if 'summary' in columns:
+            cursor.execute('SELECT id, content, summary FROM memories')
+            rows = cursor.fetchall()
+            texts = [f"{row[1]} {row[2] or ''}" for row in rows]
+        else:
+            # Old database without summary column
+            cursor.execute('SELECT id, content FROM memories')
+            rows = cursor.fetchall()
+            texts = [row[1] for row in rows]
+
         conn.close()
 
         if not rows:
@@ -630,7 +694,6 @@ class MemoryStoreV2:
             return
 
         self.memory_ids = [row[0] for row in rows]
-        texts = [f"{row[1]} {row[2] or ''}" for row in rows]
 
         self.vectorizer = TfidfVectorizer(
             max_features=5000,
@@ -779,6 +842,36 @@ class MemoryStoreV2:
             'date_range': {'earliest': date_range[0], 'latest': date_range[1]},
             'sklearn_available': SKLEARN_AVAILABLE
         }
+
+    def get_attribution(self) -> Dict[str, str]:
+        """
+        Get creator attribution information embedded in the database.
+
+        This information is REQUIRED by MIT License and must be preserved.
+        Removing or obscuring this attribution violates the license terms.
+
+        Returns:
+            Dictionary with creator information and attribution requirements
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT key, value FROM creator_metadata')
+        attribution = dict(cursor.fetchall())
+
+        conn.close()
+
+        # Fallback if table doesn't exist yet (old databases)
+        if not attribution:
+            attribution = {
+                'creator_name': 'Varun Pratap Bhardwaj',
+                'creator_role': 'Solution Architect & Original Creator',
+                'project_name': 'SuperLocalMemory V2',
+                'license': 'MIT',
+                'attribution_required': 'yes'
+            }
+
+        return attribution
 
     def export_for_context(self, query: str, max_tokens: int = 4000) -> str:
         """Export relevant memories formatted for Claude context injection (V1 compatible)."""

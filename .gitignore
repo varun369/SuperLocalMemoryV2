@@ -51,3 +51,17 @@ test-results/
 # Internal planning documents - NOT for public distribution
 docs/plans/
 plans/
+
+# Internal strategy documents - NOT for public distribution (personal strategy)
+ATTRIBUTION-IMPLEMENTATION-REPORT.md
+docs/ATTRIBUTION-PROTECTION-SUMMARY.md
+docs/UNIVERSAL-STRATEGY-2026.md
+
+# Internal testing infrastructure - NOT for public distribution (testing strategy)
+comprehensive_test.py
+test_mcp_server.py
+test_skills.py
+test_edge_cases.py
+RUN_ALL_TESTS.sh
+TEST_REPORT.md
+TESTING_COMPLETE.md
