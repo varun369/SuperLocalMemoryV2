@@ -159,6 +159,29 @@ print('Database ready')
 " && echo "✓ Database initialized (fallback)"
 fi
 
+# Install core dependencies (required for graph & dashboard)
+echo ""
+echo "Installing core dependencies..."
+echo "⏳ This ensures graph visualization and patterns work out-of-box"
+
+# Detect pip installation method
+if pip3 install --help | grep -q "break-system-packages"; then
+    PIP_FLAGS="--break-system-packages"
+else
+    PIP_FLAGS=""
+fi
+
+if [ -f "${REPO_DIR}/requirements-core.txt" ]; then
+    if pip3 install $PIP_FLAGS -q -r "${REPO_DIR}/requirements-core.txt"; then
+        echo "✓ Core dependencies installed (graph, dashboard, patterns)"
+    else
+        echo "⚠️  Core dependency installation failed. Some features may not work."
+        echo "   Install manually: pip3 install -r ${REPO_DIR}/requirements-core.txt"
+    fi
+else
+    echo "⚠️  requirements-core.txt not found, skipping dependency installation"
+fi
+
 # Initialize knowledge graph and pattern learning
 echo ""
 echo "Initializing advanced features..."
@@ -547,32 +570,22 @@ else
     echo "║  Optional Features Available                                  ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo ""
-    echo "SuperLocalMemory V2.2.0 includes optional features:"
+    echo "Core features already installed:"
+    echo "  ✓ Knowledge graph with Leiden clustering"
+    echo "  ✓ Pattern learning and identity profiles"
+    echo "  ✓ Web dashboard at http://localhost:8000"
     echo ""
-    echo "  1) Advanced Search (~1.5GB, 5-10 min)"
-    echo "     • Semantic search with sentence transformers"
+    echo "Optional advanced search features:"
+    echo ""
+    echo "  1) Advanced Semantic Search (~1.5GB, 5-10 min)"
+    echo "     • Sentence transformers for better search quality"
     echo "     • Vector similarity with HNSWLIB"
-    echo "     • Better search quality"
-    echo ""
-    echo "  2) Web Dashboard (~50MB, 1-2 min)"
-    echo "     • Graph visualization (D3.js)"
-    echo "     • API server (FastAPI)"
-    echo "     • Browser-based interface"
-    echo ""
-    echo "  3) Full Package (~1.5GB, 5-10 min)"
-    echo "     • Everything: Search + Dashboard"
+    echo "     • Recommended for large memory databases (>500 items)"
     echo ""
     echo "  N) Skip (install later)"
     echo ""
-    echo -n "Choose option [1/2/3/N]: "
+    echo -n "Choose option [1/N]: "
     read -r INSTALL_CHOICE
-fi
-
-# Detect pip installation method
-if pip3 install --help | grep -q "break-system-packages"; then
-    PIP_FLAGS="--break-system-packages"
-else
-    PIP_FLAGS=""
 fi
 
 case "$INSTALL_CHOICE" in
@@ -589,48 +602,16 @@ case "$INSTALL_CHOICE" in
             echo "  pip3 install -r ${REPO_DIR}/requirements-search.txt"
         fi
         ;;
-    2)
-        echo ""
-        echo "Installing Web Dashboard..."
-        echo "⏳ Downloading ~50MB..."
-        if pip3 install $PIP_FLAGS -r "${REPO_DIR}/requirements-ui.txt"; then
-            echo "✓ Web Dashboard installed successfully"
-            echo ""
-            echo "Start Web UI:"
-            echo "  python3 ~/.claude-memory/api_server.py"
-            echo "  Then open: http://127.0.0.1:8000"
-        else
-            echo "⚠️  Installation failed. Install manually later:"
-            echo "  pip3 install -r ${REPO_DIR}/requirements-ui.txt"
-        fi
-        ;;
-    3)
-        echo ""
-        echo "Installing Full Package (Search + Dashboard)..."
-        echo "⏳ Downloading ~1.5GB (ML models + web server)..."
-        if pip3 install $PIP_FLAGS -r "${REPO_DIR}/requirements-full.txt"; then
-            echo "✓ Full package installed successfully"
-            echo ""
-            echo "All features enabled!"
-            echo "Start Web UI:"
-            echo "  python3 ~/.claude-memory/api_server.py"
-            echo "  Then open: http://127.0.0.1:8000"
-        else
-            echo "⚠️  Installation failed. Install manually later:"
-            echo "  pip3 install -r ${REPO_DIR}/requirements-full.txt"
-        fi
-        ;;
     [Nn]|*)
         echo ""
-        echo "Skipping optional features."
+        echo "Skipping advanced search."
         echo ""
         echo "To install later:"
-        echo "  Advanced Search: pip3 install -r ${REPO_DIR}/requirements-search.txt"
-        echo "  Web Dashboard:   pip3 install -r ${REPO_DIR}/requirements-ui.txt"
-        echo "  Full Package:    pip3 install -r ${REPO_DIR}/requirements-full.txt"
+        echo "  pip3 install -r ${REPO_DIR}/requirements-search.txt"
         echo ""
-        echo "Start Web UI (after installing):"
-        echo "  python3 ~/.claude-memory/api_server.py"
+        echo "Start Web Dashboard:"
+        echo "  python3 ~/.claude-memory/ui_server.py"
+        echo "  Then open: http://localhost:8000"
         ;;
 esac
 

@@ -178,6 +178,24 @@ print('Database ready')
     Write-Host "WARNING: setup_validator.py not found, skipping database init" -ForegroundColor Yellow
 }
 
+# Install core dependencies (required for graph & dashboard)
+Write-Host ""
+Write-Host "Installing core dependencies..."
+Write-Host "INFO: This ensures graph visualization and patterns work out-of-box" -ForegroundColor Yellow
+
+$coreRequirements = Join-Path $REPO_DIR "requirements-core.txt"
+if (Test-Path $coreRequirements) {
+    try {
+        & python -m pip install -q -r $coreRequirements 2>$null
+        Write-Host "OK Core dependencies installed (graph, dashboard, patterns)" -ForegroundColor Green
+    } catch {
+        Write-Host "WARNING: Core dependency installation failed. Some features may not work." -ForegroundColor Yellow
+        Write-Host "   Install manually: python -m pip install -r $coreRequirements" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "WARNING: requirements-core.txt not found, skipping dependency installation" -ForegroundColor Yellow
+}
+
 # Initialize knowledge graph and pattern learning
 Write-Host ""
 Write-Host "Initializing advanced features..."
