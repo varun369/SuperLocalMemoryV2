@@ -1,6 +1,8 @@
-# 4-Layer Architecture
+# Universal Architecture
 
-SuperLocalMemory V2's unique architecture that no competitor offers.
+SuperLocalMemory V2.1.0's universal architecture with MCP integration, agent-skills, and local-first system-design that works across 11+ IDEs. This mcp-protocol based architecture is unique and no competitor offers this level of universal integration.
+
+**Keywords:** universal architecture, system design, mcp protocol, local-first, ai memory
 
 ---
 
@@ -8,9 +10,37 @@ SuperLocalMemory V2's unique architecture that no competitor offers.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    SuperLocalMemory V2                          │
+│              SuperLocalMemory V2.1.0 - Universal                │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  LAYER 7: UNIVERSAL ACCESS                              │   │
+│  │  ─────────────────────────────────────────────────────  │   │
+│  │  • MCP (Model Context Protocol) - 11+ IDEs             │   │
+│  │  • Skills (slash-commands) - Claude/Continue/Cody       │   │
+│  │  • CLI (Universal) - Any terminal                       │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              ▲                                  │
+│                              │ exposes                          │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  LAYER 6: MCP INTEGRATION                               │   │
+│  │  ─────────────────────────────────────────────────────  │   │
+│  │  • 6 Tools (remember, recall, status, etc.)             │   │
+│  │  • 4 Resources (graph, patterns, recent, identity)      │   │
+│  │  • 2 Prompts (context injection)                        │   │
+│  │  • Auto-configured for Cursor, Windsurf, Claude         │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              ▲                                  │
+│                              │ wraps                            │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  LAYER 5: SKILLS LAYER                                  │   │
+│  │  ─────────────────────────────────────────────────────  │   │
+│  │  • 6 Universal Skills (slm-remember, slm-recall, etc.)  │   │
+│  │  • Metadata-first design with SKILL.md                  │   │
+│  │  • Compatible with multiple IDEs                        │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              ▲                                  │
+│                              │ uses                             │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │  LAYER 4: PATTERN LEARNING                              │   │
 │  │  ─────────────────────────────────────────────────────  │   │
@@ -52,6 +82,113 @@ SuperLocalMemory V2's unique architecture that no competitor offers.
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Layer 7: Universal Access (NEW in v2.1.0)
+
+**Purpose:** Universal access across all IDEs, tools, and environments.
+
+### Three-Tier Access Model
+
+SuperLocalMemory V2.1.0 provides **three ways to access** the same local database:
+
+| Access Method | Best For | Examples |
+|---------------|----------|----------|
+| **MCP (Model Context Protocol)** | Modern IDEs with native MCP support | Cursor, Windsurf, Claude Desktop, Continue.dev |
+| **Skills (Slash Commands)** | AI assistants with command systems | Claude Code, Continue.dev, Cody |
+| **CLI (Command Line)** | Terminals, scripts, any environment | `slm remember`, `slm recall`, Aider integration |
+
+### Benefits
+
+- **Single Database:** All three methods use the same SQLite database
+- **Zero Conflicts:** No data duplication or sync issues
+- **Universal:** Works with 11+ IDEs and any terminal
+- **Local-First:** Everything runs on your machine
+
+[[Learn more: MCP Integration →|MCP-Integration]]
+[[Learn more: Universal Skills →|Universal-Skills]]
+
+---
+
+## Layer 6: MCP Integration (NEW in v2.1.0)
+
+**Purpose:** Native integration with MCP-compatible IDEs.
+
+### MCP Server Features
+
+**6 Tools:**
+1. `remember()` - Save memories with auto-indexing
+2. `recall()` - Multi-method search (semantic + FTS)
+3. `list_recent()` - Display recent memories
+4. `get_status()` - System statistics
+5. `build_graph()` - Rebuild knowledge graph
+6. `switch_profile()` - Change memory context
+
+**4 Resources:**
+1. `memory://graph/clusters` - View all knowledge clusters
+2. `memory://patterns/identity` - View learned patterns
+3. `memory://recent/10` - Recent memories feed
+4. `memory://identity/context` - Identity profile for AI
+
+**2 Prompts:**
+1. Context injection for AI sessions
+2. Identity profile prompts
+
+### Supported IDEs (Auto-Configured)
+
+The install.sh script automatically detects and configures:
+- ✅ **Cursor** - `~/.cursor/mcp_settings.json`
+- ✅ **Windsurf** - `~/.windsurf/mcp_settings.json`
+- ✅ **Claude Desktop** - `~/Library/Application Support/Claude/claude_desktop_config.json`
+- ✅ **Continue.dev** - `.continue/config.yaml`
+
+### Manual Setup Available For
+
+- ChatGPT Desktop App
+- Perplexity AI
+- Zed Editor
+- OpenCode IDE
+- Antigravity IDE
+- Custom MCP clients
+
+[[Full installation guide: MCP Integration →|MCP-Integration]]
+
+---
+
+## Layer 5: Skills Layer (NEW in v2.1.0)
+
+**Purpose:** Slash-command based access for AI assistants.
+
+### 6 Universal Skills
+
+All skills follow the `slm-*` naming convention:
+
+| Skill | Purpose | Usage |
+|-------|---------|-------|
+| `slm-remember` | Save content | `/slm-remember "content" --tags work` |
+| `slm-recall` | Search memories | `/slm-recall "query"` |
+| `slm-list-recent` | View recent | `/slm-list-recent 10` |
+| `slm-status` | System health | `/slm-status` |
+| `slm-build-graph` | Rebuild graph | `/slm-build-graph` |
+| `slm-switch-profile` | Change profile | `/slm-switch-profile personal` |
+
+### Metadata-First Design
+
+Each skill includes a `SKILL.md` file with:
+- Name, description, version
+- Usage examples
+- Arguments and options
+- Attribution (Varun Pratap Bhardwaj)
+- MIT license
+
+### Compatible Tools
+
+- **Claude Code** - Native skills support
+- **Continue.dev** - Custom slash commands
+- **Cody** - Custom commands configuration
+
+[[Learn more: Universal Skills →|Universal-Skills]]
 
 ---
 
@@ -252,25 +389,36 @@ Claude: Got it! I'll suggest React solutions, prioritize
 
 ---
 
-## Why 4 Layers?
+## Why Universal Architecture?
 
-### Competitors Have Fewer
+### Competitors Have Fewer Layers and Limited IDE Support
 
-| Solution | Layers | What's Missing |
-|----------|--------|----------------|
-| Mem0 | 2 | No patterns, no hierarchy |
-| Zep | 2 | No patterns |
-| Khoj | 1-2 | No graph, no patterns |
-| **SuperLocalMemory** | **4** | **Complete** |
+| Solution | Layers | IDE Support | What's Missing |
+|----------|--------|-------------|----------------|
+| Mem0 | 2 | Limited (Cloud) | No patterns, no hierarchy, no universal access |
+| Zep | 2 | 1-2 IDEs | No patterns, no MCP, cloud-only |
+| Khoj | 1-2 | Limited | No graph, no patterns, no universal CLI |
+| **SuperLocalMemory V2.1.0** | **7** | **11+ IDEs** | **Nothing - Complete** |
 
 ### Each Layer Adds Value
 
 | Without Layer | Impact |
 |---------------|--------|
+| No Universal Access | Limited to one IDE/tool |
+| No MCP Integration | Can't work with modern IDEs |
+| No Skills Layer | No slash-command support |
+| No Pattern Learning | Don't learn preferences |
+| No Knowledge Graph | Miss hidden relationships |
+| No Hierarchical Index | Slow navigation, no context |
 | No Storage | Can't persist anything |
-| No Index | Slow navigation, no context |
-| No Graph | Miss hidden relationships |
-| No Patterns | Don't learn preferences |
+
+### Universal = Single Database, Multiple Access Points
+
+All layers share the **same SQLite database**:
+- MCP tools read/write to `~/.claude-memory/memory.db`
+- Skills read/write to the same database
+- CLI commands use the same database
+- **Zero data duplication, zero sync conflicts**
 
 ---
 
@@ -323,13 +471,31 @@ User saves memory
 
 | Layer | Research | Source |
 |-------|----------|--------|
-| 1 | Tiered Storage | Industry best practice |
-| 2 | PageIndex | Meta AI, 2024 |
-| 3 | GraphRAG | Microsoft Research, 2024 |
+| 7 | Universal Access | Novel (v2.1.0) |
+| 6 | MCP Protocol | Anthropic, 2024 |
+| 5 | Skills Architecture | Novel (v2.1.0) |
 | 4 | xMemory | Stanford, 2024 |
+| 3 | GraphRAG | Microsoft Research, 2024 |
+| 2 | PageIndex | Meta AI, 2024 |
+| 1 | Tiered Storage | Industry best practice |
 
-**SuperLocalMemory is the only open-source implementation combining all four.**
+**SuperLocalMemory V2.1.0 is the only open-source implementation combining all seven layers with universal IDE support.**
+
+Created by **Varun Pratap Bhardwaj**.
 
 ---
 
-[[← Back to Home|Home]] | [[Next: Knowledge Graph Guide →|Knowledge-Graph-Guide]]
+## Next Steps
+
+- [[MCP Integration Guide →|MCP-Integration]] - Setup for 11+ IDEs
+- [[Universal Skills Guide →|Universal-Skills]] - Learn slash-commands
+- [[Knowledge Graph Guide →|Knowledge-Graph-Guide]] - Understand clustering
+- [[Installation →|Installation]] - Get started in 5 minutes
+
+---
+
+[[← Back to Home|Home]]
+
+---
+
+**Created by Varun Pratap Bhardwaj**

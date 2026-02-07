@@ -16,10 +16,13 @@ SuperLocalMemory V2 is an **intelligent local memory system** for AI assistants.
 
 ### Does it only work with Claude?
 
-No! While optimized for Claude CLI, SuperLocalMemory works with:
-- **Any AI assistant** via CLI commands or Python API
-- **Standalone** via terminal
-- **Custom integrations** via the Python module
+No! SuperLocalMemory V2.1.0 is **universal** and works with 11+ IDEs:
+- **MCP Integration:** Cursor, Windsurf, Claude Desktop, Continue.dev, ChatGPT Desktop, Perplexity, Zed, OpenCode, Antigravity
+- **Skills:** Claude Code, Continue.dev, Cody
+- **CLI:** Aider, any terminal
+- **Python API:** Custom integrations
+
+[[See all supported IDEs →|MCP-Integration]]
 
 ### Where is my data stored?
 
@@ -58,14 +61,21 @@ No. Pattern learning happens entirely locally using basic frequency analysis. No
 
 ## Technical Questions
 
-### What's the 4-layer architecture?
+### What's the universal architecture?
 
-1. **Layer 1: Raw Storage** — SQLite + full-text search
-2. **Layer 2: Hierarchical Index** — Tree structure for navigation
-3. **Layer 3: Knowledge Graph** — Auto-discovers relationships
+SuperLocalMemory V2.1.0 has a **7-layer universal architecture**:
+
+1. **Layer 7: Universal Access** — MCP + Skills + CLI (works everywhere)
+2. **Layer 6: MCP Integration** — Model Context Protocol for 11+ IDEs
+3. **Layer 5: Skills Layer** — 6 universal slash-commands
 4. **Layer 4: Pattern Learning** — Learns your preferences
+5. **Layer 3: Knowledge Graph** — Auto-discovers relationships
+6. **Layer 2: Hierarchical Index** — Tree structure for navigation
+7. **Layer 1: Raw Storage** — SQLite + full-text search
 
-[[Full architecture explanation →|4-Layer-Architecture]]
+All layers share the **same local database** - no duplication, no sync issues.
+
+[[Full architecture explanation →|Universal-Architecture]]
 
 ### How does the knowledge graph work?
 
@@ -129,11 +139,13 @@ Yes. Your data is in `~/.claude-memory/memory.db`. You can:
 
 ### How is this different from Zep?
 
-| Aspect | Zep | SuperLocalMemory |
+| Aspect | Zep | SuperLocalMemory V2.1.0 |
 |--------|-----|------------------|
 | **Price** | $50/month | Free forever |
 | **Data location** | Cloud | 100% local |
-| **4-layer architecture** | No | Yes |
+| **IDE Support** | 1-2 | 11+ IDEs |
+| **Universal Architecture** | No | Yes (7 layers) |
+| **MCP Integration** | No | Yes |
 | **Credit limits** | Yes | No limits |
 
 ### Why not just use ChatGPT memory?
@@ -153,6 +165,67 @@ No. Those are note-taking apps. SuperLocalMemory is specifically designed for:
 - Automatic relationship discovery
 - Pattern learning
 - Code/development workflows
+
+---
+
+## V2.1.0 New Features
+
+### What's new in v2.1.0?
+
+**Universal integration across 11+ IDEs:**
+- **MCP Server** - Native integration with Cursor, Windsurf, Claude Desktop, Continue.dev, and 7+ more
+- **6 Universal Skills** - Slash-commands for Claude Code, Continue.dev, Cody
+- **Universal CLI** - `slm` command works in any terminal
+- **Auto-Configuration** - Zero manual setup for major IDEs
+
+### What is MCP?
+
+**MCP (Model Context Protocol)** is Anthropic's protocol for connecting AI assistants to external tools. SuperLocalMemory's MCP server lets AI naturally use your memory without slash commands.
+
+Example:
+```
+You: "Remember that we use FastAPI for APIs"
+Claude: [Uses remember tool automatically] ✓ Saved
+```
+
+[[Learn more →|MCP-Integration]]
+
+### What are universal skills?
+
+**Skills** are slash-commands that work across multiple IDEs:
+- `/slm-remember` - Save memory
+- `/slm-recall` - Search
+- `/slm-status` - System health
+- `/slm-build-graph` - Rebuild graph
+- `/slm-list-recent` - Show recent
+- `/slm-switch-profile` - Change profile
+
+All skills use the **same local database** as MCP and CLI.
+
+[[Learn more →|Universal-Skills]]
+
+### Which IDEs are supported?
+
+**Auto-configured (run install.sh):**
+- ✅ Claude Desktop
+- ✅ Cursor
+- ✅ Windsurf
+- ✅ Continue.dev (VS Code)
+
+**Manual setup available:**
+- ChatGPT Desktop, Perplexity AI, Zed, OpenCode, Antigravity, Cody, Aider
+
+[[Full setup guide →|MCP-Integration]]
+
+### Do MCP, Skills, and CLI share data?
+
+**Yes!** All three methods use the **same SQLite database** at `~/.claude-memory/memory.db`. No duplication, no sync issues.
+
+Save with MCP → Search with CLI → View with Skills → All work on the same memories.
+
+### Will v2.1.0 break my existing setup?
+
+**No, 100% backward compatible.** All v2.0 commands still work. Your existing memories are preserved. Nothing breaks.
 
 ---
 
@@ -249,4 +322,22 @@ Yes! See [[Roadmap]] for upcoming features.
 
 ---
 
+## Creator
+
+### Who created SuperLocalMemory?
+
+**Varun Pratap Bhardwaj** - Solution Architect and Original Creator
+
+SuperLocalMemory V2 is built as an open-source alternative to expensive cloud-based memory services like Mem0 and Zep.
+
+- **GitHub:** [github.com/varun369](https://github.com/varun369)
+- **License:** MIT (free for commercial use)
+- **Support:** [Buy me a coffee](https://buymeacoffee.com/varunpratah)
+
+---
+
 [[← Back to Home|Home]]
+
+---
+
+**Created by Varun Pratap Bhardwaj**

@@ -12,7 +12,9 @@
 ---
 
 ### 🏗️ Core Concepts
-- [[4-Layer-Architecture]]
+- [[Universal-Architecture]]
+- [[MCP-Integration]]
+- [[Universal-Skills]]
 - [[Knowledge-Graph-Guide]]
 - [[Pattern-Learning-Explained]]
 - [[Multi-Profile-Workflows]]

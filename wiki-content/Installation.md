@@ -1,6 +1,6 @@
 # Installation Guide
 
-Complete installation instructions for SuperLocalMemory V2 on all platforms.
+Complete installation instructions for SuperLocalMemory V2.1.0 with universal MCP integration on all platforms. This guide covers setup for 11+ IDEs including Claude Desktop, Cursor IDE, Windsurf, VS Code, and more.
 
 ---
 
@@ -65,14 +65,38 @@ $env:PATH += ";$env:USERPROFILE\.claude-memory\bin"
 # Check system status
 superlocalmemoryv2:status
 
+# Or use the simpler CLI
+slm status
+
 # Expected output:
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  SuperLocalMemory V2 - System Status                         ║
+# ║  SuperLocalMemory V2.1.0 - System Status                     ║
 # ╚══════════════════════════════════════════════════════════════╝
 # ✓ Database: OK (0 memories)
 # ✓ Graph: Ready
 # ✓ Patterns: Ready
+# ✓ MCP: Configured for 4 IDEs
+# ✓ Skills: Installed (6 skills)
 ```
+
+### What Was Configured?
+
+The installer automatically detects and configures:
+
+**IDEs with MCP Support:**
+- ✅ Claude Desktop - MCP server configured
+- ✅ Cursor - MCP settings added
+- ✅ Windsurf - MCP integration enabled
+- ✅ Continue.dev - MCP + skills configured
+
+**Skills Installed:**
+- ✅ 6 universal skills (slm-remember, slm-recall, etc.)
+- ✅ Compatible with Claude Code, Continue.dev, Cody
+
+**CLI Access:**
+- ✅ `slm` command available globally
+- ✅ `aider-smart` wrapper for Aider integration
+- ✅ Bash/Zsh completion installed
 
 ---
 
@@ -186,12 +210,100 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ---
 
+## 🔧 IDE-Specific Setup
+
+### Already Configured (Auto)
+
+If you have these IDEs installed, they're **already configured**:
+- Claude Desktop
+- Cursor
+- Windsurf
+- Continue.dev (VS Code)
+
+Just **restart the IDE** and the SuperLocalMemory tools will be available.
+
+### Manual Setup Required
+
+For these IDEs, see the [[MCP-Integration]] guide:
+- **ChatGPT Desktop** - Settings → MCP
+- **Perplexity AI** - App settings
+- **Zed Editor** - JSON config
+- **OpenCode** - MCP config
+- **Antigravity IDE** - Settings
+- **Cody** - Already has skills via install-skills.sh
+- **Aider** - Use `aider-smart` wrapper
+
+[[Complete IDE setup guide →|MCP-Integration]]
+
+---
+
+## 🎯 Testing Your Installation
+
+### Test MCP Integration (Claude Desktop)
+
+1. Open Claude Desktop
+2. Start a new conversation
+3. Say: "What tools do you have access to?"
+4. You should see SuperLocalMemory tools listed
+5. Test: "Remember that we use FastAPI for APIs"
+6. Verify: "What do we use for APIs?"
+
+### Test Skills (Claude Code)
+
+1. Open Claude Code
+2. Type `/` to see available skills
+3. You should see `/slm-remember`, `/slm-recall`, etc.
+4. Test: `/slm-remember "Test memory"`
+
+### Test CLI
+
+```bash
+# Add a memory
+slm remember "Testing SuperLocalMemory CLI"
+
+# Search for it
+slm recall "testing"
+
+# Check status
+slm status
+```
+
+---
+
+## 🆕 What's New in v2.1.0?
+
+**Universal Integration:**
+- ✅ MCP server for 11+ IDEs
+- ✅ 6 universal skills
+- ✅ Universal CLI (`slm` command)
+- ✅ Auto-detection and configuration
+- ✅ Zero manual setup for major IDEs
+
+**Backward Compatible:**
+- ✅ All v2.0 commands still work
+- ✅ Existing memories preserved
+- ✅ No breaking changes
+
+---
+
 ## ⏭️ Next Steps
 
-1. [[Quick-Start-Tutorial]] — Create your first memory
-2. [[CLI-Cheatsheet]] — Essential commands
-3. [[4-Layer-Architecture]] — Understand how it works
+1. [[MCP-Integration]] — Learn about IDE integration
+2. [[Universal-Skills]] — Master the 6 skills
+3. [[Quick-Start-Tutorial]] — Create your first memory
+4. [[Universal-Architecture]] — Understand the system
+5. [[CLI-Cheatsheet]] — Essential commands
+
+---
+
+## 📸 Screenshots
+
+*Coming soon: Screenshots of SuperLocalMemory in Claude Desktop, Cursor, and Windsurf*
 
 ---
 
 [[← Back to Home|Home]]
+
+---
+
+**Created by Varun Pratap Bhardwaj**

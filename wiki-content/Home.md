@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>Your AI Finally Remembers You</strong><br/>
-  <em>The only free, local-first AI memory system with 4-layer architecture</em>
+  <em>The only free, local-first AI memory system with universal architecture</em>
 </p>
 
 <p align="center">
@@ -15,11 +15,12 @@
 
 ## 🎯 What is SuperLocalMemory?
 
-SuperLocalMemory V2 is an **intelligent memory system** that makes AI assistants remember everything about you and your projects. Unlike cloud-based alternatives like Mem0 ($50+/mo) or Zep ($50/mo), SuperLocalMemory is:
+SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assistants like Claude, Cursor, and other mcp-server compatible tools remember everything about you and your projects. Created by **Varun Pratap Bhardwaj**, this local-first memory solution is the perfect alternative to Mem0 and Zep. Unlike cloud-based alternatives like Mem0 ($50+/mo) or Zep ($50/mo), SuperLocalMemory is:
 
 - **100% Local** — Your data never leaves your machine
 - **100% Free** — No usage limits, no credit systems, forever
 - **100% Private** — GDPR/HIPAA compliant by default
+- **Works Everywhere** — 11+ IDEs including Claude Desktop, Cursor IDE, Windsurf, VS Code, and more
 
 ---
 
@@ -35,7 +36,9 @@ SuperLocalMemory V2 is an **intelligent memory system** that makes AI assistants
 ### Core Concepts
 | Guide | Description |
 |-------|-------------|
-| [[4-Layer-Architecture]] | How the system works under the hood |
+| [[Universal-Architecture]] | Universal architecture with MCP integration |
+| [[MCP-Integration]] | Model Context Protocol support for 11+ IDEs |
+| [[Universal-Skills]] | 6 agent skills and slash-commands |
 | [[Knowledge-Graph-Guide]] | Auto-discovery of relationships |
 | [[Pattern-Learning-Explained]] | How it learns your coding style |
 | [[Multi-Profile-Workflows]] | Separate contexts for work/personal/clients |
@@ -81,18 +84,20 @@ superlocalmemoryv2:recall "auth bug"
 
 ---
 
-## 🆚 Comparison with Alternatives
+## 🆚 Alternative to Mem0 and Zep
 
-| Feature | Mem0 | Zep | Personal.AI | **SuperLocalMemory** |
+| Feature | Mem0 | Zep | Personal.AI | **SuperLocalMemory V2** |
 |---------|------|-----|-------------|---------------------|
 | **Price** | Usage-based | $50/mo | $33/mo | **$0 forever** |
-| **Local** | ❌ Cloud | ❌ Cloud | ❌ Cloud | **✅ 100%** |
-| **4-Layer Architecture** | ❌ | ❌ | ❌ | **✅** |
-| **Pattern Learning** | ❌ | ❌ | Partial | **✅** |
-| **Knowledge Graphs** | ✅ | ✅ | ❌ | **✅** |
-| **Zero Setup** | ❌ | ❌ | ❌ | **✅** |
+| **Local-First** | ❌ Cloud | ❌ Cloud | ❌ Cloud | **✅ 100%** |
+| **IDE Support** | Limited | 1-2 | None | **✅ 11+ IDEs** |
+| **Universal Architecture** | ❌ | ❌ | ❌ | **✅ MCP + Skills + CLI** |
+| **MCP Integration** | ❌ | ❌ | ❌ | **✅ Native** |
+| **Pattern Learning** | ❌ | ❌ | Partial | **✅ Full** |
+| **Knowledge Graphs** | ✅ | ✅ | ❌ | **✅ Leiden Clustering** |
+| **Zero Setup** | ❌ | ❌ | ❌ | **✅ 5-min install** |
 
-**No other solution offers ALL features AND is free.** [[See detailed comparison|Comparison-Deep-Dive]]
+**SuperLocalMemory V2 is the ONLY solution with universal IDE support, full local operation, and zero cost.** Created by **Varun Pratap Bhardwaj** as an open-source alternative to expensive cloud services. [[See detailed comparison|Comparison-Deep-Dive]]
 
 ---
 
@@ -129,13 +134,13 @@ SuperLocalMemory implements cutting-edge 2026 research:
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Creator
 
-**Varun Pratap Bhardwaj** — Solution Architect
+**Created by Varun Pratap Bhardwaj** — Solution Architect & Original Creator
 
 [![GitHub](https://img.shields.io/badge/GitHub-@varun369-181717?style=flat-square&logo=github)](https://github.com/varun369)
 
-Building tools that make AI actually useful for developers.
+Building open-source tools that make AI assistants actually useful for developers. SuperLocalMemory V2.1.0 brings universal integration to 11+ IDEs while maintaining 100% local-first privacy.
 
 ---
 
@@ -151,5 +156,6 @@ If SuperLocalMemory saves you time:
 ---
 
 <p align="center">
-  <strong>100% local. 100% private. 100% yours.</strong>
+  <strong>100% local. 100% private. 100% yours.</strong><br/>
+  <em>Created by Varun Pratap Bhardwaj</em>
 </p>
