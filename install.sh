@@ -13,6 +13,12 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 
 # Parse command line arguments
 NON_INTERACTIVE=false
+
+# Auto-detect non-interactive environment (Docker, CI/CD, pipes)
+if [ ! -t 0 ] || [ ! -t 1 ]; then
+    NON_INTERACTIVE=true
+fi
+
 for arg in "$@"; do
     case $arg in
         --non-interactive|--auto|--yes|-y)
@@ -27,6 +33,9 @@ for arg in "$@"; do
             echo "                    Skip interactive prompts (for scripts/automation)"
             echo "  --help, -h        Show this help message"
             echo ""
+            echo "Note: Non-interactive mode is auto-detected when running in"
+            echo "      Docker, CI/CD, or piped environments."
+            echo ""
             exit 0
             ;;
     esac
@@ -40,6 +49,13 @@ echo "║  by Varun Pratap Bhardwaj                                    ║"
 echo "║  https://github.com/varun369/SuperLocalMemoryV2              ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
+
+# Show mode if non-interactive
+if [ "$NON_INTERACTIVE" = true ]; then
+    echo "🤖 Running in non-interactive mode (auto-detected)"
+    echo "   Skipping optional prompts, using defaults"
+    echo ""
+fi
 
 # Check Python version
 echo "Checking Python version..."

@@ -10,6 +10,24 @@ $ErrorActionPreference = "Stop"
 $INSTALL_DIR = Join-Path $env:USERPROFILE ".claude-memory"
 $REPO_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+# Auto-detect non-interactive environment
+$NON_INTERACTIVE = $false
+if (-not [Environment]::UserInteractive) {
+    $NON_INTERACTIVE = $true
+}
+
+# Parse command line arguments
+param(
+    [switch]$NonInteractive,
+    [switch]$Auto,
+    [switch]$Yes,
+    [switch]$y
+)
+
+if ($NonInteractive -or $Auto -or $Yes -or $y) {
+    $NON_INTERACTIVE = $true
+}
+
 # Print banner
 Write-Host ""
 Write-Host "=================================================================="
@@ -18,6 +36,13 @@ Write-Host "  by Varun Pratap Bhardwaj                                       "
 Write-Host "  https://github.com/varun369/SuperLocalMemoryV2                 "
 Write-Host "=================================================================="
 Write-Host ""
+
+# Show mode if non-interactive
+if ($NON_INTERACTIVE) {
+    Write-Host "🤖 Running in non-interactive mode" -ForegroundColor Cyan
+    Write-Host "   Skipping optional prompts, using defaults" -ForegroundColor Cyan
+    Write-Host ""
+}
 
 # Check Python version
 Write-Host "Checking Python version..."
@@ -316,7 +341,14 @@ Write-Host "     - Everything: Search + Dashboard"
 Write-Host ""
 Write-Host "  N) Skip (install later)"
 Write-Host ""
-$INSTALL_CHOICE = Read-Host "Choose option [1/2/3/N]"
+
+# Handle interactive vs non-interactive mode
+if ($NON_INTERACTIVE) {
+    $INSTALL_CHOICE = "N"
+    Write-Host "Auto-selecting: N (Skip)" -ForegroundColor Cyan
+} else {
+    $INSTALL_CHOICE = Read-Host "Choose option [1/2/3/N]"
+}
 
 $requirementsDir = $REPO_DIR
 switch ($INSTALL_CHOICE) {
