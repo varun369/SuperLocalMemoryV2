@@ -655,17 +655,17 @@ class PatternStore:
 
         if pattern_type:
             cursor.execute('''
-                SELECT id, pattern_type, key, value, confidence, evidence_count, memory_ids, category, updated_at
+                SELECT id, pattern_type, pattern_key, pattern_value, confidence, frequency, last_seen, created_at
                 FROM identity_patterns
                 WHERE confidence >= ? AND pattern_type = ?
-                ORDER BY confidence DESC, evidence_count DESC
+                ORDER BY confidence DESC, frequency DESC
             ''', (min_confidence, pattern_type))
         else:
             cursor.execute('''
-                SELECT id, pattern_type, key, value, confidence, evidence_count, memory_ids, category, updated_at
+                SELECT id, pattern_type, pattern_key, pattern_value, confidence, frequency, last_seen, created_at
                 FROM identity_patterns
                 WHERE confidence >= ?
-                ORDER BY confidence DESC, evidence_count DESC
+                ORDER BY confidence DESC, frequency DESC
             ''', (min_confidence,))
 
         patterns = []
@@ -676,10 +676,9 @@ class PatternStore:
                 'key': row[2],
                 'value': row[3],
                 'confidence': row[4],
-                'evidence_count': row[5],
-                'memory_ids': json.loads(row[6]) if row[6] else [],
-                'category': row[7],
-                'updated_at': row[8]
+                'frequency': row[5],
+                'last_seen': row[6],
+                'created_at': row[7]
             })
 
         conn.close()
