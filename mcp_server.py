@@ -203,8 +203,8 @@ async def list_recent(limit: int = 10) -> dict:
         # Use existing MemoryStoreV2 class
         store = MemoryStoreV2(DB_PATH)
 
-        # Call existing list_memories method
-        memories = store.list_memories(limit=limit)
+        # Call existing list_all method
+        memories = store.list_all(limit=limit)
 
         return {
             "success": True,
@@ -353,7 +353,7 @@ async def get_recent_memories_resource(limit: str) -> str:
     """
     try:
         store = MemoryStoreV2(DB_PATH)
-        memories = store.list_memories(limit=int(limit))
+        memories = store.list_all(limit=int(limit))
         return json.dumps(memories, indent=2)
     except Exception as e:
         return json.dumps({"error": str(e)}, indent=2)
@@ -383,7 +383,8 @@ async def get_clusters_resource() -> str:
     """
     try:
         engine = GraphEngine(DB_PATH)
-        clusters = engine.get_clusters()
+        stats = engine.get_stats()
+        clusters = stats.get('clusters', [])
         return json.dumps(clusters, indent=2)
     except Exception as e:
         return json.dumps({"error": str(e)}, indent=2)
@@ -398,7 +399,7 @@ async def get_coding_identity_resource() -> str:
     """
     try:
         learner = PatternLearner(DB_PATH)
-        patterns = learner.get_context(threshold=0.5)
+        patterns = learner.get_identity_context(min_confidence=0.5)
         return json.dumps(patterns, indent=2)
     except Exception as e:
         return json.dumps({"error": str(e)}, indent=2)
@@ -418,7 +419,7 @@ async def coding_identity_prompt() -> str:
     """
     try:
         learner = PatternLearner(DB_PATH)
-        patterns = learner.get_context(threshold=0.6)
+        patterns = learner.get_identity_context(min_confidence=0.6)
 
         if not patterns:
             return "# Coding Identity\n\nNo patterns learned yet. Use remember() to save coding decisions and preferences."
