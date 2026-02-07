@@ -46,12 +46,50 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
       </div>
 
-      <!-- Quick Install -->
-      <div style="max-width: 600px; margin: 0 auto; background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem;">
-        <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">5-Minute Install</h3>
-        <pre style="margin: 0;"><code>git clone https://github.com/varun369/SuperLocalMemoryV2.git
+      <!-- Downloads -->
+      <div style="max-width: 800px; margin: 0 auto;">
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem; text-align: center;">Download or Install</h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+          <!-- macOS DMG -->
+          <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem; text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;"></div>
+            <h4 style="margin-bottom: 0.5rem;">macOS</h4>
+            <p style="font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 1rem;">One-click installer</p>
+            <a href="https://github.com/varun369/SuperLocalMemoryV2/releases/download/v2.1.0/SuperLocalMemory-v2.1.0-macos.dmg" class="btn" style="width: 100%; box-sizing: border-box;">
+              Download DMG
+            </a>
+          </div>
+
+          <!-- Windows -->
+          <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem; text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🪟</div>
+            <h4 style="margin-bottom: 0.5rem;">Windows</h4>
+            <p style="font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 1rem;">PowerShell script</p>
+            <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/Installation#windows" class="btn btn-secondary" style="width: 100%; box-sizing: border-box;">
+              Install Guide
+            </a>
+          </div>
+
+          <!-- Linux -->
+          <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem; text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🐧</div>
+            <h4 style="margin-bottom: 0.5rem;">Linux</h4>
+            <p style="font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 1rem;">Shell script</p>
+            <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/Installation#linux" class="btn btn-secondary" style="width: 100%; box-sizing: border-box;">
+              Install Guide
+            </a>
+          </div>
+        </div>
+
+        <!-- Quick Install for Terminal Users -->
+        <details style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem;">
+          <summary style="cursor: pointer; font-weight: 600; margin-bottom: 1rem;">Or install from source (all platforms)</summary>
+          <pre style="margin: 0;"><code>git clone https://github.com/varun369/SuperLocalMemoryV2.git
 cd SuperLocalMemoryV2
-./install.sh</code></pre>
+./install.sh  # Mac/Linux
+# Or: .\install.ps1  # Windows</code></pre>
+        </details>
       </div>
     </div>
   </section>
