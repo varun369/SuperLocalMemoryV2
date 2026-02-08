@@ -1,6 +1,6 @@
 {
   "name": "superlocalmemory",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "description": "Your AI Finally Remembers You - Local-first intelligent memory system for AI assistants. Works with Claude, Cursor, Windsurf, VS Code/Copilot, Codex, and 16+ AI tools. 100% local, zero cloud dependencies.",
   "keywords": [
     "ai-memory",
@@ -70,7 +70,10 @@
     "CHANGELOG.md",
     "docs/",
     "requirements.txt",
-    "requirements-core.txt"
+    "requirements-core.txt",
+    "ui/",
+    "ui_server.py",
+    "api_server.py"
   ],
   "preferGlobal": true,
   "funding": {
