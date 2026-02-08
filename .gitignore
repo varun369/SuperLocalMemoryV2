@@ -1,7 +1,11 @@
-# Personal data - NEVER commit these
+# ============================================================================
+# SuperLocalMemory V2 — .gitignore
+# ============================================================================
+
+# ==== USER DATA (Never commit) ====
 memory.db
 *.db
-!demo-memory.db  # Exception: demo database is safe for distribution
+!demo-memory.db
 backups/
 profiles/
 vectors/
@@ -9,79 +13,18 @@ cold-storage/
 jobs/
 profiles.json
 
-# Personal Claude Code configuration - NOT for public distribution
-CLAUDE.md
+# ==== BACKUP DIRECTORY (Internal/archived files) ====
+.backup/
 
-# ============================================================================
-# MARKETING & STRATEGY FILES (Keep in /plans directory only)
-# ============================================================================
-
-# Strategy documents
-*STRATEGY*.md
-*-STRATEGY.md
-SEO-*.md
-MARKETING-*.md
-
-# Content creation drafts
-DIRECTORY-SUBMISSIONS.md
-REDDIT-POSTS.md
-HACKER-NEWS-POST.md
-DEVTO-*.md
-BLOG-POSTS.md
-blog-posts/
-
-# Tracking documents
-FIXES-*.md
-STATUS-SUMMARY-*.md
-DEPLOYMENT-*.md
-
-# NPM publishing guides (internal workflow)
-NPM-PUBLISHING-GUIDE.md
-NPM-DEPLOYMENT-CHECKLIST.md
-NPM-README-UPDATE.md
-NPM-PACKAGE-SUMMARY.md
-NPM-FILES-REFERENCE.md
-test-npm-package.sh
-
-# DMG/EXE build documentation (move to plans)
-DMG-BUILD-*.md
-DMG-QUICK-REFERENCE.md
-INSTALLER-*.md
-BUILD-INSTALLER.md
-WINDOWS-INSTALLER-*.md
-README-WINDOWS-INSTALLER.md
-test-dmg.sh
-
-# Website source (keep in website/ directory only)
-website/DEPLOY-NOW.md
-website/DEPLOYMENT.md
-website/VERIFICATION-CHECKLIST.md
-
-# ============================================================================
-# BUILD ARTIFACTS (Generated files, not source)
-# ============================================================================
-
-# DMG artifacts
+# ==== BUILD ARTIFACTS ====
 build/
-*.dmg
-SuperLocalMemory-*.dmg
 dist/
-
-# EXE artifacts
+*.dmg
 *.exe
-SuperLocalMemory-Setup-*.exe
+*.tgz
 *.sha256
 *.md5
-
-# NPM artifacts
-*.tgz
 package/
-
-# ============================================================================
-# DEVELOPMENT FILES
-# ============================================================================
-
-# Python cache
 __pycache__/
 *.pyc
 *.pyo
@@ -89,13 +32,13 @@ __pycache__/
 .Python
 *.so
 
-# Virtual environments
+# ==== VIRTUAL ENVIRONMENTS ====
 venv/
 .venv/
 env/
 ENV/
 
-# OS files
+# ==== OS FILES ====
 .DS_Store
 .DS_Store?
 ._*
@@ -103,65 +46,62 @@ ENV/
 .Trashes
 Thumbs.db
 
-# IDE
+# ==== IDE ====
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Logs
+# ==== LOGS ====
 *.log
 
-# Test outputs
-test-output/
-test-results/
+# ==== NODE ====
+node_modules/
+website/node_modules/
+website/dist/
+website/.astro/
 
-# ============================================================================
-# INTERNAL DOCS (Not for public repo)
-# ============================================================================
-
-# Internal planning documents
-docs/plans/
-plans/
-
-# Internal strategy documents
-ATTRIBUTION-IMPLEMENTATION-REPORT.md
-docs/ATTRIBUTION-PROTECTION-SUMMARY.md
-docs/UNIVERSAL-STRATEGY-2026.md
-
-# Internal testing infrastructure
-comprehensive_test.py
-test_mcp_server.py
-test_skills.py
-test_edge_cases.py
-RUN_ALL_TESTS.sh
-TEST_REPORT.md
-TESTING_COMPLETE.md
-
-# Internal task completion reports
+# ==== INTERNAL DOCS (Not for public repo) ====
+CLAUDE.md
+FIXES-*.md
+STATUS-SUMMARY-*.md
 TASK-*.md
 TASKS-*.md
 TASK_*.md
 COMPLETION*.md
 AGENT-*.md
 AGENT_*.md
+TEST_REPORT.md
+GAPS-AND-ISSUES.md
 
-# Internal implementation summaries
-IMPLEMENTATION-SUMMARY*.md
-MIGRATION*.md
+# ==== MARKETING & STRATEGY (Keep in /plans only) ====
+*STRATEGY*.md
+SEO-*.md
+MARKETING-*.md
+DIRECTORY-SUBMISSIONS.md
+REDDIT-POSTS.md
+HACKER-NEWS-POST.md
+DEVTO-*.md
+BLOG-POSTS.md
+blog-posts/
+NPM-PUBLISHING-GUIDE.md
+NPM-DEPLOYMENT-CHECKLIST.md
+NPM-README-UPDATE.md
+NPM-PACKAGE-SUMMARY.md
+NPM-FILES-REFERENCE.md
+DMG-BUILD-*.md
+DMG-QUICK-REFERENCE.md
+INSTALLER-*.md
+BUILD-INSTALLER.md
+WINDOWS-INSTALLER-*.md
+README-WINDOWS-INSTALLER.md
 
-# Internal UAT reports
-UAT_*.md
-EDGE_CASE*.md
+# ==== WEBSITE INTERNAL DOCS ====
+website/DEPLOY-NOW.md
+website/DEPLOYMENT.md
+website/VERIFICATION-CHECKLIST.md
 
-# Internal testing modules
-test_new_modules.py
-test_search_engine.py
-test_ui_server.py
-verify_v2_2_0.py
-
-# Internal quickstart docs (redundant with official docs)
-V2.2.0-QUICKSTART.md
-V2.2.0-README.txt
-UI_SERVER_QUICKSTART.md
+# ==== TEST OUTPUTS ====
+test-output/
+test-results/

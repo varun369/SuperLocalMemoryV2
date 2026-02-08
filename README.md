@@ -471,12 +471,12 @@ superlocalmemoryv2:profile create client-acme
 
 | Guide | Description |
 |-------|-------------|
-| [Quick Start](QUICKSTART.md) | Get running in 5 minutes |
-| [Installation](INSTALL.md) | Detailed setup instructions |
+| [Quick Start](https://github.com/varun369/SuperLocalMemoryV2/wiki/Quick-Start-Tutorial) | Get running in 5 minutes |
+| [Installation](https://github.com/varun369/SuperLocalMemoryV2/wiki/Installation) | Detailed setup instructions |
 | [Visualization Dashboard](https://github.com/varun369/SuperLocalMemoryV2/wiki/Visualization-Dashboard) | Interactive web UI guide (NEW v2.2.0) |
 | [CLI Reference](docs/CLI-COMMANDS-REFERENCE.md) | All commands explained |
-| [Knowledge Graph](docs/GRAPH_ENGINE_README.md) | How clustering works |
-| [Pattern Learning](docs/PATTERN_LEARNER_README.md) | Identity extraction |
+| [Knowledge Graph](docs/GRAPH-ENGINE.md) | How clustering works |
+| [Pattern Learning](docs/PATTERN-LEARNING.md) | Identity extraction |
 | [Profiles Guide](docs/PROFILES-GUIDE.md) | Multi-context management |
 | [API Reference](docs/API-REFERENCE.md) | Python API documentation |
 

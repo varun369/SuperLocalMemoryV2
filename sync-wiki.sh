@@ -28,7 +28,8 @@ fi
 if [ -d "${WIKI_REPO_DIR}" ]; then
     echo "📥 Updating existing wiki repository..."
     cd "${WIKI_REPO_DIR}"
-    git pull origin master
+    DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "master")
+    git pull origin "${DEFAULT_BRANCH}"
 else
     echo "📥 Cloning wiki repository..."
     git clone "${WIKI_REPO_URL}" "${WIKI_REPO_DIR}"
@@ -50,7 +51,7 @@ rsync -av --delete \
 rm -f "${WIKI_REPO_DIR}/4-Layer-Architecture.md"
 
 # Check for changes
-if [[ -z $(git status --porcelain) ]]; then
+if [ -z "$(git status --porcelain)" ]; then
     echo "✓ No changes to sync"
     exit 0
 fi
@@ -72,7 +73,7 @@ Created by: Varun Pratap Bhardwaj"
 
 echo ""
 echo "📤 Pushing to GitHub Wiki..."
-git push origin master
+git push origin "${DEFAULT_BRANCH:-master}"
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"

@@ -10,7 +10,7 @@ This document provides a comprehensive technical overview of SuperLocalMemory V2
 
 - [System Overview](#system-overview)
 - [Universal Integration](#universal-integration)
-- [4-Layer Architecture](#4-layer-architecture)
+- [7-Layer Architecture](#7-layer-architecture)
 - [Component Details](#component-details)
 - [Data Flow](#data-flow)
 - [Technology Stack](#technology-stack)
@@ -199,16 +199,38 @@ slm graph build           # Knowledge graph
 
 ---
 
-## 4-Layer Architecture
+## 7-Layer Architecture
 
-SuperLocalMemory V2 uses a hierarchical, additive architecture where each layer builds on the previous without replacing it.
+SuperLocalMemory V2 uses a hierarchical, additive architecture where each layer builds on the previous without replacing it. Version 2.1.0-universal extended the original 4 core layers with 3 universal access layers.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                   SuperLocalMemory V2                           │
-│                   4-Layer Architecture                          │
+│                   7-Layer Universal Architecture                │
 └─────────────────────────────────────────────────────────────────┘
 
+┌─────────────────────────────────────────────────────────────────┐
+│ Layer 7: Universal Access                                      │
+│  Three access methods: MCP Protocol, Skills, CLI               │
+│  All share one database (~/.claude-memory/memory.db)           │
+│  Output: Unified access across 11+ IDEs and tools              │
+└─────────────────────────────────────────────────────────────────┘
+                            ↑
+┌─────────────────────────────────────────────────────────────────┐
+│ Layer 6: MCP Integration (mcp_server.py)                       │
+│  6 tools, 4 resources, 2 prompts                               │
+│  Auto-configured for Claude Desktop, Cursor, Windsurf, etc.   │
+│  Output: Native AI tool access via Model Context Protocol      │
+└─────────────────────────────────────────────────────────────────┘
+                            ↑
+┌─────────────────────────────────────────────────────────────────┐
+│ Layer 5: Skills Layer (skills/*)                               │
+│  6 slash-command skills for Claude Code, Continue.dev, Cody    │
+│  slm-remember, slm-recall, slm-status, slm-list-recent,       │
+│  slm-build-graph, slm-switch-profile                           │
+│  Output: Familiar /command interface across AI tools           │
+└─────────────────────────────────────────────────────────────────┘
+                            ↑
 ┌─────────────────────────────────────────────────────────────────┐
 │ Layer 4: Pattern Learning (Identity Profiles)                  │
 ├─────────────────────────────────────────────────────────────────┤
@@ -277,6 +299,10 @@ SuperLocalMemory V2 uses a hierarchical, additive architecture where each layer 
 │  Output: Persistent storage, fast search, metadata             │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+**Optional Add-on Layers (v2.2.0):**
+- **Advanced Search:** BM25 engine, HNSW vector index, hybrid search
+- **Visualization:** Web dashboard with timeline, graph view, statistics
 
 ---
 
@@ -634,17 +660,19 @@ Statistics output
 
 ---
 
-### Decision 2: 4-Layer Additive Architecture
+### Decision 2: 7-Layer Additive Architecture
 
 **Reasoning:**
 - Modularity: Each layer can be disabled independently
 - Progressive enhancement: System works even if upper layers fail
 - Clear separation: Easy to understand and maintain
 - Testability: Each layer can be tested in isolation
+- Universal access: Layers 5-7 enable multi-IDE support without changing core
 
 **Trade-offs:**
 - Slight redundancy: Some data duplicated across layers
 - Build time: Graph/pattern layers require periodic rebuilds
+- More installation complexity: Auto-detection for 11+ IDEs
 
 ---
 
@@ -820,16 +848,18 @@ SuperLocalMemory V2's architecture provides:
 - **Modularity:** Independent layers, clear interfaces
 - **Performance:** Sub-second operations for typical workloads
 
-**Design Philosophy:** Start simple (Layer 1), add intelligence progressively (Layers 2-4), maintain local-first principles throughout.
+**Design Philosophy:** Start simple (Layer 1), add intelligence progressively (Layers 2-4), enable universal access (Layers 5-7), maintain local-first principles throughout.
 
 ---
 
 ## Further Reading
 
-- [Complete Feature List](docs/COMPLETE-FEATURE-LIST.md)
-- [Graph Engine Implementation](docs/GRAPH_ENGINE_README.md)
-- [Pattern Learning Details](docs/PATTERN_LEARNER_README.md)
-- [Compression System](docs/COMPRESSION-README.md)
+- [Compression System](COMPRESSION-README.md)
+- [CLI Commands Reference](CLI-COMMANDS-REFERENCE.md)
+- [MCP Troubleshooting](MCP-TROUBLESHOOTING.md)
+- [Universal Integration Guide](UNIVERSAL-INTEGRATION.md)
+- [Wiki: Knowledge Graph Guide](https://github.com/varun369/SuperLocalMemoryV2/wiki/Knowledge-Graph-Guide)
+- [Wiki: Pattern Learning](https://github.com/varun369/SuperLocalMemoryV2/wiki/Pattern-Learning-Explained)
 
 ---
 
