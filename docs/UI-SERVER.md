@@ -134,11 +134,11 @@ To change the database path, modify `DB_PATH` in `ui_server.py`.
 
 ### Server Port
 
-To change the port from 8000:
+To change the port from the default (8765):
 
 ```python
 # In ui_server.py, line ~650
-uvicorn.run(app, host="0.0.0.0", port=8080)  # Change 8000 to 8080
+uvicorn.run(app, host="0.0.0.0", port=8080)  # Change 8765 to 8080
 ```
 
 Or use command line:
