@@ -6,10 +6,12 @@
 name: Build Windows Installer
 
 on:
-  push:
-    tags:
-      - 'v*-installer'
-      - 'v*'
+  # Auto-trigger disabled — Windows cannot checkout files with ':' in filename
+  # (bin/superlocalmemoryv2:list etc.) — Fix planned for v2.4.0 (rename bin files)
+  # push:
+  #   tags:
+  #     - 'v*-installer'
+  #     - 'v*'
   workflow_dispatch:
     inputs:
       version:
