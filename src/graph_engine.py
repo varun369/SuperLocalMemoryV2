@@ -882,9 +882,9 @@ class GraphEngine:
 
             # Cluster breakdown
             cluster_info = cursor.execute('''
-                SELECT cluster_name, memory_count, avg_importance
+                SELECT name, member_count, avg_importance
                 FROM graph_clusters
-                ORDER BY memory_count DESC
+                ORDER BY member_count DESC
                 LIMIT 10
             ''').fetchall()
 

@@ -655,17 +655,17 @@ class PatternStore:
 
         if pattern_type:
             cursor.execute('''
-                SELECT id, pattern_type, pattern_key, pattern_value, confidence, frequency, last_seen, created_at
+                SELECT id, pattern_type, key, value, confidence, evidence_count, updated_at, created_at
                 FROM identity_patterns
                 WHERE confidence >= ? AND pattern_type = ?
-                ORDER BY confidence DESC, frequency DESC
+                ORDER BY confidence DESC, evidence_count DESC
             ''', (min_confidence, pattern_type))
         else:
             cursor.execute('''
-                SELECT id, pattern_type, pattern_key, pattern_value, confidence, frequency, last_seen, created_at
+                SELECT id, pattern_type, key, value, confidence, evidence_count, updated_at, created_at
                 FROM identity_patterns
                 WHERE confidence >= ?
-                ORDER BY confidence DESC, frequency DESC
+                ORDER BY confidence DESC, evidence_count DESC
             ''', (min_confidence,))
 
         patterns = []

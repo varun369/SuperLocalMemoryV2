@@ -259,8 +259,8 @@ class ProfileManager:
 
         print(f"\nSwitching from '{current}' to '{name}'...")
 
-        # Save current profile
-        if current and current in self.config['profiles']:
+        # Save current profile (skip for 'default' — it uses main DB directly)
+        if current and current != 'default' and current in self.config['profiles']:
             self._save_current_to_profile(current)
 
         # Load new profile
