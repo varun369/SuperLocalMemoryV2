@@ -16,15 +16,28 @@ NC='\033[0m' # No Color
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 SKILLS_SOURCE="$REPO_DIR/skills"
 
+# Parse arguments
+AUTO_MODE=false
+for arg in "$@"; do
+    case $arg in
+        --auto)
+            AUTO_MODE=true
+            shift
+            ;;
+    esac
+done
+
 # Tool definitions (parallel arrays for bash 3.2 compatibility)
-TOOL_IDS=("claude_code" "codex" "gemini_cli" "antigravity" "windsurf")
-TOOL_NAMES=("Claude Code" "Codex" "Gemini CLI" "Antigravity" "Windsurf")
+TOOL_IDS=("claude_code" "codex" "gemini_cli" "antigravity" "windsurf" "cursor" "vscode_copilot")
+TOOL_NAMES=("Claude Code" "Codex" "Gemini CLI" "Antigravity" "Windsurf" "Cursor" "VS Code/Copilot")
 TOOL_DIRS=(
     "$HOME/.claude/skills"
     "$HOME/.codex/skills"
     "$HOME/.gemini/skills"
     "$HOME/.gemini/antigravity/skills"
     "$HOME/.windsurf/skills"
+    "$HOME/.cursor/skills"
+    "$HOME/.copilot/skills"
 )
 
 # Helper function to get tool name by ID
@@ -71,12 +84,16 @@ if [ ! -d "$HOME/.claude-memory" ]; then
     echo -e "${YELLOW}Warning:${NC} SuperLocalMemory V2 not found at ~/.claude-memory/"
     echo "Skills require SuperLocalMemory V2 to be installed first."
     echo ""
-    read -p "Do you want to continue anyway? (y/n) " -n 1 -r
-    echo ""
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Installation cancelled."
-        echo "Please install SuperLocalMemory V2 first: ./install.sh"
-        exit 1
+    if [ "$AUTO_MODE" = true ]; then
+        echo "Auto mode: continuing anyway..."
+    else
+        read -p "Do you want to continue anyway? (y/n) " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Installation cancelled."
+            echo "Please install SuperLocalMemory V2 first: ./install.sh"
+            exit 1
+        fi
     fi
 fi
 
@@ -137,6 +154,11 @@ done
 echo ""
 
 if [ ${#DETECTED_TOOLS[@]} -eq 0 ]; then
+    if [ "$AUTO_MODE" = true ]; then
+        echo -e "${YELLOW}Warning:${NC} No supported AI tools detected. Skipping skills installation."
+        echo ""
+        exit 0
+    fi
     echo -e "${YELLOW}Warning:${NC} No supported AI tools detected."
     echo ""
     echo "Supported tools:"
@@ -160,23 +182,28 @@ else
 fi
 
 # Ask user for installation method
-echo "Installation Methods:"
-echo "  1. Symlink (recommended) - Changes in repo reflect immediately"
-echo "  2. Copy - Stable, requires manual updates"
-echo ""
-read -p "Choose installation method (1 or 2): " -n 1 -r
-echo ""
-echo ""
-
-if [[ $REPLY == "1" ]]; then
+if [ "$AUTO_MODE" = true ]; then
     METHOD="symlink"
-    echo "Installing via symlink..."
-elif [[ $REPLY == "2" ]]; then
-    METHOD="copy"
-    echo "Installing via copy..."
+    echo "Auto mode: Using symlink method..."
 else
-    echo -e "${RED}Invalid choice.${NC} Please enter 1 or 2."
-    exit 1
+    echo "Installation Methods:"
+    echo "  1. Symlink (recommended) - Changes in repo reflect immediately"
+    echo "  2. Copy - Stable, requires manual updates"
+    echo ""
+    read -p "Choose installation method (1 or 2): " -n 1 -r
+    echo ""
+    echo ""
+
+    if [[ $REPLY == "1" ]]; then
+        METHOD="symlink"
+        echo "Installing via symlink..."
+    elif [[ $REPLY == "2" ]]; then
+        METHOD="copy"
+        echo "Installing via copy..."
+    else
+        echo -e "${RED}Invalid choice.${NC} Please enter 1 or 2."
+        exit 1
+    fi
 fi
 
 echo ""
@@ -305,9 +332,13 @@ if [ -d "$REPO_DIR/claude-skills" ] && [ -d "$HOME/.claude/skills" ]; then
     echo "Found legacy claude-skills/ directory for Claude CLI."
     echo "These are different from the universal skills above."
     echo ""
-    read -p "Do you want to install legacy Claude CLI skills too? (y/n) " -n 1 -r
-    echo ""
-    echo ""
+    if [ "$AUTO_MODE" = true ]; then
+        REPLY="y"
+    else
+        read -p "Do you want to install legacy Claude CLI skills too? (y/n) " -n 1 -r
+        echo ""
+        echo ""
+    fi
 
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         LEGACY_COUNT=0
@@ -356,6 +387,12 @@ for tool_id in "${DETECTED_TOOLS[@]}"; do
             ;;
         "windsurf")
             echo "   ${GREEN}windsurf${NC} (check available commands)"
+            ;;
+        "cursor")
+            echo "   ${GREEN}cursor${NC} (check available commands)"
+            ;;
+        "vscode_copilot")
+            echo "   ${GREEN}VS Code/Copilot${NC} (check available commands)"
             ;;
     esac
 done

@@ -26,6 +26,7 @@ Usage:
 """
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 import sys
 import json
 from pathlib import Path
@@ -57,7 +58,11 @@ DB_PATH = MEMORY_DIR / "memory.db"
 # MCP TOOLS (Functions callable by AI)
 # ============================================================================
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    readOnlyHint=False,
+    destructiveHint=False,
+    openWorldHint=False,
+))
 async def remember(
     content: str,
     tags: str = "",
@@ -118,7 +123,11 @@ async def remember(
         }
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    openWorldHint=False,
+))
 async def recall(
     query: str,
     limit: int = 10,
@@ -185,7 +194,11 @@ async def recall(
         }
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    openWorldHint=False,
+))
 async def list_recent(limit: int = 10) -> dict:
     """
     List most recent memories.
@@ -222,7 +235,11 @@ async def list_recent(limit: int = 10) -> dict:
         }
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    openWorldHint=False,
+))
 async def get_status() -> dict:
     """
     Get SuperLocalMemory system status and statistics.
@@ -255,7 +272,11 @@ async def get_status() -> dict:
         }
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    readOnlyHint=False,
+    destructiveHint=False,
+    openWorldHint=False,
+))
 async def build_graph() -> dict:
     """
     Build or rebuild the knowledge graph from existing memories.
@@ -292,7 +313,11 @@ async def build_graph() -> dict:
         }
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    readOnlyHint=False,
+    destructiveHint=False,
+    openWorldHint=False,
+))
 async def switch_profile(name: str) -> dict:
     """
     Switch to a different memory profile.
@@ -514,7 +539,7 @@ if __name__ == "__main__":
     # Print startup message to stderr (stdout is used for MCP protocol)
     print("=" * 60, file=sys.stderr)
     print("SuperLocalMemory V2 - MCP Server", file=sys.stderr)
-    print("Version: 2.1.0-universal", file=sys.stderr)
+    print("Version: 2.3.0-universal", file=sys.stderr)
     print("=" * 60, file=sys.stderr)
     print("Created by: Varun Pratap Bhardwaj (Solution Architect)", file=sys.stderr)
     print("Repository: https://github.com/varun369/SuperLocalMemoryV2", file=sys.stderr)

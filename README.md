@@ -39,17 +39,18 @@
 
 ---
 
-> **📢 Coming Soon:** [SuperLocalMemory V3](https://github.com/varun369/SuperLocalMemoryV3) with `npm install -g superlocalmemory` for even easier installation!
-> **Using V2?** You're in the right place. V2 remains fully supported with all features.
+## Install in One Command
 
-## Choose Your Version
+```bash
+npm install -g superlocalmemory
+```
 
-| Version | Installation | Best For |
-|---------|--------------|----------|
-| **[V3 (Coming Soon)](https://github.com/varun369/SuperLocalMemoryV3)** | `npm install -g superlocalmemory` | Most users - One-command install |
-| **V2 (Current)** | `git clone` + `./install.sh` | Advanced users - Manual control |
+Or clone manually:
+```bash
+git clone https://github.com/varun369/SuperLocalMemoryV2.git && cd SuperLocalMemoryV2 && ./install.sh
+```
 
-Both versions have identical features and performance. V3 adds professional npm distribution.
+Both methods auto-detect and configure **16+ IDEs and AI tools** — Cursor, VS Code/Copilot, Codex, Claude, Windsurf, Gemini CLI, JetBrains, and more.
 
 ---
 
@@ -72,8 +73,8 @@ You: *sighs and explains everything again*
 ## The Solution
 
 ```bash
-# Install in 5 minutes
-git clone https://github.com/varun369/SuperLocalMemoryV2.git && cd SuperLocalMemoryV2 && ./install.sh
+# Install in one command
+npm install -g superlocalmemory
 
 # Save a memory
 superlocalmemoryv2:remember "Fixed auth bug - JWT tokens were expiring too fast, increased to 24h"
@@ -89,7 +90,12 @@ superlocalmemoryv2:recall "auth bug"
 
 ## 🚀 Quick Start
 
-### Mac/Linux
+### npm (Recommended — All Platforms)
+```bash
+npm install -g superlocalmemory
+```
+
+### Mac/Linux (Manual)
 ```bash
 git clone https://github.com/varun369/SuperLocalMemoryV2.git
 cd SuperLocalMemoryV2
@@ -248,13 +254,22 @@ slm recall "API design patterns"
 
 | Tool | Integration | How It Works |
 |------|-------------|--------------|
-| **Claude Code** | ✅ Native Skills | `/superlocalmemoryv2:remember` |
-| **Cursor** | ✅ MCP Integration | AI automatically uses memory tools |
-| **Windsurf** | ✅ MCP Integration | Native memory access |
-| **Claude Desktop** | ✅ MCP Integration | Built-in support |
-| **VS Code + Continue** | ✅ MCP + Skills | `/slm-remember` or AI tools |
-| **VS Code + Cody** | ✅ Custom Commands | `/slm-remember` commands |
-| **Aider** | ✅ Smart Wrapper | `aider-smart` with auto-context |
+| **Claude Code** | ✅ Skills + MCP | `/superlocalmemoryv2:remember` |
+| **Cursor** | ✅ MCP + Skills | AI uses memory tools natively |
+| **Windsurf** | ✅ MCP + Skills | Native memory access |
+| **Claude Desktop** | ✅ MCP | Built-in support |
+| **OpenAI Codex** | ✅ MCP + Skills | Auto-configured (TOML) |
+| **VS Code / Copilot** | ✅ MCP + Skills | `.vscode/mcp.json` |
+| **Continue.dev** | ✅ MCP + Skills | `/slm-remember` |
+| **Cody** | ✅ Custom Commands | `/slm-remember` |
+| **Gemini CLI** | ✅ MCP + Skills | Native MCP + skills |
+| **JetBrains IDEs** | ✅ MCP | Via AI Assistant settings |
+| **Zed Editor** | ✅ MCP | Native MCP tools |
+| **OpenCode** | ✅ MCP | Native MCP tools |
+| **Perplexity** | ✅ MCP | Native MCP tools |
+| **Antigravity** | ✅ MCP + Skills | Native MCP tools |
+| **ChatGPT** | ✅ HTTP Transport | `slm serve` + tunnel |
+| **Aider** | ✅ Smart Wrapper | `aider-smart` with context |
 | **Any Terminal** | ✅ Universal CLI | `slm remember "content"` |
 
 ### Three Ways to Access
@@ -359,7 +374,7 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 | **Completely Free** | Limited | Limited | Partial | ✅ | ✅ |
 
 **SuperLocalMemory V2 is the ONLY solution that:**
-- ✅ Works across 11+ IDEs and CLI tools
+- ✅ Works across 16+ IDEs and CLI tools
 - ✅ Remains 100% local (no cloud dependencies)
 - ✅ Completely free with unlimited memories
 
@@ -383,7 +398,7 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 7: UNIVERSAL ACCESS                                  │
 │  MCP + Skills + CLI (works everywhere)                      │
-│  11+ IDEs with single database                              │
+│  16+ IDEs with single database                              │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 6: MCP INTEGRATION                                   │
 │  Model Context Protocol: 6 tools, 4 resources, 2 prompts    │

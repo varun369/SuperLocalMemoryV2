@@ -75,6 +75,13 @@ echo "Creating installation directory..."
 mkdir -p "${INSTALL_DIR}"
 echo "✓ Directory: ${INSTALL_DIR}"
 
+# Create universal symlink for non-Claude users
+UNIVERSAL_LINK="${HOME}/.superlocalmemory"
+if [ ! -e "${UNIVERSAL_LINK}" ]; then
+    ln -s "${INSTALL_DIR}" "${UNIVERSAL_LINK}" 2>/dev/null && \
+        echo "✓ Universal link created: ~/.superlocalmemory → ~/.claude-memory" || true
+fi
+
 # Copy source files
 echo ""
 echo "Copying source files..."
@@ -456,22 +463,12 @@ if [ -d "${HOME}/.perplexity" ]; then
     fi
 fi
 
-# Detect ChatGPT Desktop (macOS/Linux)
+# Detect ChatGPT Desktop (requires HTTP transport, not stdio)
 if [ -d "${HOME}/Library/Application Support/ChatGPT" ] || [ -d "${HOME}/.config/ChatGPT" ]; then
-    DETECTED_TOOLS+=("ChatGPT Desktop")
-
-    if [ -f "${REPO_DIR}/configs/chatgpt-desktop-mcp.json" ]; then
-        # Determine config path based on OS
-        if [ -d "${HOME}/Library/Application Support/ChatGPT" ]; then
-            CONFIG_PATH="${HOME}/Library/Application Support/ChatGPT/mcp_config.json"
-        else
-            CONFIG_PATH="${HOME}/.config/ChatGPT/mcp_config.json"
-        fi
-
-        configure_mcp "ChatGPT Desktop" \
-            "${REPO_DIR}/configs/chatgpt-desktop-mcp.json" \
-            "${CONFIG_PATH}"
-    fi
+    DETECTED_TOOLS+=("ChatGPT (manual)")
+    echo "  ○ ChatGPT Desktop detected - requires HTTP transport"
+    echo "    Run: slm serve  (then expose via ngrok for ChatGPT)"
+    echo "    Guide: docs/MCP-MANUAL-SETUP.md#chatgpt-desktop-app"
 fi
 
 # Detect Cody (VS Code extension) - Works on macOS/Linux/Windows
@@ -484,6 +481,119 @@ if [ -d "${HOME}/.vscode/extensions" ] || [ -d "${HOME}/.config/Code/User/extens
         echo "  ○ Cody detected - manual setup required"
         echo "    See: docs/MCP-MANUAL-SETUP.md#cody-vs-codejetbrains"
     fi
+fi
+
+# Detect OpenAI Codex CLI
+if [ -d "${HOME}/.codex" ] || command -v codex &>/dev/null; then
+    DETECTED_TOOLS+=("Codex CLI")
+
+    # Try native codex mcp add command first
+    if command -v codex &>/dev/null; then
+        if codex mcp add superlocalmemory-v2 --env "PYTHONPATH=${INSTALL_DIR}" -- python3 "${INSTALL_DIR}/mcp_server.py" 2>/dev/null; then
+            echo "  ✓ Codex CLI MCP configured (via codex mcp add)"
+        else
+            # Fallback: Write TOML config
+            CODEX_CONFIG="${HOME}/.codex/config.toml"
+            mkdir -p "${HOME}/.codex"
+            if [ -f "${CODEX_CONFIG}" ] && grep -q "superlocalmemory-v2" "${CODEX_CONFIG}" 2>/dev/null; then
+                echo "  ○ Codex CLI already configured"
+            else
+                cp "${CODEX_CONFIG}" "${CODEX_CONFIG}.backup.$(date +%Y%m%d-%H%M%S)" 2>/dev/null || true
+                cat >> "${CODEX_CONFIG}" <<TOML_EOF
+
+[mcp_servers.superlocalmemory-v2]
+command = "python3"
+args = ["${INSTALL_DIR}/mcp_server.py"]
+
+[mcp_servers.superlocalmemory-v2.env]
+PYTHONPATH = "${INSTALL_DIR}"
+TOML_EOF
+                echo "  ✓ Codex CLI MCP configured (TOML appended)"
+            fi
+        fi
+    else
+        # codex command not in PATH but .codex dir exists
+        CODEX_CONFIG="${HOME}/.codex/config.toml"
+        mkdir -p "${HOME}/.codex"
+        if [ -f "${CODEX_CONFIG}" ] && grep -q "superlocalmemory-v2" "${CODEX_CONFIG}" 2>/dev/null; then
+            echo "  ○ Codex CLI already configured"
+        else
+            cp "${CODEX_CONFIG}" "${CODEX_CONFIG}.backup.$(date +%Y%m%d-%H%M%S)" 2>/dev/null || true
+            cat >> "${CODEX_CONFIG}" <<TOML_EOF
+
+[mcp_servers.superlocalmemory-v2]
+command = "python3"
+args = ["${INSTALL_DIR}/mcp_server.py"]
+
+[mcp_servers.superlocalmemory-v2.env]
+PYTHONPATH = "${INSTALL_DIR}"
+TOML_EOF
+            echo "  ✓ Codex CLI MCP configured (TOML appended)"
+        fi
+    fi
+fi
+
+# Detect VS Code / GitHub Copilot
+if command -v code &>/dev/null || command -v code-insiders &>/dev/null; then
+    DETECTED_TOOLS+=("VS Code/Copilot")
+
+    if [ -f "${REPO_DIR}/configs/vscode-copilot-mcp.json" ]; then
+        # VS Code user-level MCP config
+        VSCODE_MCP="${HOME}/.vscode/mcp.json"
+        mkdir -p "${HOME}/.vscode"
+
+        if [ -f "${VSCODE_MCP}" ] && grep -q "superlocalmemory-v2" "${VSCODE_MCP}" 2>/dev/null; then
+            echo "  ○ VS Code/Copilot already configured"
+        else
+            if [ -f "${VSCODE_MCP}" ]; then
+                cp "${VSCODE_MCP}" "${VSCODE_MCP}.backup.$(date +%Y%m%d-%H%M%S)"
+                echo "  ✓ Backed up existing VS Code MCP config"
+            fi
+            sed "s|{{INSTALL_DIR}}|${INSTALL_DIR}|g" "${REPO_DIR}/configs/vscode-copilot-mcp.json" > "${VSCODE_MCP}"
+            echo "  ✓ VS Code/Copilot MCP configured"
+        fi
+    fi
+fi
+
+# Detect Gemini CLI (separate from Antigravity)
+if command -v gemini &>/dev/null || [ -f "${HOME}/.gemini/settings.json" ]; then
+    # Only add if not already detected as Antigravity
+    if [[ ! " ${DETECTED_TOOLS[*]} " =~ " Antigravity " ]]; then
+        DETECTED_TOOLS+=("Gemini CLI")
+    else
+        DETECTED_TOOLS+=("Gemini CLI")
+    fi
+
+    if [ -f "${REPO_DIR}/configs/gemini-cli-mcp.json" ]; then
+        GEMINI_CONFIG="${HOME}/.gemini/settings.json"
+        mkdir -p "${HOME}/.gemini"
+
+        if [ -f "${GEMINI_CONFIG}" ] && grep -q "superlocalmemory-v2" "${GEMINI_CONFIG}" 2>/dev/null; then
+            echo "  ○ Gemini CLI already configured"
+        else
+            if [ -f "${GEMINI_CONFIG}" ]; then
+                cp "${GEMINI_CONFIG}" "${GEMINI_CONFIG}.backup.$(date +%Y%m%d-%H%M%S)"
+                echo "  ✓ Backed up existing Gemini CLI config"
+            fi
+            sed "s|{{INSTALL_DIR}}|${INSTALL_DIR}|g" "${REPO_DIR}/configs/gemini-cli-mcp.json" > "${GEMINI_CONFIG}"
+            echo "  ✓ Gemini CLI MCP configured"
+        fi
+    fi
+fi
+
+# Detect JetBrains IDEs (manual setup required - GUI-based)
+if [ -d "${HOME}/Library/Application Support/JetBrains" ] || [ -d "${HOME}/.config/JetBrains" ]; then
+    DETECTED_TOOLS+=("JetBrains (manual)")
+    echo "  ○ JetBrains IDE detected - manual setup via GUI"
+    echo "    Settings → AI Assistant → MCP Servers → Add"
+    echo "    Template: configs/jetbrains-mcp.json"
+fi
+
+# Install Universal Skills (SKILL.md for all detected tools)
+if [ -f "${REPO_DIR}/install-skills.sh" ]; then
+    echo ""
+    echo "Installing Universal Skills..."
+    bash "${REPO_DIR}/install-skills.sh" --auto 2>/dev/null || echo "  ○ Skills installation skipped (optional)"
 fi
 
 # Install MCP Python package if not present

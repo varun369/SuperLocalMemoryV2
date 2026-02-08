@@ -56,6 +56,19 @@ case "$1" in
         "$SLM_DIR/bin/superlocalmemoryv2:reset" "$@"
         ;;
 
+    serve|server)
+        PORT="${2:-8001}"
+        echo "Starting SuperLocalMemory MCP HTTP server..."
+        echo "Endpoint: http://localhost:$PORT"
+        echo ""
+        echo "For ChatGPT/remote access:"
+        echo "  1. In another terminal: ngrok http $PORT"
+        echo "  2. Copy the HTTPS URL"
+        echo "  3. Add to ChatGPT: Settings -> Apps & Connectors -> Developer Mode"
+        echo ""
+        exec python3 "$SLM_DIR/mcp_server.py" --transport http --port "$PORT"
+        ;;
+
     context)
         # NEW: Get context for current directory/project
         project=$(basename "$PWD")
@@ -128,6 +141,10 @@ PATTERN LEARNING:
   slm patterns list [threshold]  List learned patterns
   slm patterns context [threshold]  Get coding identity context
 
+HTTP SERVER:
+  slm serve [PORT]         Start MCP HTTP server (default port 8001)
+                           For ChatGPT/remote: ngrok http PORT
+
 ADVANCED:
   slm reset soft           Soft reset (clear memories)
   slm reset hard --confirm Hard reset (nuclear option)
@@ -152,13 +169,13 @@ DOCUMENTATION:
   README: https://github.com/varun369/SuperLocalMemoryV2
   Docs: ~/.claude-memory/docs/
 
-VERSION: 2.1.0-universal
+VERSION: 2.3.0-universal
 EOF
         ;;
 
     version|--version|-v)
         echo "SuperLocalMemory V2 - Universal CLI"
-        echo "Version: 2.1.0-universal"
+        echo "Version: 2.3.0-universal"
         echo "Database: $SLM_DIR/memory.db"
         ;;
 
@@ -173,6 +190,7 @@ EOF
         echo "  list      - List recent memories"
         echo "  status    - System status"
         echo "  context   - Project context"
+        echo "  serve     - Start MCP HTTP server"
         echo "  profile   - Manage profiles"
         echo "  graph     - Knowledge graph operations"
         echo "  patterns  - Pattern learning"

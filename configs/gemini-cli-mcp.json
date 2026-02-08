@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "superlocalmemory-v2": {
+      "command": "python3",
+      "args": ["{{INSTALL_DIR}}/mcp_server.py"],
+      "env": {
+        "PYTHONPATH": "{{INSTALL_DIR}}"
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 **Quick reference for all CLI commands**
 
-**Version 2.1.0-universal** - Universal integration across 11+ IDEs and CLI tools
+**Version 2.3.0-universal** - Universal integration across 16+ IDEs and CLI tools
 
 SuperLocalMemory V2 offers three access methods:
 1. **Universal CLI** - Simple `slm` commands (NEW in v2.1.0)

@@ -20,7 +20,7 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 - **100% Local** — Your data never leaves your machine
 - **100% Free** — No usage limits, no credit systems, forever
 - **100% Private** — GDPR/HIPAA compliant by default
-- **Works Everywhere** — 11+ IDEs including Claude Desktop, Cursor IDE, Windsurf, VS Code, and more
+- **Works Everywhere** — 16+ IDEs including Claude Desktop, Cursor IDE, Windsurf, VS Code, and more
 
 ---
 
@@ -37,7 +37,7 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 | Guide | Description |
 |-------|-------------|
 | [[Universal-Architecture]] | 7-layer universal architecture with MCP integration |
-| [[MCP-Integration]] | Model Context Protocol support for 11+ IDEs |
+| [[MCP-Integration]] | Model Context Protocol support for 16+ IDEs |
 | [[Universal-Skills]] | 6 agent skills and slash-commands system |
 | [[Knowledge-Graph-Guide]] | Auto-discovery of relationships |
 | [[Pattern-Learning-Explained]] | How it learns your coding style |
@@ -98,7 +98,7 @@ superlocalmemoryv2:recall "auth bug"
 |---------|------|-----|-------------|---------------------|
 | **Price** | Usage-based | $50/mo | $33/mo | **$0 forever** |
 | **Local-First** | ❌ Cloud | ❌ Cloud | ❌ Cloud | **✅ 100%** |
-| **IDE Support** | Limited | 1-2 | None | **✅ 11+ IDEs** |
+| **IDE Support** | Limited | 1-2 | None | **✅ 16+ IDEs** |
 | **Universal Architecture** | ❌ | ❌ | ❌ | **✅ MCP + Skills + CLI** |
 | **MCP Integration** | ❌ | ❌ | ❌ | **✅ Native** |
 | **Pattern Learning** | ❌ | ❌ | Partial | **✅ Full** |
@@ -148,7 +148,7 @@ SuperLocalMemory implements cutting-edge 2026 research:
 
 [![GitHub](https://img.shields.io/badge/GitHub-@varun369-181717?style=flat-square&logo=github)](https://github.com/varun369)
 
-Building open-source tools that make AI assistants actually useful for developers. SuperLocalMemory V2.1.0 brings universal integration to 11+ IDEs while maintaining 100% local-first privacy.
+Building open-source tools that make AI assistants actually useful for developers. SuperLocalMemory V2.3.0 brings universal integration to 16+ IDEs while maintaining 100% local-first privacy.
 
 ---
 

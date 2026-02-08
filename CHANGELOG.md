@@ -16,6 +16,107 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.3.0] - 2026-02-08
+
+**Release Type:** Universal Integration Release
+**Release Date:** February 8, 2026
+**Version Code:** 2.3.0-universal
+**Git Tag:** v2.3.0
+**Backward Compatible:** ✅ Yes (100%)
+
+### 🌐 Universal Integration — MAJOR UPDATE
+
+**SuperLocalMemory now works across 16+ IDEs and CLI tools!**
+
+This release fixes the Claude-first distribution gap by adding proper configs, detection, and integration for the tools where most non-Claude developers live.
+
+**Root Cause:** The architecture was always universal (SQLite + MCP + Skills), but the distribution (configs, installer, docs, npm) was Claude-first with bolted-on support for others. This release fixes that.
+
+### ✨ Added — New Integrations
+
+**New Config Templates:**
+- ✅ `configs/codex-mcp.toml` — OpenAI Codex CLI (TOML format, not JSON)
+- ✅ `configs/vscode-copilot-mcp.json` — VS Code / GitHub Copilot (`"servers"` format)
+- ✅ `configs/gemini-cli-mcp.json` — Google Gemini CLI
+- ✅ `configs/jetbrains-mcp.json` — JetBrains IDEs (IntelliJ, PyCharm, WebStorm)
+
+**New install.sh Detections:**
+- ✅ OpenAI Codex CLI — Auto-configures via `codex mcp add` or TOML fallback
+- ✅ VS Code / GitHub Copilot — Creates `~/.vscode/mcp.json`
+- ✅ Gemini CLI — Merges into `~/.gemini/settings.json`
+- ✅ JetBrains IDEs — Prints manual setup instructions (GUI-based)
+
+**New CLI Command:**
+- ✅ `slm serve [PORT]` — Start MCP HTTP server for ChatGPT/remote access
+  - Default port: 8001
+  - Documents ngrok/cloudflared tunnel workflow
+  - Enables ChatGPT integration (previously broken)
+
+**Universal Symlink:**
+- ✅ `~/.superlocalmemory` → `~/.claude-memory` — Non-Claude users see universal branding
+  - Zero breaking changes (real directory unchanged)
+  - Additive only (removing symlink doesn't break anything)
+
+**MCP Tool Annotations:**
+- ✅ All 6 tools annotated with `readOnlyHint`, `destructiveHint`, `openWorldHint`
+  - Required by ChatGPT and VS Code Copilot for tool classification
+  - Uses `ToolAnnotations` from MCP SDK
+
+**Skills Installer Expansion:**
+- ✅ Added Cursor to `install-skills.sh`
+- ✅ Added VS Code/Copilot to `install-skills.sh`
+- ✅ Added `--auto` flag for non-interactive mode
+- ✅ `install.sh` now calls `install-skills.sh --auto` automatically
+
+### 🔧 Fixed
+
+**ChatGPT Integration (was broken):**
+- Old config used stdio — ChatGPT only supports HTTP transport
+- New: `slm serve` + tunnel workflow documented
+- Config file replaced with setup instructions
+
+### 📝 Documentation Updates
+
+**docs/MCP-MANUAL-SETUP.md:**
+- Added: OpenAI Codex CLI section
+- Added: VS Code / GitHub Copilot section
+- Added: Gemini CLI section
+- Added: JetBrains IDEs section
+- Added: HTTP Transport section
+- Fixed: ChatGPT section (HTTP workflow replaces broken stdio instructions)
+
+**README.md:**
+- Expanded IDE table from 8 to 17 rows
+- Updated "11+ IDEs" → "16+ IDEs" everywhere
+
+### 🔢 Version Bumps
+
+| File | Old | New |
+|------|-----|-----|
+| `package.json` | 2.1.0 | 2.3.0 |
+| `mcp_server.py` | 2.1.0-universal | 2.3.0-universal |
+| `bin/slm` | 2.1.0-universal | 2.3.0-universal |
+| `CLAUDE.md` | 2.1.0-universal | 2.3.0-universal |
+| `postinstall.js` | "11+ AI tools" | "16+ AI tools" |
+
+### 🔒 Backward Compatibility
+
+**100% backward compatible — nothing breaks:**
+- ✅ Existing `~/.claude-memory/` data untouched
+- ✅ Existing MCP configs (Claude, Cursor, etc.) untouched
+- ✅ Existing skills untouched
+- ✅ Existing `slm` commands untouched (`serve` is NEW)
+- ✅ npm reinstall safe (backs up before overwriting)
+- ✅ `git pull && ./install.sh` safe for existing users
+
+### 🎊 Credits
+
+**Philosophy:** The architecture was already universal. This release makes the distribution universal too.
+
+**Author:** Varun Pratap Bhardwaj (Solution Architect)
+
+---
+
 ## [2.2.0] - 2026-02-07
 
 **Release Type:** Feature Release (Optional Search Components)
@@ -1619,10 +1720,10 @@ We use [Semantic Versioning](https://semver.org/):
 - **MINOR:** New features (backward compatible, e.g., 2.0.0 → 2.1.0)
 - **PATCH:** Bug fixes (backward compatible, e.g., 2.1.0 → 2.1.1)
 
-**Current Version:** v2.1.0-universal
-**Previous Version:** v2.0.0
-**Next Planned:** v2.2.0 (incremental graph updates, auto-compression)
-**Future:** [V3](https://github.com/varun369/SuperLocalMemoryV3) (npm distribution, same features)
+**Current Version:** v2.3.0-universal
+**Previous Version:** v2.2.0
+**Next Planned:** v2.4.0 (incremental graph updates, auto-compression)
+**npm:** `npm install -g superlocalmemory` (available since v2.1.0)
 
 ---
 

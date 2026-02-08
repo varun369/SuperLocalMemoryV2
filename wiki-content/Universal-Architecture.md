@@ -1,6 +1,6 @@
 # Universal Architecture
 
-SuperLocalMemory V2.2.0's 9-layer universal architecture with visualization dashboard, hybrid search, MCP integration, agent-skills, and local-first system-design that works across 11+ IDEs. This mcp-protocol based architecture is unique and no competitor offers this level of universal integration.
+SuperLocalMemory V2.2.0's 9-layer universal architecture with visualization dashboard, hybrid search, MCP integration, agent-skills, and local-first system-design that works across 16+ IDEs. This mcp-protocol based architecture is unique and no competitor offers this level of universal integration.
 
 **Keywords:** universal architecture, system design, mcp protocol, local-first, ai memory, visualization, hybrid search, semantic search
 
@@ -36,7 +36,7 @@ SuperLocalMemory V2.2.0's 9-layer universal architecture with visualization dash
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │  LAYER 7: UNIVERSAL ACCESS                              │   │
 │  │  ─────────────────────────────────────────────────────  │   │
-│  │  • MCP (Model Context Protocol) - 11+ IDEs             │   │
+│  │  • MCP (Model Context Protocol) - 16+ IDEs             │   │
 │  │  • Skills (slash-commands) - Claude/Continue/Cody       │   │
 │  │  • CLI (Universal) - Any terminal                       │   │
 │  └─────────────────────────────────────────────────────────┘   │
@@ -343,7 +343,7 @@ SuperLocalMemory V2.1.0 provides **three ways to access** the same local databas
 
 - **Single Database:** All three methods use the same SQLite database
 - **Zero Conflicts:** No data duplication or sync issues
-- **Universal:** Works with 11+ IDEs and any terminal
+- **Universal:** Works with 16+ IDEs and any terminal
 - **Local-First:** Everything runs on your machine
 
 [[Learn more: MCP Integration →|MCP-Integration]]
@@ -638,7 +638,7 @@ Claude: Got it! I'll suggest React solutions, prioritize
 | Mem0 | 2 | Limited (Cloud) | ❌ | ❌ | No patterns, no hierarchy, no universal access, no visualization |
 | Zep | 2 | 1-2 IDEs | ❌ | ❌ | No patterns, no MCP, cloud-only, no visualization |
 | Khoj | 2-3 | Limited | Basic | ❌ | No graph, no patterns, no universal CLI, limited search |
-| **SuperLocalMemory V2.2.0** | **9** | **11+ IDEs** | **✅ Full** | **✅ Yes** | **Nothing - Complete** |
+| **SuperLocalMemory V2.2.0** | **9** | **16+ IDEs** | **✅ Full** | **✅ Yes** | **Nothing - Complete** |
 
 ### Each Layer Adds Value
 
@@ -732,7 +732,7 @@ Created by **Varun Pratap Bhardwaj**.
 ## Next Steps
 
 - [[Visualization Dashboard →|Visualization-Dashboard]] - Interactive visual exploration (NEW v2.2.0)
-- [[MCP Integration Guide →|MCP-Integration]] - Setup for 11+ IDEs
+- [[MCP Integration Guide →|MCP-Integration]] - Setup for 16+ IDEs
 - [[Universal Skills Guide →|Universal-Skills]] - Learn slash-commands
 - [[Knowledge Graph Guide →|Knowledge-Graph-Guide]] - Understand clustering
 - [[Installation →|Installation]] - Get started in 5 minutes

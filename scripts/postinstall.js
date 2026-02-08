@@ -58,7 +58,7 @@ if (!fs.existsSync(installScript)) {
 console.log('Running installer: ' + path.basename(installScript));
 console.log('This will:');
 console.log('  • Copy files to ~/.claude-memory/');
-console.log('  • Configure MCP for 11+ AI tools');
+console.log('  • Configure MCP for 16+ AI tools');
 console.log('  • Install universal skills');
 console.log('  • Set up CLI commands\n');
 

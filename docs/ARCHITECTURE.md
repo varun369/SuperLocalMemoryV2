@@ -46,7 +46,7 @@ Simple Storage → Intelligent Organization → Adaptive Learning
 
 ## Universal Integration
 
-**Version 2.1.0-universal** transforms SuperLocalMemory from Claude-Code-only to a universal memory system that works across 11+ IDEs and CLI tools with zero configuration.
+**Version 2.3.0-universal** transforms SuperLocalMemory from Claude-Code-only to a universal memory system that works across 16+ IDEs and CLI tools with zero configuration.
 
 ### Three-Tier Access Architecture
 
@@ -201,7 +201,7 @@ slm graph build           # Knowledge graph
 
 ## 7-Layer Architecture
 
-SuperLocalMemory V2 uses a hierarchical, additive architecture where each layer builds on the previous without replacing it. Version 2.1.0-universal extended the original 4 core layers with 3 universal access layers.
+SuperLocalMemory V2 uses a hierarchical, additive architecture where each layer builds on the previous without replacing it. Version 2.3.0-universal extended the original 4 core layers with 3 universal access layers.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -213,7 +213,7 @@ SuperLocalMemory V2 uses a hierarchical, additive architecture where each layer 
 │ Layer 7: Universal Access                                      │
 │  Three access methods: MCP Protocol, Skills, CLI               │
 │  All share one database (~/.claude-memory/memory.db)           │
-│  Output: Unified access across 11+ IDEs and tools              │
+│  Output: Unified access across 16+ IDEs and tools              │
 └─────────────────────────────────────────────────────────────────┘
                             ↑
 ┌─────────────────────────────────────────────────────────────────┐
@@ -672,7 +672,7 @@ Statistics output
 **Trade-offs:**
 - Slight redundancy: Some data duplicated across layers
 - Build time: Graph/pattern layers require periodic rebuilds
-- More installation complexity: Auto-detection for 11+ IDEs
+- More installation complexity: Auto-detection for 16+ IDEs
 
 ---
 

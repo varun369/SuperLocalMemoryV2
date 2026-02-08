@@ -11,7 +11,7 @@
 **Major Release: Universal Integration**
 
 **Completed Features:**
-- ✅ 11+ IDE support (Cursor, Windsurf, Claude Desktop, Continue, Cody, Aider)
+- ✅ 16+ IDE support (Cursor, Windsurf, Claude Desktop, Continue, Cody, Aider)
 - ✅ MCP (Model Context Protocol) server implementation
 - ✅ Universal CLI wrapper (`slm` command)
 - ✅ 6 production-ready skills (remember, recall, list, status, build-graph, switch-profile)
@@ -343,9 +343,7 @@ related = graph.get_related(42, rel_type="SUPERSEDES")
 **Planned Features:**
 
 #### 1. NPM Package
-**Status:** 📝 Planned
-
-**Repository:** https://github.com/varun369/SuperLocalMemoryV3
+**Status:** ✅ Available (v2.3.0)
 
 **Installation:**
 ```bash

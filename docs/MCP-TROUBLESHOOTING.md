@@ -15,7 +15,7 @@ python3 ~/.claude-memory/mcp_server.py
 ```
 ============================================================
 SuperLocalMemory V2 - MCP Server
-Version: 2.1.0-universal
+Version: 2.3.0-universal
 ============================================================
 
 Transport: stdio

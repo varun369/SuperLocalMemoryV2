@@ -1,6 +1,6 @@
 # Universal Integration Guide
 
-**Version:** 2.1.0-universal
+**Version:** 2.3.0-universal
 **Status:** Production Ready
 **Updated:** February 7, 2026
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-SuperLocalMemory V2 now works across **11+ IDEs and CLI tools** with automatic detection and configuration. This guide shows you how to use it in every supported environment.
+SuperLocalMemory V2 now works across **16+ IDEs and CLI tools** with automatic detection and configuration. This guide shows you how to use it in every supported environment.
 
 ---
 
@@ -427,6 +427,6 @@ python3 ~/.claude-memory/mcp_server.py --transport http --port 8001
 
 **Questions?** Open an issue: https://github.com/varun369/SuperLocalMemoryV2/issues
 
-**Version:** 2.1.0-universal
+**Version:** 2.3.0-universal
 **Author:** Varun Pratap Bhardwaj
 **License:** MIT

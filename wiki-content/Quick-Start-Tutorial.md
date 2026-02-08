@@ -265,7 +265,7 @@ Current Profile: default
 
 ## Use Across Different Tools
 
-SuperLocalMemory works across 11+ IDEs and tools. All use the **same local database** - no data duplication.
+SuperLocalMemory works across 16+ IDEs and tools. All use the **same local database** - no data duplication.
 
 ### In Cursor (MCP Integration)
 

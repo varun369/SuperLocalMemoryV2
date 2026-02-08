@@ -2,13 +2,15 @@
 
 This guide shows how to manually add SuperLocalMemory V2 as an MCP server in various applications and tools.
 
-**Auto-Configuration:** If you installed using `./install.sh`, the following IDEs are already configured:
-- ✅ Claude Desktop
-- ✅ Cursor
-- ✅ Windsurf
-- ✅ Continue.dev (VS Code)
+**Auto-configured by install.sh / npm install:**
+- ✅ Claude Desktop, Cursor, Windsurf, Continue.dev
+- ✅ OpenAI Codex CLI, VS Code/Copilot, Zed, OpenCode
+- ✅ Antigravity, Perplexity, Gemini CLI
+- ⚠️ ChatGPT (HTTP transport — run `slm serve`, see below)
+- ⚠️ JetBrains (manual GUI setup — see below)
+- ⚠️ Cody (manual setup — see below)
 
-For all other tools, follow the manual setup instructions below.
+For tools marked ⚠️, follow the manual setup instructions below.
 
 ---
 
@@ -21,10 +23,15 @@ For all other tools, follow the manual setup instructions below.
    - [Cursor](#cursor)
    - [Windsurf](#windsurf)
    - [Continue.dev (VS Code)](#continuedev-vs-code)
+   - [OpenAI Codex CLI](#openai-codex-cli)
+   - [VS Code / GitHub Copilot](#vs-code--github-copilot)
+   - [Gemini CLI](#gemini-cli)
+   - [JetBrains IDEs](#jetbrains-ides)
    - [Cody (VS Code/JetBrains)](#cody-vs-codejetbrains)
    - [ChatGPT Desktop App](#chatgpt-desktop-app)
    - [Perplexity](#perplexity)
    - [Zed Editor](#zed-editor)
+   - [HTTP Transport (Remote Access)](#http-transport-remote-access)
    - [Custom MCP Clients](#custom-mcp-clients)
 4. [Troubleshooting](#troubleshooting)
 5. [Verification](#verification)
@@ -220,6 +227,136 @@ mcpServers:
 
 ---
 
+### OpenAI Codex CLI
+
+**Configuration File:** `~/.codex/config.toml`
+**Format:** TOML (not JSON)
+
+**Method 1 — CLI command (preferred):**
+
+```bash
+codex mcp add superlocalmemory-v2 \
+  --env "PYTHONPATH=/Users/yourusername/.claude-memory" \
+  -- python3 /Users/yourusername/.claude-memory/mcp_server.py
+```
+
+**Method 2 — Manual TOML config:**
+
+Add to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.superlocalmemory-v2]
+command = "python3"
+args = ["/Users/yourusername/.claude-memory/mcp_server.py"]
+
+[mcp_servers.superlocalmemory-v2.env]
+PYTHONPATH = "/Users/yourusername/.claude-memory"
+```
+
+**Verify:** `codex mcp list` should show `superlocalmemory-v2`
+
+**Auto-configured by install.sh:** ✅ Yes
+
+---
+
+### VS Code / GitHub Copilot
+
+**Configuration File:** `~/.vscode/mcp.json` (user-level) or `.vscode/mcp.json` (workspace-level)
+
+**Important:** VS Code uses `"servers"` (not `"mcpServers"`) and requires `"type": "stdio"`.
+
+**Steps:**
+
+1. Create or edit `~/.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "superlocalmemory-v2": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["/Users/yourusername/.claude-memory/mcp_server.py"],
+      "env": {
+        "PYTHONPATH": "/Users/yourusername/.claude-memory"
+      }
+    }
+  }
+}
+```
+
+2. Restart VS Code
+3. Copilot Chat should now have access to SuperLocalMemory tools
+
+**Auto-configured by install.sh:** ✅ Yes
+
+---
+
+### Gemini CLI
+
+**Configuration File:** `~/.gemini/settings.json`
+
+**Steps:**
+
+1. Create or edit `~/.gemini/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "superlocalmemory-v2": {
+      "command": "python3",
+      "args": ["/Users/yourusername/.claude-memory/mcp_server.py"],
+      "env": {
+        "PYTHONPATH": "/Users/yourusername/.claude-memory"
+      }
+    }
+  }
+}
+```
+
+2. Restart Gemini CLI
+3. Memory tools will be available in conversations
+
+**Auto-configured by install.sh:** ✅ Yes
+
+---
+
+### JetBrains IDEs
+
+**Supported:** IntelliJ IDEA, PyCharm, WebStorm, GoLand, and all JetBrains IDEs with AI Assistant (2025.2+)
+
+**Steps (GUI-based):**
+
+1. Open your JetBrains IDE
+2. Go to **Settings → AI Assistant → MCP Servers**
+3. Click **"+"** to add a new server
+4. Enter:
+   - **Name:** `superlocalmemory-v2`
+   - **Command:** `python3`
+   - **Arguments:** `/Users/yourusername/.claude-memory/mcp_server.py`
+   - **Working Directory:** `/Users/yourusername/.claude-memory`
+   - **Environment Variables:** `PYTHONPATH=/Users/yourusername/.claude-memory`
+5. Click **OK** and restart
+
+**JSON template** (for reference): See `configs/jetbrains-mcp.json`
+
+```json
+{
+  "mcpServers": {
+    "superlocalmemory-v2": {
+      "command": "python3",
+      "args": ["/Users/yourusername/.claude-memory/mcp_server.py"],
+      "env": {
+        "PYTHONPATH": "/Users/yourusername/.claude-memory"
+      }
+    }
+  }
+}
+```
+
+**Auto-configured by install.sh:** ❌ No (manual GUI setup required)
+
+---
+
 ### Cody (VS Code/JetBrains)
 
 **Configuration:** Via VS Code settings or IDE settings
@@ -255,25 +392,34 @@ mcpServers:
 
 ### ChatGPT Desktop App
 
-**Note:** As of February 2026, ChatGPT Desktop supports MCP in beta.
+**Important:** ChatGPT requires HTTP transport, not stdio. You need to run a local HTTP server and expose it via a tunnel.
 
 **Steps:**
 
-1. Open ChatGPT Desktop app
-2. Go to **Settings → Advanced → Model Context Protocol**
-3. Click **"Add MCP Server"**
-4. Enter details:
-   - **Name:** `SuperLocalMemory V2`
-   - **Command:** `python3`
-   - **Arguments:** `/Users/yourusername/.claude-memory/mcp_server.py`
-   - **Working Directory:** `/Users/yourusername/.claude-memory`
-   - **Environment Variables:** `PYTHONPATH=/Users/yourusername/.claude-memory`
+1. **Start the MCP HTTP server:**
+   ```bash
+   slm serve --port 8001
+   # or: python3 ~/.claude-memory/mcp_server.py --transport http --port 8001
+   ```
 
-5. Click **Save**
-6. Restart ChatGPT app
-7. In a new chat, look for MCP tools in the tool selector
+2. **Expose via tunnel** (in another terminal):
+   ```bash
+   ngrok http 8001
+   # or: cloudflared tunnel --url http://localhost:8001
+   ```
 
-**Auto-configured by install.sh:** ❌ No (manual setup via GUI)
+3. **Copy the HTTPS URL** from ngrok/cloudflared output
+
+4. **Add to ChatGPT:**
+   - Open ChatGPT Desktop
+   - Go to **Settings → Apps & Connectors → Developer Mode**
+   - Add the HTTPS URL as an MCP endpoint
+
+5. In a new chat, look for MCP tools in the tool selector
+
+**Note:** 100% local — your MCP server runs on YOUR machine. The tunnel just makes it reachable by ChatGPT.
+
+**Auto-configured by install.sh:** ❌ No (requires HTTP transport + tunnel)
 
 ---
 
@@ -341,6 +487,41 @@ mcpServers:
 6. Check assistant panel for available MCP tools
 
 **Auto-configured by install.sh:** ❌ No (manual setup required)
+
+---
+
+### HTTP Transport (Remote Access)
+
+For any MCP client that requires HTTP transport (ChatGPT, remote access, web-based tools):
+
+**Start the HTTP server:**
+
+```bash
+# Using CLI wrapper
+slm serve --port 8001
+
+# Using Python directly
+python3 ~/.claude-memory/mcp_server.py --transport http --port 8001
+```
+
+**For local access:**
+```
+http://localhost:8001
+```
+
+**For remote access (ChatGPT, etc.):**
+
+```bash
+# Option 1: ngrok (free tier available)
+ngrok http 8001
+
+# Option 2: Cloudflare Tunnel (free)
+cloudflared tunnel --url http://localhost:8001
+```
+
+Then use the HTTPS URL from the tunnel in your MCP client.
+
+**Security note:** The server binds to localhost only. The tunnel is the only way external services can reach it. Your data never leaves your machine — it's served on demand.
 
 ---
 
@@ -461,7 +642,7 @@ python3 ~/.claude-memory/mcp_server.py
 ```
 ============================================================
 SuperLocalMemory V2 - MCP Server
-Version: 2.1.0-universal
+Version: 2.3.0-universal
 ============================================================
 
 Transport: stdio

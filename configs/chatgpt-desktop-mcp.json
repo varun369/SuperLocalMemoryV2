@@ -1,13 +1,7 @@
 {
-  "mcpServers": {
-    "superlocalmemory-v2": {
-      "command": "python3",
-      "args": ["{{INSTALL_DIR}}/mcp_server.py"],
-      "cwd": "{{INSTALL_DIR}}",
-      "env": {
-        "PYTHONPATH": "{{INSTALL_DIR}}"
-      },
-      "description": "SuperLocalMemory V2 - Local memory for ChatGPT"
-    }
-  }
+  "_README": "ChatGPT requires HTTP transport, not stdio. See docs/MCP-MANUAL-SETUP.md#chatgpt-desktop-app",
+  "_step1": "Run: slm serve --port 8001",
+  "_step2": "Expose via: ngrok http 8001 (or cloudflared tunnel)",
+  "_step3": "Add the HTTPS URL to ChatGPT -> Settings -> Apps & Connectors -> Developer Mode",
+  "_note": "100% local - your MCP server runs on YOUR machine. The tunnel just makes it reachable."
 }

@@ -1,6 +1,6 @@
 # MCP Integration
 
-SuperLocalMemory V2.1.0 includes a universal **mcp-server** that provides native integration with 11+ IDEs including Claude Desktop, Cursor IDE, Windsurf, and more. This local-first, mcp-protocol based integration enables AI assistants to naturally access your memory system without manual commands.
+SuperLocalMemory V2.1.0 includes a universal **mcp-server** that provides native integration with 16+ IDEs including Claude Desktop, Cursor IDE, Windsurf, and more. This local-first, mcp-protocol based integration enables AI assistants to naturally access your memory system without manual commands.
 
 **Keywords:** mcp-server, claude-desktop, cursor-ide, windsurf, universal-integration, model-context-protocol
 
@@ -54,7 +54,7 @@ These IDEs require manual configuration (see detailed steps below):
 | **Cody** | Custom commands | [Setup Guide](#cody) |
 | **Aider** | Smart wrapper | [Setup Guide](#aider) |
 
-**Total: 11+ supported tools**
+**Total: 16+ supported tools**
 
 ---
 
