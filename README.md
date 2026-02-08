@@ -268,7 +268,7 @@ slm recall "API design patterns"
 | **OpenCode** | ✅ MCP | Native MCP tools |
 | **Perplexity** | ✅ MCP | Native MCP tools |
 | **Antigravity** | ✅ MCP + Skills | Native MCP tools |
-| **ChatGPT** | ✅ HTTP Transport | `slm serve` + tunnel |
+| **ChatGPT** | ✅ MCP Connector | `search()` + `fetch()` via HTTP tunnel |
 | **Aider** | ✅ Smart Wrapper | `aider-smart` with context |
 | **Any Terminal** | ✅ Universal CLI | `slm remember "content"` |
 

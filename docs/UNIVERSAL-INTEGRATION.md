@@ -231,6 +231,62 @@ aider-smart "Add authentication to the API"
 3. Passes context to Aider
 4. Aider gets relevant memories without you asking
 
+### ChatGPT (Connectors / Deep Research) ✅
+
+**How It Works:** HTTP transport with `search()` and `fetch()` MCP tools per OpenAI spec. Requires a tunnel to expose local server to ChatGPT.
+
+**Requirements:**
+- ChatGPT Plus, Team, or Enterprise plan
+- Developer Mode enabled in ChatGPT settings
+- `cloudflared` (recommended) or `ngrok` for tunneling
+- Reference: https://platform.openai.com/docs/mcp
+
+**Setup:**
+
+```bash
+# Terminal 1: Start MCP server
+slm serve --port 8417
+
+# Terminal 2: Start tunnel
+cloudflared tunnel --url http://localhost:8417
+```
+
+Then in ChatGPT:
+1. Go to **Settings → Connectors**
+2. Click **"Add Connector"**
+3. Paste the HTTPS URL from cloudflared with `/sse/` suffix:
+   ```
+   https://random-name.trycloudflare.com/sse/
+   ```
+4. Name it `SuperLocalMemory` and save
+
+**Available Tools in ChatGPT:**
+
+| Tool | Purpose |
+|------|---------|
+| `search(query)` | Search memories (required by OpenAI MCP spec) |
+| `fetch(id)` | Fetch a specific memory by ID (required by OpenAI MCP spec) |
+| `remember(content, tags, project)` | Save a new memory |
+| `recall(query, limit)` | Search memories with full options |
+
+**Usage Examples:**
+```
+User: "Search my memories for database decisions"
+ChatGPT: [calls search("database decisions")]
+→ Returns matching memories from your local database
+
+User: "What's memory #42 about?"
+ChatGPT: [calls fetch(42)]
+→ Returns full content, tags, and metadata for memory 42
+```
+
+**Notes:**
+- 100% local — your data is served on demand and never stored beyond the conversation
+- The tunnel URL changes on restart unless you configure a named cloudflared tunnel
+- For streamable-http transport (ChatGPT 2026+): `slm serve --port 8417 --transport streamable-http`
+
+---
+
 ### Any Terminal / Script ✅
 
 **How It Works:** Universal CLI wrapper

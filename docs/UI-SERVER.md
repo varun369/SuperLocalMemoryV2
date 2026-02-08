@@ -22,7 +22,15 @@ Web-based visualization interface for exploring the SuperLocalMemory knowledge g
 - **Cluster Analysis**: Visual breakdown of thematic clusters with top entities
 - **Pattern Viewer**: Display learned preferences and coding styles
 - **Timeline**: Chart showing memory creation over time
-- **Statistics Dashboard**: Real-time system metrics
+- **Statistics Dashboard**: Real-time system metrics with animated stat counters (ease-out cubic on page load)
+- **Memory Detail Modal**: Click any memory row to see full content, metadata, and tags in an overlay modal
+- **Dark Mode Toggle**: Sun/moon icon in the navbar; preference saved to localStorage and respects system preference (`prefers-color-scheme`)
+- **Export Functionality**:
+  - **Export All**: Download entire memory database as JSON or JSONL
+  - **Export Search Results**: Export current search results to JSON
+  - **Export as Markdown**: Export an individual memory as a Markdown file
+- **Search Score Bars**: Color-coded relevance bars in search results (red for low, yellow for medium, green for high relevance)
+- **Loading Spinners and Empty States**: Professional loading feedback and informative empty states across all tabs
 
 ## Quick Start
 
@@ -242,9 +250,9 @@ This UI server is intended for **local development** only.
 
 - Add authentication for multi-user access
 - Implement real-time updates via WebSockets
-- Add export functionality (JSON, CSV)
 - Create memory editing interface
 - Build cluster visualization with hierarchical layout
+- Add CSV export format alongside existing JSON/JSONL/Markdown exports
 
 ## Support
 

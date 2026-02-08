@@ -390,34 +390,75 @@ PYTHONPATH = "/Users/yourusername/.claude-memory"
 
 ---
 
-### ChatGPT Desktop App
+### ChatGPT Desktop App / ChatGPT Connectors
 
-**Important:** ChatGPT requires HTTP transport, not stdio. You need to run a local HTTP server and expose it via a tunnel.
+**Important:** ChatGPT requires HTTP transport, not stdio. You need to run a local HTTP server and expose it via a tunnel. As of v2.3.5, SuperLocalMemory includes `search(query)` and `fetch(id)` MCP tools required by OpenAI's MCP spec for ChatGPT Connectors and Deep Research.
 
-**Steps:**
+**Requirements:**
+- ChatGPT Plus, Team, or Enterprise plan
+- **Developer Mode** must be enabled in ChatGPT settings
+- A tunnel tool: `cloudflared` (recommended, free) or `ngrok`
+- Reference: https://platform.openai.com/docs/mcp
+
+**Available Tools in ChatGPT:**
+
+| Tool | Purpose |
+|------|---------|
+| `search(query)` | Search memories (required by OpenAI MCP spec) |
+| `fetch(id)` | Fetch a specific memory by ID (required by OpenAI MCP spec) |
+| `remember(content, tags, project)` | Save a new memory |
+| `recall(query, limit)` | Search memories with full options |
+
+**Step-by-Step Setup:**
 
 1. **Start the MCP HTTP server:**
    ```bash
-   slm serve --port 8001
-   # or: python3 ~/.claude-memory/mcp_server.py --transport http --port 8001
+   slm serve --port 8417
+   # or with streamable-http transport (ChatGPT 2026+):
+   slm serve --port 8417 --transport streamable-http
+   # or using Python directly:
+   python3 ~/.claude-memory/mcp_server.py --transport http --port 8417
    ```
 
-2. **Expose via tunnel** (in another terminal):
+2. **Expose via cloudflared tunnel** (in another terminal):
    ```bash
-   ngrok http 8001
-   # or: cloudflared tunnel --url http://localhost:8001
+   # Install cloudflared (if not installed)
+   # macOS: brew install cloudflared
+   # Linux: sudo apt install cloudflared
+
+   cloudflared tunnel --url http://localhost:8417
+   ```
+   Cloudflared will output a URL like `https://random-name.trycloudflare.com`
+
+   **Alternative — ngrok:**
+   ```bash
+   ngrok http 8417
    ```
 
-3. **Copy the HTTPS URL** from ngrok/cloudflared output
+3. **Copy the HTTPS URL** from cloudflared/ngrok output
 
-4. **Add to ChatGPT:**
-   - Open ChatGPT Desktop
-   - Go to **Settings → Apps & Connectors → Developer Mode**
-   - Add the HTTPS URL as an MCP endpoint
+4. **Add to ChatGPT as a Connector:**
+   - Open ChatGPT (desktop or web)
+   - Go to **Settings → Connectors** (or **Settings → Apps & Connectors → Developer Mode**)
+   - Click **"Add Connector"**
+   - Paste the HTTPS URL with the `/sse/` suffix:
+     ```
+     https://random-name.trycloudflare.com/sse/
+     ```
+   - Name it: `SuperLocalMemory`
+   - Click **Save**
 
-5. In a new chat, look for MCP tools in the tool selector
+5. **Verify in a new chat:**
+   - Start a new conversation in ChatGPT
+   - Look for the SuperLocalMemory connector in the tool selector
+   - Try: "Search my memories for authentication decisions"
+   - ChatGPT will call `search()` and return your local memories
 
-**Note:** 100% local — your MCP server runs on YOUR machine. The tunnel just makes it reachable by ChatGPT.
+**Important Notes:**
+- The `/sse/` suffix on the URL is **required** by ChatGPT's MCP implementation
+- 100% local — your MCP server runs on YOUR machine. The tunnel just makes it reachable by ChatGPT. Your data is served on demand and never stored by OpenAI beyond the conversation.
+- The tunnel URL changes each time you restart cloudflared (unless you set up a named tunnel)
+- For persistent URLs, configure a cloudflared named tunnel: `cloudflared tunnel create slm`
 
 **Auto-configured by install.sh:** ❌ No (requires HTTP transport + tunnel)
 
@@ -690,7 +731,7 @@ In your IDE/app, check:
 
 ## Available MCP Tools
 
-Once configured, these 6 tools are available:
+Once configured, these 8 tools are available:
 
 | Tool | Purpose | Example Usage |
 |------|---------|---------------|
@@ -700,6 +741,10 @@ Once configured, these 6 tools are available:
 | `get_status()` | System health | "How many memories do I have?" |
 | `build_graph()` | Build knowledge graph | "Build the knowledge graph" |
 | `switch_profile()` | Change profile | "Switch to work profile" |
+| `search()` | Search memories (OpenAI MCP spec) | Used by ChatGPT Connectors and Deep Research |
+| `fetch()` | Fetch memory by ID (OpenAI MCP spec) | Used by ChatGPT Connectors and Deep Research |
+
+**Note:** `search()` and `fetch()` are required by OpenAI's MCP specification for ChatGPT Connectors. They are available in all transports but primarily used by ChatGPT.
 
 Plus **2 MCP prompts** and **4 MCP resources** for advanced use.
 

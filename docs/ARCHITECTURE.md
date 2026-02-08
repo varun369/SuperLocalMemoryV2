@@ -85,13 +85,15 @@ Simple Storage → Intelligent Organization → Adaptive Learning
 
 The MCP server provides native integration with modern AI tools:
 
-**6 Tools:**
+**8 Tools:**
 - `remember(content, tags, project)` - Save memories
 - `recall(query, limit)` - Search memories
 - `list_recent(limit)` - Recent memories
 - `get_status()` - System status
 - `build_graph()` - Build knowledge graph
 - `switch_profile(name)` - Change profile
+- `search(query)` - Search memories (OpenAI MCP spec for ChatGPT Connectors)
+- `fetch(id)` - Fetch memory by ID (OpenAI MCP spec for ChatGPT Connectors)
 
 **4 Resources:**
 - `memory://recent` - Recent memories feed
@@ -106,6 +108,7 @@ The MCP server provides native integration with modern AI tools:
 **Transport Support:**
 - stdio (default) - For local IDE integration
 - HTTP - For remote/network access
+- streamable-http - For ChatGPT 2026+ Connectors
 
 **Key Design:** Zero duplication - calls existing `memory_store_v2.py` functions
 

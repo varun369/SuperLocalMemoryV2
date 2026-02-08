@@ -16,6 +16,28 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.3.5] - 2026-02-09
+
+### Added
+- **ChatGPT Connector Support**: `search(query)` and `fetch(id)` MCP tools per OpenAI spec
+- **Streamable HTTP transport**: `slm serve --transport streamable-http` for ChatGPT 2026+
+- **UI: Memory detail modal**: Click any memory row to see full content, tags, metadata
+- **UI: Dark mode toggle**: Sun/moon icon in navbar, saved to localStorage, respects system preference
+- **UI: Export buttons**: Export All (JSON/JSONL), Export Search Results, Export individual memory as Markdown
+- **UI: Search score bars**: Color-coded relevance bars (red/yellow/green) in search results
+- **UI: Animated stat counters**: Numbers animate up on page load with ease-out cubic
+- **UI: Loading spinners and empty states**: Professional feedback across all tabs
+- npm keywords: chatgpt, chatgpt-connector, openai, deep-research
+
+### Fixed
+- **XSS vulnerability**: Replaced inline onclick with JSON injection with safe event delegation
+- **UI: Content preview**: Increased from 80 to 100 characters
+
+### Changed
+- npm package now includes `ui/`, `ui_server.py`, `api_server.py`
+
+---
+
 ## [2.3.0] - 2026-02-08
 
 **Release Type:** Universal Integration Release
