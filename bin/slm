@@ -61,6 +61,15 @@ case "$1" in
         "$SLM_DIR/bin/superlocalmemoryv2:reset" "$@"
         ;;
 
+    ui|dashboard)
+        PORT="${2:-8765}"
+        echo "Starting SuperLocalMemory Web Dashboard..."
+        echo "URL: http://localhost:$PORT"
+        echo "API Docs: http://localhost:$PORT/api/docs"
+        echo ""
+        python3 "$SLM_DIR/ui_server.py" --port "$PORT"
+        ;;
+
     serve|server)
         PORT="${2:-8417}"
         echo "Starting SuperLocalMemory MCP HTTP server..."
@@ -146,7 +155,11 @@ PATTERN LEARNING:
   slm patterns list [threshold]  List learned patterns
   slm patterns context [threshold]  Get coding identity context
 
-HTTP SERVER:
+WEB DASHBOARD:
+  slm ui [PORT]            Start web dashboard (default port 8765)
+                           Opens at http://localhost:PORT
+
+HTTP SERVER (MCP):
   slm serve [PORT]         Start MCP HTTP server (default port 8417)
                            For ChatGPT/remote: ngrok http PORT
 
@@ -195,6 +208,7 @@ EOF
         echo "  list      - List recent memories"
         echo "  status    - System status"
         echo "  context   - Project context"
+        echo "  ui        - Start web dashboard"
         echo "  serve     - Start MCP HTTP server"
         echo "  profile   - Manage profiles"
         echo "  graph     - Knowledge graph operations"
