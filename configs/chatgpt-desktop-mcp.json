@@ -1,7 +1,16 @@
 {
-  "_README": "ChatGPT requires HTTP transport, not stdio. See docs/MCP-MANUAL-SETUP.md#chatgpt-desktop-app",
-  "_step1": "Run: slm serve --port 8001",
-  "_step2": "Expose via: ngrok http 8001 (or cloudflared tunnel)",
-  "_step3": "Add the HTTPS URL to ChatGPT -> Settings -> Apps & Connectors -> Developer Mode",
-  "_note": "100% local - your MCP server runs on YOUR machine. The tunnel just makes it reachable."
+  "_README": "ChatGPT Integration — SuperLocalMemory V2 as ChatGPT Connector",
+  "_requires": "ChatGPT Pro/Plus/Business/Enterprise with Developer Mode enabled",
+  "_tools": "search(query) and fetch(id) — required by OpenAI MCP spec for Connectors",
+  "_setup": {
+    "step1": "Start MCP server: slm serve --port 8417",
+    "step2": "Expose via tunnel: ngrok http 8417",
+    "step3": "Copy the HTTPS URL from ngrok (e.g. https://abc123.ngrok.app)",
+    "step4": "In ChatGPT: Settings → Connectors → Advanced → Enable Developer Mode",
+    "step5": "Create new Connector → paste URL with /sse/ suffix (e.g. https://abc123.ngrok.app/sse/)",
+    "step6": "Name it 'SuperLocalMemory' and click Create",
+    "step7": "In any chat, click + → More → select SuperLocalMemory connector"
+  },
+  "_alternative_transport": "For Streamable HTTP (recommended): slm serve --transport streamable-http --port 8417",
+  "_note": "100% local — your MCP server runs on YOUR machine. The tunnel just makes it reachable by ChatGPT servers. All data stays in ~/.claude-memory/memory.db"
 }

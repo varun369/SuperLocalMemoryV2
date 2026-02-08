@@ -375,6 +375,108 @@ async def switch_profile(name: str) -> dict:
 
 
 # ============================================================================
+# CHATGPT CONNECTOR TOOLS (search + fetch — required by OpenAI MCP spec)
+# These two tools are required for ChatGPT Connectors and Deep Research.
+# They wrap existing SuperLocalMemory search/retrieval logic.
+# Ref: https://platform.openai.com/docs/mcp
+# ============================================================================
+
+@mcp.tool(annotations=ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    openWorldHint=False,
+))
+async def search(query: str) -> dict:
+    """
+    Search for documents in SuperLocalMemory.
+
+    Required by ChatGPT Connectors and Deep Research.
+    Returns a list of search results with id, title, text snippet, and url.
+
+    Args:
+        query: Search query string. Natural language queries work best.
+
+    Returns:
+        {"results": [{"id": str, "title": str, "text": str, "url": str}]}
+    """
+    try:
+        store = MemoryStoreV2(DB_PATH)
+        raw_results = store.search(query, limit=20)
+
+        results = []
+        for r in raw_results:
+            if r.get('score', 0) < 0.2:
+                continue
+            content = r.get('content', '') or r.get('summary', '') or ''
+            snippet = content[:200] + "..." if len(content) > 200 else content
+            mem_id = str(r.get('id', ''))
+            title = r.get('category', 'Memory') + ': ' + (content[:60].replace('\n', ' ') if content else 'Untitled')
+            results.append({
+                "id": mem_id,
+                "title": title,
+                "text": snippet,
+                "url": f"memory://local/{mem_id}"
+            })
+
+        return {"results": results}
+
+    except Exception as e:
+        return {"results": [], "error": str(e)}
+
+
+@mcp.tool(annotations=ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    openWorldHint=False,
+))
+async def fetch(id: str) -> dict:
+    """
+    Retrieve full content of a memory by ID.
+
+    Required by ChatGPT Connectors and Deep Research.
+    Use after search() to get complete document content for analysis and citation.
+
+    Args:
+        id: Memory ID from search results.
+
+    Returns:
+        {"id": str, "title": str, "text": str, "url": str, "metadata": dict|null}
+    """
+    try:
+        store = MemoryStoreV2(DB_PATH)
+        mem = store.get_by_id(int(id))
+
+        if not mem:
+            raise ValueError(f"Memory with ID {id} not found")
+
+        content = mem.get('content', '') or mem.get('summary', '') or ''
+        title = (mem.get('category', 'Memory') or 'Memory') + ': ' + (content[:60].replace('\n', ' ') if content else 'Untitled')
+
+        metadata = {}
+        if mem.get('tags'):
+            metadata['tags'] = mem['tags']
+        if mem.get('project_name'):
+            metadata['project'] = mem['project_name']
+        if mem.get('importance'):
+            metadata['importance'] = mem['importance']
+        if mem.get('cluster_id'):
+            metadata['cluster_id'] = mem['cluster_id']
+        if mem.get('created_at'):
+            metadata['created_at'] = mem['created_at']
+
+        return {
+            "id": str(id),
+            "title": title,
+            "text": content,
+            "url": f"memory://local/{id}",
+            "metadata": metadata if metadata else None
+        }
+
+    except Exception as e:
+        raise ValueError(f"Failed to fetch memory {id}: {str(e)}")
+
+
+# ============================================================================
 # MCP RESOURCES (Data endpoints)
 # ============================================================================
 
@@ -532,9 +634,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--transport",
-        choices=["stdio", "http", "sse"],
+        choices=["stdio", "http", "sse", "streamable-http"],
         default="stdio",
-        help="Transport method: stdio for local IDEs (default), http/sse for remote access"
+        help="Transport method: stdio for local IDEs (default), sse/streamable-http for ChatGPT and remote access"
     )
     parser.add_argument(
         "--port",
@@ -565,6 +667,8 @@ if __name__ == "__main__":
     print("MCP Tools Available:", file=sys.stderr)
     print("  - remember(content, tags, project, importance)", file=sys.stderr)
     print("  - recall(query, limit, min_score)", file=sys.stderr)
+    print("  - search(query)          [ChatGPT Connector]", file=sys.stderr)
+    print("  - fetch(id)              [ChatGPT Connector]", file=sys.stderr)
     print("  - list_recent(limit)", file=sys.stderr)
     print("  - get_status()", file=sys.stderr)
     print("  - build_graph()", file=sys.stderr)
@@ -588,8 +692,14 @@ if __name__ == "__main__":
     if args.transport == "stdio":
         # stdio transport for local IDEs (default)
         mcp.run(transport="stdio")
+    elif args.transport == "streamable-http":
+        # Streamable HTTP transport (recommended for ChatGPT 2026+)
+        print(f"Streamable HTTP server at http://localhost:{args.port}", file=sys.stderr)
+        print("ChatGPT setup: expose via ngrok, paste URL in Settings > Connectors", file=sys.stderr)
+        mcp.run(transport="streamable-http")
     else:
         # SSE transport for remote access (ChatGPT, web clients)
         # "http" is accepted as alias for "sse"
         print(f"HTTP/SSE server will be available at http://localhost:{args.port}", file=sys.stderr)
+        print("ChatGPT setup: expose via ngrok, paste URL in Settings > Connectors", file=sys.stderr)
         mcp.run(transport="sse")
