@@ -98,7 +98,6 @@ copy_installer_files() {
     cp requirements.txt "${INSTALLER_DIR}/"
     cp requirements-core.txt "${INSTALLER_DIR}/"
     cp requirements-full.txt "${INSTALLER_DIR}/"
-    cp requirements-optional.txt "${INSTALLER_DIR}/"
     cp requirements-search.txt "${INSTALLER_DIR}/"
     cp requirements-ui.txt "${INSTALLER_DIR}/"
     
