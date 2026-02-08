@@ -1437,7 +1437,22 @@ if __name__ == "__main__":
     parser.add_argument("--profile", type=str, default=None, help="Memory profile to use")
     args = parser.parse_args()
 
-    ui_port = args.port
+    import socket
+
+    def find_available_port(preferred):
+        """Try preferred port, then scan next 20 ports."""
+        for port in [preferred] + list(range(preferred + 1, preferred + 20)):
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.bind(("127.0.0.1", port))
+                    return port
+            except OSError:
+                continue
+        return preferred
+
+    ui_port = find_available_port(args.port)
+    if ui_port != args.port:
+        print(f"\n  Port {args.port} in use — using {ui_port} instead\n")
 
     print("=" * 70)
     print("  SuperLocalMemory V2.3.0 - FastAPI UI Server")
