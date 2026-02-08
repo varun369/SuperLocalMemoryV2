@@ -46,9 +46,18 @@ except ImportError as e:
     print(f"Ensure SuperLocalMemory V2 is installed at {MEMORY_DIR}", file=sys.stderr)
     sys.exit(1)
 
+# Parse command line arguments early (needed for port in constructor)
+import argparse as _argparse
+_parser = _argparse.ArgumentParser(add_help=False)
+_parser.add_argument("--transport", default="stdio")
+_parser.add_argument("--port", type=int, default=8001)
+_pre_args, _ = _parser.parse_known_args()
+
 # Initialize MCP server
 mcp = FastMCP(
-    name="SuperLocalMemory V2"
+    name="SuperLocalMemory V2",
+    host="127.0.0.1",
+    port=_pre_args.port,
 )
 
 # Database path
@@ -523,9 +532,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--transport",
-        choices=["stdio", "http"],
+        choices=["stdio", "http", "sse"],
         default="stdio",
-        help="Transport method: stdio for local IDEs (default), http for remote access"
+        help="Transport method: stdio for local IDEs (default), http/sse for remote access"
     )
     parser.add_argument(
         "--port",
@@ -580,6 +589,7 @@ if __name__ == "__main__":
         # stdio transport for local IDEs (default)
         mcp.run(transport="stdio")
     else:
-        # HTTP transport for remote access
-        print(f"HTTP server will be available at http://localhost:{args.port}", file=sys.stderr)
-        mcp.run(transport="http", port=args.port)
+        # SSE transport for remote access (ChatGPT, web clients)
+        # "http" is accepted as alias for "sse"
+        print(f"HTTP/SSE server will be available at http://localhost:{args.port}", file=sys.stderr)
+        mcp.run(transport="sse")
