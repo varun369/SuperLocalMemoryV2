@@ -1431,19 +1431,27 @@ async def websocket_updates(websocket: WebSocket):
 # ============================================================================
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="SuperLocalMemory V2 - Web Dashboard")
+    parser.add_argument("--port", type=int, default=8765, help="Port to run on (default 8765)")
+    parser.add_argument("--profile", type=str, default=None, help="Memory profile to use")
+    args = parser.parse_args()
+
+    ui_port = args.port
+
     print("=" * 70)
-    print("  SuperLocalMemory V2.2.0 - FastAPI UI Server")
+    print("  SuperLocalMemory V2.3.0 - FastAPI UI Server")
     print("  Copyright (c) 2026 Varun Pratap Bhardwaj")
     print("=" * 70)
     print(f"  Database: {DB_PATH}")
     print(f"  UI Directory: {UI_DIR}")
     print(f"  Profiles: {PROFILES_DIR}")
     print("=" * 70)
-    print("\n  Server URLs:")
-    print("  - Main UI:       http://localhost:8000")
-    print("  - API Docs:      http://localhost:8000/api/docs")
-    print("  - Health Check:  http://localhost:8000/health")
-    print("  - WebSocket:     ws://localhost:8000/ws/updates")
+    print(f"\n  Server URLs:")
+    print(f"  - Main UI:       http://localhost:{ui_port}")
+    print(f"  - API Docs:      http://localhost:{ui_port}/api/docs")
+    print(f"  - Health Check:  http://localhost:{ui_port}/health")
+    print(f"  - WebSocket:     ws://localhost:{ui_port}/ws/updates")
     print("\n  Press Ctrl+C to stop\n")
 
     # SECURITY: Bind to localhost only to prevent unauthorized network access
@@ -1451,7 +1459,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="127.0.0.1",  # localhost only - NEVER use 0.0.0.0 without auth
-        port=8000,
+        port=ui_port,
         log_level="info",
         access_log=True
     )
