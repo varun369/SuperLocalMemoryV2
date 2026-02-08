@@ -68,7 +68,7 @@
     "LICENSE",
     "ATTRIBUTION.md",
     "CHANGELOG.md",
-    "QUICKSTART.md",
+    "docs/",
     "requirements.txt",
     "requirements-core.txt"
   ],
