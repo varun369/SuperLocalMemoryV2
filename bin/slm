@@ -35,8 +35,13 @@ case "$1" in
 
     list|ls)
         shift
-        # Calls existing command - no duplicate logic
-        "$SLM_DIR/bin/superlocalmemoryv2:list" "$@"
+        # Convert positional number to --limit flag
+        # e.g., "slm list 5" becomes "--limit 5"
+        if [ -n "$1" ] && [[ "$1" =~ ^[0-9]+$ ]]; then
+            "$SLM_DIR/bin/superlocalmemoryv2:list" --limit "$1"
+        else
+            "$SLM_DIR/bin/superlocalmemoryv2:list" "$@"
+        fi
         ;;
 
     status|info|stats)
@@ -57,7 +62,7 @@ case "$1" in
         ;;
 
     serve|server)
-        PORT="${2:-8001}"
+        PORT="${2:-8417}"
         echo "Starting SuperLocalMemory MCP HTTP server..."
         echo "Endpoint: http://localhost:$PORT"
         echo ""
@@ -142,7 +147,7 @@ PATTERN LEARNING:
   slm patterns context [threshold]  Get coding identity context
 
 HTTP SERVER:
-  slm serve [PORT]         Start MCP HTTP server (default port 8001)
+  slm serve [PORT]         Start MCP HTTP server (default port 8417)
                            For ChatGPT/remote: ngrok http PORT
 
 ADVANCED:

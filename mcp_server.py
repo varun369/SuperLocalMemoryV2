@@ -50,7 +50,7 @@ except ImportError as e:
 import argparse as _argparse
 _parser = _argparse.ArgumentParser(add_help=False)
 _parser.add_argument("--transport", default="stdio")
-_parser.add_argument("--port", type=int, default=8001)
+_parser.add_argument("--port", type=int, default=8417)
 _pre_args, _ = _parser.parse_known_args()
 
 # Initialize MCP server
@@ -539,8 +539,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--port",
         type=int,
-        default=8001,
-        help="Port for HTTP transport (default 8001)"
+        default=8417,
+        help="Port for HTTP transport (default 8417)"
     )
 
     args = parser.parse_args()
