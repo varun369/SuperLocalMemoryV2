@@ -119,7 +119,7 @@ superlocalmemoryv2:status
 # Launch the interactive web UI
 python3 ~/.claude-memory/ui_server.py
 
-# Opens at http://localhost:8000
+# Opens at http://localhost:8765
 # Features: Timeline view, search explorer, graph visualization
 ```
 
@@ -143,9 +143,9 @@ python3 ~/.claude-memory/ui_server.py
 
 ```bash
 # 1. Start dashboard
-python ~/.claude-memory/dashboard.py
+python ~/.claude-memory/ui_server.py
 
-# 2. Navigate to http://localhost:8050
+# 2. Navigate to http://localhost:8765
 
 # 3. Explore your memories:
 #    - Timeline: See memories over time
@@ -349,7 +349,7 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 | **Works in Claude** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Works with Aider** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Universal CLI** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **4-Layer Architecture** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **7-Layer Universal Architecture** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Pattern Learning** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Multi-Profile Support** | ❌ | ❌ | ❌ | Partial | ✅ |
 | **Knowledge Graphs** | ✅ | ✅ | ❌ | ❌ | ✅ |
@@ -359,7 +359,7 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 | **Completely Free** | Limited | Limited | Partial | ✅ | ✅ |
 
 **SuperLocalMemory V2 is the ONLY solution that:**
-- ✅ Works across 8+ IDEs and CLI tools
+- ✅ Works across 11+ IDEs and CLI tools
 - ✅ Remains 100% local (no cloud dependencies)
 - ✅ Completely free with unlimited memories
 

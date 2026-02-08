@@ -115,8 +115,8 @@ SuperLocalMemory V2.2.0 introduces a **professional visualization dashboard** bu
 
 **Launch:**
 ```bash
-python ~/.claude-memory/dashboard.py
-# Opens at http://localhost:8050
+python ~/.claude-memory/ui_server.py
+# Opens at http://localhost:8765
 ```
 
 ### Four Main Views

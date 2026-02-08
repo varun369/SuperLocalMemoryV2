@@ -50,7 +50,7 @@ pip install -r requirements-dashboard.txt
 # Start the dashboard server
 python ~/.claude-memory/ui_server.py
 
-# Dashboard opens at: http://localhost:8000
+# Dashboard opens at: http://localhost:8765
 ```
 
 **Expected output:**
@@ -63,7 +63,7 @@ python ~/.claude-memory/ui_server.py
 ✓ Knowledge graph loaded: 8 clusters, 312 entities
 ✓ Pattern data loaded: 24 learned patterns
 
-🌐 Dashboard running at: http://localhost:8000
+🌐 Dashboard running at: http://localhost:8765
 🔧 Press Ctrl+C to stop server
 
 [2026-02-07 14:30:00] Dash app starting...
@@ -741,7 +741,7 @@ pip install dash plotly pandas networkx
 python ~/.claude-memory/ui_server.py --port 8051
 
 # Or kill existing process
-lsof -ti:8000 | xargs kill
+lsof -ti:8765 | xargs kill
 ```
 
 ### Slow graph rendering
@@ -988,7 +988,7 @@ The **Visualization Dashboard** transforms SuperLocalMemory from a command-line 
 **Launch in seconds:**
 ```bash
 python ~/.claude-memory/ui_server.py
-# http://localhost:8000
+# http://localhost:8765
 ```
 
 **100% local. 100% private. 100% visual.**

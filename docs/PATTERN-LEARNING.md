@@ -346,7 +346,7 @@ Potential improvements (not yet implemented):
 Architecture documentation:
 - `docs/architecture/05-pattern-learner.md` - Detailed algorithm specification
 - `docs/architecture/01-database-schema.md` - Pattern table schemas
-- `docs/COMPREHENSIVE-ARCHITECTURE.md` - System overview
+- `docs/ARCHITECTURE.md` - System overview
 
 Research inspiration:
 - xMemory (arxiv.org/abs/2602.02007) - Semantic memory components

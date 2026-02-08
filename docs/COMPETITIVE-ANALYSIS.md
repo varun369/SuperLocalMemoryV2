@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-After extensive research of the paid/commercial AI memory landscape in 2026, **SuperLocalMemory V2 is the ONLY free solution offering all these features combined**: 4-layer architecture, pattern learning, multi-profile support, 100% local operation, and zero setup requirements.
+After extensive research of the paid/commercial AI memory landscape in 2026, **SuperLocalMemory V2 is the ONLY free solution offering all these features combined**: 7-layer universal architecture, pattern learning, multi-profile support, 100% local operation, and zero setup requirements.
 
 ---
 
@@ -23,7 +23,7 @@ After extensive research of the paid/commercial AI memory landscape in 2026, **S
 | Enterprise | SSO, audit logs, on-prem, SLA | Custom |
 
 **What's MISSING vs SuperLocalMemory V2:**
-- No 4-layer architecture (only semantic + graph)
+- No 7-layer universal architecture (only semantic + graph)
 - No pattern learning with identity profiles
 - No multi-profile support
 - Not 100% local (cloud-first design)
@@ -44,7 +44,7 @@ After extensive research of the paid/commercial AI memory landscape in 2026, **S
 **Credit System:** 1 credit = 1 Episode (data object). Episodes >350 bytes billed as multiples.
 
 **What's MISSING vs SuperLocalMemory V2:**
-- No 4-layer architecture
+- No 7-layer universal architecture
 - No pattern learning
 - No multi-profile support natively
 - Not 100% local (cloud-managed)
@@ -64,7 +64,7 @@ After extensive research of the paid/commercial AI memory landscape in 2026, **S
 | Enterprise | Custom limits | Custom |
 
 **What's MISSING vs SuperLocalMemory V2:**
-- No 4-layer architecture
+- No 7-layer universal architecture
 - No pattern learning
 - No multi-profile support
 - Not 100% local (cloud-based)
@@ -83,7 +83,7 @@ After extensive research of the paid/commercial AI memory landscape in 2026, **S
 **NO FREE PLAN AVAILABLE**
 
 **What's MISSING vs SuperLocalMemory V2:**
-- No 4-layer architecture
+- No 7-layer universal architecture
 - No pattern learning with confidence scoring
 - Not 100% local (cloud-based)
 - No free tier
@@ -100,7 +100,7 @@ After extensive research of the paid/commercial AI memory landscape in 2026, **S
 | Letta Cloud | Managed service | Beta (TBD) |
 
 **What's MISSING vs SuperLocalMemory V2:**
-- Different architecture (not 4-layer)
+- Different architecture (not 7-layer universal)
 - No explicit pattern learning with identity profiles
 - Limited multi-profile support
 - Requires significant technical setup
@@ -117,7 +117,7 @@ After extensive research of the paid/commercial AI memory landscape in 2026, **S
 | Cloud | Hosted service | Tiered |
 
 **What's MISSING vs SuperLocalMemory V2:**
-- No 4-layer architecture
+- No 7-layer universal architecture
 - No pattern learning with identity profiles
 - No progressive compression system
 - Not zero-setup
@@ -128,7 +128,7 @@ After extensive research of the paid/commercial AI memory landscape in 2026, **S
 
 | Feature | Mem0 | Zep | Supermemory | Letta | Personal.AI | Khoj | **SuperLocalMemory V2** |
 |---------|------|-----|-------------|-------|-------------|------|------------------------|
-| **4-Layer Architecture** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **7-Layer Universal Architecture** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Pattern Learning** | ❌ | ❌ | ❌ | ❌ | Partial | ❌ | ✅ |
 | **Multi-Profile Support** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
 | **100% Local** | ❌ | ❌ | ❌ | Partial | ❌ | Partial | ✅ |
@@ -155,7 +155,7 @@ After extensive research of the paid/commercial AI memory landscape in 2026, **S
 
 ## Key Differentiators: SuperLocalMemory V2
 
-### 1. 4-Layer Architecture (UNIQUE)
+### 1. 7-Layer Universal Architecture (UNIQUE)
 No competitor offers this integrated architecture:
 - Layer 1: Raw Storage (SQLite + FTS + embeddings)
 - Layer 2: Hierarchical Index (PageIndex-style)
@@ -196,7 +196,7 @@ Learns your:
 **SuperLocalMemory V2 is demonstrably unique in the 2026 AI memory market.**
 
 No single competitor offers ALL of:
-1. 4-layer architecture
+1. 7-layer universal architecture
 2. Pattern learning with identity profiles
 3. Multi-profile support
 4. 100% local operation

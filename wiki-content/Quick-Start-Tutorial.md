@@ -322,9 +322,9 @@ See [Multi-Profile Workflows](Multi-Profile-Workflows) for advanced usage.
 
 ```bash
 # Start the visualization dashboard
-python ~/.claude-memory/dashboard.py
+python ~/.claude-memory/ui_server.py
 
-# Opens at: http://localhost:8050
+# Opens at: http://localhost:8765
 ```
 
 **Expected output:**
@@ -337,7 +337,7 @@ python ~/.claude-memory/dashboard.py
 ✓ Knowledge graph loaded: 1 cluster, 15 entities
 ✓ Pattern data loaded: 2 learned patterns
 
-🌐 Dashboard running at: http://localhost:8050
+🌐 Dashboard running at: http://localhost:8765
 ```
 
 ### Explore Four Views
@@ -411,7 +411,7 @@ pip install -r ~/.claude-memory/requirements-dashboard.txt
 
 **Daily Context Refresh:**
 ```
-1. Open dashboard (http://localhost:8050)
+1. Open dashboard (http://localhost:8765)
 2. Timeline view → Filter: Last 7 days
 3. Scan memories chronologically
 4. Export as text for AI assistant

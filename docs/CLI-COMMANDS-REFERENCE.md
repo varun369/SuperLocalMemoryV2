@@ -2,7 +2,7 @@
 
 **Quick reference for all CLI commands**
 
-**Version 2.1.0-universal** - Universal integration across 8+ IDEs and CLI tools
+**Version 2.1.0-universal** - Universal integration across 11+ IDEs and CLI tools
 
 SuperLocalMemory V2 offers three access methods:
 1. **Universal CLI** - Simple `slm` commands (NEW in v2.1.0)
@@ -269,22 +269,22 @@ Shows pattern count, avg confidence, types, categories
 
 ### Add Memory
 ```bash
-python ~/.claude-memory/memory_store.py add "content" --tags tag1,tag2
+python ~/.claude-memory/memory_store_v2.py add "content" --tags tag1,tag2
 ```
 
 ### Search Memories
 ```bash
-python ~/.claude-memory/memory_store.py search "query"
+python ~/.claude-memory/memory_store_v2.py search "query"
 ```
 
 ### List Recent Memories
 ```bash
-python ~/.claude-memory/memory_store.py list 20
+python ~/.claude-memory/memory_store_v2.py list 20
 ```
 
 ### Get Stats
 ```bash
-python ~/.claude-memory/memory_store.py stats
+python ~/.claude-memory/memory_store_v2.py stats
 ```
 
 ---
@@ -422,4 +422,4 @@ For complete documentation, see:
 - `~/.claude-memory/docs/README.md` - Main documentation
 - `~/.claude-memory/RESET-GUIDE.md` - Reset procedures
 - `~/.claude-memory/PROFILES-GUIDE.md` - Profile management
-- `~/.claude-memory/COMPLETE-FEATURE-LIST.md` - All features
+- `docs/ARCHITECTURE.md` - All features

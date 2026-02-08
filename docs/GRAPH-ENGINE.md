@@ -492,7 +492,7 @@ Web-based D3.js graph viewer (see `docs/architecture/03-ui-architecture.md`)
 - `graph_engine.py` - Main implementation (31KB)
 - `example_graph_usage.py` - Usage examples
 - `docs/architecture/04-graph-engine.md` - Architecture documentation
-- `docs/COMPREHENSIVE-ARCHITECTURE.md` - Full system design
+- `docs/ARCHITECTURE.md` - Full system design
 
 ## License
 

@@ -413,7 +413,7 @@ Includes:
 
 ## 🔗 Related Pages
 
-- [[Universal-Architecture]] - Understand the 7-layer architecture
+- [[Universal-Architecture]] - Understand the universal architecture
 - [[Universal-Skills]] - Learn about slash-command based access
 - [[Installation]] - Initial setup guide
 - [[Home]] - Back to wiki home

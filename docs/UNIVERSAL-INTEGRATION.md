@@ -8,7 +8,7 @@
 
 ## Overview
 
-SuperLocalMemory V2 now works across **8+ IDEs and CLI tools** with automatic detection and configuration. This guide shows you how to use it in every supported environment.
+SuperLocalMemory V2 now works across **11+ IDEs and CLI tools** with automatic detection and configuration. This guide shows you how to use it in every supported environment.
 
 ---
 

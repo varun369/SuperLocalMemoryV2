@@ -46,7 +46,7 @@ Simple Storage → Intelligent Organization → Adaptive Learning
 
 ## Universal Integration
 
-**Version 2.1.0-universal** transforms SuperLocalMemory from Claude-Code-only to a universal memory system that works across 8+ IDEs and CLI tools with zero configuration.
+**Version 2.1.0-universal** transforms SuperLocalMemory from Claude-Code-only to a universal memory system that works across 11+ IDEs and CLI tools with zero configuration.
 
 ### Three-Tier Access Architecture
 

@@ -31,7 +31,7 @@ SuperLocalMemory is now available in:
 ✓ Windsurf (restart IDE)
 ✓ Continue.dev (use /slm-* skills)
 ✓ Cody (use custom commands)
-✓ And 6 more tools...
+✓ And 6+ more tools (11+ IDEs supported total)
 
 Troubleshooting:
 ----------------

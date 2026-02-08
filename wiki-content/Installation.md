@@ -106,9 +106,9 @@ The installer automatically detects and configures:
 
 ```bash
 # Launch the interactive web dashboard
-python ~/.claude-memory/dashboard.py
+python ~/.claude-memory/ui_server.py
 
-# Opens at http://localhost:8050
+# Opens at http://localhost:8765
 ```
 
 **Expected output:**
@@ -121,7 +121,7 @@ python ~/.claude-memory/dashboard.py
 ✓ Knowledge graph loaded: 8 clusters, 312 entities
 ✓ Pattern data loaded: 24 learned patterns
 
-🌐 Dashboard running at: http://localhost:8050
+🌐 Dashboard running at: http://localhost:8765
 🔧 Press Ctrl+C to stop server
 ```
 
@@ -152,17 +152,17 @@ pip install -r ~/.claude-memory/requirements-dashboard.txt
 
 **Custom port:**
 ```bash
-python ~/.claude-memory/dashboard.py --port 8080
+python ~/.claude-memory/ui_server.py --port 8080
 ```
 
 **Specific profile:**
 ```bash
-python ~/.claude-memory/dashboard.py --profile work
+python ~/.claude-memory/ui_server.py --profile work
 ```
 
 **Debug mode:**
 ```bash
-python ~/.claude-memory/dashboard.py --debug
+python ~/.claude-memory/ui_server.py --debug
 ```
 
 ### Performance

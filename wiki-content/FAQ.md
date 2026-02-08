@@ -185,8 +185,8 @@ No. Those are note-taking apps. SuperLocalMemory is specifically designed for:
 
 **Launch:**
 ```bash
-python ~/.claude-memory/dashboard.py
-# Opens at http://localhost:8050
+python ~/.claude-memory/ui_server.py
+# Opens at http://localhost:8765
 ```
 
 [[Complete guide →|Visualization-Dashboard]]
@@ -225,7 +225,7 @@ slm recall "security" --strategy graph
 **Timeline View** shows all memories chronologically with visual indicators.
 
 **Steps:**
-1. Start dashboard: `python ~/.claude-memory/dashboard.py`
+1. Start dashboard: `python ~/.claude-memory/ui_server.py`
 2. Navigate to Timeline tab
 3. See all memories sorted by date
 4. Filter by date range (last 7/30/90 days, custom)
@@ -416,7 +416,7 @@ pip install scikit-learn
 
 ### How can I contribute?
 
-See [[Contributing]] for guidelines. Areas we need help:
+See [Contributing](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CONTRIBUTING.md) for guidelines. Areas we need help:
 - Performance optimizations
 - Graph visualization UI
 - Additional pattern categories

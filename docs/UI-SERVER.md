@@ -50,13 +50,13 @@ python create_demo_db.py
 python ui_server.py
 ```
 
-The server will start on **http://localhost:8000**
+The server will start on **http://localhost:8765**
 
 ### 4. Open UI
 
-Navigate to: **http://localhost:8000**
+Navigate to: **http://localhost:8765**
 
-Interactive API documentation: **http://localhost:8000/docs**
+Interactive API documentation: **http://localhost:8765/docs**
 
 ## Usage
 
@@ -99,13 +99,13 @@ Node colors represent different clusters. Node size represents importance.
 ### Get Memories (with filters)
 
 ```bash
-curl "http://localhost:8000/api/memories?category=Frontend&limit=10"
+curl "http://localhost:8765/api/memories?category=Frontend&limit=10"
 ```
 
 ### Search Memories
 
 ```bash
-curl -X POST "http://localhost:8000/api/search" \
+curl -X POST "http://localhost:8765/api/search" \
   -H "Content-Type: application/json" \
   -d '{"query": "react components", "limit": 10, "min_score": 0.3}'
 ```
@@ -113,13 +113,13 @@ curl -X POST "http://localhost:8000/api/search" \
 ### Get Graph Data
 
 ```bash
-curl "http://localhost:8000/api/graph?max_nodes=100"
+curl "http://localhost:8765/api/graph?max_nodes=100"
 ```
 
 ### Get Statistics
 
 ```bash
-curl "http://localhost:8000/api/stats"
+curl "http://localhost:8765/api/stats"
 ```
 
 ## Configuration
@@ -251,4 +251,4 @@ This UI server is intended for **local development** only.
 For issues or questions:
 1. Check the main README: `README.md`
 2. Review architecture docs: `docs/architecture/`
-3. Examine demo: `DEMO_QUICKSTART.md`
+3. Examine demo: `README.md`
