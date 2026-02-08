@@ -115,11 +115,13 @@ copy_installer_files() {
     
     # Documentation
     log_info "  → Copying documentation..."
-    cp README.md "${INSTALLER_DIR}/"
-    cp LICENSE "${INSTALLER_DIR}/"
-    cp ATTRIBUTION.md "${INSTALLER_DIR}/"
-    cp QUICKSTART.md "${INSTALLER_DIR}/"
-    cp CHANGELOG.md "${INSTALLER_DIR}/"
+    cp README.md "${INSTALLER_DIR}/" 2>/dev/null || true
+    cp LICENSE "${INSTALLER_DIR}/" 2>/dev/null || true
+    cp ATTRIBUTION.md "${INSTALLER_DIR}/" 2>/dev/null || true
+    cp CHANGELOG.md "${INSTALLER_DIR}/" 2>/dev/null || true
+    if [ -d "docs" ]; then
+        cp -r docs "${INSTALLER_DIR}/"
+    fi
     
     # Shell completions
     if [ -d "completions" ]; then
@@ -169,7 +171,7 @@ After installation, verify by running:
 NEED HELP?
 ---------
 • Documentation: README.md
-• Quick Start: QUICKSTART.md
+• Quick Start: docs/CLI-COMMANDS-REFERENCE.md
 • GitHub Wiki: https://github.com/varun369/SuperLocalMemoryV2/wiki
 • Issues: https://github.com/varun369/SuperLocalMemoryV2/issues
 
