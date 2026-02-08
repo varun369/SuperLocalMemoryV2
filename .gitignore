@@ -1,0 +1,107 @@
+# ============================================================================
+# SuperLocalMemory V2 — .gitignore
+# ============================================================================
+
+# ==== USER DATA (Never commit) ====
+memory.db
+*.db
+!demo-memory.db
+backups/
+profiles/
+vectors/
+cold-storage/
+jobs/
+profiles.json
+
+# ==== BACKUP DIRECTORY (Internal/archived files) ====
+.backup/
+
+# ==== BUILD ARTIFACTS ====
+build/
+dist/
+*.dmg
+*.exe
+*.tgz
+*.sha256
+*.md5
+package/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# ==== VIRTUAL ENVIRONMENTS ====
+venv/
+.venv/
+env/
+ENV/
+
+# ==== OS FILES ====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# ==== IDE ====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ==== LOGS ====
+*.log
+
+# ==== NODE ====
+node_modules/
+website/node_modules/
+website/dist/
+website/.astro/
+
+# ==== INTERNAL DOCS (Not for public repo) ====
+CLAUDE.md
+FIXES-*.md
+STATUS-SUMMARY-*.md
+TASK-*.md
+TASKS-*.md
+TASK_*.md
+COMPLETION*.md
+AGENT-*.md
+AGENT_*.md
+TEST_REPORT.md
+GAPS-AND-ISSUES.md
+
+# ==== MARKETING & STRATEGY (Keep in /plans only) ====
+*STRATEGY*.md
+SEO-*.md
+MARKETING-*.md
+DIRECTORY-SUBMISSIONS.md
+REDDIT-POSTS.md
+HACKER-NEWS-POST.md
+DEVTO-*.md
+BLOG-POSTS.md
+blog-posts/
+NPM-PUBLISHING-GUIDE.md
+NPM-DEPLOYMENT-CHECKLIST.md
+NPM-README-UPDATE.md
+NPM-PACKAGE-SUMMARY.md
+NPM-FILES-REFERENCE.md
+DMG-BUILD-*.md
+DMG-QUICK-REFERENCE.md
+INSTALLER-*.md
+BUILD-INSTALLER.md
+WINDOWS-INSTALLER-*.md
+README-WINDOWS-INSTALLER.md
+
+# ==== WEBSITE INTERNAL DOCS ====
+website/DEPLOY-NOW.md
+website/DEPLOYMENT.md
+website/VERIFICATION-CHECKLIST.md
+
+# ==== TEST OUTPUTS ====
+test-output/
+test-results/

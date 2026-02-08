@@ -1,0 +1,69 @@
+name: Build macOS DMG
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 2.1.0)'
+        required: true
+        default: '2.1.0'
+
+jobs:
+  build-dmg:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Make scripts executable
+      run: |
+        chmod +x build-dmg.sh test-dmg.sh
+        chmod +x install.sh install-skills.sh
+        chmod +x bin/* src/*.py
+    
+    - name: Build DMG
+      run: ./build-dmg.sh
+      
+    - name: Test DMG
+      run: ./test-dmg.sh
+    
+    - name: Get DMG filename
+      id: dmg_name
+      run: |
+        DMG_FILE=$(ls SuperLocalMemory-*.dmg)
+        echo "dmg_file=${DMG_FILE}" >> $GITHUB_OUTPUT
+        echo "dmg_size=$(du -h ${DMG_FILE} | awk '{print $1}')" >> $GITHUB_OUTPUT
+    
+    - name: Upload DMG as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: SuperLocalMemory-DMG
+        path: ${{ steps.dmg_name.outputs.dmg_file }}
+        retention-days: 30
+    
+    - name: Upload to Release (if release event)
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ${{ steps.dmg_name.outputs.dmg_file }}
+        asset_name: ${{ steps.dmg_name.outputs.dmg_file }}
+        asset_content_type: application/x-apple-diskimage
+    
+    - name: Summary
+      run: |
+        echo "### DMG Build Complete! ✅" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **File:** ${{ steps.dmg_name.outputs.dmg_file }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Size:** ${{ steps.dmg_name.outputs.dmg_size }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Tests:** Passed ✅" >> $GITHUB_STEP_SUMMARY

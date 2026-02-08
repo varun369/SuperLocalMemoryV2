@@ -1,0 +1,185 @@
+# NPM Package Exclusions for SuperLocalMemory V2
+# Only include essential files for installation and runtime
+# Copyright (c) 2026 Varun Pratap Bhardwaj
+
+# ============================================================================
+# Personal & Generated Data (NEVER include)
+# ============================================================================
+memory.db
+*.db
+!demo-memory.db
+backups/
+profiles/
+vectors/
+cold-storage/
+jobs/
+profiles.json
+*.log
+ui-server.log
+
+# Personal configuration
+CLAUDE.md
+
+# ============================================================================
+# Development & Testing (NOT needed for production)
+# ============================================================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files and infrastructure
+test_*.py
+comprehensive_test.py
+test_mcp_server.py
+test_skills.py
+test_edge_cases.py
+test_new_modules.py
+test_search_engine.py
+test_ui_server.py
+test_backward_compatibility.py
+verify_*.py
+test_demo.py
+create_demo_db.py
+verify_demo.py
+
+# Test scripts
+RUN_ALL_TESTS.sh
+test_all_commands.sh
+test-system.sh
+tests/
+
+# Test reports
+TEST_REPORT.md
+TESTING_COMPLETE.md
+test-output/
+test-results/
+
+# ============================================================================
+# Internal Documentation (NOT for distribution)
+# ============================================================================
+
+# Strategy documents
+docs/plans/
+plans/
+docs/ATTRIBUTION-PROTECTION-SUMMARY.md
+docs/UNIVERSAL-STRATEGY-2026.md
+ATTRIBUTION-IMPLEMENTATION-REPORT.md
+
+# Task completion reports
+TASK-*.md
+TASKS-*.md
+TASK_*.md
+COMPLETION*.md
+AGENT-*.md
+AGENT_*.md
+STATUS-SUMMARY-*.md
+FIXES-*.md
+
+# Implementation summaries
+IMPLEMENTATION-SUMMARY*.md
+MIGRATION*.md
+
+# UAT reports
+UAT_*.md
+EDGE_CASE*.md
+
+# Internal quickstart docs (use official README/QUICKSTART)
+V2.2.0-QUICKSTART.md
+V2.2.0-README.txt
+UI_SERVER_QUICKSTART.md
+
+# Wiki source (use online wiki)
+wiki-content/
+
+# Additional developer docs
+docs/MCP-MANUAL-SETUP.md
+docs/TESTING-STRATEGY.md
+docs/
+
+# ============================================================================
+# Build & CI/CD (NOT needed for runtime)
+# ============================================================================
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# Config files
+config.json
+
+# Scripts that are only for development
+sync-wiki.sh
+add_attribution.py
+start_ui_server.sh
+start-dashboard.ps1
+start-dashboard.sh
+verify-install.sh
+verify-install.ps1
+
+# ============================================================================
+# Large/Optional Components (Keep package size small)
+# ============================================================================
+
+# API server (optional, not in core package)
+api_server.py
+
+# UI server (optional, not in core package)
+ui_server.py
+ui/
+
+# Old Claude Code skills (replaced by universal skills)
+claude-skills/
+
+# ============================================================================
+# Documentation to KEEP (Essential for users)
+# ============================================================================
+# README.md - KEEP
+# LICENSE - KEEP
+# ATTRIBUTION.md - KEEP
+# CHANGELOG.md - KEEP
+# QUICKSTART.md - KEEP
+# INSTALL.md - KEEP (installation reference)
+# CONTRIBUTING.md - KEEP
+# SECURITY.md - KEEP
+# AUTHORS.md - KEEP
+# ARCHITECTURE.md - KEEP (technical reference)
+
+# ============================================================================
+# Files to INCLUDE (Everything else needed for runtime)
+# ============================================================================
+# src/ - Core Python modules (REQUIRED)
+# bin/ - CLI wrappers (REQUIRED)
+# hooks/ - Git hooks (optional but small)
+# configs/ - MCP configs (REQUIRED)
+# skills/ - Universal skills (REQUIRED)
+# completions/ - Shell completions (nice to have)
+# scripts/ - NPM lifecycle scripts (REQUIRED)
+# mcp_server.py - MCP server (REQUIRED)
+# install.sh - Mac/Linux installer (REQUIRED)
+# install.ps1 - Windows installer (REQUIRED)
+# install-skills.sh - Skills installer (REQUIRED)
+# requirements*.txt - Python deps (REQUIRED)
