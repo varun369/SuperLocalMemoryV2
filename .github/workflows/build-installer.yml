@@ -15,7 +15,7 @@ on:
       version:
         description: 'Version to build (e.g., 2.1.0)'
         required: true
-        default: '2.1.0'
+        default: '2.3.0'
 
 permissions:
   contents: write
@@ -105,7 +105,7 @@ jobs:
 
       - name: Verify build output
         run: |
-          $exePath = "dist\SuperLocalMemory-Setup-v2.1.0-windows.exe"
+          $exePath = "dist\SuperLocalMemory-Setup-v2.3.0-windows.exe"
           if (Test-Path $exePath) {
             $fileSize = (Get-Item $exePath).Length / 1MB
             Write-Host "✓ Installer created: $exePath"
@@ -118,7 +118,7 @@ jobs:
       - name: Calculate checksums
         run: |
           Write-Host "Generating checksums..."
-          $exePath = "dist\SuperLocalMemory-Setup-v2.1.0-windows.exe"
+          $exePath = "dist\SuperLocalMemory-Setup-v2.3.0-windows.exe"
 
           # SHA256
           $sha256 = Get-FileHash -Path $exePath -Algorithm SHA256
@@ -142,7 +142,7 @@ jobs:
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/SuperLocalMemory-Setup-*.exe
@@ -154,7 +154,7 @@ jobs:
           body: |
             ## Windows Installer
 
-            **Download:** `SuperLocalMemory-Setup-v2.1.0-windows.exe`
+            **Download:** `SuperLocalMemory-Setup-v2.3.0-windows.exe`
 
             ### Installation
             1. Download the installer

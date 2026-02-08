@@ -8,7 +8,7 @@ on:
       version:
         description: 'Version number (e.g., 2.1.0)'
         required: true
-        default: '2.1.0'
+        default: '2.3.0'
 
 jobs:
   build-dmg:
@@ -43,7 +43,7 @@ jobs:
         echo "dmg_size=$(du -h ${DMG_FILE} | awk '{print $1}')" >> $GITHUB_OUTPUT
     
     - name: Upload DMG as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: SuperLocalMemory-DMG
         path: ${{ steps.dmg_name.outputs.dmg_file }}
@@ -51,14 +51,11 @@ jobs:
     
     - name: Upload to Release (if release event)
       if: github.event_name == 'release'
-      uses: actions/upload-release-asset@v1
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ${{ steps.dmg_name.outputs.dmg_file }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ${{ steps.dmg_name.outputs.dmg_file }}
-        asset_name: ${{ steps.dmg_name.outputs.dmg_file }}
-        asset_content_type: application/x-apple-diskimage
     
     - name: Summary
       run: |
