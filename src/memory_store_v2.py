@@ -915,6 +915,25 @@ class MemoryStoreV2:
         return ''.join(output)
 
 
+def format_content(content: str, full: bool = False, threshold: int = 5000, preview_len: int = 2000) -> str:
+    """
+    Smart content formatting with optional truncation.
+
+    Args:
+        content: Content to format
+        full: If True, always show full content
+        threshold: Max length before truncation (default 5000)
+        preview_len: Preview length when truncating (default 2000)
+
+    Returns:
+        Formatted content string
+    """
+    if full or len(content) < threshold:
+        return content
+    else:
+        return f"{content[:preview_len]}..."
+
+
 # CLI interface (V1 compatible + V2 extensions)
 if __name__ == "__main__":
     import sys
@@ -925,16 +944,18 @@ if __name__ == "__main__":
         print("MemoryStore V2 CLI")
         print("\nV1 Compatible Commands:")
         print("  python memory_store_v2.py add <content> [--project <path>] [--tags tag1,tag2]")
-        print("  python memory_store_v2.py search <query>")
-        print("  python memory_store_v2.py list [limit]")
+        print("  python memory_store_v2.py search <query> [--full]")
+        print("  python memory_store_v2.py list [limit] [--full]")
         print("  python memory_store_v2.py get <id>")
-        print("  python memory_store_v2.py recent [limit]")
+        print("  python memory_store_v2.py recent [limit] [--full]")
         print("  python memory_store_v2.py stats")
         print("  python memory_store_v2.py context <query>")
         print("  python memory_store_v2.py delete <id>")
         print("\nV2 Extensions:")
         print("  python memory_store_v2.py tree [parent_id]")
-        print("  python memory_store_v2.py cluster <cluster_id>")
+        print("  python memory_store_v2.py cluster <cluster_id> [--full]")
+        print("\nOptions:")
+        print("  --full    Show complete content (default: smart truncation at 5000 chars)")
         sys.exit(0)
 
     command = sys.argv[1]
@@ -954,6 +975,7 @@ if __name__ == "__main__":
 
     elif command == "cluster" and len(sys.argv) >= 3:
         cluster_id = int(sys.argv[2])
+        show_full = '--full' in sys.argv
         results = store.get_by_cluster(cluster_id)
 
         if not results:
@@ -962,7 +984,7 @@ if __name__ == "__main__":
             print(f"Cluster {cluster_id} - {len(results)} memories:")
             for r in results:
                 print(f"\n[{r['id']}] Importance: {r['importance']}")
-                print(f"  {r['content'][:200]}...")
+                print(f"  {format_content(r['content'], full=show_full)}")
 
     elif command == "stats":
         stats = store.get_stats()
@@ -996,10 +1018,11 @@ if __name__ == "__main__":
     elif command == "search":
         if len(sys.argv) < 3:
             print("Error: Search query required")
-            print("Usage: python memory_store_v2.py search <query>")
+            print("Usage: python memory_store_v2.py search <query> [--full]")
             sys.exit(1)
 
         query = sys.argv[2]
+        show_full = '--full' in sys.argv
         results = store.search(query, limit=5)
 
         if not results:
@@ -1011,11 +1034,18 @@ if __name__ == "__main__":
                     print(f"Project: {r['project_name']}")
                 if r.get('tags'):
                     print(f"Tags: {', '.join(r['tags'])}")
-                print(f"Content: {r['content'][:200]}...")
+                print(f"Content: {format_content(r['content'], full=show_full)}")
                 print(f"Created: {r['created_at']}")
 
     elif command == "recent":
-        limit = int(sys.argv[2]) if len(sys.argv) > 2 else 10
+        show_full = '--full' in sys.argv
+        # Parse limit (skip --full flag)
+        limit = 10
+        for i, arg in enumerate(sys.argv[2:], start=2):
+            if arg != '--full' and arg.isdigit():
+                limit = int(arg)
+                break
+
         results = store.get_recent(limit)
 
         if not results:
@@ -1027,17 +1057,24 @@ if __name__ == "__main__":
                     print(f"Project: {r['project_name']}")
                 if r.get('tags'):
                     print(f"Tags: {', '.join(r['tags'])}")
-                print(f"Content: {r['content'][:200]}...")
+                print(f"Content: {format_content(r['content'], full=show_full)}")
 
     elif command == "list":
-        limit = int(sys.argv[2]) if len(sys.argv) > 2 else 10
+        show_full = '--full' in sys.argv
+        # Parse limit (skip --full flag)
+        limit = 10
+        for i, arg in enumerate(sys.argv[2:], start=2):
+            if arg != '--full' and arg.isdigit():
+                limit = int(arg)
+                break
+
         results = store.get_recent(limit)
 
         if not results:
             print("No memories found.")
         else:
             for r in results:
-                print(f"[{r['id']}] {r['content'][:100]}...")
+                print(f"[{r['id']}] {format_content(r['content'], full=show_full)}")
 
     elif command == "get":
         if len(sys.argv) < 3:
@@ -1046,7 +1083,7 @@ if __name__ == "__main__":
             sys.exit(1)
 
         mem_id = int(sys.argv[2])
-        memory = store.get_memory(mem_id)
+        memory = store.get_by_id(mem_id)
 
         if not memory:
             print(f"Memory {mem_id} not found.")

@@ -33,13 +33,14 @@ Arguments:
 
 Options:
   --limit <n>            Maximum results to return (default: 10)
+  --full                 Show complete content without truncation
 
 Examples:
   memory-recall "authentication bug"
 
   memory-recall "API configuration" --limit 5
 
-  memory-recall "security best practices"
+  memory-recall "security best practices" --full
 
   memory-recall "user preferences"
 
@@ -47,6 +48,8 @@ Output Format:
   • Ranked by relevance (TF-IDF cosine similarity)
   • Shows: ID, Content, Tags, Importance, Timestamp
   • Higher scores = better matches
+  • Smart truncation: full content if <5000 chars, preview if ≥5000 chars
+  • Use --full flag to always show complete content
 
 Notes:
   • Uses local TF-IDF search (no external APIs)
@@ -67,6 +70,8 @@ Notes:
     if (arg === '--limit' && i + 1 < args.length) {
       // Note: V1 store doesn't support --limit in search, will truncate output instead
       i++; // Skip but don't add to pythonArgs
+    } else if (arg === '--full') {
+      pythonArgs.push('--full');
     } else if (!arg.startsWith('--') && query === null) {
       query = arg;
     }

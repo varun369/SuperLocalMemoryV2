@@ -34,6 +34,7 @@ Options:
                          • recent: Latest created first (default)
                          • accessed: Most recently accessed
                          • importance: Highest importance first
+  --full                 Show complete content without truncation
 
 Examples:
   memory-list
@@ -42,17 +43,17 @@ Examples:
 
   memory-list --sort importance
 
-  memory-list --limit 10 --sort accessed
+  memory-list --limit 10 --sort accessed --full
 
 Output Format:
-  • ID, Content (truncated), Tags, Importance
+  • ID, Content (smart truncated), Tags, Importance
   • Creation timestamp
   • Access count and last accessed time
 
 Notes:
   • Default shows last 20 memories
-  • Content is truncated to 100 chars for readability
-  • Use ID with memory-recall to see full content
+  • Smart truncation: full content if <5000 chars, preview if ≥5000 chars
+  • Use --full flag to always show complete content
   • Sort by 'accessed' to find frequently used memories
 `);
     return;
@@ -61,6 +62,7 @@ Notes:
   // Parse options
   let limit = 20;
   let sortBy = 'recent';
+  let showFull = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -83,6 +85,8 @@ Notes:
         return;
       }
       i++;
+    } else if (arg === '--full') {
+      showFull = true;
     }
   }
 
@@ -95,6 +99,11 @@ Notes:
   } else {
     // Default to list for importance or other sorts
     pythonArgs = ['list', limit.toString()];
+  }
+
+  // Add --full flag if requested
+  if (showFull) {
+    pythonArgs.push('--full');
   }
 
   try {

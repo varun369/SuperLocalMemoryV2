@@ -16,6 +16,30 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.3.7] - 2026-02-09
+
+### Added
+- **--full flag**: Show complete memory content without truncation in search/list/recent/cluster commands
+- **Smart truncation**: Memories <5000 chars shown in full, ≥5000 chars truncated to 2000 chars (previously always truncated at 200 chars)
+- **Help text**: Added --full flag documentation to CLI help output
+
+### Fixed
+- **CLI bug**: Fixed `get` command error - `get_memory()` → `get_by_id()` method call
+- **Content display**: Recall now shows full content for short/medium memories instead of always truncating at 200 chars
+- **User experience**: Agents and users can now see complete memory content by default for most memories
+
+### Changed
+- **Truncation logic**: 200 char limit → 2000 char preview for memories ≥5000 chars
+- **Node.js wrappers**: memory-recall-skill.js and memory-list-skill.js updated to pass --full flag through
+
+### Technical Details
+- Added `format_content()` helper function in memory_store_v2.py (line 918)
+- Updated search/list/recent/cluster commands to use smart truncation
+- Backward compatible: same output structure, MCP/API calls unaffected
+- All 74+ existing memories tested: short memories show full, long memories truncate intelligently
+
+---
+
 ## [2.3.5] - 2026-02-09
 
 ### Added
