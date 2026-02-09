@@ -119,6 +119,31 @@ superlocalmemoryv2:status
 
 **That's it.** No Docker. No API keys. No cloud accounts. No configuration.
 
+### Updating to Latest Version
+
+**npm users:**
+```bash
+# Update to latest version
+npm update -g superlocalmemory
+
+# Or force latest
+npm install -g superlocalmemory@latest
+
+# Install specific version
+npm install -g superlocalmemory@2.3.7
+```
+
+**Manual install users:**
+```bash
+cd SuperLocalMemoryV2
+git pull origin main
+./install.sh  # Mac/Linux
+# or
+.\install.ps1  # Windows
+```
+
+**Your data is safe:** Updates preserve your database and all memories.
+
 ### Start the Visualization Dashboard
 
 ```bash

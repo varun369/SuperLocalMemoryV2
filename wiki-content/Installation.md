@@ -24,7 +24,28 @@ Complete installation instructions for SuperLocalMemory V2.3.0 with universal MC
 
 ## 🚀 Quick Install
 
-### Mac/Linux (Recommended)
+### npm (Recommended — All Platforms)
+
+**Easiest method. Works on Mac, Linux, and Windows:**
+
+```bash
+# Install globally
+npm install -g superlocalmemory
+
+# Verify installation
+slm status
+
+# Start using
+slm remember "Your first memory"
+```
+
+**Auto-configures:** Claude Desktop, Cursor, Windsurf, VS Code, Continue.dev, and 11+ other IDEs.
+
+**Path setup:** Automatic (npm handles it).
+
+---
+
+### Mac/Linux (Manual Install)
 
 ```bash
 # 1. Clone the repository
@@ -41,7 +62,7 @@ echo 'export PATH="${HOME}/.claude-memory/bin:${PATH}"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-### Windows (PowerShell)
+### Windows (PowerShell — Manual Install)
 
 ```powershell
 # 1. Clone the repository
@@ -225,16 +246,46 @@ pip install fastapi uvicorn
 
 ## 🔄 Updating
 
+### npm Users (Recommended)
+
+```bash
+# Update to latest version
+npm update -g superlocalmemory
+
+# Or force latest (if update doesn't work)
+npm install -g superlocalmemory@latest
+
+# Install specific version
+npm install -g superlocalmemory@2.3.7
+```
+
+**What happens during update:**
+- ✅ Downloads new version from npm
+- ✅ Auto-runs postinstall script
+- ✅ Copies updated files to `~/.claude-memory/`
+- ✅ Preserves your database and memories
+- ✅ No restart needed (works immediately)
+
+**Verify update:**
+```bash
+slm status  # Should show new version number
+slm recall "test"  # Test functionality
+```
+
+### Manual Install Users (Git)
+
 ```bash
 # Pull latest changes
 cd SuperLocalMemoryV2
 git pull origin main
 
 # Re-run installer
-./install.sh  # or .\install.ps1 on Windows
+./install.sh  # Mac/Linux
+# or
+.\install.ps1  # Windows
 ```
 
-Your memories are preserved during updates.
+**Your memories are preserved during updates.** The installer never touches `~/.claude-memory/memory.db`.
 
 ---
 
