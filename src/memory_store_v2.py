@@ -53,20 +53,40 @@ class MemoryStoreV2:
     - Backward compatible with V1 API
     """
 
-    def __init__(self, db_path: Optional[Path] = None):
+    def __init__(self, db_path: Optional[Path] = None, profile: Optional[str] = None):
         """
         Initialize MemoryStore V2.
 
         Args:
             db_path: Optional custom database path (defaults to ~/.claude-memory/memory.db)
+            profile: Optional profile override. If None, reads from profiles.json config.
         """
         self.db_path = db_path or DB_PATH
         self.vectors_path = VECTORS_PATH
+        self._profile_override = profile
         self._init_db()
         self.vectorizer = None
         self.vectors = None
         self.memory_ids = []
         self._load_vectors()
+
+    def _get_active_profile(self) -> str:
+        """
+        Get the currently active profile name.
+        Reads from profiles.json config file. Falls back to 'default'.
+        """
+        if self._profile_override:
+            return self._profile_override
+
+        config_file = MEMORY_DIR / "profiles.json"
+        if config_file.exists():
+            try:
+                with open(config_file, 'r') as f:
+                    config = json.load(f)
+                return config.get('active_profile', 'default')
+            except (json.JSONDecodeError, IOError):
+                pass
+        return 'default'
 
     def _init_db(self):
         """Initialize SQLite database with V2 schema extensions."""
@@ -129,7 +149,8 @@ class MemoryStoreV2:
             'last_accessed': 'TIMESTAMP',
             'access_count': 'INTEGER DEFAULT 0',
             'content_hash': 'TEXT',
-            'cluster_id': 'INTEGER'
+            'cluster_id': 'INTEGER',
+            'profile': 'TEXT DEFAULT "default"'
         }
 
         for col_name, col_type in v2_columns.items():
@@ -190,7 +211,8 @@ class MemoryStoreV2:
             ('idx_tree_path', 'tree_path'),
             ('idx_cluster', 'cluster_id'),
             ('idx_last_accessed', 'last_accessed'),
-            ('idx_parent_id', 'parent_id')
+            ('idx_parent_id', 'parent_id'),
+            ('idx_profile', 'profile')
         ]
 
         for idx_name, col_name in v2_indexes:
@@ -303,6 +325,7 @@ class MemoryStoreV2:
             importance = max(1, min(10, importance))  # Clamp to valid range
 
         content_hash = self._content_hash(content)
+        active_profile = self._get_active_profile()
 
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -316,9 +339,9 @@ class MemoryStoreV2:
                     content, summary, project_path, project_name, tags, category,
                     parent_id, tree_path, depth,
                     memory_type, importance, content_hash,
-                    last_accessed, access_count
+                    last_accessed, access_count, profile
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 content,
                 summary,
@@ -333,7 +356,8 @@ class MemoryStoreV2:
                 importance,
                 content_hash,
                 datetime.now().isoformat(),
-                0
+                0,
+                active_profile
             ))
             memory_id = cursor.lastrowid
 
@@ -349,6 +373,14 @@ class MemoryStoreV2:
 
             # Rebuild vectors after adding
             self._rebuild_vectors()
+
+            # Auto-backup check (non-blocking)
+            try:
+                from auto_backup import AutoBackup
+                backup = AutoBackup()
+                backup.check_and_backup()
+            except Exception:
+                pass  # Backup failure must never break memory operations
 
             return memory_id
 
@@ -410,6 +442,7 @@ class MemoryStoreV2:
             List of memory dictionaries with scores
         """
         results = []
+        active_profile = self._get_active_profile()
 
         # Method 1: TF-IDF semantic search
         if SKLEARN_AVAILABLE and self.vectorizer is not None and self.vectors is not None:
@@ -432,8 +465,8 @@ class MemoryStoreV2:
                                        category, parent_id, tree_path, depth,
                                        memory_type, importance, created_at, cluster_id,
                                        last_accessed, access_count
-                                FROM memories WHERE id = ?
-                            ''', (memory_id,))
+                                FROM memories WHERE id = ? AND profile = ?
+                            ''', (memory_id, active_profile))
                             row = cursor.fetchone()
 
                             if row and self._apply_filters(row, project_path, memory_type,
@@ -460,10 +493,10 @@ class MemoryStoreV2:
                        m.last_accessed, m.access_count
                 FROM memories m
                 JOIN memories_fts fts ON m.id = fts.rowid
-                WHERE memories_fts MATCH ?
+                WHERE memories_fts MATCH ? AND m.profile = ?
                 ORDER BY rank
                 LIMIT ?
-            ''', (fts_query, limit))
+            ''', (fts_query, active_profile, limit))
 
             existing_ids = {r['id'] for r in results}
 
@@ -570,6 +603,7 @@ class MemoryStoreV2:
         Returns:
             List of memories with tree structure
         """
+        active_profile = self._get_active_profile()
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
@@ -580,9 +614,9 @@ class MemoryStoreV2:
                        category, parent_id, tree_path, depth, memory_type, importance,
                        created_at, cluster_id, last_accessed, access_count
                 FROM memories
-                WHERE parent_id IS NULL AND depth <= ?
+                WHERE parent_id IS NULL AND depth <= ? AND profile = ?
                 ORDER BY tree_path
-            ''', (max_depth,))
+            ''', (max_depth, active_profile))
         else:
             # Get subtree under specific parent
             cursor.execute('''
@@ -649,6 +683,7 @@ class MemoryStoreV2:
         Returns:
             List of memories in the cluster
         """
+        active_profile = self._get_active_profile()
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
@@ -657,9 +692,9 @@ class MemoryStoreV2:
                    category, parent_id, tree_path, depth, memory_type, importance,
                    created_at, cluster_id, last_accessed, access_count
             FROM memories
-            WHERE cluster_id = ?
+            WHERE cluster_id = ? AND profile = ?
             ORDER BY importance DESC, created_at DESC
-        ''', (cluster_id,))
+        ''', (cluster_id, active_profile))
 
         results = []
         for row in cursor.fetchall():
@@ -675,10 +710,11 @@ class MemoryStoreV2:
         self._rebuild_vectors()
 
     def _rebuild_vectors(self):
-        """Rebuild TF-IDF vectors from all memories (V1 compatible, backward compatible)."""
+        """Rebuild TF-IDF vectors from active profile memories (V1 compatible, backward compatible)."""
         if not SKLEARN_AVAILABLE:
             return
 
+        active_profile = self._get_active_profile()
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
@@ -686,9 +722,13 @@ class MemoryStoreV2:
         cursor.execute("PRAGMA table_info(memories)")
         columns = {row[1] for row in cursor.fetchall()}
 
-        # Build SELECT query based on available columns
+        # Build SELECT query based on available columns, filtered by profile
+        has_profile = 'profile' in columns
         if 'summary' in columns:
-            cursor.execute('SELECT id, content, summary FROM memories')
+            if has_profile:
+                cursor.execute('SELECT id, content, summary FROM memories WHERE profile = ?', (active_profile,))
+            else:
+                cursor.execute('SELECT id, content, summary FROM memories')
             rows = cursor.fetchall()
             texts = [f"{row[1]} {row[2] or ''}" for row in rows]
         else:
@@ -720,7 +760,8 @@ class MemoryStoreV2:
             json.dump(self.memory_ids, f)
 
     def get_recent(self, limit: int = 10, project_path: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Get most recent memories (V1 compatible)."""
+        """Get most recent memories (V1 compatible, profile-aware)."""
+        active_profile = self._get_active_profile()
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
@@ -730,19 +771,20 @@ class MemoryStoreV2:
                        category, parent_id, tree_path, depth, memory_type, importance,
                        created_at, cluster_id, last_accessed, access_count
                 FROM memories
-                WHERE project_path = ?
+                WHERE project_path = ? AND profile = ?
                 ORDER BY created_at DESC
                 LIMIT ?
-            ''', (project_path, limit))
+            ''', (project_path, active_profile, limit))
         else:
             cursor.execute('''
                 SELECT id, content, summary, project_path, project_name, tags,
                        category, parent_id, tree_path, depth, memory_type, importance,
                        created_at, cluster_id, last_accessed, access_count
                 FROM memories
+                WHERE profile = ?
                 ORDER BY created_at DESC
                 LIMIT ?
-            ''', (limit,))
+            ''', (active_profile, limit))
 
         results = []
         for row in cursor.fetchall():
@@ -789,7 +831,8 @@ class MemoryStoreV2:
         return deleted
 
     def list_all(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """List all memories with short previews (V1 compatible)."""
+        """List all memories with short previews (V1 compatible, profile-aware)."""
+        active_profile = self._get_active_profile()
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
@@ -798,9 +841,10 @@ class MemoryStoreV2:
                    category, parent_id, tree_path, depth, memory_type, importance,
                    created_at, cluster_id, last_accessed, access_count
             FROM memories
+            WHERE profile = ?
             ORDER BY created_at DESC
             LIMIT ?
-        ''', (limit,))
+        ''', (active_profile, limit))
 
         results = []
         for row in cursor.fetchall():
@@ -817,35 +861,42 @@ class MemoryStoreV2:
         return results
 
     def get_stats(self) -> Dict[str, Any]:
-        """Get memory store statistics (V1 compatible with V2 extensions)."""
+        """Get memory store statistics (V1 compatible with V2 extensions, profile-aware)."""
+        active_profile = self._get_active_profile()
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute('SELECT COUNT(*) FROM memories')
+        cursor.execute('SELECT COUNT(*) FROM memories WHERE profile = ?', (active_profile,))
         total_memories = cursor.fetchone()[0]
 
-        cursor.execute('SELECT COUNT(DISTINCT project_path) FROM memories WHERE project_path IS NOT NULL')
+        cursor.execute('SELECT COUNT(DISTINCT project_path) FROM memories WHERE project_path IS NOT NULL AND profile = ?', (active_profile,))
         total_projects = cursor.fetchone()[0]
 
-        cursor.execute('SELECT memory_type, COUNT(*) FROM memories GROUP BY memory_type')
+        cursor.execute('SELECT memory_type, COUNT(*) FROM memories WHERE profile = ? GROUP BY memory_type', (active_profile,))
         by_type = dict(cursor.fetchall())
 
-        cursor.execute('SELECT category, COUNT(*) FROM memories WHERE category IS NOT NULL GROUP BY category')
+        cursor.execute('SELECT category, COUNT(*) FROM memories WHERE category IS NOT NULL AND profile = ? GROUP BY category', (active_profile,))
         by_category = dict(cursor.fetchall())
 
-        cursor.execute('SELECT MIN(created_at), MAX(created_at) FROM memories')
+        cursor.execute('SELECT MIN(created_at), MAX(created_at) FROM memories WHERE profile = ?', (active_profile,))
         date_range = cursor.fetchone()
 
-        cursor.execute('SELECT COUNT(DISTINCT cluster_id) FROM memories WHERE cluster_id IS NOT NULL')
+        cursor.execute('SELECT COUNT(DISTINCT cluster_id) FROM memories WHERE cluster_id IS NOT NULL AND profile = ?', (active_profile,))
         total_clusters = cursor.fetchone()[0]
 
-        cursor.execute('SELECT MAX(depth) FROM memories')
+        cursor.execute('SELECT MAX(depth) FROM memories WHERE profile = ?', (active_profile,))
         max_depth = cursor.fetchone()[0] or 0
+
+        # Total across all profiles
+        cursor.execute('SELECT COUNT(*) FROM memories')
+        total_all_profiles = cursor.fetchone()[0]
 
         conn.close()
 
         return {
             'total_memories': total_memories,
+            'total_all_profiles': total_all_profiles,
+            'active_profile': active_profile,
             'total_projects': total_projects,
             'total_clusters': total_clusters,
             'max_tree_depth': max_depth,

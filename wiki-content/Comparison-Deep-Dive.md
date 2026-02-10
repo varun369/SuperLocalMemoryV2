@@ -26,7 +26,7 @@
 | **Semantic Search** | ✅ TF-IDF | ✅ Embeddings | ✅ Embeddings | ✅ Embeddings | ✅ | ✅ |
 | **Full-Text Search** | ✅ FTS5 | ❌ | ✅ | ✅ | ❌ | ❌ |
 | **Knowledge Graph** | ✅ Leiden clustering | ✅ Basic | ✅ Neo4j | ❌ | ❌ | ❌ |
-| **Pattern Learning** | ✅ xMemory-inspired | ❌ | ❌ | ❌ | ❌ | ✅ Basic |
+| **Pattern Learning** | ✅ MemoryBank/MACLA/Hindsight-inspired | ❌ | ❌ | ❌ | ❌ | ✅ Basic |
 | **Multi-Profile** | ✅ Unlimited | ⚠️ Per-user only | ⚠️ Per-user only | ✅ | ⚠️ Limited | ❌ |
 | **Hierarchical Memory** | ✅ PageIndex-inspired | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Compression** | ✅ 3-tier | ❌ | ❌ | ❌ | ❌ | ❌ |

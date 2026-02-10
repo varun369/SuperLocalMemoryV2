@@ -8,7 +8,7 @@
 
 Pattern learning is SuperLocalMemory's ability to **automatically detect your coding preferences and style** by analyzing the memories you save. It learns what frameworks you prefer, how you write code, what testing approaches you use, and more.
 
-**Based on xMemory (Stanford Research):** Identity pattern learning from interactions with adaptive confidence scoring.
+**Based on published research:** Identity pattern learning from interactions with adaptive confidence scoring, inspired by MemoryBank (Zhong et al., AAAI 2024, [arXiv:2305.10250](https://arxiv.org/abs/2305.10250)), MACLA (Forouzandeh et al., Dec 2025, [arXiv:2512.18950](https://arxiv.org/abs/2512.18950)), and Hindsight (Latimer et al., Dec 2025, [arXiv:2512.12818](https://arxiv.org/abs/2512.12818)).
 
 **Example:**
 ```

@@ -199,7 +199,7 @@ function renderGraph(data) {
     var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
     var simulation = d3.forceSimulation(data.nodes).force('link', d3.forceLink(data.links).id(function(d) { return d.id; }).distance(100)).force('charge', d3.forceManyBody().strength(-200)).force('center', d3.forceCenter(width / 2, height / 2)).force('collision', d3.forceCollide().radius(20));
     var link = svg.append('g').selectAll('line').data(data.links).enter().append('line').attr('class', 'link').attr('stroke-width', function(d) { return Math.sqrt(d.weight * 2); });
-    var node = svg.append('g').selectAll('circle').data(data.nodes).enter().append('circle').attr('class', 'node').attr('r', function(d) { return 5 + (d.importance || 5); }).attr('fill', function(d) { return colorScale(d.cluster_id || 0); }).call(d3.drag().on('start', dragStarted).on('drag', dragged).on('end', dragEnded)).on('mouseover', function(event, d) { tooltip.transition().duration(200).style('opacity', .9); tooltip.text((d.category || 'Uncategorized') + ': ' + (d.content_preview || d.summary || 'No content')).style('left', (event.pageX + 10) + 'px').style('top', (event.pageY - 28) + 'px'); }).on('mouseout', function() { tooltip.transition().duration(500).style('opacity', 0); }).on('click', function(event, d) { openMemoryDetail(d); });
+    var node = svg.append('g').selectAll('circle').data(data.nodes).enter().append('circle').attr('class', 'node').attr('r', function(d) { return 5 + (d.importance || 5); }).attr('fill', function(d) { return colorScale(d.cluster_id || 0); }).call(d3.drag().on('start', dragStarted).on('drag', dragged).on('end', dragEnded)).on('mouseover', function(event, d) { tooltip.transition().duration(200).style('opacity', .9); var label = d.category || d.project_name || 'Memory #' + d.id; tooltip.text(label + ': ' + (d.content_preview || d.summary || 'No content')).style('left', (event.pageX + 10) + 'px').style('top', (event.pageY - 28) + 'px'); }).on('mouseout', function() { tooltip.transition().duration(500).style('opacity', 0); }).on('click', function(event, d) { openMemoryDetail(d); });
     simulation.on('tick', function() { link.attr('x1', function(d) { return d.source.x; }).attr('y1', function(d) { return d.source.y; }).attr('x2', function(d) { return d.target.x; }).attr('y2', function(d) { return d.target.y; }); node.attr('cx', function(d) { return d.x; }).attr('cy', function(d) { return d.y; }); });
     function dragStarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
     function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
@@ -275,9 +275,14 @@ function renderMemoriesTable(memories, showScores) {
     });
 
     var html = '<table class="table table-hover memory-table"><thead><tr>'
-        + '<th>ID</th><th>Category</th><th>Project</th><th>Content</th>'
+        + '<th class="sortable" data-sort="id">ID</th>'
+        + '<th class="sortable" data-sort="category">Category</th>'
+        + '<th class="sortable" data-sort="project">Project</th>'
+        + '<th>Content</th>'
         + scoreHeader
-        + '<th>Importance</th><th>Cluster</th><th>Created</th>'
+        + '<th class="sortable" data-sort="importance">Importance</th>'
+        + '<th>Cluster</th>'
+        + '<th class="sortable" data-sort="created">Created</th>'
         + '</tr></thead><tbody>' + rows + '</tbody></table>';
 
     // Safe: all interpolated values above are escaped via escapeHtml()
@@ -287,6 +292,12 @@ function renderMemoriesTable(memories, showScores) {
     var table = container.querySelector('table');
     if (table) {
         table.addEventListener('click', function(e) {
+            // Check if clicking a sortable header
+            var th = e.target.closest('th.sortable');
+            if (th) {
+                handleSort(th);
+                return;
+            }
             var row = e.target.closest('tr[data-mem-idx]');
             if (row) {
                 var idx = parseInt(row.getAttribute('data-mem-idx'), 10);
@@ -565,26 +576,78 @@ function renderPatterns(patterns) {
         return;
     }
 
-    // All dynamic values escaped — safe for innerHTML
-    var html = '';
+    var typeIcons = { preference: 'heart', style: 'palette', terminology: 'code-slash' };
+    var typeLabels = { preference: 'Preferences', style: 'Coding Style', terminology: 'Terminology' };
+
+    // Build using DOM for safety
+    container.textContent = '';
+
     for (var type in patterns) {
         if (!patterns.hasOwnProperty(type)) continue;
         var items = patterns[type];
-        html += '<h6 class="mt-3 text-capitalize">' + escapeHtml(type.replace(/_/g, ' ')) + '</h6><div class="list-group mb-3">';
+
+        var header = document.createElement('h6');
+        header.className = 'mt-3 mb-2';
+        var icon = document.createElement('i');
+        icon.className = 'bi bi-' + (typeIcons[type] || 'puzzle') + ' me-1';
+        header.appendChild(icon);
+        header.appendChild(document.createTextNode(typeLabels[type] || type));
+        var countBadge = document.createElement('span');
+        countBadge.className = 'badge bg-secondary ms-2';
+        countBadge.textContent = items.length;
+        header.appendChild(countBadge);
+        container.appendChild(header);
+
+        var group = document.createElement('div');
+        group.className = 'list-group mb-3';
+
         items.forEach(function(pattern) {
-            var confidence = (pattern.confidence * 100).toFixed(0);
-            html += '<div class="list-group-item">'
-                + '<div class="d-flex justify-content-between align-items-center">'
-                + '<strong>' + escapeHtml(pattern.key) + '</strong>'
-                + '<span class="badge bg-success">' + escapeHtml(confidence) + '% confidence</span>'
-                + '</div>'
-                + '<div class="mt-1"><small class="text-muted">' + escapeHtml(JSON.stringify(pattern.value)) + '</small></div>'
-                + '<small class="text-muted">Evidence: ' + escapeHtml(String(pattern.evidence_count)) + ' memories</small>'
-                + '</div>';
+            var pct = Math.round(pattern.confidence * 100);
+            var barColor = pct >= 60 ? '#43e97b' : pct >= 40 ? '#f9c74f' : '#6c757d';
+            var badgeClass = pct >= 60 ? 'bg-success' : pct >= 40 ? 'bg-warning text-dark' : 'bg-secondary';
+
+            var item = document.createElement('div');
+            item.className = 'list-group-item';
+
+            var topRow = document.createElement('div');
+            topRow.className = 'd-flex justify-content-between align-items-center';
+            var keyEl = document.createElement('strong');
+            keyEl.textContent = pattern.key;
+            var badge = document.createElement('span');
+            badge.className = 'badge ' + badgeClass;
+            badge.textContent = pct + '%';
+            topRow.appendChild(keyEl);
+            topRow.appendChild(badge);
+            item.appendChild(topRow);
+
+            // Confidence bar
+            var barContainer = document.createElement('div');
+            barContainer.className = 'confidence-bar';
+            var barFill = document.createElement('div');
+            barFill.className = 'confidence-fill';
+            barFill.style.width = pct + '%';
+            barFill.style.background = barColor;
+            barContainer.appendChild(barFill);
+            item.appendChild(barContainer);
+
+            var valueEl = document.createElement('div');
+            valueEl.className = 'mt-1';
+            var valueSmall = document.createElement('small');
+            valueSmall.className = 'text-muted';
+            valueSmall.textContent = typeof pattern.value === 'string' ? pattern.value : JSON.stringify(pattern.value);
+            valueEl.appendChild(valueSmall);
+            item.appendChild(valueEl);
+
+            var evidenceEl = document.createElement('small');
+            evidenceEl.className = 'text-muted';
+            evidenceEl.textContent = 'Evidence: ' + (pattern.evidence_count || '?') + ' memories';
+            item.appendChild(evidenceEl);
+
+            group.appendChild(item);
         });
-        html += '</div>';
+
+        container.appendChild(group);
     }
-    container.innerHTML = html;  // nosemgrep: innerHTML-xss — all values escaped
 }
 
 // ============================================================================
@@ -645,10 +708,456 @@ document.getElementById('memories-tab').addEventListener('shown.bs.tab', loadMem
 document.getElementById('clusters-tab').addEventListener('shown.bs.tab', loadClusters);
 document.getElementById('patterns-tab').addEventListener('shown.bs.tab', loadPatterns);
 document.getElementById('timeline-tab').addEventListener('shown.bs.tab', loadTimeline);
+document.getElementById('settings-tab').addEventListener('shown.bs.tab', loadSettings);
 document.getElementById('search-query').addEventListener('keypress', function(e) { if (e.key === 'Enter') searchMemories(); });
+
+document.getElementById('profile-select').addEventListener('change', function() {
+    switchProfile(this.value);
+});
+
+document.getElementById('add-profile-btn').addEventListener('click', function() {
+    createProfile();
+});
+
+var newProfileInput = document.getElementById('new-profile-name');
+if (newProfileInput) {
+    newProfileInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') createProfile();
+    });
+}
 
 window.addEventListener('DOMContentLoaded', function() {
     initDarkMode();
+    loadProfiles();
     loadStats();
     loadGraph();
 });
+
+// ============================================================================
+// Profile Management
+// ============================================================================
+
+async function loadProfiles() {
+    try {
+        var response = await fetch('/api/profiles');
+        var data = await response.json();
+        var select = document.getElementById('profile-select');
+        select.textContent = '';
+        var profiles = data.profiles || [];
+        var active = data.active_profile || 'default';
+
+        profiles.forEach(function(p) {
+            var opt = document.createElement('option');
+            opt.value = p.name;
+            opt.textContent = p.name + (p.memory_count ? ' (' + p.memory_count + ')' : '');
+            if (p.name === active) opt.selected = true;
+            select.appendChild(opt);
+        });
+    } catch (error) {
+        console.error('Error loading profiles:', error);
+    }
+}
+
+async function createProfile(nameOverride) {
+    var name = nameOverride || document.getElementById('new-profile-name').value.trim();
+    if (!name) {
+        // Prompt with a simple browser dialog if called from the "+" button
+        name = prompt('Enter new profile name:');
+        if (!name || !name.trim()) return;
+        name = name.trim();
+    }
+
+    // Validate: alphanumeric, dashes, underscores only
+    if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
+        showToast('Invalid name. Use letters, numbers, dashes, underscores.');
+        return;
+    }
+
+    try {
+        var response = await fetch('/api/profiles/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profile_name: name })
+        });
+        var data = await response.json();
+        if (response.status === 409) {
+            showToast('Profile "' + name + '" already exists');
+            return;
+        }
+        if (!response.ok) {
+            showToast(data.detail || 'Failed to create profile');
+            return;
+        }
+        showToast('Profile "' + name + '" created');
+        var input = document.getElementById('new-profile-name');
+        if (input) input.value = '';
+        loadProfiles();
+        loadProfilesTable();
+    } catch (error) {
+        console.error('Error creating profile:', error);
+        showToast('Error creating profile');
+    }
+}
+
+async function deleteProfile(name) {
+    if (name === 'default') {
+        showToast('Cannot delete the default profile');
+        return;
+    }
+    if (!confirm('Delete profile "' + name + '"?\nIts memories will be moved to the default profile.')) {
+        return;
+    }
+    try {
+        var response = await fetch('/api/profiles/' + encodeURIComponent(name), {
+            method: 'DELETE'
+        });
+        var data = await response.json();
+        if (!response.ok) {
+            showToast(data.detail || 'Failed to delete profile');
+            return;
+        }
+        showToast(data.message || 'Profile deleted');
+        loadProfiles();
+        loadProfilesTable();
+        loadStats();
+    } catch (error) {
+        console.error('Error deleting profile:', error);
+        showToast('Error deleting profile');
+    }
+}
+
+async function loadProfilesTable() {
+    var container = document.getElementById('profiles-table');
+    if (!container) return;
+    try {
+        var response = await fetch('/api/profiles');
+        var data = await response.json();
+        var profiles = data.profiles || [];
+        var active = data.active_profile || 'default';
+
+        if (profiles.length === 0) {
+            showEmpty('profiles-table', 'people', 'No profiles found.');
+            return;
+        }
+
+        var table = document.createElement('table');
+        table.className = 'table table-sm mb-0';
+        var thead = document.createElement('thead');
+        var headRow = document.createElement('tr');
+        ['Name', 'Memories', 'Status', 'Actions'].forEach(function(h) {
+            var th = document.createElement('th');
+            th.textContent = h;
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        var tbody = document.createElement('tbody');
+        profiles.forEach(function(p) {
+            var row = document.createElement('tr');
+
+            var nameCell = document.createElement('td');
+            var nameIcon = document.createElement('i');
+            nameIcon.className = 'bi bi-person me-1';
+            nameCell.appendChild(nameIcon);
+            nameCell.appendChild(document.createTextNode(p.name));
+            row.appendChild(nameCell);
+
+            var countCell = document.createElement('td');
+            countCell.textContent = (p.memory_count || 0) + ' memories';
+            row.appendChild(countCell);
+
+            var statusCell = document.createElement('td');
+            if (p.name === active) {
+                var badge = document.createElement('span');
+                badge.className = 'badge bg-success';
+                badge.textContent = 'Active';
+                statusCell.appendChild(badge);
+            } else {
+                var switchBtn = document.createElement('button');
+                switchBtn.className = 'btn btn-sm btn-outline-primary';
+                switchBtn.textContent = 'Switch';
+                switchBtn.addEventListener('click', (function(n) {
+                    return function() { switchProfile(n); };
+                })(p.name));
+                statusCell.appendChild(switchBtn);
+            }
+            row.appendChild(statusCell);
+
+            var actionsCell = document.createElement('td');
+            if (p.name !== 'default') {
+                var delBtn = document.createElement('button');
+                delBtn.className = 'btn btn-sm btn-outline-danger btn-delete-profile';
+                delBtn.title = 'Delete profile';
+                var delIcon = document.createElement('i');
+                delIcon.className = 'bi bi-trash';
+                delBtn.appendChild(delIcon);
+                delBtn.addEventListener('click', (function(n) {
+                    return function() { deleteProfile(n); };
+                })(p.name));
+                actionsCell.appendChild(delBtn);
+            } else {
+                var protectedBadge = document.createElement('span');
+                protectedBadge.className = 'badge bg-secondary';
+                protectedBadge.textContent = 'Protected';
+                actionsCell.appendChild(protectedBadge);
+            }
+            row.appendChild(actionsCell);
+
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+
+        container.textContent = '';
+        container.appendChild(table);
+    } catch (error) {
+        console.error('Error loading profiles table:', error);
+        showEmpty('profiles-table', 'exclamation-triangle', 'Failed to load profiles');
+    }
+}
+
+async function switchProfile(profileName) {
+    try {
+        var response = await fetch('/api/profiles/' + encodeURIComponent(profileName) + '/switch', {
+            method: 'POST'
+        });
+        var data = await response.json();
+        if (data.success || data.active_profile) {
+            showToast('Switched to profile: ' + profileName);
+            loadProfiles();
+            loadStats();
+            loadGraph();
+            loadProfilesTable();
+            var activeTab = document.querySelector('#mainTabs .nav-link.active');
+            if (activeTab) activeTab.click();
+        } else {
+            showToast('Failed to switch profile');
+        }
+    } catch (error) {
+        console.error('Error switching profile:', error);
+        showToast('Error switching profile');
+    }
+}
+
+// ============================================================================
+// Settings & Backup
+// ============================================================================
+
+async function loadSettings() {
+    loadProfilesTable();
+    loadBackupStatus();
+    loadBackupList();
+}
+
+async function loadBackupStatus() {
+    try {
+        var response = await fetch('/api/backup/status');
+        var data = await response.json();
+        renderBackupStatus(data);
+        document.getElementById('backup-interval').value = data.interval_hours <= 24 ? '24' : '168';
+        document.getElementById('backup-max').value = data.max_backups || 10;
+        document.getElementById('backup-enabled').checked = data.enabled !== false;
+    } catch (error) {
+        var container = document.getElementById('backup-status');
+        var alert = document.createElement('div');
+        alert.className = 'alert alert-warning mb-0';
+        alert.textContent = 'Auto-backup not available. Update to v2.4.0+.';
+        container.textContent = '';
+        container.appendChild(alert);
+    }
+}
+
+function renderBackupStatus(data) {
+    var container = document.getElementById('backup-status');
+    container.textContent = '';
+
+    var lastBackup = data.last_backup ? formatDateFull(data.last_backup) : 'Never';
+    var nextBackup = data.next_backup || 'N/A';
+    if (nextBackup === 'overdue') nextBackup = 'Overdue';
+    else if (nextBackup !== 'N/A' && nextBackup !== 'unknown') nextBackup = formatDateFull(nextBackup);
+
+    var statusColor = data.enabled ? 'text-success' : 'text-secondary';
+    var statusText = data.enabled ? 'Active' : 'Disabled';
+
+    // Build DOM nodes for safety
+    var row = document.createElement('div');
+    row.className = 'row g-2 mb-2';
+
+    var stats = [
+        { value: statusText, label: 'Status', cls: statusColor },
+        { value: String(data.backup_count || 0), label: 'Backups', cls: '' },
+        { value: (data.total_size_mb || 0) + ' MB', label: 'Storage', cls: '' }
+    ];
+
+    stats.forEach(function(s) {
+        var col = document.createElement('div');
+        col.className = 'col-4';
+        var stat = document.createElement('div');
+        stat.className = 'backup-stat';
+        var val = document.createElement('div');
+        val.className = 'value ' + s.cls;
+        val.textContent = s.value;
+        var lbl = document.createElement('div');
+        lbl.className = 'label';
+        lbl.textContent = s.label;
+        stat.appendChild(val);
+        stat.appendChild(lbl);
+        col.appendChild(stat);
+        row.appendChild(col);
+    });
+    container.appendChild(row);
+
+    var details = [
+        { label: 'Last backup:', value: lastBackup },
+        { label: 'Next backup:', value: nextBackup },
+        { label: 'Interval:', value: data.interval_display || '-' }
+    ];
+    details.forEach(function(d) {
+        var div = document.createElement('div');
+        div.className = 'small text-muted';
+        var strong = document.createElement('strong');
+        strong.textContent = d.label + ' ';
+        div.appendChild(strong);
+        div.appendChild(document.createTextNode(d.value));
+        container.appendChild(div);
+    });
+}
+
+async function saveBackupConfig() {
+    try {
+        var response = await fetch('/api/backup/configure', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                interval_hours: parseInt(document.getElementById('backup-interval').value),
+                max_backups: parseInt(document.getElementById('backup-max').value),
+                enabled: document.getElementById('backup-enabled').checked
+            })
+        });
+        var data = await response.json();
+        renderBackupStatus(data);
+        showToast('Backup settings saved');
+    } catch (error) {
+        console.error('Error saving backup config:', error);
+        showToast('Failed to save backup settings');
+    }
+}
+
+async function createBackupNow() {
+    showToast('Creating backup...');
+    try {
+        var response = await fetch('/api/backup/create', { method: 'POST' });
+        var data = await response.json();
+        if (data.success) {
+            showToast('Backup created: ' + data.filename);
+            loadBackupStatus();
+            loadBackupList();
+        } else {
+            showToast('Backup failed');
+        }
+    } catch (error) {
+        console.error('Error creating backup:', error);
+        showToast('Backup failed');
+    }
+}
+
+async function loadBackupList() {
+    try {
+        var response = await fetch('/api/backup/list');
+        var data = await response.json();
+        renderBackupList(data.backups || []);
+    } catch (error) {
+        var container = document.getElementById('backup-list');
+        container.textContent = 'Backup list unavailable';
+    }
+}
+
+function renderBackupList(backups) {
+    var container = document.getElementById('backup-list');
+    if (!backups || backups.length === 0) {
+        showEmpty('backup-list', 'archive', 'No backups yet. Create your first backup above.');
+        return;
+    }
+
+    // Build table using DOM nodes
+    var table = document.createElement('table');
+    table.className = 'table table-sm';
+    var thead = document.createElement('thead');
+    var headRow = document.createElement('tr');
+    ['Filename', 'Size', 'Age', 'Created'].forEach(function(h) {
+        var th = document.createElement('th');
+        th.textContent = h;
+        headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    backups.forEach(function(b) {
+        var row = document.createElement('tr');
+        var age = b.age_hours < 48 ? Math.round(b.age_hours) + 'h ago' : Math.round(b.age_hours / 24) + 'd ago';
+        var cells = [b.filename, b.size_mb + ' MB', age, formatDateFull(b.created)];
+        cells.forEach(function(text) {
+            var td = document.createElement('td');
+            td.textContent = text;
+            row.appendChild(td);
+        });
+        tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+
+    container.textContent = '';
+    container.appendChild(table);
+}
+
+// ============================================================================
+// Column Sorting
+// ============================================================================
+
+var currentSort = { column: null, direction: 'asc' };
+
+function handleSort(th) {
+    var col = th.getAttribute('data-sort');
+    if (!col) return;
+
+    if (currentSort.column === col) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort.column = col;
+        currentSort.direction = 'asc';
+    }
+
+    // Update header classes
+    document.querySelectorAll('#memories-list th.sortable').forEach(function(h) {
+        h.classList.remove('sort-asc', 'sort-desc');
+    });
+    th.classList.add('sort-' + currentSort.direction);
+
+    // Sort the data
+    if (!window._slmMemories) return;
+    var memories = window._slmMemories.slice();
+    var dir = currentSort.direction === 'asc' ? 1 : -1;
+
+    memories.sort(function(a, b) {
+        var av, bv;
+        switch (col) {
+            case 'id': return ((a.id || 0) - (b.id || 0)) * dir;
+            case 'importance': return ((a.importance || 0) - (b.importance || 0)) * dir;
+            case 'category':
+                av = (a.category || '').toLowerCase(); bv = (b.category || '').toLowerCase();
+                return av < bv ? -dir : av > bv ? dir : 0;
+            case 'project':
+                av = (a.project_name || '').toLowerCase(); bv = (b.project_name || '').toLowerCase();
+                return av < bv ? -dir : av > bv ? dir : 0;
+            case 'created':
+                av = a.created_at || ''; bv = b.created_at || '';
+                return av < bv ? -dir : av > bv ? dir : 0;
+            case 'score': return ((a.score || 0) - (b.score || 0)) * dir;
+            default: return 0;
+        }
+    });
+
+    window._slmMemories = memories;
+    var showScores = memories.length > 0 && typeof memories[0].score === 'number';
+    renderMemoriesTable(memories, showScores);
+}

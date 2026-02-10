@@ -46,10 +46,12 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 - ✅ SQLite database with ACID transactions
 
 **Research Foundation:**
-- GraphRAG (Microsoft Research)
-- PageIndex (Meta AI)
-- xMemory (Stanford)
-- A-RAG (Multi-level Retrieval)
+- GraphRAG (Microsoft Research, [arXiv:2404.16130](https://arxiv.org/abs/2404.16130))
+- PageIndex (VectifyAI, Mingtian Zhang et al., Sep 2025)
+- MemoryBank (Zhong et al., AAAI 2024, [arXiv:2305.10250](https://arxiv.org/abs/2305.10250))
+- MACLA (Forouzandeh et al., Dec 2025, [arXiv:2512.18950](https://arxiv.org/abs/2512.18950))
+- Hindsight (Latimer et al., Dec 2025, [arXiv:2512.12818](https://arxiv.org/abs/2512.12818))
+- A-RAG (Multi-level Retrieval, [arXiv:2602.03442](https://arxiv.org/abs/2602.03442))
 
 ---
 

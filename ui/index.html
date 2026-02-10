@@ -206,6 +206,94 @@
             vertical-align: middle;
         }
 
+        /* Profile select in navbar */
+        .profile-select {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 20px;
+            padding: 2px 28px 2px 10px;
+            font-size: 0.85rem;
+            min-width: 120px;
+            cursor: pointer;
+        }
+
+        .profile-select option {
+            background: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+
+        /* Sortable table headers */
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 18px !important;
+        }
+
+        .sortable:hover {
+            background-color: rgba(102, 126, 234, 0.08);
+        }
+
+        .sortable::after {
+            content: '\F282';
+            font-family: 'bootstrap-icons';
+            position: absolute;
+            right: 4px;
+            opacity: 0.3;
+            font-size: 0.7rem;
+        }
+
+        .sortable.sort-asc::after {
+            content: '\F235';
+            opacity: 0.8;
+        }
+
+        .sortable.sort-desc::after {
+            content: '\F229';
+            opacity: 0.8;
+        }
+
+        /* Confidence bar for patterns */
+        .confidence-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bs-border-color);
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        /* Backup status cards */
+        .backup-stat {
+            padding: 12px;
+            border-radius: 8px;
+            background: var(--bs-tertiary-bg);
+            text-align: center;
+        }
+
+        .backup-stat .value {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .backup-stat .label {
+            font-size: 0.75rem;
+            color: var(--bs-secondary-color);
+            text-transform: uppercase;
+        }
+
+        /* Profile delete button */
+        .btn-delete-profile {
+            padding: 2px 8px;
+            font-size: 0.75rem;
+        }
+
         /* Dark mode toggle button */
         .theme-toggle {
             background: none;
@@ -285,7 +373,16 @@
                 <i class="bi bi-diagram-3"></i> SuperLocalMemory V2
             </span>
             <div class="d-flex align-items-center gap-3">
-                <span class="text-white-50 d-none d-md-inline">Knowledge Graph Explorer</span>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-person-circle text-white-50"></i>
+                    <select class="form-select form-select-sm profile-select" id="profile-select" title="Switch memory profile">
+                        <option value="default">default</option>
+                    </select>
+                    <button class="btn btn-sm theme-toggle" id="add-profile-btn" title="Create new profile" style="padding:2px 8px;font-size:1rem;line-height:1;">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                </div>
+                <span class="text-white-50 d-none d-md-inline" id="navbar-subtitle">Knowledge Graph Explorer</span>
                 <button class="theme-toggle" id="theme-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">
                     <i class="bi bi-sun-fill" id="theme-icon"></i>
                 </button>
@@ -355,6 +452,11 @@
             <li class="nav-item">
                 <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline-pane">
                     <i class="bi bi-clock-history"></i> Timeline
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings-pane">
+                    <i class="bi bi-gear"></i> Settings
                 </button>
             </li>
         </ul>
@@ -470,6 +572,85 @@
                         <div class="loading">
                             <div class="spinner-border text-primary" role="status"></div>
                             <div>Loading timeline...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings & Backup -->
+            <div class="tab-pane fade" id="settings-pane">
+                <!-- Profile Management -->
+                <div class="card p-3 mb-3">
+                    <h5 class="mb-3"><i class="bi bi-people"></i> Profile Management</h5>
+                    <div class="row g-3 align-items-end mb-3">
+                        <div class="col-md-5">
+                            <label class="form-label">Create New Profile</label>
+                            <input type="text" class="form-control" id="new-profile-name" placeholder="e.g. work, personal, project-x" maxlength="32">
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100" onclick="createProfile()">
+                                <i class="bi bi-plus-circle"></i> Create Profile
+                            </button>
+                        </div>
+                    </div>
+                    <div id="profiles-table" class="table-responsive">
+                        <div class="loading">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <div>Loading profiles...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Backup Status -->
+                    <div class="col-lg-6 mb-3">
+                        <div class="card p-3">
+                            <h5 class="mb-3"><i class="bi bi-shield-check"></i> Auto-Backup</h5>
+                            <div id="backup-status">
+                                <div class="loading">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                    <div>Loading backup status...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Backup Configuration -->
+                    <div class="col-lg-6 mb-3">
+                        <div class="card p-3">
+                            <h5 class="mb-3"><i class="bi bi-sliders"></i> Backup Configuration</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Backup Interval</label>
+                                <select class="form-select" id="backup-interval">
+                                    <option value="24">Daily (every 24 hours)</option>
+                                    <option value="168" selected>Weekly (every 7 days)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Max Backups to Keep</label>
+                                <input type="number" class="form-control" id="backup-max" value="10" min="1" max="100">
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="backup-enabled" checked>
+                                <label class="form-check-label" for="backup-enabled">Auto-backup enabled</label>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" onclick="saveBackupConfig()">
+                                    <i class="bi bi-save"></i> Save Settings
+                                </button>
+                                <button class="btn btn-outline-success" onclick="createBackupNow()">
+                                    <i class="bi bi-download"></i> Backup Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Backup History -->
+                <div class="card p-3">
+                    <h5 class="mb-3"><i class="bi bi-clock-history"></i> Backup History</h5>
+                    <div id="backup-list" class="table-responsive">
+                        <div class="loading">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <div>Loading backups...</div>
                         </div>
                     </div>
                 </div>

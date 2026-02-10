@@ -23,10 +23,13 @@ Based on architecture: docs/architecture/05-pattern-learner.md
 import sqlite3
 import json
 import re
+import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Counter as CounterType
 from collections import Counter
+
+logger = logging.getLogger(__name__)
 
 # Local NLP tools (no external APIs)
 try:
@@ -404,23 +407,54 @@ class ConfidenceScorer:
         evidence_memory_ids: List[int],
         total_memories: int
     ) -> float:
-        """Calculate confidence score for a pattern."""
+        """
+        Calculate confidence using Beta-Binomial Bayesian posterior.
+
+        Based on MACLA (arXiv:2512.18950, Forouzandeh et al., Dec 2025):
+          posterior_mean = (alpha + evidence) / (alpha + beta + evidence + competition)
+
+        Adaptation: MACLA's Beta-Binomial uses pairwise interaction counts.
+        Our corpus has sparse signals (most memories are irrelevant to any
+        single pattern). We use log-scaled competition instead of raw total
+        to avoid over-dilution: competition = log2(total_memories).
+
+        Pattern-specific priors (alpha, beta):
+        - preference (1, 4): prior mean 0.20, ~8 items to reach 0.5
+        - style (1, 5): prior mean 0.17, subtler signals need more evidence
+        - terminology (2, 3): prior mean 0.40, direct usage signal
+        """
         if total_memories == 0 or not evidence_memory_ids:
             return 0.0
 
-        # Base confidence: % of memories supporting this
-        base_confidence = len(evidence_memory_ids) / total_memories
+        import math
+        evidence_count = len(evidence_memory_ids)
 
-        # Consistency check: recency bonus
+        # Pattern-specific Beta priors (alpha, beta)
+        PRIORS = {
+            'preference': (1.0, 4.0),
+            'style':      (1.0, 5.0),
+            'terminology': (2.0, 3.0),
+        }
+        alpha, beta = PRIORS.get(pattern_type, (1.0, 4.0))
+
+        # Log-scaled competition: grows slowly with corpus size
+        # 10 memories -> 3.3, 60 -> 5.9, 500 -> 9.0, 5000 -> 12.3
+        competition = math.log2(max(2, total_memories))
+
+        # MACLA-inspired Beta posterior with log competition
+        posterior_mean = (alpha + evidence_count) / (alpha + beta + evidence_count + competition)
+
+        # Recency adjustment (mild: 1.0 to 1.15)
         recency_bonus = self._calculate_recency_bonus(evidence_memory_ids)
+        recency_factor = 1.0 + min(0.15, 0.075 * (recency_bonus - 1.0) / 0.2) if recency_bonus > 1.0 else 1.0
 
-        # Distribution check: are memories spread over time or clustered?
+        # Temporal spread adjustment (0.9 to 1.1)
         distribution_factor = self._calculate_distribution_factor(evidence_memory_ids)
 
         # Final confidence
-        confidence = base_confidence * recency_bonus * distribution_factor
+        confidence = posterior_mean * recency_factor * distribution_factor
 
-        return min(1.0, confidence)  # Cap at 1.0
+        return min(0.95, round(confidence, 3))
 
     def _calculate_recency_bonus(self, memory_ids: List[int]) -> float:
         """Give bonus to patterns with recent evidence."""
@@ -517,9 +551,20 @@ class PatternStore:
         self._init_tables()
 
     def _init_tables(self):
-        """Initialize pattern tables if they don't exist."""
+        """Initialize pattern tables if they don't exist, or recreate if schema is incomplete."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+
+        # Check if existing tables have correct schema
+        for table_name, required_cols in [
+            ('identity_patterns', {'pattern_type', 'key', 'value', 'confidence'}),
+            ('pattern_examples', {'pattern_id', 'memory_id'}),
+        ]:
+            cursor.execute(f"PRAGMA table_info({table_name})")
+            existing_cols = {row[1] for row in cursor.fetchall()}
+            if existing_cols and not required_cols.issubset(existing_cols):
+                logger.warning(f"Dropping incomplete {table_name} table (missing: {required_cols - existing_cols})")
+                cursor.execute(f'DROP TABLE IF EXISTS {table_name}')
 
         # Identity patterns table
         cursor.execute('''
@@ -532,11 +577,18 @@ class PatternStore:
                 evidence_count INTEGER DEFAULT 1,
                 memory_ids TEXT,
                 category TEXT,
+                profile TEXT DEFAULT 'default',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(pattern_type, key, category)
+                UNIQUE(pattern_type, key, category, profile)
             )
         ''')
+
+        # Add profile column if upgrading from older schema
+        try:
+            cursor.execute('ALTER TABLE identity_patterns ADD COLUMN profile TEXT DEFAULT "default"')
+        except sqlite3.OperationalError:
+            pass  # Column already exists
 
         # Pattern examples table
         cursor.execute('''
@@ -553,21 +605,23 @@ class PatternStore:
         # Indexes
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_pattern_type ON identity_patterns(pattern_type)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_pattern_confidence ON identity_patterns(confidence)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_pattern_profile ON identity_patterns(profile)')
 
         conn.commit()
         conn.close()
 
     def save_pattern(self, pattern: Dict[str, Any]) -> int:
-        """Save or update a pattern."""
+        """Save or update a pattern (scoped by profile)."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+        profile = pattern.get('profile', 'default')
 
         try:
-            # Check if pattern exists
+            # Check if pattern exists for this profile
             cursor.execute('''
                 SELECT id FROM identity_patterns
-                WHERE pattern_type = ? AND key = ? AND category = ?
-            ''', (pattern['pattern_type'], pattern['key'], pattern['category']))
+                WHERE pattern_type = ? AND key = ? AND category = ? AND profile = ?
+            ''', (pattern['pattern_type'], pattern['key'], pattern['category'], profile))
 
             existing = cursor.fetchone()
 
@@ -592,8 +646,8 @@ class PatternStore:
                 # Insert new pattern
                 cursor.execute('''
                     INSERT INTO identity_patterns
-                    (pattern_type, key, value, confidence, evidence_count, memory_ids, category)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    (pattern_type, key, value, confidence, evidence_count, memory_ids, category, profile)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
                     pattern['pattern_type'],
                     pattern['key'],
@@ -601,7 +655,8 @@ class PatternStore:
                     pattern['confidence'],
                     pattern['evidence_count'],
                     memory_ids_json,
-                    pattern['category']
+                    pattern['category'],
+                    profile
                 ))
                 pattern_id = cursor.lastrowid
 
@@ -648,25 +703,32 @@ class PatternStore:
         # Fallback: first 150 chars
         return content[:150] + ('...' if len(content) > 150 else '')
 
-    def get_patterns(self, min_confidence: float = 0.7, pattern_type: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Get patterns above confidence threshold."""
+    def get_patterns(self, min_confidence: float = 0.7, pattern_type: Optional[str] = None,
+                     profile: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get patterns above confidence threshold, optionally filtered by profile."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
+        # Build query with optional filters
+        conditions = ['confidence >= ?']
+        params = [min_confidence]
+
         if pattern_type:
-            cursor.execute('''
-                SELECT id, pattern_type, key, value, confidence, evidence_count, updated_at, created_at
-                FROM identity_patterns
-                WHERE confidence >= ? AND pattern_type = ?
-                ORDER BY confidence DESC, evidence_count DESC
-            ''', (min_confidence, pattern_type))
-        else:
-            cursor.execute('''
-                SELECT id, pattern_type, key, value, confidence, evidence_count, updated_at, created_at
-                FROM identity_patterns
-                WHERE confidence >= ?
-                ORDER BY confidence DESC, evidence_count DESC
-            ''', (min_confidence,))
+            conditions.append('pattern_type = ?')
+            params.append(pattern_type)
+
+        if profile:
+            conditions.append('profile = ?')
+            params.append(profile)
+
+        where_clause = ' AND '.join(conditions)
+        cursor.execute(f'''
+            SELECT id, pattern_type, key, value, confidence, evidence_count,
+                   updated_at, created_at, category
+            FROM identity_patterns
+            WHERE {where_clause}
+            ORDER BY confidence DESC, evidence_count DESC
+        ''', params)
 
         patterns = []
         for row in cursor.fetchall():
@@ -676,9 +738,11 @@ class PatternStore:
                 'key': row[2],
                 'value': row[3],
                 'confidence': row[4],
+                'evidence_count': row[5],
                 'frequency': row[5],
                 'last_seen': row[6],
-                'created_at': row[7]
+                'created_at': row[7],
+                'category': row[8]
             })
 
         conn.close()
@@ -696,23 +760,37 @@ class PatternLearner:
         self.confidence_scorer = ConfidenceScorer(db_path)
         self.pattern_store = PatternStore(db_path)
 
-    def weekly_pattern_update(self) -> Dict[str, int]:
-        """Full pattern analysis of all memories. Run this weekly."""
-        print("Starting weekly pattern update...")
+    def _get_active_profile(self) -> str:
+        """Get the currently active profile name from config."""
+        config_file = MEMORY_DIR / "profiles.json"
+        if config_file.exists():
+            try:
+                with open(config_file, 'r') as f:
+                    config = json.load(f)
+                return config.get('active_profile', 'default')
+            except (json.JSONDecodeError, IOError):
+                pass
+        return 'default'
 
-        # Get all memory IDs
+    def weekly_pattern_update(self) -> Dict[str, int]:
+        """Full pattern analysis of all memories for active profile. Run this weekly."""
+        active_profile = self._get_active_profile()
+        print(f"Starting weekly pattern update for profile: {active_profile}...")
+
+        # Get memory IDs for active profile only
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute('SELECT id FROM memories ORDER BY created_at')
+        cursor.execute('SELECT id FROM memories WHERE profile = ? ORDER BY created_at',
+                       (active_profile,))
         all_memory_ids = [row[0] for row in cursor.fetchall()]
         total_memories = len(all_memory_ids)
         conn.close()
 
         if total_memories == 0:
-            print("No memories found. Add memories first.")
+            print(f"No memories found for profile '{active_profile}'. Add memories first.")
             return {'preferences': 0, 'styles': 0, 'terminology': 0}
 
-        print(f"Analyzing {total_memories} memories...")
+        print(f"Analyzing {total_memories} memories for profile '{active_profile}'...")
 
         # Run all analyzers
         preferences = self.frequency_analyzer.analyze_preferences(all_memory_ids)
@@ -724,7 +802,7 @@ class PatternLearner:
         terms = self.terminology_learner.learn_terminology(all_memory_ids)
         print(f"  Found {len(terms)} terminology patterns")
 
-        # Recalculate confidence scores and save all patterns
+        # Recalculate confidence scores and save all patterns (tagged with profile)
         counts = {'preferences': 0, 'styles': 0, 'terminology': 0}
 
         for pattern in preferences.values():
@@ -736,6 +814,7 @@ class PatternLearner:
                 total_memories
             )
             pattern['confidence'] = round(confidence, 2)
+            pattern['profile'] = active_profile
             self.pattern_store.save_pattern(pattern)
             counts['preferences'] += 1
 
@@ -748,6 +827,7 @@ class PatternLearner:
                 total_memories
             )
             pattern['confidence'] = round(confidence, 2)
+            pattern['profile'] = active_profile
             self.pattern_store.save_pattern(pattern)
             counts['styles'] += 1
 
@@ -760,6 +840,7 @@ class PatternLearner:
                 total_memories
             )
             pattern['confidence'] = round(confidence, 2)
+            pattern['profile'] = active_profile
             self.pattern_store.save_pattern(pattern)
             counts['terminology'] += 1
 
@@ -772,11 +853,11 @@ class PatternLearner:
 
     def on_new_memory(self, memory_id: int):
         """Incremental update when new memory is added."""
-        # For now, just trigger full update if memory count is low
-        # Future optimization: only update affected patterns
+        active_profile = self._get_active_profile()
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute('SELECT COUNT(*) FROM memories')
+        cursor.execute('SELECT COUNT(*) FROM memories WHERE profile = ?',
+                       (active_profile,))
         total = cursor.fetchone()[0]
         conn.close()
 
@@ -789,8 +870,9 @@ class PatternLearner:
             self.weekly_pattern_update()
 
     def get_patterns(self, min_confidence: float = 0.7) -> List[Dict[str, Any]]:
-        """Query patterns above confidence threshold."""
-        return self.pattern_store.get_patterns(min_confidence)
+        """Query patterns above confidence threshold for active profile."""
+        active_profile = self._get_active_profile()
+        return self.pattern_store.get_patterns(min_confidence, profile=active_profile)
 
     def get_identity_context(self, min_confidence: float = 0.7) -> str:
         """Format patterns for Claude context injection."""

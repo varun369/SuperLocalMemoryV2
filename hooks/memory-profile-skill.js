@@ -31,13 +31,13 @@ async function memoryProfileSkill() {
 ║                                                          ║
 ╚══════════════════════════════════════════════════════════╝
 
-Profiles let you maintain separate memory databases for different contexts:
+Profiles let you maintain separate memory contexts in ONE database:
   • Work vs Personal projects
   • Different clients or teams
-  • Different AI personalities
   • Experimentation vs Production
 
-Each profile has isolated: memories, graph, patterns, archives
+All profiles share one database. Switching is instant and safe.
+No data copying, no data loss risk.
 
 Usage: memory-profile <command> [options]
 
@@ -157,18 +157,12 @@ After switching, restart Claude CLI for changes to take effect.
 
     console.log(`
 ╔══════════════════════════════════════════════════════════╗
-║              Profile Switch Confirmation                 ║
+║              Profile Switch                              ║
 ╚══════════════════════════════════════════════════════════╝
 
-This will:
-  ✓ Save current profile state
-  ✓ Load profile "${profileName}"
-  ✓ Update active profile marker
-
-After switching, you MUST restart Claude CLI for the new profile
-to take effect.
-
-Current memories will be preserved in the old profile.
+This will switch the active profile to "${profileName}".
+All profiles share one database — switching is instant and safe.
+Your current memories are always preserved.
 `);
 
     const answer = await question('Proceed with profile switch? (yes/no): ');
@@ -181,11 +175,6 @@ Current memories will be preserved in the old profile.
           profileName
         ]);
         console.log(stdout);
-        console.log(`
-⚠️  IMPORTANT: Restart Claude CLI now for profile switch to complete.
-
-The new profile will not be active until you restart.
-`);
       } catch (error) {
         console.error('❌ Error:', error.message);
         if (error.stdout) console.log(error.stdout);

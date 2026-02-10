@@ -16,6 +16,47 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.4.0] - 2026-02-11
+
+**Release Type:** Profile System & Intelligence Release
+**Backward Compatible:** Yes (additive schema changes only)
+
+### Added
+- **Column-based memory profiles**: Single `memory.db` with `profile` column — all memories, clusters, patterns, and graph data are profile-scoped. Switch profiles from any IDE/CLI and it takes effect everywhere instantly via shared `profiles.json`
+- **Auto-backup system** (`src/auto_backup.py`): SQLite backup API with configurable interval (daily/weekly), retention policy, and one-click backup from UI
+- **MACLA confidence scorer**: Research-grounded Beta-Binomial Bayesian posterior (arXiv:2512.18950) replaces ad-hoc log2 formula. Pattern-specific priors: preference(1,4), style(1,5), terminology(2,3). Log-scaled competition prevents over-dilution from sparse signals
+- **UI: Profile Management**: Create, switch, and delete profiles from the web dashboard. "+" button in navbar for quick creation, full management table in Settings tab
+- **UI: Settings tab**: Auto-backup status, configuration (interval, max backups, enable toggle), backup history, profile management — all in one place
+- **UI: Column sorting**: Click any column header in the Memories table to sort asc/desc
+- **UI: Enhanced Patterns view**: DOM-based rendering with confidence bars, color coding, type icons
+- **API: Profile isolation on all endpoints**: `/api/graph`, `/api/clusters`, `/api/patterns`, `/api/timeline` now filter by active profile (previously showed all profiles)
+- **API: `get_active_profile()` helper**: Shared function in `ui_server.py` replaces 4 duplicate inline profile-reading blocks
+- **API: Profile CRUD endpoints**: `POST /api/profiles/create`, `DELETE /api/profiles/{name}` with validation and safety (can't delete default or active profile)
+
+### Fixed
+- **Profile switching ValueError**: Rewrote from directory-based to column-based profiles — no more file copy errors on switch
+- **Pattern learner schema validation**: Safe column addition with try/except for `profile` column on `identity_patterns` table
+- **Graph engine schema validation**: Safe column check before profile-filtered queries
+- **Research references**: PageIndex correctly attributed to VectifyAI (not Meta AI), removed fabricated xMemory/Stanford citation, replaced with MemoryBank (AAAI 2024) across wiki and website
+- **Graph tooltip**: Shows project name or Memory ID instead of "Uncategorized" when category is null
+
+### Changed
+- All 4 core layers (storage, tree, graph, patterns) are now profile-aware
+- `memory_store_v2.py`: Every query filters by `WHERE profile = ?` from `_get_active_profile()`
+- `graph_engine.py`: `build_graph()` and `get_stats()` scoped to active profile
+- `pattern_learner.py`: Pattern learning and retrieval scoped to active profile
+- `ui_server.py`: Refactored profile code into shared helper, eliminated 4 duplicate blocks
+
+### Technical Details
+- Schema: `ALTER TABLE memories ADD COLUMN profile TEXT DEFAULT 'default'`
+- Schema: `ALTER TABLE identity_patterns ADD COLUMN profile TEXT DEFAULT 'default'`
+- MACLA formula: `posterior = (alpha + evidence) / (alpha + beta + evidence + log2(total_memories))`
+- Confidence range: 0.0 to 0.95 (capped), with recency and distribution bonuses
+- Backup: Uses SQLite `backup()` API for safe concurrent backup
+- 17 API endpoint tests, 5 core module tests — all passing
+
+---
+
 ## [2.3.7] - 2026-02-09
 
 ### Added

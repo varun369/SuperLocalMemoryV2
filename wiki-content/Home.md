@@ -133,12 +133,16 @@ SuperLocalMemory implements cutting-edge 2026 research:
 
 | Research | Source | Implementation |
 |----------|--------|----------------|
-| **PageIndex** | Meta AI | Hierarchical memory indexing |
-| **GraphRAG** | Microsoft | Knowledge graph clustering |
-| **xMemory** | Stanford | Identity pattern learning |
-| **A-RAG** | — | Multi-level retrieval |
+| **PageIndex** | VectifyAI (Zhang et al., Sep 2025) | Hierarchical memory indexing |
+| **GraphRAG** | Microsoft (Edge et al., 2024, [arXiv:2404.16130](https://arxiv.org/abs/2404.16130)) | Knowledge graph clustering |
+| **MemoryBank** | Zhong et al., AAAI 2024 ([arXiv:2305.10250](https://arxiv.org/abs/2305.10250)) | Long-term memory for LLM agents |
+| **MACLA** | Forouzandeh et al., Dec 2025 ([arXiv:2512.18950](https://arxiv.org/abs/2512.18950)) | Multi-agent collaborative learning |
+| **Hindsight** | Latimer et al., Dec 2025 ([arXiv:2512.12818](https://arxiv.org/abs/2512.12818)) | Retrospective identity pattern learning |
+| **A-RAG** | [arXiv:2602.03442](https://arxiv.org/abs/2602.03442) | Multi-level retrieval |
 
-**The only open-source implementation combining all four approaches.**
+> **Note:** PageIndex attribution corrected from "Meta AI" to VectifyAI (Mingtian Zhang et al., Sep 2025). "xMemory (Stanford)" was a non-existent paper reference and has been replaced with three published research papers: MemoryBank, MACLA, and Hindsight.
+
+**The only open-source implementation combining all these research approaches.**
 
 ---
 

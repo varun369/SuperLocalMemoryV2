@@ -475,7 +475,7 @@ CREATE TABLE memories (
 **Purpose:** Fast navigation and contextual grouping.
 
 ### Based On
-**PageIndex** (Meta AI, 2024) — Hierarchical RAG for efficient retrieval.
+**PageIndex** (VectifyAI, Mingtian Zhang et al., Sep 2025) — Hierarchical RAG for efficient retrieval.
 
 ### How It Works
 
@@ -516,7 +516,7 @@ tree.get_path(memory_id=42)  # Returns: /MyApp/Authentication/
 **Purpose:** Discover hidden relationships between memories.
 
 ### Based On
-**GraphRAG** (Microsoft, 2024) — Knowledge graphs for retrieval.
+**GraphRAG** (Microsoft, 2024, [arXiv:2404.16130](https://arxiv.org/abs/2404.16130)) — Knowledge graphs for retrieval.
 
 ### How It Works
 
@@ -572,7 +572,9 @@ Related memories:
 **Purpose:** Learn your coding identity and preferences.
 
 ### Based On
-**xMemory** (Stanford, 2024) — Identity extraction from interactions.
+**MemoryBank** (Zhong et al., AAAI 2024, [arXiv:2305.10250](https://arxiv.org/abs/2305.10250)) — Long-term memory for LLM agents.
+**MACLA** (Forouzandeh et al., Dec 2025, [arXiv:2512.18950](https://arxiv.org/abs/2512.18950)) — Multi-agent collaborative learning with adaptive memory.
+**Hindsight** (Latimer et al., Dec 2025, [arXiv:2512.12818](https://arxiv.org/abs/2512.12818)) — Retrospective identity extraction from interactions.
 
 ### What It Learns
 
@@ -718,9 +720,9 @@ User saves memory
 | 7 | Universal Access | Novel (v2.1.0) |
 | 6 | MCP Protocol | Anthropic, 2024 |
 | 5 | Skills Architecture | Novel (v2.1.0) |
-| 4 | xMemory | Stanford, 2024 |
-| 3 | GraphRAG | Microsoft Research, 2024 |
-| 2 | PageIndex | Meta AI, 2024 |
+| 4 | MemoryBank + MACLA + Hindsight | Zhong et al. (AAAI 2024) + Forouzandeh et al. (Dec 2025) + Latimer et al. (Dec 2025) |
+| 3 | GraphRAG | Microsoft Research, 2024 ([arXiv:2404.16130](https://arxiv.org/abs/2404.16130)) |
+| 2 | PageIndex | VectifyAI (Zhang et al., Sep 2025) |
 | 1 | Tiered Storage | Industry best practice |
 
 **SuperLocalMemory V2.2.0 is the only open-source implementation combining all nine layers with universal IDE support and interactive visualization.**

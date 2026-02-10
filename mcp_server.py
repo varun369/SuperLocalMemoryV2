@@ -332,7 +332,8 @@ async def switch_profile(name: str) -> dict:
     Switch to a different memory profile.
 
     Profiles allow you to maintain separate memory contexts
-    (e.g., work, personal, client projects).
+    (e.g., work, personal, client projects). All profiles share
+    one database — switching is instant and safe (no data copying).
 
     Args:
         name: Profile name to switch to
@@ -345,25 +346,40 @@ async def switch_profile(name: str) -> dict:
         }
     """
     try:
-        # Profile switching logic (calls existing system)
-        profile_path = MEMORY_DIR / "profiles" / name
+        # Import profile manager (uses column-based profiles)
+        sys.path.insert(0, str(MEMORY_DIR))
+        from importlib import import_module
+        # Use direct JSON config update for speed
+        import json
+        config_file = MEMORY_DIR / "profiles.json"
 
-        if not profile_path.exists():
+        if config_file.exists():
+            with open(config_file, 'r') as f:
+                config = json.load(f)
+        else:
+            config = {'profiles': {'default': {'name': 'default', 'description': 'Default memory profile'}}, 'active_profile': 'default'}
+
+        if name not in config.get('profiles', {}):
+            available = ', '.join(config.get('profiles', {}).keys())
             return {
                 "success": False,
-                "message": f"Profile '{name}' does not exist. Use list_profiles() to see available profiles."
+                "message": f"Profile '{name}' not found. Available: {available}"
             }
 
-        # Update current profile symlink
-        current_link = MEMORY_DIR / "current_profile"
-        if current_link.exists() or current_link.is_symlink():
-            current_link.unlink()
-        current_link.symlink_to(profile_path)
+        old_profile = config.get('active_profile', 'default')
+        config['active_profile'] = name
+
+        from datetime import datetime
+        config['profiles'][name]['last_used'] = datetime.now().isoformat()
+
+        with open(config_file, 'w') as f:
+            json.dump(config, f, indent=2)
 
         return {
             "success": True,
             "profile": name,
-            "message": f"Switched to profile '{name}'. Restart IDE to use new profile."
+            "previous_profile": old_profile,
+            "message": f"Switched to profile '{name}'. Memory operations now use this profile."
         }
 
     except Exception as e:
@@ -371,6 +387,51 @@ async def switch_profile(name: str) -> dict:
             "success": False,
             "error": str(e),
             "message": "Failed to switch profile"
+        }
+
+
+@mcp.tool(annotations=ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    openWorldHint=False,
+))
+async def backup_status() -> dict:
+    """
+    Get auto-backup system status for SuperLocalMemory.
+
+    Returns backup configuration, last backup time, next scheduled backup,
+    total backup count, and storage used. Useful for monitoring data safety.
+
+    Returns:
+        {
+            "enabled": bool,
+            "interval_display": str,
+            "last_backup": str or null,
+            "next_backup": str or null,
+            "backup_count": int,
+            "total_size_mb": float
+        }
+    """
+    try:
+        from auto_backup import AutoBackup
+        backup = AutoBackup()
+        status = backup.get_status()
+        return {
+            "success": True,
+            **status
+        }
+    except ImportError:
+        return {
+            "success": False,
+            "message": "Auto-backup module not installed. Update SuperLocalMemory to v2.4.0+.",
+            "enabled": False,
+            "backup_count": 0
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to get backup status"
         }
 
 
@@ -673,6 +734,7 @@ if __name__ == "__main__":
     print("  - get_status()", file=sys.stderr)
     print("  - build_graph()", file=sys.stderr)
     print("  - switch_profile(name)", file=sys.stderr)
+    print("  - backup_status()        [Auto-Backup]", file=sys.stderr)
     print("", file=sys.stderr)
     print("MCP Resources Available:", file=sys.stderr)
     print("  - memory://recent/{limit}", file=sys.stderr)

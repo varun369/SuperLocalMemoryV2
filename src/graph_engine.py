@@ -239,9 +239,21 @@ class ClusterBuilder:
         """Initialize cluster builder."""
         self.db_path = db_path
 
+    def _get_active_profile(self) -> str:
+        """Get the currently active profile name from config."""
+        config_file = MEMORY_DIR / "profiles.json"
+        if config_file.exists():
+            try:
+                with open(config_file, 'r') as f:
+                    config = json.load(f)
+                return config.get('active_profile', 'default')
+            except (json.JSONDecodeError, IOError):
+                pass
+        return 'default'
+
     def detect_communities(self) -> int:
         """
-        Run Leiden algorithm to find memory clusters.
+        Run Leiden algorithm to find memory clusters (active profile only).
 
         Returns:
             Number of clusters created
@@ -255,13 +267,16 @@ class ClusterBuilder:
 
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+        active_profile = self._get_active_profile()
 
         try:
-            # Load all edges
+            # Load edges for active profile's memories only
             edges = cursor.execute('''
-                SELECT source_memory_id, target_memory_id, weight
-                FROM graph_edges
-            ''').fetchall()
+                SELECT ge.source_memory_id, ge.target_memory_id, ge.weight
+                FROM graph_edges ge
+                WHERE ge.source_memory_id IN (SELECT id FROM memories WHERE profile = ?)
+                  AND ge.target_memory_id IN (SELECT id FROM memories WHERE profile = ?)
+            ''', (active_profile, active_profile)).fetchall()
 
             if not edges:
                 logger.warning("No edges found - cannot build clusters")
@@ -418,10 +433,35 @@ class GraphEngine:
         self.cluster_builder = ClusterBuilder(db_path)
         self._ensure_graph_tables()
 
+    def _get_active_profile(self) -> str:
+        """Get the currently active profile name from config."""
+        config_file = MEMORY_DIR / "profiles.json"
+        if config_file.exists():
+            try:
+                with open(config_file, 'r') as f:
+                    config = json.load(f)
+                return config.get('active_profile', 'default')
+            except (json.JSONDecodeError, IOError):
+                pass
+        return 'default'
+
     def _ensure_graph_tables(self):
-        """Create graph tables if they don't exist."""
+        """Create graph tables if they don't exist, or recreate if schema is incomplete."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+
+        # Check if existing tables have correct schema (not just id column)
+        for table_name, required_cols in [
+            ('graph_nodes', {'memory_id', 'entities'}),
+            ('graph_edges', {'source_memory_id', 'target_memory_id', 'weight'}),
+            ('graph_clusters', {'name', 'member_count'}),
+        ]:
+            cursor.execute(f"PRAGMA table_info({table_name})")
+            existing_cols = {row[1] for row in cursor.fetchall()}
+            if existing_cols and not required_cols.issubset(existing_cols):
+                # Table exists but has incomplete schema — drop and recreate
+                logger.warning(f"Dropping incomplete {table_name} table (missing: {required_cols - existing_cols})")
+                cursor.execute(f'DROP TABLE IF EXISTS {table_name}')
 
         # Graph nodes table
         cursor.execute('''
@@ -516,11 +556,14 @@ class GraphEngine:
                     'fix': "Run 'superlocalmemoryv2:status' first to initialize the database, or add some memories."
                 }
 
-            # Load all memories
+            # Load memories for active profile only
+            active_profile = self._get_active_profile()
+            logger.info(f"Building graph for profile: {active_profile}")
             memories = cursor.execute('''
                 SELECT id, content, summary FROM memories
+                WHERE profile = ?
                 ORDER BY id
-            ''').fetchall()
+            ''', (active_profile,)).fetchall()
 
             if len(memories) == 0:
                 logger.warning("No memories found")
@@ -553,11 +596,29 @@ class GraphEngine:
                     'fix': "Use incremental updates or reduce memory count with compression."
                 }
 
-            # Clear existing graph data
-            cursor.execute('DELETE FROM graph_edges')
-            cursor.execute('DELETE FROM graph_nodes')
-            cursor.execute('DELETE FROM graph_clusters')
-            cursor.execute('UPDATE memories SET cluster_id = NULL')
+            # Clear existing graph data for this profile's memories
+            profile_memory_ids = [m[0] for m in memories]
+            if profile_memory_ids:
+                placeholders = ','.join('?' * len(profile_memory_ids))
+                cursor.execute(f'''
+                    DELETE FROM graph_edges
+                    WHERE source_memory_id IN ({placeholders})
+                       OR target_memory_id IN ({placeholders})
+                ''', profile_memory_ids + profile_memory_ids)
+                cursor.execute(f'''
+                    DELETE FROM graph_nodes
+                    WHERE memory_id IN ({placeholders})
+                ''', profile_memory_ids)
+            # Remove orphaned clusters (no remaining members)
+            cursor.execute('''
+                DELETE FROM graph_clusters
+                WHERE id NOT IN (
+                    SELECT DISTINCT cluster_id FROM memories
+                    WHERE cluster_id IS NOT NULL
+                )
+            ''')
+            cursor.execute('UPDATE memories SET cluster_id = NULL WHERE profile = ?',
+                          (active_profile,))
             conn.commit()
 
             logger.info(f"Processing {len(memories)} memories")
@@ -646,7 +707,7 @@ class GraphEngine:
 
     def get_related(self, memory_id: int, max_hops: int = 2) -> List[Dict]:
         """
-        Get memories connected to this memory via graph edges.
+        Get memories connected to this memory via graph edges (active profile only).
 
         Args:
             memory_id: Source memory ID
@@ -657,18 +718,21 @@ class GraphEngine:
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+        active_profile = self._get_active_profile()
 
         try:
-            # Get 1-hop neighbors
+            # Get 1-hop neighbors (filtered to active profile)
             edges = cursor.execute('''
-                SELECT target_memory_id, relationship_type, weight, shared_entities
-                FROM graph_edges
-                WHERE source_memory_id = ?
+                SELECT ge.target_memory_id, ge.relationship_type, ge.weight, ge.shared_entities
+                FROM graph_edges ge
+                JOIN memories m ON ge.target_memory_id = m.id
+                WHERE ge.source_memory_id = ? AND m.profile = ?
                 UNION
-                SELECT source_memory_id, relationship_type, weight, shared_entities
-                FROM graph_edges
-                WHERE target_memory_id = ?
-            ''', (memory_id, memory_id)).fetchall()
+                SELECT ge.source_memory_id, ge.relationship_type, ge.weight, ge.shared_entities
+                FROM graph_edges ge
+                JOIN memories m ON ge.source_memory_id = m.id
+                WHERE ge.target_memory_id = ? AND m.profile = ?
+            ''', (memory_id, active_profile, memory_id, active_profile)).fetchall()
 
             results = []
             seen_ids = {memory_id}
@@ -743,7 +807,7 @@ class GraphEngine:
 
     def get_cluster_members(self, cluster_id: int) -> List[Dict]:
         """
-        Get all memories in a cluster.
+        Get all memories in a cluster (filtered by active profile).
 
         Args:
             cluster_id: Cluster ID
@@ -753,14 +817,15 @@ class GraphEngine:
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+        active_profile = self._get_active_profile()
 
         try:
             memories = cursor.execute('''
                 SELECT id, summary, importance, tags, created_at
                 FROM memories
-                WHERE cluster_id = ?
+                WHERE cluster_id = ? AND profile = ?
                 ORDER BY importance DESC
-            ''', (cluster_id,)).fetchall()
+            ''', (cluster_id, active_profile)).fetchall()
 
             return [
                 {
@@ -814,12 +879,14 @@ class GraphEngine:
                 VALUES (?, ?, ?)
             ''', (memory_id, json.dumps(new_entities), json.dumps(new_vector.tolist())))
 
-            # Compare to existing memories
+            # Compare to existing memories in the same profile
+            active_profile = self._get_active_profile()
             existing = cursor.execute('''
-                SELECT memory_id, embedding_vector, entities
-                FROM graph_nodes
-                WHERE memory_id != ?
-            ''', (memory_id,)).fetchall()
+                SELECT gn.memory_id, gn.embedding_vector, gn.entities
+                FROM graph_nodes gn
+                JOIN memories m ON gn.memory_id = m.id
+                WHERE gn.memory_id != ? AND m.profile = ?
+            ''', (memory_id, active_profile)).fetchall()
 
             edges_added = 0
 
@@ -871,24 +938,44 @@ class GraphEngine:
             conn.close()
 
     def get_stats(self) -> Dict[str, any]:
-        """Get graph statistics."""
+        """Get graph statistics for the active profile."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+        active_profile = self._get_active_profile()
 
         try:
-            nodes = cursor.execute('SELECT COUNT(*) FROM graph_nodes').fetchone()[0]
-            edges = cursor.execute('SELECT COUNT(*) FROM graph_edges').fetchone()[0]
-            clusters = cursor.execute('SELECT COUNT(*) FROM graph_clusters').fetchone()[0]
+            # Count nodes for active profile's memories
+            nodes = cursor.execute('''
+                SELECT COUNT(*) FROM graph_nodes
+                WHERE memory_id IN (SELECT id FROM memories WHERE profile = ?)
+            ''', (active_profile,)).fetchone()[0]
 
-            # Cluster breakdown
+            # Count edges where at least one end is in active profile
+            edges = cursor.execute('''
+                SELECT COUNT(*) FROM graph_edges
+                WHERE source_memory_id IN (SELECT id FROM memories WHERE profile = ?)
+            ''', (active_profile,)).fetchone()[0]
+
+            # Clusters that have members in active profile
+            clusters = cursor.execute('''
+                SELECT COUNT(DISTINCT cluster_id) FROM memories
+                WHERE cluster_id IS NOT NULL AND profile = ?
+            ''', (active_profile,)).fetchone()[0]
+
+            # Cluster breakdown for active profile
             cluster_info = cursor.execute('''
-                SELECT name, member_count, avg_importance
-                FROM graph_clusters
-                ORDER BY member_count DESC
+                SELECT gc.name, gc.member_count, gc.avg_importance
+                FROM graph_clusters gc
+                WHERE gc.id IN (
+                    SELECT DISTINCT cluster_id FROM memories
+                    WHERE cluster_id IS NOT NULL AND profile = ?
+                )
+                ORDER BY gc.member_count DESC
                 LIMIT 10
-            ''').fetchall()
+            ''', (active_profile,)).fetchall()
 
             return {
+                'profile': active_profile,
                 'nodes': nodes,
                 'edges': edges,
                 'clusters': clusters,

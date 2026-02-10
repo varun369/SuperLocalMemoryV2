@@ -125,6 +125,23 @@ app.mount("/static", StaticFiles(directory=str(UI_DIR)), name="static")
 
 
 # ============================================================================
+# Profile Helper
+# ============================================================================
+
+def get_active_profile() -> str:
+    """Read the active profile from profiles.json. Falls back to 'default'."""
+    config_file = MEMORY_DIR / "profiles.json"
+    if config_file.exists():
+        try:
+            with open(config_file, 'r') as f:
+                pconfig = json.load(f)
+            return pconfig.get('active_profile', 'default')
+        except (json.JSONDecodeError, IOError):
+            pass
+    return 'default'
+
+
+# ============================================================================
 # Request/Response Models
 # ============================================================================
 
@@ -387,6 +404,8 @@ async def get_memories(
         conn.row_factory = dict_factory
         cursor = conn.cursor()
 
+        active_profile = get_active_profile()
+
         # Build dynamic query
         query = """
             SELECT
@@ -394,9 +413,9 @@ async def get_memories(
                 importance, cluster_id, depth, access_count, parent_id,
                 created_at, updated_at, last_accessed, tags, memory_type
             FROM memories
-            WHERE 1=1
+            WHERE profile = ?
         """
-        params = []
+        params = [active_profile]
 
         if category:
             query += " AND category = ?"
@@ -427,8 +446,8 @@ async def get_memories(
         memories = cursor.fetchall()
 
         # Get total count
-        count_query = "SELECT COUNT(*) as total FROM memories WHERE 1=1"
-        count_params = []
+        count_query = "SELECT COUNT(*) as total FROM memories WHERE profile = ?"
+        count_params = [active_profile]
 
         if category:
             count_query += " AND category = ?"
@@ -483,6 +502,8 @@ async def get_graph(
         conn.row_factory = dict_factory
         cursor = conn.cursor()
 
+        active_profile = get_active_profile()
+
         # Get nodes (memories with graph data)
         cursor.execute("""
             SELECT
@@ -492,10 +513,10 @@ async def get_graph(
                 gn.entities
             FROM memories m
             LEFT JOIN graph_nodes gn ON m.id = gn.memory_id
-            WHERE m.importance >= ?
+            WHERE m.importance >= ? AND m.profile = ?
             ORDER BY m.importance DESC, m.updated_at DESC
             LIMIT ?
-        """, (min_importance, max_nodes))
+        """, (min_importance, active_profile, max_nodes))
         nodes = cursor.fetchall()
 
         # Parse entities JSON and create previews
@@ -551,9 +572,9 @@ async def get_graph(
                 COUNT(*) as size,
                 AVG(importance) as avg_importance
             FROM memories
-            WHERE cluster_id IS NOT NULL
+            WHERE cluster_id IS NOT NULL AND profile = ?
             GROUP BY cluster_id
-        """)
+        """, (active_profile,))
         clusters = cursor.fetchall()
 
         conn.close()
@@ -607,6 +628,8 @@ async def get_timeline(
         else:  # month
             date_group = "strftime('%Y-%m', created_at)"
 
+        active_profile = get_active_profile()
+
         # Timeline aggregates
         cursor.execute(f"""
             SELECT
@@ -618,9 +641,10 @@ async def get_timeline(
                 GROUP_CONCAT(DISTINCT category) as categories
             FROM memories
             WHERE created_at >= datetime('now', '-' || ? || ' days')
+              AND profile = ?
             GROUP BY {date_group}
             ORDER BY period DESC
-        """, (days,))
+        """, (days, active_profile))
         timeline = cursor.fetchall()
 
         # Category trend over time
@@ -631,10 +655,10 @@ async def get_timeline(
                 COUNT(*) as count
             FROM memories
             WHERE created_at >= datetime('now', '-' || ? || ' days')
-              AND category IS NOT NULL
+              AND category IS NOT NULL AND profile = ?
             GROUP BY {date_group}, category
             ORDER BY period DESC, count DESC
-        """, (days,))
+        """, (days, active_profile))
         category_trend = cursor.fetchall()
 
         # Period statistics
@@ -646,7 +670,8 @@ async def get_timeline(
                 AVG(importance) as avg_importance
             FROM memories
             WHERE created_at >= datetime('now', '-' || ? || ' days')
-        """, (days,))
+              AND profile = ?
+        """, (days, active_profile))
         period_stats = cursor.fetchone()
 
         conn.close()
@@ -680,6 +705,8 @@ async def get_clusters():
         conn.row_factory = dict_factory
         cursor = conn.cursor()
 
+        active_profile = get_active_profile()
+
         # Get cluster statistics
         cursor.execute("""
             SELECT
@@ -693,10 +720,10 @@ async def get_clusters():
                 MIN(created_at) as first_memory,
                 MAX(created_at) as latest_memory
             FROM memories
-            WHERE cluster_id IS NOT NULL
+            WHERE cluster_id IS NOT NULL AND profile = ?
             GROUP BY cluster_id
             ORDER BY member_count DESC
-        """)
+        """, (active_profile,))
         clusters = cursor.fetchall()
 
         # Get dominant entities per cluster
@@ -732,8 +759,8 @@ async def get_clusters():
         cursor.execute("""
             SELECT COUNT(*) as count
             FROM memories
-            WHERE cluster_id IS NULL
-        """)
+            WHERE cluster_id IS NULL AND profile = ?
+        """, (active_profile,))
         unclustered = cursor.fetchone()['count']
 
         conn.close()
@@ -872,13 +899,16 @@ async def get_patterns():
                 "message": "Pattern learning not initialized. Run pattern learning first."
             }
 
+        active_profile = get_active_profile()
+
         cursor.execute("""
             SELECT
                 pattern_type, key, value, confidence,
                 evidence_count, updated_at as last_updated
             FROM identity_patterns
+            WHERE profile = ?
             ORDER BY confidence DESC, evidence_count DESC
-        """)
+        """, (active_profile,))
         patterns = cursor.fetchall()
 
         # Parse value JSON
@@ -937,14 +967,16 @@ async def get_stats():
         conn.row_factory = dict_factory
         cursor = conn.cursor()
 
-        # Basic counts
-        cursor.execute("SELECT COUNT(*) as total FROM memories")
+        active_profile = get_active_profile()
+
+        # Basic counts (profile-filtered)
+        cursor.execute("SELECT COUNT(*) as total FROM memories WHERE profile = ?", (active_profile,))
         total_memories = cursor.fetchone()['total']
 
         cursor.execute("SELECT COUNT(*) as total FROM sessions")
         total_sessions = cursor.fetchone()['total']
 
-        cursor.execute("SELECT COUNT(DISTINCT cluster_id) as total FROM memories WHERE cluster_id IS NOT NULL")
+        cursor.execute("SELECT COUNT(DISTINCT cluster_id) as total FROM memories WHERE cluster_id IS NOT NULL AND profile = ?", (active_profile,))
         total_clusters = cursor.fetchone()['total']
 
         cursor.execute("SELECT COUNT(*) as total FROM graph_nodes")
@@ -1115,30 +1147,40 @@ async def search_memories(request: SearchRequest):
 @app.get("/api/profiles")
 async def list_profiles():
     """
-    List available memory profiles.
+    List available memory profiles (column-based).
 
     Returns:
-    - profiles: List of profile names
+    - profiles: List of profiles with memory counts
     - active_profile: Currently active profile
     - total_profiles: Profile count
     """
     try:
-        PROFILES_DIR.mkdir(exist_ok=True)
+        config_file = MEMORY_DIR / "profiles.json"
+        if config_file.exists():
+            with open(config_file, 'r') as f:
+                config = json.load(f)
+        else:
+            config = {'profiles': {'default': {'name': 'default', 'description': 'Default memory profile'}}, 'active_profile': 'default'}
 
+        active = config.get('active_profile', 'default')
         profiles = []
-        for profile_dir in PROFILES_DIR.iterdir():
-            if profile_dir.is_dir():
-                db_file = profile_dir / "memory.db"
-                if db_file.exists():
-                    profiles.append({
-                        "name": profile_dir.name,
-                        "path": str(profile_dir),
-                        "size_mb": round(db_file.stat().st_size / (1024 * 1024), 2),
-                        "modified": datetime.fromtimestamp(db_file.stat().st_mtime).isoformat()
-                    })
 
-        # Determine active profile (default is main)
-        active = "default"
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        for name, info in config.get('profiles', {}).items():
+            cursor.execute("SELECT COUNT(*) FROM memories WHERE profile = ?", (name,))
+            count = cursor.fetchone()[0]
+            profiles.append({
+                "name": name,
+                "description": info.get('description', ''),
+                "memory_count": count,
+                "created_at": info.get('created_at', ''),
+                "last_used": info.get('last_used', ''),
+                "is_active": name == active
+            })
+
+        conn.close()
 
         return {
             "profiles": profiles,
@@ -1153,7 +1195,7 @@ async def list_profiles():
 @app.post("/api/profiles/{name}/switch")
 async def switch_profile(name: str):
     """
-    Switch active memory profile.
+    Switch active memory profile (column-based, instant).
 
     Parameters:
     - name: Profile name to switch to
@@ -1161,7 +1203,8 @@ async def switch_profile(name: str):
     Returns:
     - success: Switch status
     - active_profile: New active profile
-    - message: Status message
+    - previous_profile: Previously active profile
+    - memory_count: Memories in new profile
     """
     try:
         if not validate_profile_name(name):
@@ -1170,26 +1213,145 @@ async def switch_profile(name: str):
                 detail="Invalid profile name. Use alphanumeric, underscore, or hyphen only."
             )
 
-        profile_path = PROFILES_DIR / name / "memory.db"
+        config_file = MEMORY_DIR / "profiles.json"
+        if config_file.exists():
+            with open(config_file, 'r') as f:
+                config = json.load(f)
+        else:
+            config = {'profiles': {'default': {'name': 'default', 'description': 'Default memory profile'}}, 'active_profile': 'default'}
 
-        if not profile_path.exists():
+        if name not in config.get('profiles', {}):
             raise HTTPException(
                 status_code=404,
-                detail=f"Profile '{name}' not found"
+                detail=f"Profile '{name}' not found. Available: {', '.join(config.get('profiles', {}).keys())}"
             )
 
-        # Note: Actual profile switching would require modifying DB_PATH
-        # This is a placeholder implementation
+        previous = config.get('active_profile', 'default')
+        config['active_profile'] = name
+        config['profiles'][name]['last_used'] = datetime.now().isoformat()
+
+        with open(config_file, 'w') as f:
+            json.dump(config, f, indent=2)
+
+        # Get memory count for new profile
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM memories WHERE profile = ?", (name,))
+        count = cursor.fetchone()[0]
+        conn.close()
+
+        # Broadcast profile switch to WebSocket clients
+        await manager.broadcast({
+            "type": "profile_switched",
+            "profile": name,
+            "previous": previous,
+            "memory_count": count,
+            "timestamp": datetime.now().isoformat()
+        })
+
         return {
             "success": True,
             "active_profile": name,
-            "message": f"Profile switched to '{name}'. Restart server to apply changes."
+            "previous_profile": previous,
+            "memory_count": count,
+            "message": f"Switched to profile '{name}' ({count} memories). Changes take effect immediately."
         }
 
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Profile switch error: {str(e)}")
+
+
+@app.post("/api/profiles/create")
+async def create_profile(body: ProfileSwitch):
+    """
+    Create a new memory profile.
+
+    Parameters:
+    - profile_name: Name for the new profile
+
+    Returns:
+    - success: Creation status
+    - profile: Created profile name
+    """
+    try:
+        name = body.profile_name
+        if not validate_profile_name(name):
+            raise HTTPException(status_code=400, detail="Invalid profile name")
+
+        config_file = MEMORY_DIR / "profiles.json"
+        if config_file.exists():
+            with open(config_file, 'r') as f:
+                config = json.load(f)
+        else:
+            config = {'profiles': {'default': {'name': 'default', 'description': 'Default memory profile'}}, 'active_profile': 'default'}
+
+        if name in config.get('profiles', {}):
+            raise HTTPException(status_code=409, detail=f"Profile '{name}' already exists")
+
+        config['profiles'][name] = {
+            'name': name,
+            'description': f'Memory profile: {name}',
+            'created_at': datetime.now().isoformat(),
+            'last_used': None
+        }
+
+        with open(config_file, 'w') as f:
+            json.dump(config, f, indent=2)
+
+        return {
+            "success": True,
+            "profile": name,
+            "message": f"Profile '{name}' created"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Profile create error: {str(e)}")
+
+
+@app.delete("/api/profiles/{name}")
+async def delete_profile(name: str):
+    """
+    Delete a profile. Moves its memories to 'default'.
+    """
+    try:
+        if name == 'default':
+            raise HTTPException(status_code=400, detail="Cannot delete 'default' profile")
+
+        config_file = MEMORY_DIR / "profiles.json"
+        with open(config_file, 'r') as f:
+            config = json.load(f)
+
+        if name not in config.get('profiles', {}):
+            raise HTTPException(status_code=404, detail=f"Profile '{name}' not found")
+
+        if config.get('active_profile') == name:
+            raise HTTPException(status_code=400, detail="Cannot delete active profile. Switch first.")
+
+        # Move memories to default
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE memories SET profile = 'default' WHERE profile = ?", (name,))
+        moved = cursor.rowcount
+        conn.commit()
+        conn.close()
+
+        del config['profiles'][name]
+        with open(config_file, 'w') as f:
+            json.dump(config, f, indent=2)
+
+        return {
+            "success": True,
+            "message": f"Profile '{name}' deleted. {moved} memories moved to 'default'."
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Profile delete error: {str(e)}")
 
 
 # ============================================================================
@@ -1364,6 +1526,141 @@ async def import_memories(file: UploadFile = File(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Import error: {str(e)}")
+
+
+# ============================================================================
+# API Endpoints - Backup Management
+# ============================================================================
+
+class BackupConfigRequest(BaseModel):
+    """Backup configuration update request."""
+    interval_hours: Optional[int] = Field(None, ge=1, le=8760)
+    max_backups: Optional[int] = Field(None, ge=1, le=100)
+    enabled: Optional[bool] = None
+
+
+@app.get("/api/backup/status")
+async def backup_status():
+    """
+    Get auto-backup system status.
+
+    Returns:
+    - enabled: Whether auto-backup is active
+    - interval_display: Human-readable interval
+    - last_backup: Timestamp of last backup
+    - next_backup: When next backup is due
+    - backup_count: Number of existing backups
+    - total_size_mb: Total backup storage used
+    """
+    try:
+        from auto_backup import AutoBackup
+        backup = AutoBackup()
+        return backup.get_status()
+    except ImportError:
+        raise HTTPException(
+            status_code=501,
+            detail="Auto-backup module not installed. Update SuperLocalMemory to v2.4.0+."
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Backup status error: {str(e)}")
+
+
+@app.post("/api/backup/create")
+async def backup_create():
+    """
+    Create a manual backup of memory.db immediately.
+
+    Returns:
+    - success: Whether backup was created
+    - filename: Name of the backup file
+    - status: Updated backup system status
+    """
+    try:
+        from auto_backup import AutoBackup
+        backup = AutoBackup()
+        filename = backup.create_backup(label='manual')
+
+        if filename:
+            return {
+                "success": True,
+                "filename": filename,
+                "message": f"Backup created: {filename}",
+                "status": backup.get_status()
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Backup failed — database may not exist",
+                "status": backup.get_status()
+            }
+    except ImportError:
+        raise HTTPException(
+            status_code=501,
+            detail="Auto-backup module not installed. Update SuperLocalMemory to v2.4.0+."
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Backup create error: {str(e)}")
+
+
+@app.post("/api/backup/configure")
+async def backup_configure(request: BackupConfigRequest):
+    """
+    Update auto-backup configuration.
+
+    Request body (all optional):
+    - interval_hours: Hours between backups (24=daily, 168=weekly)
+    - max_backups: Maximum backup files to retain
+    - enabled: Enable/disable auto-backup
+
+    Returns:
+    - Updated backup status
+    """
+    try:
+        from auto_backup import AutoBackup
+        backup = AutoBackup()
+        result = backup.configure(
+            interval_hours=request.interval_hours,
+            max_backups=request.max_backups,
+            enabled=request.enabled
+        )
+        return {
+            "success": True,
+            "message": "Backup configuration updated",
+            "status": result
+        }
+    except ImportError:
+        raise HTTPException(
+            status_code=501,
+            detail="Auto-backup module not installed. Update SuperLocalMemory to v2.4.0+."
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Backup configure error: {str(e)}")
+
+
+@app.get("/api/backup/list")
+async def backup_list():
+    """
+    List all available backups.
+
+    Returns:
+    - backups: List of backup files with metadata (filename, size, age, created)
+    - count: Total number of backups
+    """
+    try:
+        from auto_backup import AutoBackup
+        backup = AutoBackup()
+        backups = backup.list_backups()
+        return {
+            "backups": backups,
+            "count": len(backups)
+        }
+    except ImportError:
+        raise HTTPException(
+            status_code=501,
+            detail="Auto-backup module not installed. Update SuperLocalMemory to v2.4.0+."
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Backup list error: {str(e)}")
 
 
 # ============================================================================
