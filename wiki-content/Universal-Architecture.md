@@ -1,8 +1,8 @@
 # Universal Architecture
 
-SuperLocalMemory V2.2.0's 9-layer universal architecture with visualization dashboard, hybrid search, MCP integration, agent-skills, and local-first system-design that works across 16+ IDEs. This mcp-protocol based architecture is unique and no competitor offers this level of universal integration.
+SuperLocalMemory V2's 10-layer universal architecture with A2A agent collaboration, visualization dashboard, hybrid search, MCP integration, agent-skills, and local-first system-design that works across 16+ IDEs. This dual-protocol (MCP + A2A) architecture is unique — no competitor offers both agent-to-tool and agent-to-agent communication with local-first privacy.
 
-**Keywords:** universal architecture, system design, mcp protocol, local-first, ai memory, visualization, hybrid search, semantic search
+**Keywords:** universal architecture, system design, mcp protocol, a2a protocol, agent-to-agent, local-first, ai memory, visualization, hybrid search, semantic search, multi-agent
 
 ---
 
@@ -10,11 +10,22 @@ SuperLocalMemory V2.2.0's 9-layer universal architecture with visualization dash
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│              SuperLocalMemory V2.2.0 - Universal                │
+│            SuperLocalMemory V2 - Universal (10-Layer)           │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │  LAYER 9: VISUALIZATION (NEW v2.2.0)                    │   │
+│  │  LAYER 10: A2A AGENT COLLABORATION (PLANNED v2.5.0)     │   │
+│  │  ─────────────────────────────────────────────────────  │   │
+│  │  • Agent-to-Agent Protocol (Google/Linux Foundation)    │   │
+│  │  • Agent discovery via Agent Cards                      │   │
+│  │  • Multi-agent memory sharing & broadcasting            │   │
+│  │  • gRPC + JSON-RPC dual transport                       │   │
+│  │  • Signed security cards for agent authentication       │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              ▲                                  │
+│                              │ enables agent collaboration      │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  LAYER 9: VISUALIZATION (v2.2.0)                        │   │
 │  │  ─────────────────────────────────────────────────────  │   │
 │  │  • Interactive web dashboard (Dash/Plotly)              │   │
 │  │  • Timeline view, search explorer, graph visualization  │   │
@@ -24,7 +35,7 @@ SuperLocalMemory V2.2.0's 9-layer universal architecture with visualization dash
 │                              ▲                                  │
 │                              │ visualizes                       │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │  LAYER 8: HYBRID SEARCH (NEW v2.2.0)                    │   │
+│  │  LAYER 8: HYBRID SEARCH (v2.2.0)                        │   │
 │  │  ─────────────────────────────────────────────────────  │   │
 │  │  • Semantic Search (TF-IDF + cosine similarity)         │   │
 │  │  • Full-Text Search (SQLite FTS5 with ranking)          │   │
@@ -102,6 +113,94 @@ SuperLocalMemory V2.2.0's 9-layer universal architecture with visualization dash
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Layer 10: A2A Agent Collaboration (PLANNED v2.5.0)
+
+**Purpose:** Enable AI agents to collaborate through shared memory using the Agent-to-Agent (A2A) protocol.
+
+### Why A2A + MCP?
+
+SuperLocalMemory already uses **MCP** (Anthropic, 2024) for agent-to-tool communication — AI tools connect to the memory database. **A2A** (Google/Linux Foundation, 2025) adds agent-to-agent communication — AI agents discover each other, delegate tasks, and share memory context.
+
+| Protocol | Direction | Purpose | Example |
+|----------|-----------|---------|---------|
+| **MCP** | Agent → Tool | AI tool accesses memory | Cursor calls `remember()` |
+| **A2A** | Agent ↔ Agent | AI agents collaborate via memory | Cursor notifies Claude Desktop of a new decision |
+
+### How It Works
+
+1. **Discovery** — SuperLocalMemory publishes an Agent Card at `/.well-known/agent.json`
+2. **Authentication** — Agents present signed security cards; user authorizes each agent
+3. **Task Delegation** — External agents submit memory tasks (remember, recall, list)
+4. **Streaming Results** — Large query results stream back via server-side streaming
+5. **Broadcasting** — Memory changes broadcast to subscribed agents in real-time
+
+### Agent Card
+
+```json
+{
+  "name": "SuperLocalMemory",
+  "description": "Local-first persistent memory with knowledge graph and pattern learning",
+  "version": "2.5.0",
+  "url": "http://localhost:8766",
+  "skills": [
+    {"name": "remember", "description": "Store memory with tags, importance, and project context"},
+    {"name": "recall", "description": "Hybrid search across memories (semantic + FTS5 + graph)"},
+    {"name": "list_recent", "description": "Get recent memories with filtering"},
+    {"name": "get_status", "description": "System health, statistics, and graph info"}
+  ],
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": true,
+    "stateTransitionHistory": true
+  },
+  "preferredTransport": "jsonrpc",
+  "additionalInterfaces": ["grpc"],
+  "securitySchemes": ["signed_agent_card"]
+}
+```
+
+### A2A Task Lifecycle
+
+```
+Agent submits task → SuperLocalMemory processes → Result returned
+     │                      │                         │
+     ▼                      ▼                         ▼
+  submitted            working                   completed
+                    (streaming)                   (or failed)
+```
+
+### Multi-Agent Scenario
+
+```
+Developer using Cursor + Claude Desktop + Continue.dev simultaneously:
+
+1. Cursor Agent → A2A remember("User prefers Tailwind over Bootstrap")
+2. SuperLocalMemory stores memory, broadcasts to subscribers
+3. Claude Desktop Agent receives broadcast → updates its context
+4. Continue.dev Agent receives broadcast → adjusts code suggestions
+
+Result: All tools stay in sync through shared local memory.
+```
+
+### Security Model
+
+- **Local-first:** No cloud authentication. Keys stored in `~/.claude-memory/a2a_keys/`
+- **Explicit authorization:** User must approve each agent before it can access memory
+- **Per-agent permissions:** Read-only, read-write, or admin per agent
+- **Audit trail:** All A2A interactions logged to `~/.claude-memory/a2a_audit.log`
+
+### Architecture Principle
+
+A2A is **additive and opt-in**. If A2A server isn't running, all MCP/CLI/Skills functionality works exactly as before. A2A adds a new dimension (agent collaboration) without modifying any existing layer.
+
+### Research Foundation
+
+- **A2A Protocol** (Google/Linux Foundation, 2025) — [a2a-protocol.org](https://a2a-protocol.org/latest/specification/)
+- **Complementary to MCP** (Anthropic, 2024) — [a2a-protocol.org/topics/a2a-and-mcp](https://a2a-protocol.org/latest/topics/a2a-and-mcp/)
+- Official Python SDK: `a2a-sdk` v0.3.22+ ([github.com/a2aproject/a2a-python](https://github.com/a2aproject/a2a-python))
 
 ---
 
@@ -631,16 +730,16 @@ Claude: Got it! I'll suggest React solutions, prioritize
 
 ---
 
-## Why 9-Layer Architecture?
+## Why 10-Layer Architecture?
 
 ### Competitors Have Fewer Layers and Limited Capabilities
 
-| Solution | Layers | IDE Support | Visualization | Hybrid Search | What's Missing |
-|----------|--------|-------------|---------------|---------------|----------------|
-| Mem0 | 2 | Limited (Cloud) | ❌ | ❌ | No patterns, no hierarchy, no universal access, no visualization |
-| Zep | 2 | 1-2 IDEs | ❌ | ❌ | No patterns, no MCP, cloud-only, no visualization |
-| Khoj | 2-3 | Limited | Basic | ❌ | No graph, no patterns, no universal CLI, limited search |
-| **SuperLocalMemory V2.2.0** | **9** | **16+ IDEs** | **✅ Full** | **✅ Yes** | **Nothing - Complete** |
+| Solution | Layers | IDE Support | A2A Protocol | MCP Protocol | Visualization | What's Missing |
+|----------|--------|-------------|--------------|--------------|---------------|----------------|
+| Mem0 | 2 | Limited (Cloud) | ❌ | ❌ | ❌ | No A2A, no MCP, no patterns, no hierarchy, cloud-only |
+| Zep | 2 | 1-2 IDEs | ❌ | ❌ | ❌ | No A2A, no MCP, no patterns, cloud-only |
+| Khoj | 2-3 | Limited | ❌ | ❌ | Basic | No A2A, no MCP, no graph, limited search |
+| **SuperLocalMemory V2** | **10** | **16+ IDEs** | **✅ Planned** | **✅ Native** | **✅ Full** | **Dual-protocol: MCP + A2A** |
 
 ### Each Layer Adds Value
 
@@ -715,6 +814,7 @@ User saves memory
 
 | Layer | Research | Source |
 |-------|----------|--------|
+| 10 | A2A Protocol | Google/Linux Foundation, 2025 ([a2a-protocol.org](https://a2a-protocol.org/)) |
 | 9 | Interactive Visualization | Novel (v2.2.0) - Dash/Plotly integration |
 | 8 | Hybrid Search | Novel (v2.2.0) - Multi-strategy retrieval |
 | 7 | Universal Access | Novel (v2.1.0) |
@@ -725,7 +825,7 @@ User saves memory
 | 2 | PageIndex | VectifyAI (Zhang et al., Sep 2025) |
 | 1 | Tiered Storage | Industry best practice |
 
-**SuperLocalMemory V2.2.0 is the only open-source implementation combining all nine layers with universal IDE support and interactive visualization.**
+**SuperLocalMemory V2 is the only open-source memory system with both MCP (agent-to-tool) and A2A (agent-to-agent) protocol support, combining 10 layers with universal IDE integration.**
 
 Created by **Varun Pratap Bhardwaj**.
 
@@ -733,7 +833,8 @@ Created by **Varun Pratap Bhardwaj**.
 
 ## Next Steps
 
-- [[Visualization Dashboard →|Visualization-Dashboard]] - Interactive visual exploration (NEW v2.2.0)
+- [[A2A Integration →|A2A-Integration]] - Agent-to-Agent collaboration (PLANNED v2.5.0)
+- [[Visualization Dashboard →|Visualization-Dashboard]] - Interactive visual exploration
 - [[MCP Integration Guide →|MCP-Integration]] - Setup for 16+ IDEs
 - [[Universal Skills Guide →|Universal-Skills]] - Learn slash-commands
 - [[Knowledge Graph Guide →|Knowledge-Graph-Guide]] - Understand clustering

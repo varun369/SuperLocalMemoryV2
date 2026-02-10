@@ -257,11 +257,18 @@ def initialize_database() -> Tuple[bool, str]:
             CREATE TABLE IF NOT EXISTS graph_clusters (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 cluster_name TEXT,
+                name TEXT,
                 description TEXT,
+                summary TEXT,
                 memory_count INTEGER DEFAULT 0,
+                member_count INTEGER DEFAULT 0,
                 avg_importance REAL DEFAULT 5.0,
                 top_entities TEXT DEFAULT '[]',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                parent_cluster_id INTEGER,
+                depth INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (parent_cluster_id) REFERENCES graph_clusters(id) ON DELETE SET NULL
             )
         ''')
 

@@ -404,6 +404,293 @@ class ClusterBuilder:
         return name[:100]  # Limit length
 
 
+    def hierarchical_cluster(self, min_subcluster_size: int = 5, max_depth: int = 3) -> Dict[str, any]:
+        """
+        Run recursive Leiden clustering — cluster the clusters.
+
+        Large communities (>= min_subcluster_size * 2) are recursively sub-clustered
+        to reveal finer-grained thematic structure. E.g., "Python" → "FastAPI" → "Auth".
+
+        Args:
+            min_subcluster_size: Minimum members to attempt sub-clustering (default 5)
+            max_depth: Maximum recursion depth (default 3)
+
+        Returns:
+            Dictionary with hierarchical clustering statistics
+        """
+        try:
+            import igraph as ig
+            import leidenalg
+        except ImportError:
+            raise ImportError("python-igraph and leidenalg required. Install: pip install python-igraph leidenalg")
+
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        active_profile = self._get_active_profile()
+
+        try:
+            # Get top-level clusters for this profile that are large enough to sub-cluster
+            cursor.execute('''
+                SELECT cluster_id, COUNT(*) as cnt
+                FROM memories
+                WHERE cluster_id IS NOT NULL AND profile = ?
+                GROUP BY cluster_id
+                HAVING cnt >= ?
+            ''', (active_profile, min_subcluster_size * 2))
+            large_clusters = cursor.fetchall()
+
+            if not large_clusters:
+                logger.info("No clusters large enough for hierarchical decomposition")
+                return {'subclusters_created': 0, 'depth_reached': 0}
+
+            total_subclusters = 0
+            max_depth_reached = 0
+
+            for parent_cid, member_count in large_clusters:
+                subs, depth = self._recursive_subcluster(
+                    conn, cursor, parent_cid, active_profile,
+                    min_subcluster_size, max_depth, current_depth=1
+                )
+                total_subclusters += subs
+                max_depth_reached = max(max_depth_reached, depth)
+
+            conn.commit()
+            logger.info(f"Hierarchical clustering: {total_subclusters} sub-clusters, depth {max_depth_reached}")
+            return {
+                'subclusters_created': total_subclusters,
+                'depth_reached': max_depth_reached,
+                'parent_clusters_processed': len(large_clusters)
+            }
+
+        except Exception as e:
+            logger.error(f"Hierarchical clustering failed: {e}")
+            conn.rollback()
+            return {'subclusters_created': 0, 'error': str(e)}
+        finally:
+            conn.close()
+
+    def _recursive_subcluster(self, conn, cursor, parent_cluster_id: int,
+                               profile: str, min_size: int, max_depth: int,
+                               current_depth: int) -> Tuple[int, int]:
+        """Recursively sub-cluster a community using Leiden."""
+        import igraph as ig
+        import leidenalg
+
+        if current_depth > max_depth:
+            return 0, current_depth - 1
+
+        # Get memory IDs in this cluster
+        cursor.execute('''
+            SELECT id FROM memories
+            WHERE cluster_id = ? AND profile = ?
+        ''', (parent_cluster_id, profile))
+        member_ids = [row[0] for row in cursor.fetchall()]
+
+        if len(member_ids) < min_size * 2:
+            return 0, current_depth - 1
+
+        # Get edges between members of this cluster
+        placeholders = ','.join('?' * len(member_ids))
+        edges = cursor.execute(f'''
+            SELECT source_memory_id, target_memory_id, weight
+            FROM graph_edges
+            WHERE source_memory_id IN ({placeholders})
+              AND target_memory_id IN ({placeholders})
+        ''', member_ids + member_ids).fetchall()
+
+        if len(edges) < 2:
+            return 0, current_depth - 1
+
+        # Build sub-graph
+        id_to_vertex = {mid: idx for idx, mid in enumerate(member_ids)}
+        vertex_to_id = {idx: mid for mid, idx in id_to_vertex.items()}
+
+        g = ig.Graph()
+        g.add_vertices(len(member_ids))
+        edge_list, edge_weights = [], []
+        for src, tgt, w in edges:
+            if src in id_to_vertex and tgt in id_to_vertex:
+                edge_list.append((id_to_vertex[src], id_to_vertex[tgt]))
+                edge_weights.append(w)
+
+        if not edge_list:
+            return 0, current_depth - 1
+
+        g.add_edges(edge_list)
+
+        # Run Leiden with higher resolution for finer communities
+        partition = leidenalg.find_partition(
+            g, leidenalg.ModularityVertexPartition,
+            weights=edge_weights, n_iterations=100, seed=42
+        )
+
+        # Only proceed if Leiden found > 1 community (actual split)
+        non_singleton = [c for c in partition if len(c) >= 2]
+        if len(non_singleton) <= 1:
+            return 0, current_depth - 1
+
+        subclusters_created = 0
+        deepest = current_depth
+
+        # Get parent depth
+        cursor.execute('SELECT depth FROM graph_clusters WHERE id = ?', (parent_cluster_id,))
+        parent_row = cursor.fetchone()
+        parent_depth = parent_row[0] if parent_row else 0
+
+        for community in non_singleton:
+            sub_member_ids = [vertex_to_id[v] for v in community]
+
+            if len(sub_member_ids) < 2:
+                continue
+
+            avg_imp = self._get_avg_importance(cursor, sub_member_ids)
+            cluster_name = self._generate_cluster_name(cursor, sub_member_ids)
+
+            result = cursor.execute('''
+                INSERT INTO graph_clusters (name, member_count, avg_importance, parent_cluster_id, depth)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (cluster_name, len(sub_member_ids), avg_imp, parent_cluster_id, parent_depth + 1))
+
+            sub_cluster_id = result.lastrowid
+
+            # Update memories to point to sub-cluster
+            cursor.executemany('''
+                UPDATE memories SET cluster_id = ? WHERE id = ?
+            ''', [(sub_cluster_id, mid) for mid in sub_member_ids])
+
+            subclusters_created += 1
+            logger.info(f"Sub-cluster {sub_cluster_id} under {parent_cluster_id}: "
+                        f"'{cluster_name}' ({len(sub_member_ids)} members, depth {parent_depth + 1})")
+
+            # Recurse into this sub-cluster if large enough
+            child_subs, child_depth = self._recursive_subcluster(
+                conn, cursor, sub_cluster_id, profile,
+                min_size, max_depth, current_depth + 1
+            )
+            subclusters_created += child_subs
+            deepest = max(deepest, child_depth)
+
+        return subclusters_created, deepest
+
+    def generate_cluster_summaries(self) -> int:
+        """
+        Generate TF-IDF structured summaries for all clusters.
+
+        For each cluster, analyzes member content to produce a human-readable
+        summary describing the cluster's theme, key topics, and scope.
+
+        Returns:
+            Number of clusters with summaries generated
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        active_profile = self._get_active_profile()
+
+        try:
+            # Get all clusters for this profile
+            cursor.execute('''
+                SELECT DISTINCT gc.id, gc.name, gc.member_count
+                FROM graph_clusters gc
+                JOIN memories m ON m.cluster_id = gc.id
+                WHERE m.profile = ?
+            ''', (active_profile,))
+            clusters = cursor.fetchall()
+
+            if not clusters:
+                return 0
+
+            summaries_generated = 0
+
+            for cluster_id, cluster_name, member_count in clusters:
+                summary = self._build_cluster_summary(cursor, cluster_id, active_profile)
+                if summary:
+                    cursor.execute('''
+                        UPDATE graph_clusters SET summary = ?, updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    ''', (summary, cluster_id))
+                    summaries_generated += 1
+                    logger.info(f"Summary for cluster {cluster_id} ({cluster_name}): {summary[:80]}...")
+
+            conn.commit()
+            logger.info(f"Generated {summaries_generated} cluster summaries")
+            return summaries_generated
+
+        except Exception as e:
+            logger.error(f"Summary generation failed: {e}")
+            conn.rollback()
+            return 0
+        finally:
+            conn.close()
+
+    def _build_cluster_summary(self, cursor, cluster_id: int, profile: str) -> str:
+        """Build a TF-IDF structured summary for a single cluster."""
+        # Get member content
+        cursor.execute('''
+            SELECT m.content, m.summary, m.tags, m.category, m.project_name
+            FROM memories m
+            WHERE m.cluster_id = ? AND m.profile = ?
+        ''', (cluster_id, profile))
+        members = cursor.fetchall()
+
+        if not members:
+            return ""
+
+        # Collect entities from graph nodes
+        cursor.execute('''
+            SELECT gn.entities
+            FROM graph_nodes gn
+            JOIN memories m ON gn.memory_id = m.id
+            WHERE m.cluster_id = ? AND m.profile = ?
+        ''', (cluster_id, profile))
+        all_entities = []
+        for row in cursor.fetchall():
+            if row[0]:
+                try:
+                    all_entities.extend(json.loads(row[0]))
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+        # Top entities by frequency (TF-IDF already extracted these)
+        entity_counts = Counter(all_entities)
+        top_entities = [e for e, _ in entity_counts.most_common(5)]
+
+        # Collect unique projects and categories
+        projects = set()
+        categories = set()
+        for m in members:
+            if m[3]:  # category
+                categories.add(m[3])
+            if m[4]:  # project_name
+                projects.add(m[4])
+
+        # Build structured summary
+        parts = []
+
+        # Theme from top entities
+        if top_entities:
+            parts.append(f"Key topics: {', '.join(top_entities[:5])}")
+
+        # Scope
+        if projects:
+            parts.append(f"Projects: {', '.join(sorted(projects)[:3])}")
+        if categories:
+            parts.append(f"Categories: {', '.join(sorted(categories)[:3])}")
+
+        # Size context
+        parts.append(f"{len(members)} memories")
+
+        # Check for hierarchical context
+        cursor.execute('SELECT parent_cluster_id FROM graph_clusters WHERE id = ?', (cluster_id,))
+        parent_row = cursor.fetchone()
+        if parent_row and parent_row[0]:
+            cursor.execute('SELECT name FROM graph_clusters WHERE id = ?', (parent_row[0],))
+            parent_name_row = cursor.fetchone()
+            if parent_name_row:
+                parts.append(f"Sub-cluster of: {parent_name_row[0]}")
+
+        return " | ".join(parts)
+
+
 class ClusterNamer:
     """Enhanced cluster naming with optional LLM support (future)."""
 
@@ -498,12 +785,23 @@ class GraphEngine:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 description TEXT,
+                summary TEXT,
                 member_count INTEGER DEFAULT 0,
                 avg_importance REAL,
+                parent_cluster_id INTEGER,
+                depth INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (parent_cluster_id) REFERENCES graph_clusters(id) ON DELETE SET NULL
             )
         ''')
+
+        # Safe column additions for existing databases
+        for col, col_type in [('summary', 'TEXT'), ('parent_cluster_id', 'INTEGER'), ('depth', 'INTEGER DEFAULT 0')]:
+            try:
+                cursor.execute(f'ALTER TABLE graph_clusters ADD COLUMN {col} {col_type}')
+            except sqlite3.OperationalError:
+                pass
 
         # Add cluster_id to memories if not exists
         try:
@@ -648,8 +946,15 @@ class GraphEngine:
                 memory_ids, vectors, entities_list
             )
 
-            # Detect communities
+            # Detect communities (flat Leiden)
             clusters_count = self.cluster_builder.detect_communities()
+
+            # Hierarchical sub-clustering on large communities
+            hierarchical_stats = self.cluster_builder.hierarchical_cluster()
+            subclusters = hierarchical_stats.get('subclusters_created', 0)
+
+            # Generate TF-IDF structured summaries for all clusters
+            summaries = self.cluster_builder.generate_cluster_summaries()
 
             elapsed = time.time() - start_time
 
@@ -659,6 +964,9 @@ class GraphEngine:
                 'nodes': len(memory_ids),
                 'edges': edges_count,
                 'clusters': clusters_count,
+                'subclusters': subclusters,
+                'max_depth': hierarchical_stats.get('depth_reached', 0),
+                'summaries_generated': summaries,
                 'time_seconds': round(elapsed, 2)
             }
 
@@ -962,28 +1270,36 @@ class GraphEngine:
                 WHERE cluster_id IS NOT NULL AND profile = ?
             ''', (active_profile,)).fetchone()[0]
 
-            # Cluster breakdown for active profile
+            # Cluster breakdown for active profile (including hierarchy)
             cluster_info = cursor.execute('''
-                SELECT gc.name, gc.member_count, gc.avg_importance
+                SELECT gc.name, gc.member_count, gc.avg_importance,
+                       gc.summary, gc.parent_cluster_id, gc.depth
                 FROM graph_clusters gc
                 WHERE gc.id IN (
                     SELECT DISTINCT cluster_id FROM memories
                     WHERE cluster_id IS NOT NULL AND profile = ?
                 )
-                ORDER BY gc.member_count DESC
-                LIMIT 10
+                ORDER BY gc.depth ASC, gc.member_count DESC
+                LIMIT 20
             ''', (active_profile,)).fetchall()
+
+            # Count hierarchical depth
+            max_depth = max((c[5] or 0 for c in cluster_info), default=0) if cluster_info else 0
 
             return {
                 'profile': active_profile,
                 'nodes': nodes,
                 'edges': edges,
                 'clusters': clusters,
+                'max_depth': max_depth,
                 'top_clusters': [
                     {
                         'name': c[0],
                         'members': c[1],
-                        'avg_importance': round(c[2], 1)
+                        'avg_importance': round(c[2], 1) if c[2] else 5.0,
+                        'summary': c[3],
+                        'parent_cluster_id': c[4],
+                        'depth': c[5] or 0
                     }
                     for c in cluster_info
                 ]
@@ -998,7 +1314,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description='GraphEngine - Knowledge Graph Management')
-    parser.add_argument('command', choices=['build', 'stats', 'related', 'cluster'],
+    parser.add_argument('command', choices=['build', 'stats', 'related', 'cluster', 'hierarchical', 'summaries'],
                        help='Command to execute')
     parser.add_argument('--memory-id', type=int, help='Memory ID for related/add commands')
     parser.add_argument('--cluster-id', type=int, help='Cluster ID for cluster command')
@@ -1051,6 +1367,18 @@ def main():
             print(f"\n{idx}. Memory #{mem['id']} (importance={mem['importance']})")
             summary = mem['summary'] or '[No summary]'
             print(f"   {summary[:100]}...")
+
+    elif args.command == 'hierarchical':
+        print("Running hierarchical sub-clustering...")
+        cluster_builder = ClusterBuilder(engine.db_path)
+        stats = cluster_builder.hierarchical_cluster()
+        print(json.dumps(stats, indent=2))
+
+    elif args.command == 'summaries':
+        print("Generating cluster summaries...")
+        cluster_builder = ClusterBuilder(engine.db_path)
+        count = cluster_builder.generate_cluster_summaries()
+        print(f"Generated summaries for {count} clusters")
 
 
 if __name__ == '__main__':

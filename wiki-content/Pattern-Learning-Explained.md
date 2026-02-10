@@ -159,7 +159,31 @@ Domain: Fintech (KYC, AML, reconciliation)
 
 ## Confidence Scoring Algorithm
 
-### How Confidence is Calculated
+### MACLA Beta-Binomial Scoring (v2.4.0)
+
+SuperLocalMemory v2.4.0 replaced the frequency-based formula with a **Bayesian Beta-Binomial posterior** grounded in the MACLA framework (Forouzandeh et al., Dec 2025, [arXiv:2512.18950](https://arxiv.org/abs/2512.18950)).
+
+**Formula:**
+```python
+posterior_mean = (alpha + evidence_count) / (alpha + beta + evidence_count + log2(total_memories))
+```
+
+**How it works:**
+- **Alpha/Beta priors** are pattern-specific: framework preferences (α=2, β=3), coding style (α=1, β=4), terminology (α=2, β=3), testing approach (α=1, β=5)
+- **Log-scaled competition**: The denominator grows with `log2(total_memories)`, not the raw count — so adding memories doesn't crush existing confidence scores
+- **Recency bonus**: Patterns observed in the last 7 days get up to +0.05 boost (decays linearly over 30 days)
+- **Distribution bonus**: Patterns with high consistency get up to +0.03
+- **Hard cap at 0.95**: No pattern can reach 100% — epistemic humility built in
+
+**Why this matters:**
+```
+Old formula:  500 memories, 10 React observations → 2% confidence (too low, unusable)
+MACLA formula: Same data → 55% confidence (calibrated, actionable)
+```
+
+The Bayesian approach gives meaningful confidence from the start and converges toward the true proportion as evidence accumulates.
+
+### Legacy: Frequency-Based Scoring (pre-v2.4.0)
 
 **Frequency-based scoring:**
 ```python

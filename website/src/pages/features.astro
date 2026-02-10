@@ -13,13 +13,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         SuperLocalMemory V2 combines cutting-edge 2026 research with practical, production-ready features.
       </p>
 
-      <!-- 9-Layer Architecture -->
+      <!-- 10-Layer Architecture -->
       <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 2rem; margin-bottom: 3rem;">
-        <h2 style="margin-bottom: 1.5rem;">🏗️ 9-Layer Universal Architecture</h2>
-        <p style="margin-bottom: 1.5rem;">Each layer enhances the previous one. The system degrades gracefully if advanced features aren't available.</p>
+        <h2 style="margin-bottom: 1.5rem;">🏗️ 10-Layer Universal Architecture</h2>
+        <p style="margin-bottom: 1.5rem;">The only memory system with both <strong>MCP</strong> (agent-to-tool) and <strong>A2A</strong> (agent-to-agent) protocol support. Each layer enhances the previous one.</p>
 
         <div style="font-family: monospace; font-size: 0.875rem; line-height: 1.8; background: var(--color-bg-tertiary); padding: 1.5rem; border-radius: 8px; overflow-x: auto;">
 <pre style="margin: 0; background: none; padding: 0; border: none;">┌─────────────────────────────────────────────────────┐
+│ Layer 10: A2A AGENT COLLABORATION (v2.5.0)         │
+│  Agent-to-Agent protocol for multi-agent sync      │
+├─────────────────────────────────────────────────────┤
 │ Layer 9: VISUALIZATION (v2.2.0)                    │
 │  Interactive dashboard, timeline, search explorer   │
 ├─────────────────────────────────────────────────────┤
@@ -35,11 +38,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 │ Layer 5: SKILLS LAYER                              │
 │  6 universal slash-commands                        │
 ├─────────────────────────────────────────────────────┤
-│ Layer 4: PATTERN LEARNING                          │
-│  Learns your coding style & preferences            │
+│ Layer 4: PATTERN LEARNING + MACLA (v2.4.0)         │
+│  Bayesian Beta-Binomial confidence scoring         │
 ├─────────────────────────────────────────────────────┤
-│ Layer 3: KNOWLEDGE GRAPH                           │
-│  Auto-discovers relationships (Leiden clustering)  │
+│ Layer 3: KNOWLEDGE GRAPH + HIERARCHICAL (v2.4.1)   │
+│  Recursive Leiden clustering + community summaries │
 ├─────────────────────────────────────────────────────┤
 │ Layer 2: HIERARCHICAL INDEX                        │
 │  Tree structure for O(log n) navigation            │
@@ -47,6 +50,24 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 │ Layer 1: RAW STORAGE                               │
 │  SQLite + FTS5 + TF-IDF vectors                    │
 └─────────────────────────────────────────────────────┘</pre>
+        </div>
+      </div>
+
+      <!-- A2A Protocol - Coming Soon -->
+      <div class="card" style="margin-bottom: 2rem; border: 2px solid var(--color-accent);">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+          <h3 style="color: var(--color-accent); margin: 0;">🤝 A2A Agent Collaboration (Coming v2.5.0)</h3>
+          <span style="background: var(--color-accent); color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">NEW</span>
+        </div>
+        <p style="margin-bottom: 1rem;">Multi-agent collaboration through the <strong>A2A Protocol</strong> (Google/Linux Foundation). Your AI tools finally talk to each other through shared memory.</p>
+        <ul style="margin-bottom: 1rem;">
+          <li><strong>Agent Discovery</strong> - AI agents discover SuperLocalMemory via Agent Cards</li>
+          <li><strong>Real-Time Sync</strong> - Cursor saves a preference, Claude Desktop knows instantly</li>
+          <li><strong>Secure by Default</strong> - Per-agent permissions, local-only auth, audit logging</li>
+          <li><strong>Dual Protocol</strong> - MCP for tool access + A2A for agent collaboration</li>
+        </ul>
+        <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px;">
+          <strong>Why both MCP + A2A?</strong> MCP connects tools to memory (vertical). A2A connects agents to each other through memory (horizontal). Together, they make SuperLocalMemory the complete memory backbone for multi-agent workflows.
         </div>
       </div>
 
@@ -86,6 +107,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <ul style="margin-bottom: 1rem;">
           <li><strong>TF-IDF Entity Extraction</strong> - Identifies important terms and concepts</li>
           <li><strong>Leiden Clustering</strong> - Groups related memories into communities</li>
+          <li><strong>Hierarchical Leiden (v2.4.1)</strong> - Recursive sub-clustering: "Python" → "FastAPI" → "Auth patterns"</li>
+          <li><strong>Community Summaries (v2.4.1)</strong> - TF-IDF structured reports: key topics, projects, categories per cluster</li>
           <li><strong>Auto-naming</strong> - Clusters get descriptive names ("Auth & Tokens", "Performance")</li>
           <li><strong>Relationship Discovery</strong> - Finds connections between memories</li>
         </ul>
@@ -95,8 +118,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
 
       <div class="card" style="margin-bottom: 2rem;">
-        <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🎯 Pattern Learning</h3>
-        <p style="margin-bottom: 1rem;">Learns your coding identity from your memories:</p>
+        <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🎯 Pattern Learning + MACLA Confidence (v2.4.0)</h3>
+        <p style="margin-bottom: 1rem;">Learns your coding identity with research-grounded Bayesian scoring (<a href="https://arxiv.org/abs/2512.18950" style="color: var(--color-accent);">arXiv:2512.18950</a>):</p>
         <ul style="margin-bottom: 1rem;">
           <li><strong>Framework Preferences</strong> - "You prefer React over Vue" (73% confidence)</li>
           <li><strong>Coding Style</strong> - "Performance over readability" (58% confidence)</li>
@@ -137,6 +160,20 @@ python ~/.claude-memory/pattern_learner.py context 0.5</code></pre>
         <pre><code>slm switch-profile work
 slm switch-profile personal
 slm switch-profile client-acme</code></pre>
+      </div>
+
+      <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🔄 Auto-Backup System (NEW v2.4.0)</h3>
+        <p style="margin-bottom: 1rem;">Never lose your memories. Automatic SQLite backups with full control:</p>
+        <ul style="margin-bottom: 1rem;">
+          <li><strong>Configurable Intervals</strong> - Daily, weekly, or custom schedule</li>
+          <li><strong>Retention Policies</strong> - Keep N most recent backups automatically</li>
+          <li><strong>One-Click Restore</strong> - Restore from any backup via dashboard or CLI</li>
+          <li><strong>Safe Concurrent Backup</strong> - Uses SQLite's <code>backup()</code> API, no locking</li>
+        </ul>
+        <pre><code>python ~/.claude-memory/auto_backup.py backup   # Manual backup
+python ~/.claude-memory/auto_backup.py list     # List backups
+python ~/.claude-memory/auto_backup.py status   # Backup status</code></pre>
       </div>
 
       <div class="card" style="margin-bottom: 2rem;">

@@ -6,7 +6,46 @@
 
 ## Version History
 
-### ✅ v2.1.0-universal (2026-02-07) - Current
+### ✅ v2.4.1 (2026-02-11) - Current
+
+**Patch Release: Hierarchical Clustering & Documentation**
+
+**New Features:**
+- ✅ Hierarchical Leiden clustering — recursive community detection up to 3 levels deep
+- ✅ Community summaries — TF-IDF structured reports for every cluster (key topics, projects, hierarchy)
+- ✅ New CLI commands: `graph_engine.py hierarchical` and `graph_engine.py summaries`
+- ✅ Schema additions: `summary`, `parent_cluster_id`, `depth` columns on `graph_clusters`
+- ✅ Full documentation updates across README, wiki, and website
+
+See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
+
+---
+
+### ✅ v2.4.0 (2026-02-11)
+
+**Major Release: Profile System & Intelligence**
+
+**New Features:**
+- ✅ Column-based memory profiles with UI management (create, switch, delete)
+- ✅ MACLA Beta-Binomial confidence scorer (arXiv:2512.18950)
+- ✅ Auto-backup system with configurable intervals and retention
+- ✅ Full profile isolation across all API endpoints (graph, clusters, patterns, timeline)
+- ✅ UI overhaul: Settings tab, column sorting, enhanced patterns view
+- ✅ Profile CRUD API endpoints
+
+See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
+
+---
+
+### ✅ v2.3.5–v2.3.7 (2026-02-08–09)
+
+**Patch Releases: ChatGPT Connector, SessionStart Hook, Smart Truncation**
+
+See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for details.
+
+---
+
+### ✅ v2.1.0-universal (2026-02-07)
 
 **Major Release: Universal Integration**
 
@@ -338,6 +377,143 @@ related = graph.get_related(42, rel_type="SUPERSEDES")
 
 ---
 
+### v2.5.0 (Q2-Q3 2026) - A2A Protocol Integration
+
+**Theme:** Multi-agent collaboration via Agent-to-Agent protocol
+
+**Why A2A?** MCP (Model Context Protocol) connects AI tools to memory (agent-to-tool). A2A (Agent-to-Agent Protocol) enables AI agents to collaborate with each other through shared memory. Together, MCP + A2A make SuperLocalMemory the complete memory backbone for the multi-agent era.
+
+**A2A Protocol:** Launched by Google (April 2025), now under Linux Foundation. Version 0.3 (July 2025). 150+ organizations. Backed by Google, Microsoft, Cisco, Salesforce, UiPath, Cohere, ServiceNow.
+
+**Planned Features:**
+
+#### 1. A2A Agent Server
+**Status:** 📝 Planned
+
+**Purpose:** SuperLocalMemory becomes an A2A-compliant agent that other agents can discover, authenticate with, and delegate memory tasks to.
+
+**Agent Card (Discovery):**
+```json
+{
+  "name": "SuperLocalMemory",
+  "description": "Local-first persistent memory for AI agents",
+  "version": "2.5.0",
+  "skills": [
+    {"name": "remember", "description": "Store a memory with tags and importance"},
+    {"name": "recall", "description": "Search memories using hybrid search"},
+    {"name": "list_recent", "description": "Get recent memories"},
+    {"name": "get_status", "description": "System health and statistics"}
+  ],
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": true,
+    "stateTransitionHistory": true
+  },
+  "preferredTransport": "jsonrpc",
+  "additionalInterfaces": ["grpc"]
+}
+```
+
+**Implementation:**
+- gRPC + JSON-RPC dual transport (A2A v0.3 spec)
+- Python SDK: `pip install a2a-sdk` (official SDK, v0.3.22+)
+- Runs alongside MCP server on separate port (default: 8766)
+- New file: `src/a2a_server.py`
+
+#### 2. Agent Authentication & Security
+**Status:** 📝 Planned
+
+**Purpose:** Control which agents can access your memory. Local-first security model.
+
+**Features:**
+- Signed security cards (A2A v0.3 spec)
+- Per-agent permission model (read-only, read-write, admin)
+- Local key store — no cloud auth
+- User explicitly authorizes each agent
+- Audit log of agent interactions
+
+**Configuration:**
+```json
+{
+  "authorized_agents": [
+    {"agent_id": "cursor-ai", "permissions": ["read", "write"]},
+    {"agent_id": "claude-desktop", "permissions": ["read", "write", "admin"]}
+  ]
+}
+```
+
+#### 3. Memory Task Management
+**Status:** 📝 Planned
+
+**Purpose:** A2A tasks are stateful and async. Memory operations become trackable tasks.
+
+**Task Lifecycle:**
+```
+submitted → working → completed
+                   → failed
+                   → canceled
+```
+
+**Operations:**
+```
+POST  /a2a/task/remember     → Store memory (async, returns task ID)
+POST  /a2a/task/recall        → Search memory (streaming results)
+POST  /a2a/task/list_recent   → Get recent memories
+GET   /a2a/task/{id}/status   → Check task progress
+POST  /a2a/task/{id}/cancel   → Cancel running task
+```
+
+#### 4. Real-Time Memory Broadcasting (v2.5.1)
+**Status:** 📝 Planned (Phase 2)
+
+**Purpose:** When Agent A stores a memory, Agent B gets notified instantly.
+
+**Use Case:** Developer uses Cursor and Claude Desktop simultaneously. Cursor agent saves "switched to Tailwind CSS" → Claude Desktop agent instantly knows.
+
+**Implementation:**
+- A2A push notifications
+- WebSocket fallback for non-A2A clients
+- Configurable subscription filters (by tag, project, importance)
+
+#### 5. Multi-Agent Memory Sharing
+**Status:** 📝 Planned (Phase 2)
+
+**Purpose:** Multiple agents collaborate through shared memory context.
+
+**Scenarios:**
+```
+Cursor Agent:    "User prefers React hooks over class components"
+                  ↓ (A2A broadcast)
+Claude Desktop:  "Got it — will suggest hooks-based patterns"
+                  ↓ (A2A broadcast)
+Continue.dev:    "Updated code suggestions to use hooks"
+```
+
+**Research Foundation:**
+- A2A Protocol (Google/Linux Foundation, 2025, [a2a-protocol.org](https://a2a-protocol.org/))
+- Complementary to MCP (Anthropic, 2024) — MCP for tool access, A2A for agent collaboration
+
+**Files Affected:**
+```
+src/a2a_server.py          # NEW: A2A gRPC/JSON-RPC server
+src/a2a_auth.py            # NEW: Agent authentication
+bin/slm-a2a                # NEW: CLI wrapper for A2A server
+configs/a2a_config.json    # NEW: Default A2A configuration
+mcp_server.py              # Updated: Cross-reference A2A endpoints
+install.sh / install.ps1   # Updated: Optional A2A dependencies
+```
+
+**Dependencies (Optional — A2A features only):**
+```
+a2a-sdk>=0.3.22            # Official A2A Python SDK
+grpcio>=1.60.0             # gRPC transport
+protobuf>=4.25.0           # Protocol Buffers
+```
+
+**Core principle:** A2A is opt-in. The system works perfectly with MCP-only. A2A adds multi-agent collaboration for users who need it.
+
+---
+
 ### v3.0.0 (Q4 2026) - NPM Distribution
 
 **Theme:** Professional packaging
@@ -500,9 +676,10 @@ store.compare_experiments("bert-finetuning-v2", "bert-finetuning-v3")
 
 1. ✅ **Multi-IDE support** (Completed in v2.1.0)
 2. 🔨 **REST API** (In progress, v2.2.0)
-3. 📝 **Web UI** (Planned, v2.3.0)
-4. 📝 **Docker container** (Planned, v2.2.0)
-5. 📝 **OpenAI embeddings** (Planned, v2.3.0)
+3. 📝 **A2A Protocol support** (Planned, v2.5.0) — Multi-agent collaboration
+4. 📝 **Web UI** (Planned, v2.3.0)
+5. 📝 **Docker container** (Planned, v2.2.0)
+6. 📝 **OpenAI embeddings** (Planned, v2.3.0)
 
 ### How to Request Features
 

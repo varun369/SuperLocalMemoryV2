@@ -707,22 +707,26 @@ async def get_clusters():
 
         active_profile = get_active_profile()
 
-        # Get cluster statistics
+        # Get cluster statistics with hierarchy and summaries
         cursor.execute("""
             SELECT
-                cluster_id,
+                m.cluster_id,
                 COUNT(*) as member_count,
-                AVG(importance) as avg_importance,
-                MIN(importance) as min_importance,
-                MAX(importance) as max_importance,
-                GROUP_CONCAT(DISTINCT category) as categories,
-                GROUP_CONCAT(DISTINCT project_name) as projects,
-                MIN(created_at) as first_memory,
-                MAX(created_at) as latest_memory
-            FROM memories
-            WHERE cluster_id IS NOT NULL AND profile = ?
-            GROUP BY cluster_id
-            ORDER BY member_count DESC
+                AVG(m.importance) as avg_importance,
+                MIN(m.importance) as min_importance,
+                MAX(m.importance) as max_importance,
+                GROUP_CONCAT(DISTINCT m.category) as categories,
+                GROUP_CONCAT(DISTINCT m.project_name) as projects,
+                MIN(m.created_at) as first_memory,
+                MAX(m.created_at) as latest_memory,
+                gc.summary,
+                gc.parent_cluster_id,
+                gc.depth
+            FROM memories m
+            LEFT JOIN graph_clusters gc ON m.cluster_id = gc.id
+            WHERE m.cluster_id IS NOT NULL AND m.profile = ?
+            GROUP BY m.cluster_id
+            ORDER BY COALESCE(gc.depth, 0) ASC, member_count DESC
         """, (active_profile,))
         clusters = cursor.fetchall()
 

@@ -577,6 +577,83 @@ pruned_edges = [(u, v, w) for u, v, w in edges if w > threshold]
 
 ---
 
+## Hierarchical Leiden Clustering (v2.4.1)
+
+Standard Leiden finds flat communities — "Python", "JavaScript", "DevOps". **Hierarchical Leiden** goes deeper by recursively sub-clustering large communities:
+
+```
+Python (42 members)
+├── FastAPI (18 members)
+│   ├── Authentication (7 members)
+│   └── Database Models (6 members)
+├── Data Science (14 members)
+└── CLI Tools (10 members)
+```
+
+### How It Works
+
+1. Flat Leiden runs first (existing behavior)
+2. Clusters with ≥10 members are recursively sub-clustered
+3. Maximum depth: 3 levels (configurable via `max_depth` parameter)
+4. Each sub-cluster gets its own name from TF-IDF entity extraction
+5. `parent_cluster_id` and `depth` columns track the hierarchy in `graph_clusters` table
+
+### CLI
+
+```bash
+# Run hierarchical sub-clustering on existing clusters
+python3 ~/.claude-memory/graph_engine.py hierarchical
+
+# Full build (includes hierarchical + summaries automatically)
+python3 ~/.claude-memory/graph_engine.py build
+```
+
+### Schema
+
+```sql
+-- New columns on graph_clusters (added automatically)
+ALTER TABLE graph_clusters ADD COLUMN parent_cluster_id INTEGER;
+ALTER TABLE graph_clusters ADD COLUMN depth INTEGER DEFAULT 0;
+ALTER TABLE graph_clusters ADD COLUMN summary TEXT;
+```
+
+---
+
+## Community Summaries (v2.4.1)
+
+Every cluster gets a **TF-IDF structured summary** describing its contents:
+
+```
+Cluster "FastAPI & Authentication"
+Summary: Key topics: fastapi, authentication, jwt, middleware, oauth |
+         Projects: myapp, api-gateway | Categories: backend |
+         18 memories | Sub-cluster of: Python
+```
+
+### What's in a Summary
+
+| Component | Source | Example |
+|-----------|--------|---------|
+| **Key topics** | Top 5 TF-IDF entities | fastapi, authentication, jwt |
+| **Projects** | Distinct `project_name` values | myapp, api-gateway |
+| **Categories** | Distinct `category` values | backend, security |
+| **Size** | Member count | 18 memories |
+| **Hierarchy** | Parent cluster name (if sub-cluster) | Sub-cluster of: Python |
+
+### CLI
+
+```bash
+# Generate summaries for all clusters
+python3 ~/.claude-memory/graph_engine.py summaries
+
+# Summaries are also generated automatically during build
+python3 ~/.claude-memory/graph_engine.py build
+```
+
+Summaries appear in the web dashboard clusters view and are returned by the `/api/clusters` endpoint.
+
+---
+
 ## Related Pages
 
 - [Quick Start Tutorial](Quick-Start-Tutorial) - First-time setup

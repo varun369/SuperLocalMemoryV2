@@ -130,7 +130,7 @@ npm update -g superlocalmemory
 npm install -g superlocalmemory@latest
 
 # Install specific version
-npm install -g superlocalmemory@2.3.7
+npm install -g superlocalmemory@latest
 ```
 
 **Manual install users:**
@@ -186,6 +186,19 @@ python ~/.claude-memory/ui_server.py
 ```
 
 **[[Complete Dashboard Guide →|Visualization-Dashboard]]**
+
+---
+
+### New in v2.4.1: Hierarchical Clustering, Community Summaries & Auto-Backup
+
+| Feature | Description |
+|---------|-------------|
+| **Hierarchical Leiden** | Recursive community detection — clusters within clusters up to 3 levels. "Python" → "FastAPI" → "Auth patterns" |
+| **Community Summaries** | TF-IDF structured reports per cluster: key topics, projects, categories at a glance |
+| **MACLA Confidence** | Bayesian Beta-Binomial scoring (arXiv:2512.18950) — calibrated confidence, not raw frequency |
+| **Auto-Backup** | Configurable SQLite backups with retention policies, one-click restore from dashboard |
+| **Profile UI** | Create, switch, delete profiles from the web dashboard — full isolation per context |
+| **Profile Isolation** | All API endpoints (graph, clusters, patterns, timeline) scoped to active profile |
 
 ---
 
@@ -433,13 +446,13 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 │  6 universal slash-commands for AI assistants               │
 │  Compatible with Claude Code, Continue, Cody                │
 ├─────────────────────────────────────────────────────────────┤
-│  Layer 4: PATTERN LEARNING                                  │
-│  Learns: coding style, preferences, terminology             │
+│  Layer 4: PATTERN LEARNING + MACLA (v2.4.0)                  │
+│  Bayesian Beta-Binomial confidence (arXiv:2512.18950)       │
 │  "You prefer React over Vue" (73% confidence)               │
 ├─────────────────────────────────────────────────────────────┤
-│  Layer 3: KNOWLEDGE GRAPH                                   │
-│  Auto-clusters: "Auth & Tokens", "Performance", "Testing"   │
-│  Discovers relationships you didn't know existed            │
+│  Layer 3: KNOWLEDGE GRAPH + HIERARCHICAL LEIDEN (v2.4.1)    │
+│  Recursive clustering: "Python" → "FastAPI" → "Auth"        │
+│  Community summaries + TF-IDF structured reports            │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 2: HIERARCHICAL INDEX                                │
 │  Tree structure for fast navigation                         │
@@ -487,6 +500,8 @@ python ~/.claude-memory/pattern_learner.py context 0.5
 ```
 
 **Your AI assistant can now match your preferences automatically.**
+
+**MACLA Confidence Scoring (v2.4.0):** Confidence uses a Bayesian Beta-Binomial posterior (Forouzandeh et al., [arXiv:2512.18950](https://arxiv.org/abs/2512.18950)). Pattern-specific priors, log-scaled competition, recency bonus. Range: 0.0–0.95 (hard cap prevents overconfidence).
 
 ### Multi-Profile Support
 
@@ -537,13 +552,20 @@ superlocalmemoryv2:profile create <name>                 # New profile
 superlocalmemoryv2:profile switch <name>                 # Switch context
 
 # Knowledge Graph
-python ~/.claude-memory/graph_engine.py build            # Build graph
+python ~/.claude-memory/graph_engine.py build            # Build graph (+ hierarchical + summaries)
 python ~/.claude-memory/graph_engine.py stats            # View clusters
 python ~/.claude-memory/graph_engine.py related --id 5   # Find related
+python ~/.claude-memory/graph_engine.py hierarchical     # Sub-cluster large communities
+python ~/.claude-memory/graph_engine.py summaries        # Generate cluster summaries
 
 # Pattern Learning
 python ~/.claude-memory/pattern_learner.py update        # Learn patterns
 python ~/.claude-memory/pattern_learner.py context 0.5   # Get identity
+
+# Auto-Backup (v2.4.0)
+python ~/.claude-memory/auto_backup.py backup            # Manual backup
+python ~/.claude-memory/auto_backup.py list              # List backups
+python ~/.claude-memory/auto_backup.py status            # Backup status
 
 # Reset (Use with caution!)
 superlocalmemoryv2:reset soft                            # Clear memories

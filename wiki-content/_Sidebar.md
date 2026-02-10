@@ -13,7 +13,7 @@
 
 ### 🏗️ Core Concepts
 - [[Universal-Architecture]]
-- [[Visualization-Dashboard]] ⭐ NEW
+- [[Visualization-Dashboard]]
 - [[MCP-Integration]]
 - [[Universal-Skills]]
 - [[Knowledge-Graph-Guide]]

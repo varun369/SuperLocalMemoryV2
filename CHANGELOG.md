@@ -16,6 +16,31 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.4.1] - 2026-02-11
+
+**Release Type:** Hierarchical Clustering & Documentation Release
+**Backward Compatible:** Yes (additive schema changes only)
+
+### Added
+- **Hierarchical Leiden clustering** (`graph_engine.py`): Recursive community detection — large clusters (≥10 members) are automatically sub-divided up to 3 levels deep. E.g., "Python" → "FastAPI" → "Authentication patterns". New `parent_cluster_id` and `depth` columns in `graph_clusters` table
+- **Community summaries** (`graph_engine.py`): TF-IDF structured reports for every cluster — key topics, projects, categories, hierarchy context. Stored in `graph_clusters.summary` column, surfaced in `/api/clusters` endpoint and web dashboard
+- **CLI commands**: `python3 graph_engine.py hierarchical` and `python3 graph_engine.py summaries` for manual runs
+- **Schema migration**: Safe `ALTER TABLE` additions for `summary`, `parent_cluster_id`, `depth` columns — backward compatible with existing databases
+
+### Changed
+- `build_graph()` now automatically runs hierarchical sub-clustering and summary generation after flat Leiden
+- `/api/clusters` endpoint returns `summary`, `parent_cluster_id`, `depth` fields
+- `get_stats()` includes `max_depth` and per-cluster summary/hierarchy data
+- `setup_validator.py` schema updated to include new columns
+
+### Documentation
+- **README.md**: v2.4.0→v2.4.1, added Hierarchical Leiden, Community Summaries, MACLA, Auto-Backup sections
+- **Wiki**: Updated Roadmap, Pattern-Learning-Explained, Knowledge-Graph-Guide, Configuration, Visualization-Dashboard, Footer
+- **Website**: Updated features.astro, comparison.astro, index.astro for v2.4.1 features
+- **`.npmignore`**: Recursive `__pycache__` exclusion patterns
+
+---
+
 ## [2.4.0] - 2026-02-11
 
 **Release Type:** Profile System & Intelligence Release

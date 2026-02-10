@@ -1,7 +1,7 @@
 {
   "name": "superlocalmemory-website",
   "type": "module",
-  "version": "2.3.0",
+  "version": "2.4.1",
   "description": "Official website for SuperLocalMemory V2 - The only free, local-first AI memory system",
   "author": "Varun Pratap Bhardwaj",
   "license": "MIT",
