@@ -43,6 +43,7 @@
     "superlocalmemory": "./bin/slm-npm"
   },
   "scripts": {
+    "prepack": "find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; find . -name '*.pyc' -delete 2>/dev/null; true",
     "postinstall": "node scripts/postinstall.js",
     "preuninstall": "node scripts/preuninstall.js",
     "test": "echo \"Run: npm install -g . && slm status\" && exit 0"
