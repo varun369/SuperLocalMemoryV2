@@ -186,9 +186,21 @@ superlocalmemoryv2:recall "auth bug"
   <section style="padding: 4rem 0; background: var(--color-bg-secondary);">
     <div class="container">
       <h2 class="text-center" style="margin-bottom: 3rem;">Universal Integration</h2>
-      <p class="text-center" style="max-width: 800px; margin: 0 auto 3rem;">
-        SuperLocalMemory V2 is the <strong>ONLY</strong> memory system that works across ALL your tools with <strong>MCP (Model Context Protocol)</strong> integration.
+      <p class="text-center" style="max-width: 800px; margin: 0 auto 2rem;">
+        SuperLocalMemory V2 is the <strong>ONLY</strong> memory system with dual-protocol support: <strong>MCP</strong> (agent-to-tool) and <strong>A2A</strong> (agent-to-agent).
       </p>
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 3rem;">
+        <div style="background: var(--color-bg-tertiary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1rem 1.5rem; text-align: center;">
+          <div style="font-weight: 700; color: var(--color-accent); font-size: 1.1rem;">MCP Protocol</div>
+          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">Agent → Tool (Anthropic)</div>
+          <div style="font-size: 0.75rem; margin-top: 0.25rem;">✅ Live now</div>
+        </div>
+        <div style="background: var(--color-bg-tertiary); border: 1px solid var(--color-accent); border-radius: var(--border-radius); padding: 1rem 1.5rem; text-align: center;">
+          <div style="font-weight: 700; color: var(--color-accent); font-size: 1.1rem;">A2A Protocol</div>
+          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">Agent ↔ Agent (Google/LF)</div>
+          <div style="font-size: 0.75rem; margin-top: 0.25rem;">🔜 Coming v2.5.0</div>
+        </div>
+      </div>
 
       <div style="overflow-x: auto;">
         <table>
@@ -301,6 +313,13 @@ superlocalmemoryv2:recall "auth bug"
               <td><span class="badge badge-success">✅ Native</span></td>
             </tr>
             <tr>
+              <td><strong>A2A Protocol</strong></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+              <td><span class="badge badge-success">🔜 v2.5.0</span></td>
+            </tr>
+            <tr>
               <td><strong>Pattern Learning</strong></td>
               <td>❌</td>
               <td>❌</td>
@@ -396,7 +415,7 @@ superlocalmemoryv2:recall "auth bug"
         Not another simple key-value store. SuperLocalMemory implements <strong>cutting-edge memory architecture</strong>.
       </p>
 
-      <div class="grid grid-2">
+      <div class="grid grid-3">
         <div class="card">
           <h3>📄 PageIndex (VectifyAI)</h3>
           <p>Hierarchical memory organization with tree structures and breadcrumbs for O(log n) lookups.</p>
@@ -416,10 +435,15 @@ superlocalmemoryv2:recall "auth bug"
           <h3>⚡ A-RAG</h3>
           <p>Multi-level retrieval with context awareness. Hybrid search combining semantic, FTS5, and graph.</p>
         </div>
+
+        <div class="card" style="border: 1px solid var(--color-accent);">
+          <h3>🤝 A2A Protocol (Google/LF)</h3>
+          <p>Agent-to-Agent collaboration. AI agents discover each other and share memory context in real-time. Coming v2.5.0.</p>
+        </div>
       </div>
 
       <p class="text-center" style="margin-top: 2rem; font-size: 1.1rem;">
-        <strong>The only open-source implementation combining all four approaches.</strong>
+        <strong>The only open-source memory system with both MCP + A2A protocol support.</strong>
       </p>
     </div>
   </section>

@@ -13,6 +13,16 @@
 
 ---
 
+## 🤝 Coming Soon: A2A Protocol Support (v2.5.0)
+
+> **SuperLocalMemory will be the first local-first memory system with both MCP + A2A protocol support.**
+>
+> **MCP** (Anthropic) connects AI tools to memory. **A2A** (Google/Linux Foundation) enables AI agents to collaborate through shared memory. When Cursor learns you switched to Tailwind, Claude Desktop knows instantly.
+>
+> [[Learn more → A2A Integration|A2A-Integration]] • [[Roadmap|Roadmap]]
+
+---
+
 ## 🎯 What is SuperLocalMemory?
 
 SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assistants like Claude, Cursor, and other mcp-server compatible tools remember everything about you and your projects. Created by **Varun Pratap Bhardwaj**, this local-first memory solution is the perfect alternative to Mem0 and Zep. Unlike cloud-based alternatives like Mem0 ($50+/mo) or Zep ($50/mo), SuperLocalMemory is:
@@ -21,6 +31,7 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 - **100% Free** — No usage limits, no credit systems, forever
 - **100% Private** — GDPR/HIPAA compliant by default
 - **Works Everywhere** — 16+ IDEs including Claude Desktop, Cursor IDE, Windsurf, VS Code, and more
+- **Dual Protocol** — MCP (agent→tool) + A2A (agent↔agent) support
 
 ---
 
@@ -36,7 +47,7 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 ### Core Concepts
 | Guide | Description |
 |-------|-------------|
-| [[Universal-Architecture]] | 7-layer universal architecture with MCP integration |
+| [[Universal-Architecture]] | 10-layer universal architecture with MCP + A2A integration |
 | [[MCP-Integration]] | Model Context Protocol support for 16+ IDEs |
 | [[Universal-Skills]] | 6 agent skills and slash-commands system |
 | [[Knowledge-Graph-Guide]] | Auto-discovery of relationships |
@@ -101,6 +112,7 @@ superlocalmemoryv2:recall "auth bug"
 | **IDE Support** | Limited | 1-2 | None | **✅ 16+ IDEs** |
 | **Universal Architecture** | ❌ | ❌ | ❌ | **✅ MCP + Skills + CLI** |
 | **MCP Integration** | ❌ | ❌ | ❌ | **✅ Native** |
+| **A2A Protocol** | ❌ | ❌ | ❌ | **🔜 v2.5.0** |
 | **Pattern Learning** | ❌ | ❌ | Partial | **✅ Full** |
 | **Knowledge Graphs** | ✅ | ✅ | ❌ | **✅ Leiden Clustering** |
 | **Zero Setup** | ❌ | ❌ | ❌ | **✅ 5-min install** |
