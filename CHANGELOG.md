@@ -16,6 +16,16 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.4.2] - 2026-02-11
+
+**Release Type:** Bug Fix Release
+**Backward Compatible:** Yes
+
+### Fixed
+- **Profile isolation bug in UI dashboard**: Graph nodes and connections were displaying global counts instead of profile-filtered counts. New/empty profiles incorrectly showed data from other profiles. Fixed by adding `JOIN memories` and `WHERE m.profile = ?` filter to graph stats queries in `ui_server.py` (`/api/stats` endpoint, lines 986-990).
+
+---
+
 ## [2.4.1] - 2026-02-11
 
 **Release Type:** Hierarchical Clustering & Documentation Release
