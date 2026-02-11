@@ -1,8 +1,8 @@
 # Universal Integration Guide
 
-**Version:** 2.3.0-universal
+**Version:** 2.4.1
 **Status:** Production Ready
-**Updated:** February 7, 2026
+**Updated:** February 11, 2026
 
 ---
 
@@ -483,6 +483,6 @@ python3 ~/.claude-memory/mcp_server.py --transport http --port 8001
 
 **Questions?** Open an issue: https://github.com/varun369/SuperLocalMemoryV2/issues
 
-**Version:** 2.3.0-universal
+**Version:** 2.4.1
 **Author:** Varun Pratap Bhardwaj
 **License:** MIT

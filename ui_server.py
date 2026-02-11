@@ -1756,7 +1756,7 @@ if __name__ == "__main__":
         print(f"\n  Port {args.port} in use — using {ui_port} instead\n")
 
     print("=" * 70)
-    print("  SuperLocalMemory V2.3.0 - FastAPI UI Server")
+    print("  SuperLocalMemory V2.4.1 - FastAPI UI Server")
     print("  Copyright (c) 2026 Varun Pratap Bhardwaj")
     print("=" * 70)
     print(f"  Database: {DB_PATH}")

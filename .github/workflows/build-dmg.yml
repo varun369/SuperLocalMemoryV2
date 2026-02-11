@@ -8,7 +8,7 @@ on:
       version:
         description: 'Version number (e.g., 2.1.0)'
         required: true
-        default: '2.3.0'
+        default: '2.4.1'
 
 jobs:
   build-dmg:

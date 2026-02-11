@@ -242,7 +242,7 @@ class MemoryStoreV2:
             'project_url': 'https://github.com/varun369/SuperLocalMemoryV2',
             'license': 'MIT',
             'attribution_required': 'yes',
-            'version': '2.3.0-universal',
+            'version': '2.4.1',
             'architecture_date': '2026-01-15',
             'release_date': '2026-02-07',
             'signature': 'VBPB-SLM-V2-2026-ARCHITECT',

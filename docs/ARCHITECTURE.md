@@ -46,7 +46,7 @@ Simple Storage → Intelligent Organization → Adaptive Learning
 
 ## Universal Integration
 
-**Version 2.3.0-universal** transforms SuperLocalMemory from Claude-Code-only to a universal memory system that works across 16+ IDEs and CLI tools with zero configuration.
+**Version 2.4.1** transforms SuperLocalMemory from Claude-Code-only to a universal memory system that works across 16+ IDEs and CLI tools with zero configuration.
 
 ### Three-Tier Access Architecture
 
@@ -204,7 +204,7 @@ slm graph build           # Knowledge graph
 
 ## 7-Layer Architecture
 
-SuperLocalMemory V2 uses a hierarchical, additive architecture where each layer builds on the previous without replacing it. Version 2.3.0-universal extended the original 4 core layers with 3 universal access layers.
+SuperLocalMemory V2 uses a hierarchical, additive architecture where each layer builds on the previous without replacing it. Version 2.3.0 introduced universal access across 16+ IDEs, and subsequent releases (through 2.4.1) added profiles, hierarchical clustering, and community summaries.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐

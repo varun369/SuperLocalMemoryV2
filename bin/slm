@@ -187,13 +187,13 @@ DOCUMENTATION:
   README: https://github.com/varun369/SuperLocalMemoryV2
   Docs: ~/.claude-memory/docs/
 
-VERSION: 2.3.0-universal
+VERSION: 2.4.1
 EOF
         ;;
 
     version|--version|-v)
         echo "SuperLocalMemory V2 - Universal CLI"
-        echo "Version: 2.3.0-universal"
+        echo "Version: 2.4.1"
         echo "Database: $SLM_DIR/memory.db"
         ;;
 
