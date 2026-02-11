@@ -16,6 +16,52 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.5.0] - 2026-02-12
+
+**Release Type:** Major Feature Release — "Your AI Memory Has a Heartbeat"
+**Backward Compatible:** Yes (additive tables, columns, and modules only)
+
+### The Big Picture
+SuperLocalMemory transforms from passive storage to **active coordination layer**. Every memory operation now triggers real-time events. Agents are tracked. Trust is scored. The dashboard is live.
+
+### Added
+- **DbConnectionManager** (`src/db_connection_manager.py`): SQLite WAL mode, 5s busy timeout, thread-local read pool, serialized write queue. Fixes "database is locked" errors when multiple agents write simultaneously
+- **Event Bus** (`src/event_bus.py`): Real-time event broadcasting — every memory write/update/delete fires events to SSE, WebSocket, and Webhook subscribers. Tiered retention (hot 48h, warm 14d, cold 30d)
+- **Subscription Manager** (`src/subscription_manager.py`): Durable + ephemeral event subscriptions with filters (event type, importance, protocol)
+- **Webhook Dispatcher** (`src/webhook_dispatcher.py`): Background HTTP POST delivery with exponential backoff retry (3 attempts)
+- **Agent Registry** (`src/agent_registry.py`): Tracks which AI agents connect — protocol, write/recall counters, last seen, metadata
+- **Provenance Tracker** (`src/provenance_tracker.py`): Tracks who created each memory — created_by, source_protocol, trust_score, provenance_chain
+- **Trust Scorer** (`src/trust_scorer.py`): Bayesian trust signal collection — positive (cross-agent recall, high importance), negative (quick delete, burst write). Silent collection in v2.5, enforcement in v2.6
+- **SSE endpoint** (`/events/stream`): Real-time Server-Sent Events with cross-process DB polling, Last-Event-ID replay, event type filtering
+- **Dashboard: Live Events tab**: Real-time event stream with color-coded types, filter dropdown, stats counters
+- **Dashboard: Agents tab**: Connected agents table with protocol badges, trust scores, write/recall counters, trust overview
+- **4 new database tables**: `memory_events`, `subscriptions`, `agent_registry`, `trust_signals`
+- **4 new columns on `memories`**: `created_by`, `source_protocol`, `trust_score`, `provenance_chain`
+- **28 API endpoints** across 8 modular route files
+- **Architecture document**: `docs/ARCHITECTURE-V2.5.md`
+
+### Changed
+- **`memory_store_v2.py`**: Replaced 15 direct `sqlite3.connect()` calls with `DbConnectionManager` (read pool + write queue). Added EventBus, Provenance, Trust integration. Fully backward compatible — falls back to direct SQLite if new modules unavailable
+- **`mcp_server.py`**: Replaced 9 per-call `MemoryStoreV2(DB_PATH)` instantiations with shared singleton. Added agent registration and provenance tracking for MCP calls
+- **`ui_server.py`**: Refactored from 2008-line monolith to 194-line app shell + 9 route modules in `routes/` directory using FastAPI APIRouter
+- **`ui/app.js`**: Split from 1588-line monolith to 13 modular files in `ui/js/` directory (largest: 230 lines)
+
+### Fixed
+- **"Database is locked" errors**: WAL mode + write serialization eliminates concurrent access failures
+- **Fresh database crashes**: `/api/stats`, `/api/graph`, `/api/clusters` now return graceful empty responses when `graph_nodes`/`graph_edges`/`sessions` tables don't exist yet
+- **Per-call overhead**: MCP tool handlers no longer rebuild TF-IDF vectorizer on every call
+
+### Testing
+- 63 pytest tests (unit, concurrency, regression, security, edge cases, Docker/new-user scenarios)
+- 27 end-to-end tests (all v2.5 components + 50 concurrent writes + reads during writes)
+- 15 fresh-database edge case tests
+- 17 backward compatibility tests against live v2.4.2 database
+- All CLI commands and skill scripts verified
+- Profile isolation verified across 2 profiles
+- Playwright dashboard testing (all 8 tabs, SSE stream, profile switching)
+
+---
+
 ## [2.4.2] - 2026-02-11
 
 **Release Type:** Bug Fix Release

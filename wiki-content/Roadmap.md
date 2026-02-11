@@ -6,7 +6,29 @@
 
 ## Version History
 
-### ✅ v2.4.1 (2026-02-11) - Current
+### ✅ v2.5.0 (2026-02-12) - Current
+
+**Major Release: "Your AI Memory Has a Heartbeat"**
+
+SuperLocalMemory transforms from passive storage to active coordination layer.
+
+**New Features:**
+- ✅ **DbConnectionManager** — SQLite WAL mode, 5s busy timeout, serialized write queue, thread-local read pool. Eliminates "database is locked" errors
+- ✅ **Event Bus** — Real-time event broadcasting (SSE, WebSocket, Webhook). Tiered retention (hot/warm/cold). Cross-process delivery via DB polling
+- ✅ **Agent Registry** — Tracks which AI tools connect, what they write, protocol detection, write/recall counters
+- ✅ **Trust Scorer** — Bayesian trust signal collection (silent in v2.5). Positive signals: cross-agent recall, high importance. Negative: quick delete, burst writes
+- ✅ **Provenance Tracker** — Who created each memory, via which protocol, trust score, derivation lineage
+- ✅ **Dashboard: Live Events tab** — Real-time event stream with color-coded types, filtering, stats
+- ✅ **Dashboard: Agents tab** — Connected agents table, trust overview, signal breakdown
+- ✅ **Modular codebase** — app.js split to 13 files, ui_server.py split to 9 route modules
+- ✅ **63 pytest tests** — Unit, concurrency, regression, security, edge cases, Docker/new-user
+- ✅ 4 new tables, 4 new columns on memories, 28 API endpoints, 7 new Python modules
+
+See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
+
+---
+
+### ✅ v2.4.1 (2026-02-11)
 
 **Patch Release: Hierarchical Clustering & Documentation**
 

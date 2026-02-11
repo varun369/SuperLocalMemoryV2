@@ -13,13 +13,24 @@
 
 ---
 
-## 🤝 Coming Soon: A2A Protocol Support (v2.5.0)
+## NEW: v2.5.0 — "Your AI Memory Has a Heartbeat"
 
-> **SuperLocalMemory will be the first local-first memory system with both MCP + A2A protocol support.**
+> **SuperLocalMemory is no longer passive storage — it's a real-time coordination layer.**
 >
-> **MCP** (Anthropic) connects AI tools to memory. **A2A** (Google/Linux Foundation) enables AI agents to collaborate through shared memory. When Cursor learns you switched to Tailwind, Claude Desktop knows instantly.
+> Every memory write triggers events. Agents are tracked. Trust is scored. The dashboard is live.
 >
-> [[Learn more → A2A Integration|A2A-Integration]] • [[Roadmap|Roadmap]]
+> | Feature | Benefit |
+> |---------|---------|
+> | **Real-Time Event Stream** | See memory operations live in the dashboard (SSE-powered) |
+> | **No More "Database Locked"** | WAL mode + write queue — 50 concurrent agents, zero errors |
+> | **Agent Tracking** | Know which AI tool wrote what — auto-registered on connect |
+> | **Trust Scoring** | Bayesian signals detect spam and cross-agent validation |
+> | **Memory Provenance** | Who created it, via which protocol, full lineage |
+> | **28 API Endpoints** | Modular FastAPI routes across 8 files |
+>
+> **Upgrade:** `npm install -g superlocalmemory@latest`
+>
+> [[Architecture V2.5|Architecture-V2.5]] | [[Roadmap|Roadmap]] | [Full Changelog](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md)
 
 ---
 

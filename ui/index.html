@@ -455,6 +455,16 @@
                 </button>
             </li>
             <li class="nav-item">
+                <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events-pane">
+                    <i class="bi bi-broadcast"></i> Live Events
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="agents-tab" data-bs-toggle="tab" data-bs-target="#agents-pane">
+                    <i class="bi bi-robot"></i> Agents
+                </button>
+            </li>
+            <li class="nav-item">
                 <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings-pane">
                     <i class="bi bi-gear"></i> Settings
                 </button>
@@ -572,6 +582,129 @@
                         <div class="loading">
                             <div class="spinner-border text-primary" role="status"></div>
                             <div>Loading timeline...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Events (v2.5) -->
+            <div class="tab-pane fade" id="events-pane">
+                <div class="card p-3 mb-3">
+                    <div class="row align-items-center mb-3">
+                        <div class="col-md-6">
+                            <h5 class="mb-0"><i class="bi bi-broadcast"></i> Live Event Stream</h5>
+                            <small class="text-muted">Real-time memory operations as they happen</small>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <span id="event-connection-status" class="badge bg-secondary me-2">Connecting...</span>
+                            <select class="form-select form-select-sm d-inline-block w-auto" id="event-type-filter" onchange="filterEvents()">
+                                <option value="">All Events</option>
+                                <option value="memory.created">Memory Created</option>
+                                <option value="memory.updated">Memory Updated</option>
+                                <option value="memory.deleted">Memory Deleted</option>
+                                <option value="memory.recalled">Memory Recalled</option>
+                                <option value="agent.connected">Agent Connected</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-secondary ms-1" onclick="clearEventStream()">
+                                <i class="bi bi-trash"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Event Stats Row -->
+                    <div class="row g-2 mb-3" id="event-stats-row">
+                        <div class="col-md-3">
+                            <div class="border rounded p-2 text-center">
+                                <div class="fw-bold" id="event-stat-total">0</div>
+                                <small class="text-muted">Total Events</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-2 text-center">
+                                <div class="fw-bold" id="event-stat-24h">0</div>
+                                <small class="text-muted">Last 24h</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-2 text-center">
+                                <div class="fw-bold" id="event-stat-listeners">0</div>
+                                <small class="text-muted">Listeners</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-2 text-center">
+                                <div class="fw-bold" id="event-stat-buffer">0</div>
+                                <small class="text-muted">In Buffer</small>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Event Stream -->
+                    <div id="event-stream" style="max-height: 500px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.85rem; background: var(--bs-body-bg); border: 1px solid var(--bs-border-color); border-radius: 8px; padding: 12px;">
+                        <div class="text-muted text-center py-4">
+                            <i class="bi bi-broadcast" style="font-size: 2rem;"></i>
+                            <p class="mt-2">Waiting for events...</p>
+                            <small>Events will appear here in real-time as memories are created, updated, or deleted.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connected Agents (v2.5) -->
+            <div class="tab-pane fade" id="agents-pane">
+                <div class="card p-3 mb-3">
+                    <div class="row align-items-center mb-3">
+                        <div class="col-md-6">
+                            <h5 class="mb-0"><i class="bi bi-robot"></i> Connected Agents</h5>
+                            <small class="text-muted">AI tools that interact with your memory</small>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button class="btn btn-sm btn-outline-primary" onclick="loadAgents()">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Agent Stats -->
+                    <div class="row g-2 mb-3" id="agent-stats-row">
+                        <div class="col-md-3">
+                            <div class="border rounded p-2 text-center">
+                                <div class="fw-bold" id="agent-stat-total">0</div>
+                                <small class="text-muted">Total Agents</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-2 text-center">
+                                <div class="fw-bold" id="agent-stat-active">0</div>
+                                <small class="text-muted">Active (24h)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-2 text-center">
+                                <div class="fw-bold" id="agent-stat-writes">0</div>
+                                <small class="text-muted">Total Writes</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-2 text-center">
+                                <div class="fw-bold" id="agent-stat-recalls">0</div>
+                                <small class="text-muted">Total Recalls</small>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Agent List -->
+                    <div id="agents-list" class="table-responsive">
+                        <div class="loading">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <div>Loading agents...</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Trust Overview -->
+                <div class="card p-3">
+                    <h5 class="mb-3"><i class="bi bi-shield-check"></i> Trust Scoring <span class="badge bg-info">Silent Collection</span></h5>
+                    <p class="text-muted small mb-3">Trust scores are being collected silently. No enforcement in v2.5 — scores will affect recall ranking in v2.6.</p>
+                    <div id="trust-overview">
+                        <div class="loading">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <div>Loading trust data...</div>
                         </div>
                     </div>
                 </div>
@@ -696,7 +829,20 @@
     <!-- D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
 
-    <script src="static/app.js"></script>
+    <!-- Modular JS (v2.5 — split from monolith app.js) -->
+    <script src="static/js/core.js"></script>
+    <script src="static/js/graph.js"></script>
+    <script src="static/js/memories.js"></script>
+    <script src="static/js/search.js"></script>
+    <script src="static/js/modal.js"></script>
+    <script src="static/js/clusters.js"></script>
+    <script src="static/js/patterns.js"></script>
+    <script src="static/js/timeline.js"></script>
+    <script src="static/js/profiles.js"></script>
+    <script src="static/js/settings.js"></script>
+    <script src="static/js/events.js"></script>
+    <script src="static/js/agents.js"></script>
+    <script src="static/js/init.js"></script>
 
     <footer>
         <p>SuperLocalMemory V2 by <a href="https://github.com/varun369">Varun Pratap Bhardwaj</a></p>

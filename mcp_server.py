@@ -46,6 +46,14 @@ except ImportError as e:
     print(f"Ensure SuperLocalMemory V2 is installed at {MEMORY_DIR}", file=sys.stderr)
     sys.exit(1)
 
+# Agent Registry + Provenance (v2.5+)
+try:
+    from agent_registry import AgentRegistry
+    from provenance_tracker import ProvenanceTracker
+    PROVENANCE_AVAILABLE = True
+except ImportError:
+    PROVENANCE_AVAILABLE = False
+
 # Parse command line arguments early (needed for port in constructor)
 import argparse as _argparse
 _parser = _argparse.ArgumentParser(add_help=False)
@@ -62,6 +70,80 @@ mcp = FastMCP(
 
 # Database path
 DB_PATH = MEMORY_DIR / "memory.db"
+
+# ============================================================================
+# Shared singleton instances (v2.5 — fixes per-call instantiation overhead)
+# All MCP tool handlers share one MemoryStoreV2 instance instead of creating
+# a new one per call. This means one ConnectionManager, one TF-IDF vectorizer,
+# one write queue — shared across all concurrent MCP requests.
+# ============================================================================
+
+_store = None
+_graph_engine = None
+_pattern_learner = None
+
+
+def get_store() -> MemoryStoreV2:
+    """Get or create the shared MemoryStoreV2 singleton."""
+    global _store
+    if _store is None:
+        _store = MemoryStoreV2(DB_PATH)
+    return _store
+
+
+def get_graph_engine() -> GraphEngine:
+    """Get or create the shared GraphEngine singleton."""
+    global _graph_engine
+    if _graph_engine is None:
+        _graph_engine = GraphEngine(DB_PATH)
+    return _graph_engine
+
+
+def get_pattern_learner() -> PatternLearner:
+    """Get or create the shared PatternLearner singleton."""
+    global _pattern_learner
+    if _pattern_learner is None:
+        _pattern_learner = PatternLearner(DB_PATH)
+    return _pattern_learner
+
+
+_agent_registry = None
+_provenance_tracker = None
+
+
+def get_agent_registry():
+    """Get shared AgentRegistry singleton (v2.5+). Returns None if unavailable."""
+    global _agent_registry
+    if not PROVENANCE_AVAILABLE:
+        return None
+    if _agent_registry is None:
+        _agent_registry = AgentRegistry.get_instance(DB_PATH)
+    return _agent_registry
+
+
+def get_provenance_tracker():
+    """Get shared ProvenanceTracker singleton (v2.5+). Returns None if unavailable."""
+    global _provenance_tracker
+    if not PROVENANCE_AVAILABLE:
+        return None
+    if _provenance_tracker is None:
+        _provenance_tracker = ProvenanceTracker.get_instance(DB_PATH)
+    return _provenance_tracker
+
+
+def _register_mcp_agent(agent_name: str = "mcp-client"):
+    """Register the calling MCP agent and record activity. Non-blocking."""
+    registry = get_agent_registry()
+    if registry:
+        try:
+            registry.register_agent(
+                agent_id=f"mcp:{agent_name}",
+                agent_name=agent_name,
+                protocol="mcp",
+            )
+        except Exception:
+            pass
+
 
 # ============================================================================
 # MCP TOOLS (Functions callable by AI)
@@ -103,8 +185,11 @@ async def remember(
         remember("JWT auth with refresh tokens", tags="security,auth", importance=8)
     """
     try:
+        # Register MCP agent (v2.5 — agent tracking)
+        _register_mcp_agent()
+
         # Use existing MemoryStoreV2 class (no duplicate logic)
-        store = MemoryStoreV2(DB_PATH)
+        store = get_store()
 
         # Call existing add_memory method
         memory_id = store.add_memory(
@@ -113,6 +198,22 @@ async def remember(
             project_name=project or None,
             importance=importance
         )
+
+        # Record provenance (v2.5 — who created this memory)
+        prov = get_provenance_tracker()
+        if prov:
+            try:
+                prov.record_provenance(memory_id, created_by="mcp:client", source_protocol="mcp")
+            except Exception:
+                pass
+
+        # Track write in agent registry
+        registry = get_agent_registry()
+        if registry:
+            try:
+                registry.record_write("mcp:mcp-client")
+            except Exception:
+                pass
 
         # Format response
         preview = content[:100] + "..." if len(content) > 100 else content
@@ -174,7 +275,7 @@ async def recall(
     """
     try:
         # Use existing MemoryStoreV2 class
-        store = MemoryStoreV2(DB_PATH)
+        store = get_store()
 
         # Call existing search method
         results = store.search(query, limit=limit)
@@ -223,7 +324,7 @@ async def list_recent(limit: int = 10) -> dict:
     """
     try:
         # Use existing MemoryStoreV2 class
-        store = MemoryStoreV2(DB_PATH)
+        store = get_store()
 
         # Call existing list_all method
         memories = store.list_all(limit=limit)
@@ -263,7 +364,7 @@ async def get_status() -> dict:
     """
     try:
         # Use existing MemoryStoreV2 class
-        store = MemoryStoreV2(DB_PATH)
+        store = get_store()
 
         # Call existing get_stats method
         stats = store.get_stats()
@@ -303,7 +404,7 @@ async def build_graph() -> dict:
     """
     try:
         # Use existing GraphEngine class
-        engine = GraphEngine(DB_PATH)
+        engine = get_graph_engine()
 
         # Call existing build_graph method
         stats = engine.build_graph()
@@ -461,7 +562,7 @@ async def search(query: str) -> dict:
         {"results": [{"id": str, "title": str, "text": str, "url": str}]}
     """
     try:
-        store = MemoryStoreV2(DB_PATH)
+        store = get_store()
         raw_results = store.search(query, limit=20)
 
         results = []
@@ -504,7 +605,7 @@ async def fetch(id: str) -> dict:
         {"id": str, "title": str, "text": str, "url": str, "metadata": dict|null}
     """
     try:
-        store = MemoryStoreV2(DB_PATH)
+        store = get_store()
         mem = store.get_by_id(int(id))
 
         if not mem:
@@ -549,7 +650,7 @@ async def get_recent_memories_resource(limit: str) -> str:
     Usage: memory://recent/10
     """
     try:
-        store = MemoryStoreV2(DB_PATH)
+        store = get_store()
         memories = store.list_all(limit=int(limit))
         return json.dumps(memories, indent=2)
     except Exception as e:
@@ -564,7 +665,7 @@ async def get_stats_resource() -> str:
     Usage: memory://stats
     """
     try:
-        store = MemoryStoreV2(DB_PATH)
+        store = get_store()
         stats = store.get_stats()
         return json.dumps(stats, indent=2)
     except Exception as e:
@@ -579,7 +680,7 @@ async def get_clusters_resource() -> str:
     Usage: memory://graph/clusters
     """
     try:
-        engine = GraphEngine(DB_PATH)
+        engine = get_graph_engine()
         stats = engine.get_stats()
         clusters = stats.get('clusters', [])
         return json.dumps(clusters, indent=2)
@@ -595,7 +696,7 @@ async def get_coding_identity_resource() -> str:
     Usage: memory://patterns/identity
     """
     try:
-        learner = PatternLearner(DB_PATH)
+        learner = get_pattern_learner()
         patterns = learner.get_identity_context(min_confidence=0.5)
         return json.dumps(patterns, indent=2)
     except Exception as e:
@@ -615,7 +716,7 @@ async def coding_identity_prompt() -> str:
     based on learned preferences and patterns.
     """
     try:
-        learner = PatternLearner(DB_PATH)
+        learner = get_pattern_learner()
         patterns = learner.get_identity_context(min_confidence=0.6)
 
         if not patterns:
@@ -656,7 +757,7 @@ async def project_context_prompt(project_name: str) -> str:
         Formatted prompt with relevant project memories
     """
     try:
-        store = MemoryStoreV2(DB_PATH)
+        store = get_store()
 
         # Search for project-related memories
         memories = store.search(f"project:{project_name}", limit=20)
@@ -711,7 +812,7 @@ if __name__ == "__main__":
     # Print startup message to stderr (stdout is used for MCP protocol)
     print("=" * 60, file=sys.stderr)
     print("SuperLocalMemory V2 - MCP Server", file=sys.stderr)
-    print("Version: 2.4.1", file=sys.stderr)
+    print("Version: 2.5.0", file=sys.stderr)
     print("=" * 60, file=sys.stderr)
     print("Created by: Varun Pratap Bhardwaj (Solution Architect)", file=sys.stderr)
     print("Repository: https://github.com/varun369/SuperLocalMemoryV2", file=sys.stderr)

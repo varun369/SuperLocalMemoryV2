@@ -6,6 +6,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   title="SuperLocalMemory V2 - Your AI Finally Remembers You"
   description="The only free, local-first AI memory system with universal architecture. Works with ChatGPT, Claude, Cursor, Windsurf, VS Code, Codex, Gemini CLI, JetBrains, and 17+ AI tools. 100% local, 100% private, 100% free forever."
 >
+  <!-- v2.5 Announcement Banner -->
+  <section style="padding: 1rem 0; background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); text-align: center;">
+    <div class="container">
+      <p style="color: white; margin: 0; font-size: 1.1rem; font-weight: 600;">
+        NEW: v2.5 — "Your AI Memory Has a Heartbeat" — Real-time events, agent tracking, trust scoring, zero database locks.
+        <a href="https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md" target="_blank" rel="noopener" style="color: #fde68a; margin-left: 0.5rem;">See what's new</a>
+      </p>
+    </div>
+  </section>
+
   <!-- Hero Section -->
   <section style="padding: 4rem 0; text-align: center; background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-tertiary) 100%);">
     <div class="container">
@@ -139,6 +149,41 @@ superlocalmemoryv2:recall "auth bug"
         <p style="text-align: center; margin-top: 2rem; font-size: 1.25rem; font-weight: 600;">
           Your AI now remembers everything. Forever. Locally. For free.
         </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- v2.5 Feature Highlights -->
+  <section style="padding: 3rem 0; background: var(--color-bg-secondary);">
+    <div class="container">
+      <h2 class="text-center" style="margin-bottom: 0.5rem;">v2.5 — Your AI Memory Has a Heartbeat</h2>
+      <p class="text-center" style="margin-bottom: 2rem; color: var(--color-text-secondary);">From passive storage to active coordination layer</p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+        <div class="card">
+          <h3>Real-Time Event Stream</h3>
+          <p>Every memory operation fires a live event to the dashboard via SSE. No refresh needed. Cross-process — CLI, MCP, REST all visible in one stream.</p>
+        </div>
+        <div class="card">
+          <h3>Zero Database Locks</h3>
+          <p>WAL mode + serialized write queue. 50 agents writing simultaneously? Zero "database locked" errors. Reads never block during writes.</p>
+        </div>
+        <div class="card">
+          <h3>Agent Tracking</h3>
+          <p>Know exactly which AI tool wrote what. Claude, Cursor, Windsurf, Perplexity — all auto-registered with protocol, write counts, and last-seen timestamps.</p>
+        </div>
+        <div class="card">
+          <h3>Trust Scoring</h3>
+          <p>Bayesian trust signals detect quality. Cross-agent validation boosts trust. Spam and quick-deletes lower it. Silent collection now — enforcement in v2.6.</p>
+        </div>
+        <div class="card">
+          <h3>Memory Provenance</h3>
+          <p>Every memory records its creator, protocol, trust score, and derivation lineage. Full audit trail for enterprise compliance.</p>
+        </div>
+        <div class="card">
+          <h3>Production-Grade Code</h3>
+          <p>28 API endpoints across 8 modular routes. 13 modular JS files. 63 pytest tests covering concurrency, security, edge cases.</p>
+        </div>
       </div>
     </div>
   </section>

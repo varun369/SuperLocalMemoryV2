@@ -26,6 +26,36 @@ import hashlib
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
+from contextlib import contextmanager
+
+# Connection Manager (v2.5+) — fixes "database is locked" with multiple agents
+try:
+    from db_connection_manager import DbConnectionManager
+    USE_CONNECTION_MANAGER = True
+except ImportError:
+    USE_CONNECTION_MANAGER = False
+
+# Event Bus (v2.5+) — real-time event broadcasting
+try:
+    from event_bus import EventBus
+    USE_EVENT_BUS = True
+except ImportError:
+    USE_EVENT_BUS = False
+
+# Agent Registry + Provenance (v2.5+) — tracks who writes what
+try:
+    from agent_registry import AgentRegistry
+    from provenance_tracker import ProvenanceTracker
+    USE_PROVENANCE = True
+except ImportError:
+    USE_PROVENANCE = False
+
+# Trust Scorer (v2.5+) — silent signal collection, no enforcement
+try:
+    from trust_scorer import TrustScorer
+    USE_TRUST = True
+except ImportError:
+    USE_TRUST = False
 
 # TF-IDF for local semantic search (no external APIs)
 try:
@@ -64,11 +94,115 @@ class MemoryStoreV2:
         self.db_path = db_path or DB_PATH
         self.vectors_path = VECTORS_PATH
         self._profile_override = profile
+
+        # Connection Manager (v2.5+) — thread-safe WAL + write queue
+        # Falls back to direct sqlite3.connect() if unavailable
+        self._db_mgr = None
+        if USE_CONNECTION_MANAGER:
+            try:
+                self._db_mgr = DbConnectionManager.get_instance(self.db_path)
+            except Exception:
+                pass  # Fall back to direct connections
+
+        # Event Bus (v2.5+) — real-time event broadcasting
+        # If unavailable, events simply don't fire (core ops unaffected)
+        self._event_bus = None
+        if USE_EVENT_BUS:
+            try:
+                self._event_bus = EventBus.get_instance(self.db_path)
+            except Exception:
+                pass
+
         self._init_db()
+
+        # Agent Registry + Provenance (v2.5+)
+        # MUST run AFTER _init_db() — ProvenanceTracker ALTER TABLEs the memories table
+        self._agent_registry = None
+        self._provenance_tracker = None
+        if USE_PROVENANCE:
+            try:
+                self._agent_registry = AgentRegistry.get_instance(self.db_path)
+                self._provenance_tracker = ProvenanceTracker.get_instance(self.db_path)
+            except Exception:
+                pass
+
+        # Trust Scorer (v2.5+) — silent signal collection
+        self._trust_scorer = None
+        if USE_TRUST:
+            try:
+                self._trust_scorer = TrustScorer.get_instance(self.db_path)
+            except Exception:
+                pass
+
         self.vectorizer = None
         self.vectors = None
         self.memory_ids = []
         self._load_vectors()
+
+    # =========================================================================
+    # Connection helpers — abstract ConnectionManager vs direct sqlite3
+    # =========================================================================
+
+    @contextmanager
+    def _read_connection(self):
+        """
+        Context manager for read operations.
+        Uses ConnectionManager pool if available, else direct sqlite3.connect().
+        """
+        if self._db_mgr:
+            with self._db_mgr.read_connection() as conn:
+                yield conn
+        else:
+            conn = sqlite3.connect(self.db_path)
+            try:
+                yield conn
+            finally:
+                conn.close()
+
+    def _execute_write(self, callback):
+        """
+        Execute a write operation (INSERT/UPDATE/DELETE).
+        Uses ConnectionManager write queue if available, else direct sqlite3.connect().
+
+        Args:
+            callback: Function(conn) that performs writes and calls conn.commit()
+
+        Returns:
+            Whatever the callback returns
+        """
+        if self._db_mgr:
+            return self._db_mgr.execute_write(callback)
+        else:
+            conn = sqlite3.connect(self.db_path)
+            try:
+                result = callback(conn)
+                return result
+            finally:
+                conn.close()
+
+    def _emit_event(self, event_type: str, memory_id: Optional[int] = None, **kwargs):
+        """
+        Emit an event to the Event Bus (v2.5+).
+
+        Progressive enhancement: if Event Bus is unavailable, this is a no-op.
+        Event emission failure must NEVER break core memory operations.
+
+        Args:
+            event_type: Event type (e.g., "memory.created")
+            memory_id: Associated memory ID (if applicable)
+            **kwargs: Additional payload fields
+        """
+        if not self._event_bus:
+            return
+        try:
+            self._event_bus.emit(
+                event_type=event_type,
+                memory_id=memory_id,
+                payload=kwargs,
+                importance=kwargs.get("importance", 5),
+            )
+        except Exception:
+            pass  # Event bus failure must never break core operations
 
     def _get_active_profile(self) -> str:
         """
@@ -90,173 +224,174 @@ class MemoryStoreV2:
 
     def _init_db(self):
         """Initialize SQLite database with V2 schema extensions."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+        def _do_init(conn):
+            cursor = conn.cursor()
 
-        # Check if we need to add V2 columns to existing table
-        cursor.execute("PRAGMA table_info(memories)")
-        existing_columns = {row[1] for row in cursor.fetchall()}
+            # Check if we need to add V2 columns to existing table
+            cursor.execute("PRAGMA table_info(memories)")
+            existing_columns = {row[1] for row in cursor.fetchall()}
 
-        # Main memories table (V1 compatible + V2 extensions)
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS memories (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                content TEXT NOT NULL,
-                summary TEXT,
+            # Main memories table (V1 compatible + V2 extensions)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS memories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    content TEXT NOT NULL,
+                    summary TEXT,
 
-                -- Organization
-                project_path TEXT,
-                project_name TEXT,
-                tags TEXT,
-                category TEXT,
+                    -- Organization
+                    project_path TEXT,
+                    project_name TEXT,
+                    tags TEXT,
+                    category TEXT,
 
-                -- Hierarchy (Layer 2 link)
-                parent_id INTEGER,
-                tree_path TEXT,
-                depth INTEGER DEFAULT 0,
+                    -- Hierarchy (Layer 2 link)
+                    parent_id INTEGER,
+                    tree_path TEXT,
+                    depth INTEGER DEFAULT 0,
 
-                -- Metadata
-                memory_type TEXT DEFAULT 'session',
-                importance INTEGER DEFAULT 5,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_accessed TIMESTAMP,
-                access_count INTEGER DEFAULT 0,
+                    -- Metadata
+                    memory_type TEXT DEFAULT 'session',
+                    importance INTEGER DEFAULT 5,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_accessed TIMESTAMP,
+                    access_count INTEGER DEFAULT 0,
 
-                -- Deduplication
-                content_hash TEXT UNIQUE,
+                    -- Deduplication
+                    content_hash TEXT UNIQUE,
 
-                -- Graph (Layer 3 link)
-                cluster_id INTEGER,
+                    -- Graph (Layer 3 link)
+                    cluster_id INTEGER,
 
-                FOREIGN KEY (parent_id) REFERENCES memories(id) ON DELETE CASCADE
-            )
-        ''')
+                    FOREIGN KEY (parent_id) REFERENCES memories(id) ON DELETE CASCADE
+                )
+            ''')
 
-        # Add missing V2 columns to existing table (migration support)
-        # This handles upgrades from very old databases that might be missing columns
-        v2_columns = {
-            'summary': 'TEXT',
-            'project_path': 'TEXT',
-            'project_name': 'TEXT',
-            'category': 'TEXT',
-            'parent_id': 'INTEGER',
-            'tree_path': 'TEXT',
-            'depth': 'INTEGER DEFAULT 0',
-            'memory_type': 'TEXT DEFAULT "session"',
-            'importance': 'INTEGER DEFAULT 5',
-            'updated_at': 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP',
-            'last_accessed': 'TIMESTAMP',
-            'access_count': 'INTEGER DEFAULT 0',
-            'content_hash': 'TEXT',
-            'cluster_id': 'INTEGER',
-            'profile': 'TEXT DEFAULT "default"'
-        }
+            # Add missing V2 columns to existing table (migration support)
+            # This handles upgrades from very old databases that might be missing columns
+            v2_columns = {
+                'summary': 'TEXT',
+                'project_path': 'TEXT',
+                'project_name': 'TEXT',
+                'category': 'TEXT',
+                'parent_id': 'INTEGER',
+                'tree_path': 'TEXT',
+                'depth': 'INTEGER DEFAULT 0',
+                'memory_type': 'TEXT DEFAULT "session"',
+                'importance': 'INTEGER DEFAULT 5',
+                'updated_at': 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP',
+                'last_accessed': 'TIMESTAMP',
+                'access_count': 'INTEGER DEFAULT 0',
+                'content_hash': 'TEXT',
+                'cluster_id': 'INTEGER',
+                'profile': 'TEXT DEFAULT "default"'
+            }
 
-        for col_name, col_type in v2_columns.items():
-            if col_name not in existing_columns:
+            for col_name, col_type in v2_columns.items():
+                if col_name not in existing_columns:
+                    try:
+                        cursor.execute(f'ALTER TABLE memories ADD COLUMN {col_name} {col_type}')
+                    except sqlite3.OperationalError:
+                        # Column might already exist from concurrent migration
+                        pass
+
+            # Sessions table (V1 compatible)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    session_id TEXT UNIQUE,
+                    project_path TEXT,
+                    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    ended_at TIMESTAMP,
+                    summary TEXT
+                )
+            ''')
+
+            # Full-text search index (V1 compatible)
+            cursor.execute('''
+                CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts
+                USING fts5(content, summary, tags, content='memories', content_rowid='id')
+            ''')
+
+            # FTS Triggers (V1 compatible)
+            cursor.execute('''
+                CREATE TRIGGER IF NOT EXISTS memories_ai AFTER INSERT ON memories BEGIN
+                    INSERT INTO memories_fts(rowid, content, summary, tags)
+                    VALUES (new.id, new.content, new.summary, new.tags);
+                END
+            ''')
+
+            cursor.execute('''
+                CREATE TRIGGER IF NOT EXISTS memories_ad AFTER DELETE ON memories BEGIN
+                    INSERT INTO memories_fts(memories_fts, rowid, content, summary, tags)
+                    VALUES('delete', old.id, old.content, old.summary, old.tags);
+                END
+            ''')
+
+            cursor.execute('''
+                CREATE TRIGGER IF NOT EXISTS memories_au AFTER UPDATE ON memories BEGIN
+                    INSERT INTO memories_fts(memories_fts, rowid, content, summary, tags)
+                    VALUES('delete', old.id, old.content, old.summary, old.tags);
+                    INSERT INTO memories_fts(rowid, content, summary, tags)
+                    VALUES (new.id, new.content, new.summary, new.tags);
+                END
+            ''')
+
+            # Create indexes for V2 fields (safe for old databases without V2 columns)
+            v2_indexes = [
+                ('idx_project', 'project_path'),
+                ('idx_tags', 'tags'),
+                ('idx_category', 'category'),
+                ('idx_tree_path', 'tree_path'),
+                ('idx_cluster', 'cluster_id'),
+                ('idx_last_accessed', 'last_accessed'),
+                ('idx_parent_id', 'parent_id'),
+                ('idx_profile', 'profile')
+            ]
+
+            for idx_name, col_name in v2_indexes:
                 try:
-                    cursor.execute(f'ALTER TABLE memories ADD COLUMN {col_name} {col_type}')
+                    cursor.execute(f'CREATE INDEX IF NOT EXISTS {idx_name} ON memories({col_name})')
                 except sqlite3.OperationalError:
-                    # Column might already exist from concurrent migration
+                    # Column doesn't exist yet (old database) - skip index creation
+                    # Index will be created automatically on next schema upgrade
                     pass
 
-        # Sessions table (V1 compatible)
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS sessions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                session_id TEXT UNIQUE,
-                project_path TEXT,
-                started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                ended_at TIMESTAMP,
-                summary TEXT
-            )
-        ''')
-
-        # Full-text search index (V1 compatible)
-        cursor.execute('''
-            CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts
-            USING fts5(content, summary, tags, content='memories', content_rowid='id')
-        ''')
-
-        # FTS Triggers (V1 compatible)
-        cursor.execute('''
-            CREATE TRIGGER IF NOT EXISTS memories_ai AFTER INSERT ON memories BEGIN
-                INSERT INTO memories_fts(rowid, content, summary, tags)
-                VALUES (new.id, new.content, new.summary, new.tags);
-            END
-        ''')
-
-        cursor.execute('''
-            CREATE TRIGGER IF NOT EXISTS memories_ad AFTER DELETE ON memories BEGIN
-                INSERT INTO memories_fts(memories_fts, rowid, content, summary, tags)
-                VALUES('delete', old.id, old.content, old.summary, old.tags);
-            END
-        ''')
-
-        cursor.execute('''
-            CREATE TRIGGER IF NOT EXISTS memories_au AFTER UPDATE ON memories BEGIN
-                INSERT INTO memories_fts(memories_fts, rowid, content, summary, tags)
-                VALUES('delete', old.id, old.content, old.summary, old.tags);
-                INSERT INTO memories_fts(rowid, content, summary, tags)
-                VALUES (new.id, new.content, new.summary, new.tags);
-            END
-        ''')
-
-        # Create indexes for V2 fields (safe for old databases without V2 columns)
-        v2_indexes = [
-            ('idx_project', 'project_path'),
-            ('idx_tags', 'tags'),
-            ('idx_category', 'category'),
-            ('idx_tree_path', 'tree_path'),
-            ('idx_cluster', 'cluster_id'),
-            ('idx_last_accessed', 'last_accessed'),
-            ('idx_parent_id', 'parent_id'),
-            ('idx_profile', 'profile')
-        ]
-
-        for idx_name, col_name in v2_indexes:
-            try:
-                cursor.execute(f'CREATE INDEX IF NOT EXISTS {idx_name} ON memories({col_name})')
-            except sqlite3.OperationalError:
-                # Column doesn't exist yet (old database) - skip index creation
-                # Index will be created automatically on next schema upgrade
-                pass
-
-        # Creator Attribution Metadata Table (REQUIRED by MIT License)
-        # This table embeds creator information directly in the database
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS creator_metadata (
-                key TEXT PRIMARY KEY,
-                value TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-
-        # Insert creator attribution (embedded in database body)
-        creator_data = {
-            'creator_name': 'Varun Pratap Bhardwaj',
-            'creator_role': 'Solution Architect & Original Creator',
-            'creator_github': 'varun369',
-            'project_name': 'SuperLocalMemory V2',
-            'project_url': 'https://github.com/varun369/SuperLocalMemoryV2',
-            'license': 'MIT',
-            'attribution_required': 'yes',
-            'version': '2.4.1',
-            'architecture_date': '2026-01-15',
-            'release_date': '2026-02-07',
-            'signature': 'VBPB-SLM-V2-2026-ARCHITECT',
-            'verification_hash': 'sha256:c9f3d1a8b5e2f4c6d8a9b3e7f1c4d6a8b9c3e7f2d5a8c1b4e6f9d2a7c5b8e1'
-        }
-
-        for key, value in creator_data.items():
+            # Creator Attribution Metadata Table (REQUIRED by MIT License)
+            # This table embeds creator information directly in the database
             cursor.execute('''
-                INSERT OR IGNORE INTO creator_metadata (key, value)
-                VALUES (?, ?)
-            ''', (key, value))
+                CREATE TABLE IF NOT EXISTS creator_metadata (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
 
-        conn.commit()
-        conn.close()
+            # Insert creator attribution (embedded in database body)
+            creator_data = {
+                'creator_name': 'Varun Pratap Bhardwaj',
+                'creator_role': 'Solution Architect & Original Creator',
+                'creator_github': 'varun369',
+                'project_name': 'SuperLocalMemory V2',
+                'project_url': 'https://github.com/varun369/SuperLocalMemoryV2',
+                'license': 'MIT',
+                'attribution_required': 'yes',
+                'version': '2.5.0',
+                'architecture_date': '2026-01-15',
+                'release_date': '2026-02-07',
+                'signature': 'VBPB-SLM-V2-2026-ARCHITECT',
+                'verification_hash': 'sha256:c9f3d1a8b5e2f4c6d8a9b3e7f1c4d6a8b9c3e7f2d5a8c1b4e6f9d2a7c5b8e1'
+            }
+
+            for key, value in creator_data.items():
+                cursor.execute('''
+                    INSERT OR IGNORE INTO creator_metadata (key, value)
+                    VALUES (?, ?)
+                ''', (key, value))
+
+            conn.commit()
+
+        self._execute_write(_do_init)
 
     def _content_hash(self, content: str) -> str:
         """Generate hash for deduplication."""
@@ -327,70 +462,90 @@ class MemoryStoreV2:
         content_hash = self._content_hash(content)
         active_profile = self._get_active_profile()
 
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+        def _do_add(conn):
+            cursor = conn.cursor()
 
-        try:
-            # Calculate tree_path and depth
-            tree_path, depth = self._calculate_tree_position(cursor, parent_id)
-
-            cursor.execute('''
-                INSERT INTO memories (
-                    content, summary, project_path, project_name, tags, category,
-                    parent_id, tree_path, depth,
-                    memory_type, importance, content_hash,
-                    last_accessed, access_count, profile
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                content,
-                summary,
-                project_path,
-                project_name,
-                json.dumps(tags) if tags else None,
-                category,
-                parent_id,
-                tree_path,
-                depth,
-                memory_type,
-                importance,
-                content_hash,
-                datetime.now().isoformat(),
-                0,
-                active_profile
-            ))
-            memory_id = cursor.lastrowid
-
-            # Update tree_path with actual memory_id
-            if tree_path:
-                tree_path = f"{tree_path}.{memory_id}"
-            else:
-                tree_path = str(memory_id)
-
-            cursor.execute('UPDATE memories SET tree_path = ? WHERE id = ?', (tree_path, memory_id))
-
-            conn.commit()
-
-            # Rebuild vectors after adding
-            self._rebuild_vectors()
-
-            # Auto-backup check (non-blocking)
             try:
-                from auto_backup import AutoBackup
-                backup = AutoBackup()
-                backup.check_and_backup()
+                # Calculate tree_path and depth
+                tree_path, depth = self._calculate_tree_position(cursor, parent_id)
+
+                cursor.execute('''
+                    INSERT INTO memories (
+                        content, summary, project_path, project_name, tags, category,
+                        parent_id, tree_path, depth,
+                        memory_type, importance, content_hash,
+                        last_accessed, access_count, profile
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    content,
+                    summary,
+                    project_path,
+                    project_name,
+                    json.dumps(tags) if tags else None,
+                    category,
+                    parent_id,
+                    tree_path,
+                    depth,
+                    memory_type,
+                    importance,
+                    content_hash,
+                    datetime.now().isoformat(),
+                    0,
+                    active_profile
+                ))
+                memory_id = cursor.lastrowid
+
+                # Update tree_path with actual memory_id
+                if tree_path:
+                    tree_path = f"{tree_path}.{memory_id}"
+                else:
+                    tree_path = str(memory_id)
+
+                cursor.execute('UPDATE memories SET tree_path = ? WHERE id = ?', (tree_path, memory_id))
+
+                conn.commit()
+                return memory_id
+
+            except sqlite3.IntegrityError:
+                # Duplicate content
+                cursor.execute('SELECT id FROM memories WHERE content_hash = ?', (content_hash,))
+                result = cursor.fetchone()
+                return result[0] if result else -1
+
+        memory_id = self._execute_write(_do_add)
+
+        # Rebuild vectors after adding (reads only — outside write callback)
+        self._rebuild_vectors()
+
+        # Emit event (v2.5 — Event Bus)
+        self._emit_event("memory.created", memory_id=memory_id,
+                         content_preview=content[:100], tags=tags,
+                         project=project_name, importance=importance)
+
+        # Record provenance (v2.5 — who created this memory)
+        if self._provenance_tracker:
+            try:
+                self._provenance_tracker.record_provenance(memory_id)
             except Exception:
-                pass  # Backup failure must never break memory operations
+                pass  # Provenance failure must never break core
 
-            return memory_id
+        # Trust signal (v2.5 — silent collection)
+        if self._trust_scorer:
+            try:
+                self._trust_scorer.on_memory_created("user", memory_id, importance)
+            except Exception:
+                pass  # Trust failure must never break core
 
-        except sqlite3.IntegrityError:
-            # Duplicate content
-            cursor.execute('SELECT id FROM memories WHERE content_hash = ?', (content_hash,))
-            result = cursor.fetchone()
-            return result[0] if result else -1
-        finally:
-            conn.close()
+        # Auto-backup check (non-blocking)
+        try:
+            from auto_backup import AutoBackup
+            backup = AutoBackup()
+            backup.check_and_backup()
+        except Exception:
+            pass  # Backup failure must never break memory operations
+
+        return memory_id
 
     def _calculate_tree_position(self, cursor: sqlite3.Cursor, parent_id: Optional[int]) -> Tuple[str, int]:
         """
@@ -444,69 +599,65 @@ class MemoryStoreV2:
         results = []
         active_profile = self._get_active_profile()
 
-        # Method 1: TF-IDF semantic search
-        if SKLEARN_AVAILABLE and self.vectorizer is not None and self.vectors is not None:
-            try:
-                query_vec = self.vectorizer.transform([query])
-                similarities = cosine_similarity(query_vec, self.vectors).flatten()
-                top_indices = np.argsort(similarities)[::-1][:limit * 2]
+        with self._read_connection() as conn:
+            # Method 1: TF-IDF semantic search
+            if SKLEARN_AVAILABLE and self.vectorizer is not None and self.vectors is not None:
+                try:
+                    query_vec = self.vectorizer.transform([query])
+                    similarities = cosine_similarity(query_vec, self.vectors).flatten()
+                    top_indices = np.argsort(similarities)[::-1][:limit * 2]
 
-                conn = sqlite3.connect(self.db_path)
-                cursor = conn.cursor()
+                    cursor = conn.cursor()
 
-                for idx in top_indices:
-                    if idx < len(self.memory_ids):
-                        memory_id = self.memory_ids[idx]
-                        score = float(similarities[idx])
+                    for idx in top_indices:
+                        if idx < len(self.memory_ids):
+                            memory_id = self.memory_ids[idx]
+                            score = float(similarities[idx])
 
-                        if score > 0.05:  # Minimum relevance threshold
-                            cursor.execute('''
-                                SELECT id, content, summary, project_path, project_name, tags,
-                                       category, parent_id, tree_path, depth,
-                                       memory_type, importance, created_at, cluster_id,
-                                       last_accessed, access_count
-                                FROM memories WHERE id = ? AND profile = ?
-                            ''', (memory_id, active_profile))
-                            row = cursor.fetchone()
+                            if score > 0.05:  # Minimum relevance threshold
+                                cursor.execute('''
+                                    SELECT id, content, summary, project_path, project_name, tags,
+                                           category, parent_id, tree_path, depth,
+                                           memory_type, importance, created_at, cluster_id,
+                                           last_accessed, access_count
+                                    FROM memories WHERE id = ? AND profile = ?
+                                ''', (memory_id, active_profile))
+                                row = cursor.fetchone()
 
-                            if row and self._apply_filters(row, project_path, memory_type,
-                                                          category, cluster_id, min_importance):
-                                results.append(self._row_to_dict(row, score, 'semantic'))
+                                if row and self._apply_filters(row, project_path, memory_type,
+                                                              category, cluster_id, min_importance):
+                                    results.append(self._row_to_dict(row, score, 'semantic'))
 
-                conn.close()
-            except Exception as e:
-                print(f"Semantic search error: {e}")
+                except Exception as e:
+                    print(f"Semantic search error: {e}")
 
-        # Method 2: FTS fallback/supplement
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+            # Method 2: FTS fallback/supplement
+            cursor = conn.cursor()
 
-        # Clean query for FTS
-        import re
-        fts_query = ' OR '.join(re.findall(r'\w+', query))
+            # Clean query for FTS
+            import re
+            fts_query = ' OR '.join(re.findall(r'\w+', query))
 
-        if fts_query:
-            cursor.execute('''
-                SELECT m.id, m.content, m.summary, m.project_path, m.project_name,
-                       m.tags, m.category, m.parent_id, m.tree_path, m.depth,
-                       m.memory_type, m.importance, m.created_at, m.cluster_id,
-                       m.last_accessed, m.access_count
-                FROM memories m
-                JOIN memories_fts fts ON m.id = fts.rowid
-                WHERE memories_fts MATCH ? AND m.profile = ?
-                ORDER BY rank
-                LIMIT ?
-            ''', (fts_query, active_profile, limit))
+            if fts_query:
+                cursor.execute('''
+                    SELECT m.id, m.content, m.summary, m.project_path, m.project_name,
+                           m.tags, m.category, m.parent_id, m.tree_path, m.depth,
+                           m.memory_type, m.importance, m.created_at, m.cluster_id,
+                           m.last_accessed, m.access_count
+                    FROM memories m
+                    JOIN memories_fts fts ON m.id = fts.rowid
+                    WHERE memories_fts MATCH ? AND m.profile = ?
+                    ORDER BY rank
+                    LIMIT ?
+                ''', (fts_query, active_profile, limit))
 
-            existing_ids = {r['id'] for r in results}
+                existing_ids = {r['id'] for r in results}
 
-            for row in cursor.fetchall():
-                if row[0] not in existing_ids:
-                    if self._apply_filters(row, project_path, memory_type,
-                                          category, cluster_id, min_importance):
-                        results.append(self._row_to_dict(row, 0.5, 'keyword'))
-
-        conn.close()
+                for row in cursor.fetchall():
+                    if row[0] not in existing_ids:
+                        if self._apply_filters(row, project_path, memory_type,
+                                              category, cluster_id, min_importance):
+                            results.append(self._row_to_dict(row, 0.5, 'keyword'))
 
         # Update access tracking for returned results
         self._update_access_tracking([r['id'] for r in results])
@@ -578,19 +729,18 @@ class MemoryStoreV2:
         if not memory_ids:
             return
 
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+        def _do_update(conn):
+            cursor = conn.cursor()
+            now = datetime.now().isoformat()
+            for mem_id in memory_ids:
+                cursor.execute('''
+                    UPDATE memories
+                    SET last_accessed = ?, access_count = access_count + 1
+                    WHERE id = ?
+                ''', (now, mem_id))
+            conn.commit()
 
-        now = datetime.now().isoformat()
-        for mem_id in memory_ids:
-            cursor.execute('''
-                UPDATE memories
-                SET last_accessed = ?, access_count = access_count + 1
-                WHERE id = ?
-            ''', (now, mem_id))
-
-        conn.commit()
-        conn.close()
+        self._execute_write(_do_update)
 
     def get_tree(self, parent_id: Optional[int] = None, max_depth: int = 3) -> List[Dict[str, Any]]:
         """
@@ -604,45 +754,44 @@ class MemoryStoreV2:
             List of memories with tree structure
         """
         active_profile = self._get_active_profile()
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
 
-        if parent_id is None:
-            # Get root level memories
-            cursor.execute('''
-                SELECT id, content, summary, project_path, project_name, tags,
-                       category, parent_id, tree_path, depth, memory_type, importance,
-                       created_at, cluster_id, last_accessed, access_count
-                FROM memories
-                WHERE parent_id IS NULL AND depth <= ? AND profile = ?
-                ORDER BY tree_path
-            ''', (max_depth, active_profile))
-        else:
-            # Get subtree under specific parent
-            cursor.execute('''
-                SELECT tree_path FROM memories WHERE id = ?
-            ''', (parent_id,))
-            result = cursor.fetchone()
+        with self._read_connection() as conn:
+            cursor = conn.cursor()
 
-            if not result:
-                conn.close()
-                return []
+            if parent_id is None:
+                # Get root level memories
+                cursor.execute('''
+                    SELECT id, content, summary, project_path, project_name, tags,
+                           category, parent_id, tree_path, depth, memory_type, importance,
+                           created_at, cluster_id, last_accessed, access_count
+                    FROM memories
+                    WHERE parent_id IS NULL AND depth <= ? AND profile = ?
+                    ORDER BY tree_path
+                ''', (max_depth, active_profile))
+            else:
+                # Get subtree under specific parent
+                cursor.execute('''
+                    SELECT tree_path FROM memories WHERE id = ?
+                ''', (parent_id,))
+                result = cursor.fetchone()
 
-            parent_path = result[0]
-            cursor.execute('''
-                SELECT id, content, summary, project_path, project_name, tags,
-                       category, parent_id, tree_path, depth, memory_type, importance,
-                       created_at, cluster_id, last_accessed, access_count
-                FROM memories
-                WHERE tree_path LIKE ? AND depth <= ?
-                ORDER BY tree_path
-            ''', (f"{parent_path}.%", max_depth))
+                if not result:
+                    return []
 
-        results = []
-        for row in cursor.fetchall():
-            results.append(self._row_to_dict(row, 1.0, 'tree'))
+                parent_path = result[0]
+                cursor.execute('''
+                    SELECT id, content, summary, project_path, project_name, tags,
+                           category, parent_id, tree_path, depth, memory_type, importance,
+                           created_at, cluster_id, last_accessed, access_count
+                    FROM memories
+                    WHERE tree_path LIKE ? AND depth <= ?
+                    ORDER BY tree_path
+                ''', (f"{parent_path}.%", max_depth))
 
-        conn.close()
+            results = []
+            for row in cursor.fetchall():
+                results.append(self._row_to_dict(row, 1.0, 'tree'))
+
         return results
 
     def update_tier(self, memory_id: int, new_tier: str, compressed_summary: Optional[str] = None):
@@ -654,24 +803,26 @@ class MemoryStoreV2:
             new_tier: New tier level ('hot', 'warm', 'cold', 'archived')
             compressed_summary: Optional compressed summary for higher tiers
         """
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+        def _do_update(conn):
+            cursor = conn.cursor()
+            if compressed_summary:
+                cursor.execute('''
+                    UPDATE memories
+                    SET memory_type = ?, summary = ?, updated_at = ?
+                    WHERE id = ?
+                ''', (new_tier, compressed_summary, datetime.now().isoformat(), memory_id))
+            else:
+                cursor.execute('''
+                    UPDATE memories
+                    SET memory_type = ?, updated_at = ?
+                    WHERE id = ?
+                ''', (new_tier, datetime.now().isoformat(), memory_id))
+            conn.commit()
 
-        if compressed_summary:
-            cursor.execute('''
-                UPDATE memories
-                SET memory_type = ?, summary = ?, updated_at = ?
-                WHERE id = ?
-            ''', (new_tier, compressed_summary, datetime.now().isoformat(), memory_id))
-        else:
-            cursor.execute('''
-                UPDATE memories
-                SET memory_type = ?, updated_at = ?
-                WHERE id = ?
-            ''', (new_tier, datetime.now().isoformat(), memory_id))
+        self._execute_write(_do_update)
 
-        conn.commit()
-        conn.close()
+        # Emit event (v2.5)
+        self._emit_event("memory.updated", memory_id=memory_id, new_tier=new_tier)
 
     def get_by_cluster(self, cluster_id: int) -> List[Dict[str, Any]]:
         """
@@ -684,23 +835,23 @@ class MemoryStoreV2:
             List of memories in the cluster
         """
         active_profile = self._get_active_profile()
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
 
-        cursor.execute('''
-            SELECT id, content, summary, project_path, project_name, tags,
-                   category, parent_id, tree_path, depth, memory_type, importance,
-                   created_at, cluster_id, last_accessed, access_count
-            FROM memories
-            WHERE cluster_id = ? AND profile = ?
-            ORDER BY importance DESC, created_at DESC
-        ''', (cluster_id, active_profile))
+        with self._read_connection() as conn:
+            cursor = conn.cursor()
 
-        results = []
-        for row in cursor.fetchall():
-            results.append(self._row_to_dict(row, 1.0, 'cluster'))
+            cursor.execute('''
+                SELECT id, content, summary, project_path, project_name, tags,
+                       category, parent_id, tree_path, depth, memory_type, importance,
+                       created_at, cluster_id, last_accessed, access_count
+                FROM memories
+                WHERE cluster_id = ? AND profile = ?
+                ORDER BY importance DESC, created_at DESC
+            ''', (cluster_id, active_profile))
 
-        conn.close()
+            results = []
+            for row in cursor.fetchall():
+                results.append(self._row_to_dict(row, 1.0, 'cluster'))
+
         return results
 
     # ========== V1 Backward Compatible Methods ==========
@@ -715,29 +866,28 @@ class MemoryStoreV2:
             return
 
         active_profile = self._get_active_profile()
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
 
-        # Check which columns exist (backward compatibility for old databases)
-        cursor.execute("PRAGMA table_info(memories)")
-        columns = {row[1] for row in cursor.fetchall()}
+        with self._read_connection() as conn:
+            cursor = conn.cursor()
 
-        # Build SELECT query based on available columns, filtered by profile
-        has_profile = 'profile' in columns
-        if 'summary' in columns:
-            if has_profile:
-                cursor.execute('SELECT id, content, summary FROM memories WHERE profile = ?', (active_profile,))
+            # Check which columns exist (backward compatibility for old databases)
+            cursor.execute("PRAGMA table_info(memories)")
+            columns = {row[1] for row in cursor.fetchall()}
+
+            # Build SELECT query based on available columns, filtered by profile
+            has_profile = 'profile' in columns
+            if 'summary' in columns:
+                if has_profile:
+                    cursor.execute('SELECT id, content, summary FROM memories WHERE profile = ?', (active_profile,))
+                else:
+                    cursor.execute('SELECT id, content, summary FROM memories')
+                rows = cursor.fetchall()
+                texts = [f"{row[1]} {row[2] or ''}" for row in rows]
             else:
-                cursor.execute('SELECT id, content, summary FROM memories')
-            rows = cursor.fetchall()
-            texts = [f"{row[1]} {row[2] or ''}" for row in rows]
-        else:
-            # Old database without summary column
-            cursor.execute('SELECT id, content FROM memories')
-            rows = cursor.fetchall()
-            texts = [row[1] for row in rows]
-
-        conn.close()
+                # Old database without summary column
+                cursor.execute('SELECT id, content FROM memories')
+                rows = cursor.fetchall()
+                texts = [row[1] for row in rows]
 
         if not rows:
             self.vectorizer = None
@@ -762,51 +912,50 @@ class MemoryStoreV2:
     def get_recent(self, limit: int = 10, project_path: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get most recent memories (V1 compatible, profile-aware)."""
         active_profile = self._get_active_profile()
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
 
-        if project_path:
-            cursor.execute('''
-                SELECT id, content, summary, project_path, project_name, tags,
-                       category, parent_id, tree_path, depth, memory_type, importance,
-                       created_at, cluster_id, last_accessed, access_count
-                FROM memories
-                WHERE project_path = ? AND profile = ?
-                ORDER BY created_at DESC
-                LIMIT ?
-            ''', (project_path, active_profile, limit))
-        else:
-            cursor.execute('''
-                SELECT id, content, summary, project_path, project_name, tags,
-                       category, parent_id, tree_path, depth, memory_type, importance,
-                       created_at, cluster_id, last_accessed, access_count
-                FROM memories
-                WHERE profile = ?
-                ORDER BY created_at DESC
-                LIMIT ?
-            ''', (active_profile, limit))
+        with self._read_connection() as conn:
+            cursor = conn.cursor()
 
-        results = []
-        for row in cursor.fetchall():
-            results.append(self._row_to_dict(row, 1.0, 'recent'))
+            if project_path:
+                cursor.execute('''
+                    SELECT id, content, summary, project_path, project_name, tags,
+                           category, parent_id, tree_path, depth, memory_type, importance,
+                           created_at, cluster_id, last_accessed, access_count
+                    FROM memories
+                    WHERE project_path = ? AND profile = ?
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                ''', (project_path, active_profile, limit))
+            else:
+                cursor.execute('''
+                    SELECT id, content, summary, project_path, project_name, tags,
+                           category, parent_id, tree_path, depth, memory_type, importance,
+                           created_at, cluster_id, last_accessed, access_count
+                    FROM memories
+                    WHERE profile = ?
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                ''', (active_profile, limit))
 
-        conn.close()
+            results = []
+            for row in cursor.fetchall():
+                results.append(self._row_to_dict(row, 1.0, 'recent'))
+
         return results
 
     def get_by_id(self, memory_id: int) -> Optional[Dict[str, Any]]:
         """Get a specific memory by ID (V1 compatible)."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+        with self._read_connection() as conn:
+            cursor = conn.cursor()
 
-        cursor.execute('''
-            SELECT id, content, summary, project_path, project_name, tags,
-                   category, parent_id, tree_path, depth, memory_type, importance,
-                   created_at, cluster_id, last_accessed, access_count
-            FROM memories WHERE id = ?
-        ''', (memory_id,))
+            cursor.execute('''
+                SELECT id, content, summary, project_path, project_name, tags,
+                       category, parent_id, tree_path, depth, memory_type, importance,
+                       created_at, cluster_id, last_accessed, access_count
+                FROM memories WHERE id = ?
+            ''', (memory_id,))
 
-        row = cursor.fetchone()
-        conn.close()
+            row = cursor.fetchone()
 
         if not row:
             return None
@@ -818,80 +967,89 @@ class MemoryStoreV2:
 
     def delete_memory(self, memory_id: int) -> bool:
         """Delete a specific memory (V1 compatible)."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM memories WHERE id = ?', (memory_id,))
-        deleted = cursor.rowcount > 0
-        conn.commit()
-        conn.close()
+        def _do_delete(conn):
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM memories WHERE id = ?', (memory_id,))
+            deleted = cursor.rowcount > 0
+            conn.commit()
+            return deleted
+
+        deleted = self._execute_write(_do_delete)
 
         if deleted:
             self._rebuild_vectors()
+            # Emit event (v2.5)
+            self._emit_event("memory.deleted", memory_id=memory_id)
+            # Trust signal (v2.5 — silent)
+            if self._trust_scorer:
+                try:
+                    self._trust_scorer.on_memory_deleted("user", memory_id)
+                except Exception:
+                    pass
 
         return deleted
 
     def list_all(self, limit: int = 50) -> List[Dict[str, Any]]:
         """List all memories with short previews (V1 compatible, profile-aware)."""
         active_profile = self._get_active_profile()
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
 
-        cursor.execute('''
-            SELECT id, content, summary, project_path, project_name, tags,
-                   category, parent_id, tree_path, depth, memory_type, importance,
-                   created_at, cluster_id, last_accessed, access_count
-            FROM memories
-            WHERE profile = ?
-            ORDER BY created_at DESC
-            LIMIT ?
-        ''', (active_profile, limit))
+        with self._read_connection() as conn:
+            cursor = conn.cursor()
 
-        results = []
-        for row in cursor.fetchall():
-            mem_dict = self._row_to_dict(row, 1.0, 'list')
+            cursor.execute('''
+                SELECT id, content, summary, project_path, project_name, tags,
+                       category, parent_id, tree_path, depth, memory_type, importance,
+                       created_at, cluster_id, last_accessed, access_count
+                FROM memories
+                WHERE profile = ?
+                ORDER BY created_at DESC
+                LIMIT ?
+            ''', (active_profile, limit))
 
-            # Add title field for V1 compatibility
-            content = row[1]
-            first_line = content.split('\n')[0][:60]
-            mem_dict['title'] = first_line + ('...' if len(content) > 60 else '')
+            results = []
+            for row in cursor.fetchall():
+                mem_dict = self._row_to_dict(row, 1.0, 'list')
 
-            results.append(mem_dict)
+                # Add title field for V1 compatibility
+                content = row[1]
+                first_line = content.split('\n')[0][:60]
+                mem_dict['title'] = first_line + ('...' if len(content) > 60 else '')
 
-        conn.close()
+                results.append(mem_dict)
+
         return results
 
     def get_stats(self) -> Dict[str, Any]:
         """Get memory store statistics (V1 compatible with V2 extensions, profile-aware)."""
         active_profile = self._get_active_profile()
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
 
-        cursor.execute('SELECT COUNT(*) FROM memories WHERE profile = ?', (active_profile,))
-        total_memories = cursor.fetchone()[0]
+        with self._read_connection() as conn:
+            cursor = conn.cursor()
 
-        cursor.execute('SELECT COUNT(DISTINCT project_path) FROM memories WHERE project_path IS NOT NULL AND profile = ?', (active_profile,))
-        total_projects = cursor.fetchone()[0]
+            cursor.execute('SELECT COUNT(*) FROM memories WHERE profile = ?', (active_profile,))
+            total_memories = cursor.fetchone()[0]
 
-        cursor.execute('SELECT memory_type, COUNT(*) FROM memories WHERE profile = ? GROUP BY memory_type', (active_profile,))
-        by_type = dict(cursor.fetchall())
+            cursor.execute('SELECT COUNT(DISTINCT project_path) FROM memories WHERE project_path IS NOT NULL AND profile = ?', (active_profile,))
+            total_projects = cursor.fetchone()[0]
 
-        cursor.execute('SELECT category, COUNT(*) FROM memories WHERE category IS NOT NULL AND profile = ? GROUP BY category', (active_profile,))
-        by_category = dict(cursor.fetchall())
+            cursor.execute('SELECT memory_type, COUNT(*) FROM memories WHERE profile = ? GROUP BY memory_type', (active_profile,))
+            by_type = dict(cursor.fetchall())
 
-        cursor.execute('SELECT MIN(created_at), MAX(created_at) FROM memories WHERE profile = ?', (active_profile,))
-        date_range = cursor.fetchone()
+            cursor.execute('SELECT category, COUNT(*) FROM memories WHERE category IS NOT NULL AND profile = ? GROUP BY category', (active_profile,))
+            by_category = dict(cursor.fetchall())
 
-        cursor.execute('SELECT COUNT(DISTINCT cluster_id) FROM memories WHERE cluster_id IS NOT NULL AND profile = ?', (active_profile,))
-        total_clusters = cursor.fetchone()[0]
+            cursor.execute('SELECT MIN(created_at), MAX(created_at) FROM memories WHERE profile = ?', (active_profile,))
+            date_range = cursor.fetchone()
 
-        cursor.execute('SELECT MAX(depth) FROM memories WHERE profile = ?', (active_profile,))
-        max_depth = cursor.fetchone()[0] or 0
+            cursor.execute('SELECT COUNT(DISTINCT cluster_id) FROM memories WHERE cluster_id IS NOT NULL AND profile = ?', (active_profile,))
+            total_clusters = cursor.fetchone()[0]
 
-        # Total across all profiles
-        cursor.execute('SELECT COUNT(*) FROM memories')
-        total_all_profiles = cursor.fetchone()[0]
+            cursor.execute('SELECT MAX(depth) FROM memories WHERE profile = ?', (active_profile,))
+            max_depth = cursor.fetchone()[0] or 0
 
-        conn.close()
+            # Total across all profiles
+            cursor.execute('SELECT COUNT(*) FROM memories')
+            total_all_profiles = cursor.fetchone()[0]
 
         return {
             'total_memories': total_memories,
@@ -916,13 +1074,10 @@ class MemoryStoreV2:
         Returns:
             Dictionary with creator information and attribution requirements
         """
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
-        cursor.execute('SELECT key, value FROM creator_metadata')
-        attribution = dict(cursor.fetchall())
-
-        conn.close()
+        with self._read_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT key, value FROM creator_metadata')
+            attribution = dict(cursor.fetchall())
 
         # Fallback if table doesn't exist yet (old databases)
         if not attribution:

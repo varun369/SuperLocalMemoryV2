@@ -39,6 +39,27 @@
 
 ---
 
+## NEW: v2.5 — "Your AI Memory Has a Heartbeat"
+
+> **SuperLocalMemory is no longer passive storage — it's a real-time coordination layer.**
+
+| What's New | Why It Matters |
+|------------|----------------|
+| **Real-Time Event Stream** | See every memory operation live in the dashboard — no refresh needed. SSE-powered, cross-process. |
+| **No More "Database Locked"** | WAL mode + serialized write queue. 50 concurrent agents writing? Zero errors. |
+| **Agent Tracking** | Know exactly which AI tool wrote what. Claude, Cursor, Windsurf, CLI — all tracked automatically. |
+| **Trust Scoring** | Bayesian trust signals detect spam, quick-deletes, and cross-agent validation. Silent in v2.5, enforced in v2.6. |
+| **Memory Provenance** | Every memory records who created it, via which protocol, with full derivation lineage. |
+| **Production-Grade Code** | 28 API endpoints across 8 modular route files. 13 modular JS files. 63 pytest tests. |
+
+**Upgrade:** `npm install -g superlocalmemory@latest`
+
+**Dashboard:** `python3 ~/.claude-memory/ui_server.py` then open `http://localhost:8765`
+
+[Architecture Doc](docs/ARCHITECTURE-V2.5.md) | [Full Changelog](CHANGELOG.md)
+
+---
+
 ## Install in One Command
 
 ```bash
