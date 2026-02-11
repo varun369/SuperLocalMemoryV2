@@ -983,10 +983,18 @@ async def get_stats():
         cursor.execute("SELECT COUNT(DISTINCT cluster_id) as total FROM memories WHERE cluster_id IS NOT NULL AND profile = ?", (active_profile,))
         total_clusters = cursor.fetchone()['total']
 
-        cursor.execute("SELECT COUNT(*) as total FROM graph_nodes")
+        cursor.execute("""
+            SELECT COUNT(*) as total FROM graph_nodes gn
+            JOIN memories m ON gn.memory_id = m.id
+            WHERE m.profile = ?
+        """, (active_profile,))
         total_graph_nodes = cursor.fetchone()['total']
 
-        cursor.execute("SELECT COUNT(*) as total FROM graph_edges")
+        cursor.execute("""
+            SELECT COUNT(*) as total FROM graph_edges ge
+            JOIN memories m ON ge.source_memory_id = m.id
+            WHERE m.profile = ?
+        """, (active_profile,))
         total_graph_edges = cursor.fetchone()['total']
 
         # Category breakdown
