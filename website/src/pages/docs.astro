@@ -365,7 +365,7 @@ cd SuperLocalMemoryV2
 
       filterButtons.forEach(button => {
         button.addEventListener('click', () => {
-          const filter = button.dataset.filter;
+          const filter = (button as HTMLElement).dataset.filter;
 
           // Update active button
           filterButtons.forEach(btn => btn.classList.remove('active'));
@@ -373,7 +373,7 @@ cd SuperLocalMemoryV2
 
           // Filter items
           visualItems.forEach(item => {
-            const category = item.dataset.category;
+            const category = (item as HTMLElement).dataset.category;
             if (filter === 'all' || category === filter) {
               item.classList.remove('hidden');
             } else {
