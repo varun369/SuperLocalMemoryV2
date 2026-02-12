@@ -731,6 +731,11 @@ window.addEventListener('DOMContentLoaded', function() {
     loadProfiles();
     loadStats();
     loadGraph();
+
+    // v2.5 — Event Bus + Agent Registry
+    initEventStream();
+    loadEventStats();
+    loadAgents();
 });
 
 // ============================================================================
@@ -1160,4 +1165,424 @@ function handleSort(th) {
     window._slmMemories = memories;
     var showScores = memories.length > 0 && typeof memories[0].score === 'number';
     renderMemoriesTable(memories, showScores);
+}
+
+// ============================================================================
+// v2.5 — Live Event Stream (SSE)
+// ============================================================================
+// Security note: All dynamic values are escaped via escapeHtml() before DOM insertion.
+// Data originates from our own trusted local SQLite database (localhost only).
+// No external/untrusted user input reaches the DOM — same pattern as existing code above.
+
+var _eventSource = null;
+var _eventStreamItems = [];
+var _maxEventStreamItems = 200;
+
+function initEventStream() {
+    try {
+        _eventSource = new EventSource('/events/stream');
+
+        _eventSource.onopen = function() {
+            var badge = document.getElementById('event-connection-status');
+            if (badge) {
+                badge.textContent = 'Connected';
+                badge.className = 'badge bg-success me-2';
+            }
+        };
+
+        _eventSource.onmessage = function(e) {
+            try {
+                var event = JSON.parse(e.data);
+                appendEventToStream(event);
+            } catch (err) {
+                // Ignore parse errors (keepalive comments)
+            }
+        };
+
+        _eventSource.onerror = function() {
+            var badge = document.getElementById('event-connection-status');
+            if (badge) {
+                badge.textContent = 'Reconnecting...';
+                badge.className = 'badge bg-warning me-2';
+            }
+        };
+
+        ['memory.created', 'memory.updated', 'memory.deleted', 'memory.recalled',
+         'agent.connected', 'agent.disconnected', 'graph.updated', 'pattern.learned'
+        ].forEach(function(type) {
+            _eventSource.addEventListener(type, function(e) {
+                try {
+                    appendEventToStream(JSON.parse(e.data));
+                } catch (err) { /* ignore */ }
+            });
+        });
+    } catch (err) {
+        console.log('SSE not available:', err);
+        var badge = document.getElementById('event-connection-status');
+        if (badge) {
+            badge.textContent = 'Unavailable';
+            badge.className = 'badge bg-secondary me-2';
+        }
+    }
+}
+
+function appendEventToStream(event) {
+    var container = document.getElementById('event-stream');
+    if (!container) return;
+
+    if (_eventStreamItems.length === 0) {
+        container.textContent = '';
+    }
+
+    _eventStreamItems.push(event);
+    if (_eventStreamItems.length > _maxEventStreamItems) {
+        _eventStreamItems.shift();
+    }
+
+    var filter = document.getElementById('event-type-filter');
+    var filterValue = filter ? filter.value : '';
+    if (filterValue && event.event_type !== filterValue) return;
+
+    var typeColors = {
+        'memory.created': 'text-success', 'memory.updated': 'text-info',
+        'memory.deleted': 'text-danger', 'memory.recalled': 'text-primary',
+        'agent.connected': 'text-warning', 'agent.disconnected': 'text-secondary',
+        'graph.updated': 'text-info', 'pattern.learned': 'text-success'
+    };
+    var typeIcons = {
+        'memory.created': 'bi-plus-circle', 'memory.updated': 'bi-pencil',
+        'memory.deleted': 'bi-trash', 'memory.recalled': 'bi-search',
+        'agent.connected': 'bi-plug', 'agent.disconnected': 'bi-plug',
+        'graph.updated': 'bi-diagram-3', 'pattern.learned': 'bi-lightbulb'
+    };
+
+    var colorClass = typeColors[event.event_type] || 'text-muted';
+    var iconClass = typeIcons[event.event_type] || 'bi-circle';
+    var ts = event.timestamp ? new Date(event.timestamp).toLocaleTimeString() : '';
+    var payload = event.payload || {};
+    var preview = payload.content_preview || payload.agent_id || payload.agent_name || '';
+    if (preview.length > 80) preview = preview.substring(0, 80) + '...';
+
+    // Build event line using safe DOM methods + escapeHtml for all dynamic content
+    var div = document.createElement('div');
+    div.className = 'event-line mb-1 pb-1 border-bottom border-opacity-25';
+
+    var timeSpan = document.createElement('small');
+    timeSpan.className = 'text-muted';
+    timeSpan.textContent = ts;
+
+    var icon = document.createElement('i');
+    icon.className = 'bi ' + iconClass + ' ' + colorClass;
+    icon.style.marginLeft = '6px';
+
+    var typeSpan = document.createElement('span');
+    typeSpan.className = colorClass + ' fw-bold';
+    typeSpan.style.marginLeft = '4px';
+    typeSpan.textContent = event.event_type;
+
+    div.appendChild(timeSpan);
+    div.appendChild(document.createTextNode(' '));
+    div.appendChild(icon);
+    div.appendChild(document.createTextNode(' '));
+    div.appendChild(typeSpan);
+    div.appendChild(document.createTextNode(' '));
+
+    if (event.memory_id) {
+        var badge = document.createElement('span');
+        badge.className = 'badge bg-secondary';
+        badge.textContent = '#' + event.memory_id;
+        div.appendChild(badge);
+        div.appendChild(document.createTextNode(' '));
+    }
+
+    var previewSpan = document.createElement('span');
+    previewSpan.className = 'text-muted';
+    previewSpan.textContent = preview;
+    div.appendChild(previewSpan);
+
+    container.insertBefore(div, container.firstChild);
+
+    while (container.children.length > _maxEventStreamItems) {
+        container.removeChild(container.lastChild);
+    }
+}
+
+function filterEvents() {
+    var container = document.getElementById('event-stream');
+    if (!container) return;
+    container.textContent = '';
+
+    var filter = document.getElementById('event-type-filter');
+    var filterValue = filter ? filter.value : '';
+
+    var filtered = filterValue
+        ? _eventStreamItems.filter(function(e) { return e.event_type === filterValue; })
+        : _eventStreamItems;
+
+    filtered.forEach(function(event) {
+        appendEventToStream(event);
+    });
+}
+
+function clearEventStream() {
+    _eventStreamItems = [];
+    var container = document.getElementById('event-stream');
+    if (container) {
+        container.textContent = '';
+        var placeholder = document.createElement('div');
+        placeholder.className = 'text-muted text-center py-4';
+        var pIcon = document.createElement('i');
+        pIcon.className = 'bi bi-broadcast';
+        pIcon.style.fontSize = '2rem';
+        placeholder.appendChild(pIcon);
+        var pText = document.createElement('p');
+        pText.className = 'mt-2';
+        pText.textContent = 'Event stream cleared. Waiting for new events...';
+        placeholder.appendChild(pText);
+        container.appendChild(placeholder);
+    }
+}
+
+async function loadEventStats() {
+    try {
+        var response = await fetch('/api/events/stats');
+        var stats = await response.json();
+        var el;
+        el = document.getElementById('event-stat-total');
+        if (el) el.textContent = (stats.total_events || 0).toLocaleString();
+        el = document.getElementById('event-stat-24h');
+        if (el) el.textContent = (stats.events_last_24h || 0).toLocaleString();
+        el = document.getElementById('event-stat-listeners');
+        if (el) el.textContent = (stats.listener_count || 0).toLocaleString();
+        el = document.getElementById('event-stat-buffer');
+        if (el) el.textContent = (stats.buffer_size || 0).toLocaleString();
+    } catch (err) {
+        console.log('Event stats not available:', err);
+    }
+}
+
+// ============================================================================
+// v2.5 — Connected Agents
+// ============================================================================
+
+async function loadAgents() {
+    try {
+        var response = await fetch('/api/agents');
+        var data = await response.json();
+        var agents = data.agents || [];
+        var stats = data.stats || {};
+
+        var el;
+        el = document.getElementById('agent-stat-total');
+        if (el) el.textContent = (stats.total_agents || 0).toLocaleString();
+        el = document.getElementById('agent-stat-active');
+        if (el) el.textContent = (stats.active_last_24h || 0).toLocaleString();
+        el = document.getElementById('agent-stat-writes');
+        if (el) el.textContent = (stats.total_writes || 0).toLocaleString();
+        el = document.getElementById('agent-stat-recalls');
+        if (el) el.textContent = (stats.total_recalls || 0).toLocaleString();
+
+        var container = document.getElementById('agents-list');
+        if (!container) return;
+
+        if (agents.length === 0) {
+            container.textContent = '';
+            var empty = document.createElement('div');
+            empty.className = 'text-muted text-center py-4';
+            var emptyIcon = document.createElement('i');
+            emptyIcon.className = 'bi bi-robot';
+            emptyIcon.style.fontSize = '2rem';
+            empty.appendChild(emptyIcon);
+            var emptyText = document.createElement('p');
+            emptyText.className = 'mt-2';
+            emptyText.textContent = 'No agents registered yet. Agents appear automatically when they connect via MCP, CLI, or REST.';
+            empty.appendChild(emptyText);
+            container.appendChild(empty);
+            loadTrustOverview();
+            return;
+        }
+
+        // Build agent table using safe DOM methods
+        var table = document.createElement('table');
+        table.className = 'table table-hover table-sm';
+        var thead = document.createElement('thead');
+        var headerRow = document.createElement('tr');
+        ['Agent', 'Protocol', 'Trust', 'Writes', 'Recalls', 'Last Seen'].forEach(function(h) {
+            var th = document.createElement('th');
+            th.textContent = h;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        var tbody = document.createElement('tbody');
+        agents.forEach(function(agent) {
+            var tr = document.createElement('tr');
+
+            // Agent name cell
+            var tdName = document.createElement('td');
+            var strong = document.createElement('strong');
+            strong.textContent = agent.agent_name || agent.agent_id;
+            tdName.appendChild(strong);
+            tdName.appendChild(document.createElement('br'));
+            var smallId = document.createElement('small');
+            smallId.className = 'text-muted';
+            smallId.textContent = agent.agent_id;
+            tdName.appendChild(smallId);
+            tr.appendChild(tdName);
+
+            // Protocol badge
+            var tdProto = document.createElement('td');
+            var protoBadge = document.createElement('span');
+            var protocolColors = {
+                'mcp': 'bg-primary', 'cli': 'bg-success', 'rest': 'bg-info',
+                'python': 'bg-secondary', 'a2a': 'bg-warning'
+            };
+            protoBadge.className = 'badge ' + (protocolColors[agent.protocol] || 'bg-secondary');
+            protoBadge.textContent = agent.protocol;
+            tdProto.appendChild(protoBadge);
+            tr.appendChild(tdProto);
+
+            // Trust score
+            var tdTrust = document.createElement('td');
+            var trustScore = agent.trust_score != null ? agent.trust_score : 1.0;
+            tdTrust.className = trustScore < 0.7 ? 'text-danger fw-bold'
+                : trustScore < 0.9 ? 'text-warning fw-bold' : 'text-success fw-bold';
+            tdTrust.textContent = trustScore.toFixed(2);
+            tr.appendChild(tdTrust);
+
+            // Writes
+            var tdW = document.createElement('td');
+            tdW.textContent = agent.memories_written || 0;
+            tr.appendChild(tdW);
+
+            // Recalls
+            var tdR = document.createElement('td');
+            tdR.textContent = agent.memories_recalled || 0;
+            tr.appendChild(tdR);
+
+            // Last seen
+            var tdLast = document.createElement('td');
+            var lastSmall = document.createElement('small');
+            lastSmall.textContent = agent.last_seen ? new Date(agent.last_seen).toLocaleString() : 'Never';
+            tdLast.appendChild(lastSmall);
+            tr.appendChild(tdLast);
+
+            tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+
+        container.textContent = '';
+        container.appendChild(table);
+
+        loadTrustOverview();
+
+    } catch (err) {
+        console.log('Agents not available:', err);
+        var container = document.getElementById('agents-list');
+        if (container) {
+            container.textContent = '';
+            var msg = document.createElement('small');
+            msg.className = 'text-muted';
+            msg.textContent = 'Agent registry not available. This feature requires v2.5+.';
+            container.appendChild(msg);
+        }
+    }
+}
+
+async function loadTrustOverview() {
+    try {
+        var response = await fetch('/api/trust/stats');
+        var stats = await response.json();
+        var container = document.getElementById('trust-overview');
+        if (!container) return;
+
+        container.textContent = '';
+        var row = document.createElement('div');
+        row.className = 'row g-3';
+
+        // Total signals card
+        var col1 = document.createElement('div');
+        col1.className = 'col-md-4';
+        var card1 = document.createElement('div');
+        card1.className = 'border rounded p-3 text-center';
+        var val1 = document.createElement('div');
+        val1.className = 'fs-4 fw-bold';
+        val1.textContent = (stats.total_signals || 0).toLocaleString();
+        card1.appendChild(val1);
+        var lbl1 = document.createElement('small');
+        lbl1.className = 'text-muted';
+        lbl1.textContent = 'Total Signals Collected';
+        card1.appendChild(lbl1);
+        col1.appendChild(card1);
+        row.appendChild(col1);
+
+        // Avg trust card
+        var col2 = document.createElement('div');
+        col2.className = 'col-md-4';
+        var card2 = document.createElement('div');
+        card2.className = 'border rounded p-3 text-center';
+        var val2 = document.createElement('div');
+        val2.className = 'fs-4 fw-bold';
+        val2.textContent = (stats.avg_trust_score || 1.0).toFixed(3);
+        card2.appendChild(val2);
+        var lbl2 = document.createElement('small');
+        lbl2.className = 'text-muted';
+        lbl2.textContent = 'Average Trust Score';
+        card2.appendChild(lbl2);
+        col2.appendChild(card2);
+        row.appendChild(col2);
+
+        // Enforcement card
+        var col3 = document.createElement('div');
+        col3.className = 'col-md-4';
+        var card3 = document.createElement('div');
+        card3.className = 'border rounded p-3 text-center';
+        var val3 = document.createElement('div');
+        val3.className = 'fs-4 fw-bold text-info';
+        val3.textContent = stats.enforcement || 'disabled';
+        card3.appendChild(val3);
+        var lbl3 = document.createElement('small');
+        lbl3.className = 'text-muted';
+        lbl3.textContent = 'Enforcement Status';
+        card3.appendChild(lbl3);
+        col3.appendChild(card3);
+        row.appendChild(col3);
+
+        container.appendChild(row);
+
+        // Signal breakdown
+        if (stats.by_signal_type && Object.keys(stats.by_signal_type).length > 0) {
+            var breakdownDiv = document.createElement('div');
+            breakdownDiv.className = 'col-12 mt-3';
+            var h6 = document.createElement('h6');
+            h6.textContent = 'Signal Breakdown';
+            breakdownDiv.appendChild(h6);
+            var badgeWrap = document.createElement('div');
+            badgeWrap.className = 'd-flex flex-wrap gap-2';
+            Object.keys(stats.by_signal_type).forEach(function(type) {
+                var count = stats.by_signal_type[type];
+                var signalClass = (type.indexOf('high_volume') >= 0 || type.indexOf('quick_delete') >= 0)
+                    ? 'bg-danger' : (type.indexOf('recalled') >= 0 || type.indexOf('high_importance') >= 0)
+                    ? 'bg-success' : 'bg-secondary';
+                var b = document.createElement('span');
+                b.className = 'badge ' + signalClass;
+                b.textContent = type + ': ' + count;
+                badgeWrap.appendChild(b);
+            });
+            breakdownDiv.appendChild(badgeWrap);
+            container.appendChild(breakdownDiv);
+        }
+
+    } catch (err) {
+        console.log('Trust stats not available:', err);
+        var container = document.getElementById('trust-overview');
+        if (container) {
+            container.textContent = '';
+            var msg = document.createElement('small');
+            msg.className = 'text-muted';
+            msg.textContent = 'Trust scoring data will appear here once agents interact with memory.';
+            container.appendChild(msg);
+        }
+    }
 }

@@ -22,6 +22,16 @@ Complete installation instructions for SuperLocalMemory V2.3.0 with universal MC
 
 ---
 
+## 📹 Video Walkthrough (1 minute)
+
+Watch the step-by-step installation process:
+
+![Installation Walkthrough Video](../assets/videos/installation-walkthrough.mp4)
+
+Or follow the detailed guide below.
+
+---
+
 ## 🚀 Quick Install
 
 ### npm (Recommended — All Platforms)
@@ -62,6 +72,14 @@ echo 'export PATH="${HOME}/.claude-memory/bin:${PATH}"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
+**After installation, verify with:**
+```bash
+slm status
+```
+
+![CLI Status Output](../assets/screenshots/cli/cli-status.png)
+*Figure: Successful Mac/Linux installation showing 0 memories and all systems ready*
+
 ### Windows (PowerShell — Manual Install)
 
 ```powershell
@@ -78,26 +96,34 @@ cd SuperLocalMemoryV2
 $env:PATH += ";$env:USERPROFILE\.claude-memory\bin"
 ```
 
+**Windows users:** See the [[Video Walkthrough|#-video-walkthrough-1-minute]] above for a visual step-by-step guide. If you encounter the "running scripts is disabled" error, refer to the troubleshooting section below.
+
 ---
 
 ## ✅ Verify Installation
 
+Run the status command to confirm everything is working:
+
 ```bash
-# Check system status
-superlocalmemoryv2:status
-
-# Or use the simpler CLI
 slm status
+```
 
-# Expected output:
-# ╔══════════════════════════════════════════════════════════════╗
-# ║  SuperLocalMemory V2.1.0 - System Status                     ║
-# ╚══════════════════════════════════════════════════════════════╝
-# ✓ Database: OK (0 memories)
-# ✓ Graph: Ready
-# ✓ Patterns: Ready
-# ✓ MCP: Configured for 4 IDEs
-# ✓ Skills: Installed (6 skills)
+**Expected output:**
+
+![Successful Installation](../assets/screenshots/cli/cli-status.png)
+
+*Figure: Fresh installation showing 0 memories and all systems ready*
+
+The output should show:
+```
+╔══════════════════════════════════════════════════════════════╗
+║  SuperLocalMemory V2.5.0 - System Status                     ║
+╚══════════════════════════════════════════════════════════════╝
+✓ Database: OK (0 memories)
+✓ Graph: Ready
+✓ Patterns: Ready
+✓ MCP: Configured for 4 IDEs
+✓ Skills: Installed (6 skills)
 ```
 
 ### What Was Configured?

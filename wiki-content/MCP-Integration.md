@@ -25,6 +25,13 @@ Claude: [Automatically uses the remember tool] ✓ Saved to memory
 
 No slash commands needed. The AI assistant naturally uses your memory system.
 
+### How MCP Works in Practice
+
+SuperLocalMemory runs an MCP server locally on your machine. When you open Claude Desktop, Cursor, or any supported IDE, it automatically connects to this server. Every time you ask your AI assistant to remember something or search your memory, it's making a direct local call — no cloud, no delays, complete privacy.
+
+![MCP Protocol Diagram](../assets/screenshots/v25/v25-agents-tab.png)
+*Figure: MCP client connected to SuperLocalMemory, showing protocol and trust score*
+
 ---
 
 ## 🚀 Supported IDEs
@@ -321,6 +328,33 @@ aider-smart myfile.py
 
 1. **Context Injection** - Automatically provides recent memories to AI
 2. **Identity Profile** - Injects coding preferences from pattern learning
+
+---
+
+## ✅ Verify MCP Connection
+
+Once you've configured MCP in your IDE, check the dashboard to confirm the connection is active:
+
+```bash
+# Start the web dashboard
+python3 ~/.claude-memory/ui_server.py
+
+# Dashboard opens at http://localhost:8765
+# Navigate to the "Agents" tab
+```
+
+You should see your IDE listed as a connected MCP client:
+
+![MCP Agents Connected](../assets/screenshots/v25/v25-agents-tab.png)
+*Figure: Dashboard showing MCP client connected with trust score 1.00*
+
+**Key indicators:**
+- **Protocol:** Shows `MCP` (agent-to-tool) or `A2A` (agent-to-agent)
+- **Trust Score:** Starts at 1.00 (full trust)
+- **Last Seen:** Recent timestamp means active connection
+- **Memory Operations:** Count of remember/recall calls this session
+
+> **Note:** The Agents tab (v2.5 feature) tracks all MCP connections in real-time. This view helps you verify that your IDE is successfully connected and communicating with SuperLocalMemory.
 
 ---
 

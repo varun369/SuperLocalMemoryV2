@@ -6,6 +6,14 @@
 
 ---
 
+## 🎥 Dashboard Tour
+
+**Watch the full dashboard walkthrough** (2 minutes):
+
+https://github.com/varun369/SuperLocalMemoryV2/raw/main/assets/videos/dashboard-tour.mp4
+
+---
+
 ## 🎨 Overview
 
 The **Visualization Dashboard** (new in v2.2.0) provides an **interactive web interface** for exploring your memories, discovering patterns, and visualizing relationships. Built with Dash/Plotly for professional-grade interactive visualizations.
@@ -135,16 +143,25 @@ See: Old architectural decisions
 Action: Recall reasoning
 ```
 
-### Screenshots (Placeholders)
+### Screenshots
 
-**[Screenshot 1: Timeline View - Full]**
-- Caption: "Full timeline showing 523 memories with importance color coding"
+**Timeline View - Full:**
 
-**[Screenshot 2: Timeline View - Filtered]**
-- Caption: "Filtered to last 30 days, showing authentication cluster"
+![Timeline view showing all memories](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-timeline.png)
 
-**[Screenshot 3: Timeline View - Memory Detail]**
-- Caption: "Expanded memory card with full content, tags, and actions"
+*Full timeline showing all memories with importance color coding and chronological organization*
+
+**Timeline View - Filtered:**
+
+![Filtered timeline view](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-filtered.png)
+
+*Filtered to last 30 days, showing cluster-organized memories*
+
+**Memory Cards - Detail View:**
+
+![Memory cards with full details](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-memories-annotated.png)
+
+*Expanded memory cards showing content, tags, clusters, and importance scores*
 
 ---
 
@@ -239,16 +256,25 @@ Strategy: Graph
 Results: All React-related via cluster
 ```
 
-### Screenshots (Placeholders)
+### Screenshots
 
-**[Screenshot 4: Search Explorer - Live]**
-- Caption: "Search explorer showing real-time results for 'authentication'"
+**Search Explorer - Live Search:**
 
-**[Screenshot 5: Search Explorer - Scores]**
-- Caption: "Visual score bars showing relevance percentages"
+![Live search demonstration](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/dashboard-search.gif)
 
-**[Screenshot 6: Search Explorer - Filters]**
-- Caption: "Advanced filter panel with all options expanded"
+*Real-time search as you type with instant results and hybrid scoring*
+
+**Search Results - Score Visualization:**
+
+![Search with relevance scores](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-memories-annotated.png)
+
+*Visual score bars showing relevance percentages with color-coded importance*
+
+**Advanced Filters:**
+
+![Filtered memories view](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-filtered.png)
+
+*Advanced filter panel showing date range, tags, importance, and cluster filters*
 
 ---
 
@@ -354,16 +380,25 @@ View: 8 memories using FastAPI
 Insight: Framework preference confirmed
 ```
 
-### Screenshots (Placeholders)
+### Screenshots
 
-**[Screenshot 7: Graph Visualization - Full]**
-- Caption: "Full knowledge graph with 8 clusters and 312 entities"
+**Interactive Graph Visualization:**
 
-**[Screenshot 8: Graph Visualization - Cluster Focus]**
-- Caption: "Zoomed into Authentication & Security cluster"
+![Interactive graph exploration](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/graph-interaction.gif)
 
-**[Screenshot 9: Graph Visualization - Entity Highlight]**
-- Caption: "Entity 'JWT' highlighted showing all connections"
+*Interactive graph with zoom, pan, and click-to-explore functionality*
+
+**Knowledge Graph - Cluster View:**
+
+![Knowledge graph with clusters](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-graph-annotated.png)
+
+*Full knowledge graph showing clusters, entities, and relationships with color coding*
+
+**Cluster Details:**
+
+![Cluster visualization](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-clusters.png)
+
+*Detailed cluster view showing all members and connections*
 
 ---
 
@@ -451,16 +486,25 @@ Threshold: 60%
 Insight: "I prefer React (73%), Jest (65%), REST (81%)"
 ```
 
-### Screenshots (Placeholders)
+### Screenshots
 
-**[Screenshot 10: Statistics Dashboard - Overview]**
-- Caption: "Full statistics dashboard with all widgets"
+**Statistics Dashboard - Overview:**
 
-**[Screenshot 11: Statistics Dashboard - Trends]**
-- Caption: "Memory trends showing growth over 90 days"
+![Statistics dashboard overview](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-overview-annotated.png)
 
-**[Screenshot 12: Statistics Dashboard - Tag Cloud]**
-- Caption: "Tag cloud highlighting most frequent topics"
+*Full statistics dashboard with memory counts, cluster distribution, and key metrics*
+
+**Pattern Learning Analytics:**
+
+![Pattern learning dashboard](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-patterns.png)
+
+*Learned patterns with confidence scores showing coding preferences and identity profiles*
+
+**Live Events & Agent Activity:**
+
+![Live events stream](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-live-events-annotated.png)
+
+*Real-time event stream showing memory operations and agent connections*
 
 ---
 
@@ -836,21 +880,101 @@ slm status
 
 ## 📸 Screenshots Gallery
 
-**Coming soon: Full screenshot gallery showing all dashboard features**
+### Dashboard Views
 
-Expected screenshots:
-1. Dashboard home page
-2. Timeline view (full)
-3. Timeline view (filtered)
-4. Search explorer (live search)
-5. Search explorer (score bars)
-6. Graph visualization (full graph)
-7. Graph visualization (cluster focus)
-8. Statistics dashboard (overview)
-9. Statistics dashboard (trends)
-10. Mobile view (responsive)
-11. Dark mode (all views)
-12. Filter panel (expanded)
+**Overview Dashboard (Light Mode):**
+
+![Dashboard overview](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-overview.png)
+
+**Overview Dashboard (Dark Mode):**
+
+![Dashboard overview dark](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-overview-dark.png)
+
+**Memory Timeline:**
+
+![Timeline view](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-timeline.png)
+
+**Filtered Memories:**
+
+![Filtered memories](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-filtered.png)
+
+**Memory Cards (Light Mode):**
+
+![Memory cards](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-memories.png)
+
+**Memory Cards (Dark Mode):**
+
+![Memory cards dark](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-memories-dark.png)
+
+### Knowledge Graph
+
+**Graph Visualization:**
+
+![Graph view](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-graph.png)
+
+**Cluster Analysis:**
+
+![Cluster view](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-clusters.png)
+
+### Analytics & Patterns
+
+**Pattern Learning:**
+
+![Patterns dashboard](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-patterns.png)
+
+### Live Events & Agents
+
+**Live Events (Light Mode):**
+
+![Live events](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-live-events.png)
+
+**Live Events (Dark Mode):**
+
+![Live events dark](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-live-events-dark.png)
+
+**Agent Connections:**
+
+![Agent registry](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-agents.png)
+
+### Annotated Guides
+
+**Overview - Annotated:**
+
+![Overview annotated](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-overview-annotated.png)
+
+**Memory Cards - Annotated:**
+
+![Memory cards annotated](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-memories-annotated.png)
+
+**Graph Visualization - Annotated:**
+
+![Graph annotated](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-graph-annotated.png)
+
+**Live Events - Annotated:**
+
+![Live events annotated](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-live-events-annotated.png)
+
+**Agents Tab - Annotated:**
+
+![Agents annotated](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/screenshots/dashboard/dashboard-agents-annotated.png)
+
+### Interactive Demos
+
+**Dashboard Tab Navigation:**
+
+![Dashboard tabs demo](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/dashboard-tabs.gif)
+
+**Real-time Search:**
+
+![Search demo](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/dashboard-search.gif)
+
+**Graph Interaction:**
+
+![Graph interaction demo](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/graph-interaction.gif)
+
+**Event Stream:**
+
+![Event stream demo](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/event-stream.gif)
 
 ---
 

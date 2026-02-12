@@ -13,6 +13,13 @@
 
 ---
 
+## Visual Overview
+
+![SuperLocalMemory V2 Features](../assets/contact-sheet.png)
+*All SuperLocalMemory V2 features at a glance: Dashboard, CLI, Live Events, Agents, Knowledge Graph*
+
+---
+
 ## NEW: v2.5.0 — "Your AI Memory Has a Heartbeat"
 
 > **SuperLocalMemory is no longer passive storage — it's a real-time coordination layer.**
@@ -43,6 +50,30 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 - **100% Private** — GDPR/HIPAA compliant by default
 - **Works Everywhere** — 16+ IDEs including Claude Desktop, Cursor IDE, Windsurf, VS Code, and more
 - **Dual Protocol** — MCP (agent→tool) + A2A (agent↔agent) support
+
+---
+
+## Key Features in Action
+
+### 🎯 Real-Time Memory Operations
+![Live Events](../assets/gifs/event-stream.gif)
+
+### 🔍 Intelligent Search
+![Hybrid Search](../assets/gifs/dashboard-search.gif)
+
+### 🕸️ Knowledge Graph
+![Interactive Graph](../assets/gifs/graph-interaction.gif)
+
+### 💻 Simple CLI
+![CLI Demo](../assets/gifs/cli-demo.gif)
+
+---
+
+## Video Walkthroughs
+
+- [Installation (1 min)](../assets/videos/installation-walkthrough.mp4)
+- [Quick Start (2 min)](../assets/videos/quick-start.mp4)
+- [Dashboard Tour (2 min)](../assets/videos/dashboard-tour.mp4)
 
 ---
 

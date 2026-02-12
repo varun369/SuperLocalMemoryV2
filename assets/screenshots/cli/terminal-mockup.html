@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLM Terminal Mockup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+        }
+
+        .terminal-window {
+            width: 1200px;
+            height: 800px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-header {
+            background: #e0e0e0;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #d0d0d0;
+        }
+
+        .terminal-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-button.close {
+            background: #ff5f56;
+        }
+
+        .terminal-button.minimize {
+            background: #ffbd2e;
+        }
+
+        .terminal-button.maximize {
+            background: #27c93f;
+        }
+
+        .terminal-title {
+            flex: 1;
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .terminal-content {
+            padding: 24px;
+            color: #2c3e50;
+            font-size: 16px;
+            line-height: 1.6;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .prompt {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .command {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .output {
+            margin-top: 12px;
+            margin-bottom: 24px;
+        }
+
+        .output-line {
+            margin: 4px 0;
+        }
+
+        .success {
+            color: #27ae60;
+        }
+
+        .info {
+            color: #3498db;
+        }
+
+        .warning {
+            color: #f39c12;
+        }
+
+        .muted {
+            color: #7f8c8d;
+        }
+
+        .bold {
+            font-weight: 600;
+        }
+
+        .memory-item {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 8px 0;
+        }
+
+        .memory-id {
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        .memory-content {
+            color: #2c3e50;
+            margin: 4px 0;
+        }
+
+        .memory-meta {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .scenario {
+            display: none;
+        }
+
+        .scenario.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-window">
+        <div class="terminal-header">
+            <div class="terminal-buttons">
+                <div class="terminal-button close"></div>
+                <div class="terminal-button minimize"></div>
+                <div class="terminal-button maximize"></div>
+            </div>
+            <div class="terminal-title">SuperLocalMemory V2 — Terminal</div>
+        </div>
+        <div class="terminal-content">
+            <!-- Scenario 1: Status -->
+            <div class="scenario" id="status">
+                <div class="output-line">
+                    <span class="prompt">$ </span>
+                    <span class="command">slm status</span>
+                </div>
+                <div class="output">
+                    <div class="output-line success">✓ Database: OK (0 memories)</div>
+                    <div class="output-line success">✓ Knowledge Graph: Ready</div>
+                    <div class="output-line success">✓ Pattern Learning: Ready</div>
+                    <div class="output-line success">✓ Current Profile: default</div>
+                    <div class="output-line" style="margin-top: 12px;">
+                        <span class="muted">Location: ~/.claude-memory/memory.db</span>
+                    </div>
+                    <div class="output-line">
+                        <span class="muted">Version: 2.5.0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scenario 2: Remember -->
+            <div class="scenario" id="remember">
+                <div class="output-line">
+                    <span class="prompt">$ </span>
+                    <span class="command">slm remember "Use FastAPI for REST APIs" --tags api --importance 7</span>
+                </div>
+                <div class="output">
+                    <div class="output-line">Memory added with ID: <span class="memory-id">1</span></div>
+                    <div class="output-line success">✅ Memory saved successfully</div>
+                    <div class="output-line" style="margin-top: 12px;">
+                        <span class="muted">Tags: api</span>
+                    </div>
+                    <div class="output-line">
+                        <span class="muted">Importance: 7/10</span>
+                    </div>
+                    <div class="output-line">
+                        <span class="muted">Created: 2026-02-12 10:30</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scenario 3: Recall -->
+            <div class="scenario" id="recall">
+                <div class="output-line">
+                    <span class="prompt">$ </span>
+                    <span class="command">slm recall "FastAPI"</span>
+                </div>
+                <div class="output">
+                    <div class="output-line info">🔍 Search Results (3 found)</div>
+                    <div class="output-line" style="margin-top: 12px;"></div>
+
+                    <div class="memory-item">
+                        <div class="output-line">
+                            <span class="memory-id">[ID: 1]</span>
+                            <span class="muted">Score: 0.95</span>
+                        </div>
+                        <div class="memory-content">Use FastAPI for REST APIs</div>
+                        <div class="memory-meta">
+                            Tags: api | Importance: 7 | Created: 2026-02-12 10:30
+                        </div>
+                    </div>
+
+                    <div class="memory-item">
+                        <div class="output-line">
+                            <span class="memory-id">[ID: 8]</span>
+                            <span class="muted">Score: 0.82</span>
+                        </div>
+                        <div class="memory-content">FastAPI supports async/await natively - perfect for I/O-bound operations</div>
+                        <div class="memory-meta">
+                            Tags: api, python, performance | Importance: 6 | Created: 2026-02-10 14:22
+                        </div>
+                    </div>
+
+                    <div class="memory-item">
+                        <div class="output-line">
+                            <span class="memory-id">[ID: 15]</span>
+                            <span class="muted">Score: 0.78</span>
+                        </div>
+                        <div class="memory-content">Always use Pydantic models with FastAPI for type safety and validation</div>
+                        <div class="memory-meta">
+                            Tags: api, best-practice | Importance: 8 | Created: 2026-02-08 09:15
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scenario 4: List -->
+            <div class="scenario" id="list">
+                <div class="output-line">
+                    <span class="prompt">$ </span>
+                    <span class="command">slm list --limit 5</span>
+                </div>
+                <div class="output">
+                    <div class="output-line info">📋 Recent Memories (5 of 127 total)</div>
+                    <div class="output-line" style="margin-top: 12px;"></div>
+
+                    <div class="memory-item">
+                        <div class="output-line">
+                            <span class="memory-id">[ID: 127]</span>
+                            <span class="muted">2 hours ago</span>
+                        </div>
+                        <div class="memory-content">Docker Compose health checks use 'test' not 'healthcheck' key</div>
+                        <div class="memory-meta">Tags: docker, devops | Importance: 5</div>
+                    </div>
+
+                    <div class="memory-item">
+                        <div class="output-line">
+                            <span class="memory-id">[ID: 126]</span>
+                            <span class="muted">5 hours ago</span>
+                        </div>
+                        <div class="memory-content">Use SQLite WAL mode for concurrent access - set PRAGMA journal_mode=WAL</div>
+                        <div class="memory-meta">Tags: database, sqlite | Importance: 8</div>
+                    </div>
+
+                    <div class="memory-item">
+                        <div class="output-line">
+                            <span class="memory-id">[ID: 125]</span>
+                            <span class="muted">1 day ago</span>
+                        </div>
+                        <div class="memory-content">A2A Protocol v0.3 is stable - v1.0 RC in progress</div>
+                        <div class="memory-meta">Tags: a2a, research | Importance: 9</div>
+                    </div>
+
+                    <div class="memory-item">
+                        <div class="output-line">
+                            <span class="memory-id">[ID: 124]</span>
+                            <span class="muted">1 day ago</span>
+                        </div>
+                        <div class="memory-content">Always use parameterized queries - never f-string SQL values</div>
+                        <div class="memory-meta">Tags: security, database | Importance: 10</div>
+                    </div>
+
+                    <div class="memory-item">
+                        <div class="output-line">
+                            <span class="memory-id">[ID: 123]</span>
+                            <span class="muted">2 days ago</span>
+                        </div>
+                        <div class="memory-content">MCP server port 8765 - A2A server port 8766</div>
+                        <div class="memory-meta">Tags: mcp, a2a, config | Importance: 7</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scenario 5: Build Graph -->
+            <div class="scenario" id="build-graph">
+                <div class="output-line">
+                    <span class="prompt">$ </span>
+                    <span class="command">slm build-graph</span>
+                </div>
+                <div class="output">
+                    <div class="output-line info">🔄 Building Knowledge Graph...</div>
+                    <div class="output-line" style="margin-top: 12px;">
+                        <span class="muted">Phase 1: Entity Extraction</span>
+                        <span style="margin-left: 20px;">✓ Complete (0.2s)</span>
+                    </div>
+                    <div class="output-line">
+                        <span class="muted">Phase 2: Clustering (Leiden)</span>
+                        <span style="margin-left: 20px;">✓ Complete (0.5s)</span>
+                    </div>
+                    <div class="output-line">
+                        <span class="muted">Phase 3: Community Detection</span>
+                        <span style="margin-left: 8px;">✓ Complete (0.3s)</span>
+                    </div>
+                    <div class="output-line" style="margin-top: 12px;" class="success">
+                        ✅ Graph built successfully
+                    </div>
+                    <div class="output-line" style="margin-top: 12px;">
+                        <div class="output-line bold">Results:</div>
+                        <div class="output-line">  • 127 memories analyzed</div>
+                        <div class="output-line">  • 45 entities extracted</div>
+                        <div class="output-line">  • 82 relationships discovered</div>
+                        <div class="output-line">  • 8 clusters identified</div>
+                    </div>
+                    <div class="output-line" style="margin-top: 12px;">
+                        <span class="muted">Graph available in dashboard: http://localhost:8765</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scenario 6: Profile Switch -->
+            <div class="scenario" id="profile-switch">
+                <div class="output-line">
+                    <span class="prompt">$ </span>
+                    <span class="command">slm switch-profile work</span>
+                </div>
+                <div class="output">
+                    <div class="output-line info">🔄 Switching to profile: work</div>
+                    <div class="output-line" style="margin-top: 12px;">
+                        <span class="muted">Previous: default (127 memories)</span>
+                    </div>
+                    <div class="output-line success">✅ Switched to profile: work</div>
+                    <div class="output-line" style="margin-top: 12px;">
+                        <div class="output-line bold">Profile: work</div>
+                        <div class="output-line">  • Total memories: 89</div>
+                        <div class="output-line">  • Active memories: 74</div>
+                        <div class="output-line">  • Compressed: 12</div>
+                        <div class="output-line">  • Archived: 3</div>
+                    </div>
+                    <div class="output-line" style="margin-top: 12px;">
+                        <span class="muted">Top tags: api (23), database (18), security (15)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scenario 7: Help -->
+            <div class="scenario" id="help">
+                <div class="output-line">
+                    <span class="prompt">$ </span>
+                    <span class="command">slm --help</span>
+                </div>
+                <div class="output">
+                    <div class="output-line bold">SuperLocalMemory V2 — Universal AI Memory System</div>
+                    <div class="output-line muted">Version 2.5.0 | Local-first, Privacy-first</div>
+                    <div class="output-line" style="margin-top: 12px;"></div>
+
+                    <div class="output-line bold">Usage:</div>
+                    <div class="output-line">  slm [command] [options]</div>
+                    <div class="output-line" style="margin-top: 12px;"></div>
+
+                    <div class="output-line bold">Core Commands:</div>
+                    <div class="output-line">  <span class="info">remember</span>     Store a new memory</div>
+                    <div class="output-line">  <span class="info">recall</span>       Search and retrieve memories</div>
+                    <div class="output-line">  <span class="info">list</span>         List recent memories</div>
+                    <div class="output-line">  <span class="info">status</span>       Show system status</div>
+                    <div class="output-line" style="margin-top: 8px;"></div>
+
+                    <div class="output-line bold">Advanced Commands:</div>
+                    <div class="output-line">  <span class="info">build-graph</span>     Build knowledge graph</div>
+                    <div class="output-line">  <span class="info">switch-profile</span>  Switch memory profile</div>
+                    <div class="output-line">  <span class="info">learn-patterns</span>  Update learned patterns</div>
+                    <div class="output-line" style="margin-top: 8px;"></div>
+
+                    <div class="output-line bold">Options:</div>
+                    <div class="output-line">  --tags TAG1,TAG2    Add tags to memory</div>
+                    <div class="output-line">  --importance N      Set importance (1-10)</div>
+                    <div class="output-line">  --project NAME      Associate with project</div>
+                    <div class="output-line">  --limit N           Limit results (default: 10)</div>
+                    <div class="output-line" style="margin-top: 12px;"></div>
+
+                    <div class="output-line bold">Examples:</div>
+                    <div class="output-line muted">  $ slm remember "Use FastAPI for APIs" --tags api --importance 7</div>
+                    <div class="output-line muted">  $ slm recall "FastAPI" --limit 5</div>
+                    <div class="output-line muted">  $ slm list --limit 10</div>
+                    <div class="output-line muted">  $ slm build-graph</div>
+                    <div class="output-line" style="margin-top: 12px;"></div>
+
+                    <div class="output-line muted">For detailed documentation: https://github.com/varun369/SuperLocalMemoryV2</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Script to control which scenario is shown
+        // Usage: Add ?scenario=status to URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const scenario = urlParams.get('scenario') || 'status';
+        document.getElementById(scenario)?.classList.add('active');
+    </script>
+</body>
+</html>

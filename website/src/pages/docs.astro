@@ -95,6 +95,125 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
       </div>
 
+      <!-- Visual Documentation -->
+      <h2 style="margin-bottom: 1.5rem;">📸 Visual Documentation</h2>
+      <p style="font-size: 1.125rem; color: var(--color-text-secondary); margin-bottom: 1.5rem;">
+        Explore SuperLocalMemory V2's interface through screenshots organized by category.
+      </p>
+
+      <!-- Filter Buttons -->
+      <div class="filter-buttons" style="margin-bottom: 2rem;">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="dashboard">Dashboard</button>
+        <button class="filter-btn" data-filter="v25">v2.5 Features</button>
+        <button class="filter-btn" data-filter="graph">Knowledge Graph</button>
+      </div>
+
+      <!-- Screenshot Grid -->
+      <div class="visual-gallery" style="margin-bottom: 3rem;">
+        <!-- Dashboard -->
+        <a href="/assets/screenshots/dashboard/dashboard-overview.png" target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-overview-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-overview-thumb.png" alt="Dashboard Overview" loading="lazy">
+          </picture>
+          <div class="visual-caption">
+            <strong>Dashboard Overview</strong>
+            <p>Main dashboard interface with key metrics</p>
+          </div>
+        </a>
+
+        <a href="/assets/screenshots/dashboard/dashboard-memories.png" target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-memories-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-memories-thumb.png" alt="Memory List" loading="lazy">
+          </picture>
+          <div class="visual-caption">
+            <strong>Memory List</strong>
+            <p>Detailed memory list with search and filtering</p>
+          </div>
+        </a>
+
+        <a href="/assets/screenshots/dashboard/dashboard-timeline.png" target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-timeline-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-timeline-thumb.png" alt="Timeline View" loading="lazy">
+          </picture>
+          <div class="visual-caption">
+            <strong>Timeline View</strong>
+            <p>Chronological timeline of all stored memories</p>
+          </div>
+        </a>
+
+        <a href="/assets/screenshots/dashboard/dashboard-filtered.png" target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-filtered-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-filtered-thumb.png" alt="Advanced Search" loading="lazy">
+          </picture>
+          <div class="visual-caption">
+            <strong>Advanced Search</strong>
+            <p>Memory search with advanced filtering options</p>
+          </div>
+        </a>
+
+        <!-- Knowledge Graph -->
+        <a href="/assets/screenshots/dashboard/dashboard-graph.png" target="_blank" rel="noopener" class="visual-item" data-category="graph">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-graph-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-graph-thumb.png" alt="Interactive Graph" loading="lazy">
+          </picture>
+          <div class="visual-caption">
+            <strong>Knowledge Graph</strong>
+            <p>Interactive knowledge graph visualization</p>
+          </div>
+        </a>
+
+        <a href="/assets/screenshots/dashboard/dashboard-clusters.png" target="_blank" rel="noopener" class="visual-item" data-category="graph">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-clusters-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-clusters-thumb.png" alt="Cluster Analysis" loading="lazy">
+          </picture>
+          <div class="visual-caption">
+            <strong>Clusters</strong>
+            <p>Knowledge graph clusters and relationships</p>
+          </div>
+        </a>
+
+        <!-- v2.5 Features -->
+        <a href="/assets/screenshots/dashboard/dashboard-live-events.png" target="_blank" rel="noopener" class="visual-item" data-category="v25">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-live-events-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-live-events-thumb.png" alt="Live Event Stream" loading="lazy">
+          </picture>
+          <div class="visual-caption">
+            <strong>Live Events</strong>
+            <p>Real-time event stream from memory operations</p>
+          </div>
+        </a>
+
+        <a href="/assets/screenshots/dashboard/dashboard-agents.png" target="_blank" rel="noopener" class="visual-item" data-category="v25">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-agents-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-agents-thumb.png" alt="Agent Connections" loading="lazy">
+          </picture>
+          <div class="visual-caption">
+            <strong>Agent Tracking</strong>
+            <p>Agent connections and activity tracking</p>
+          </div>
+        </a>
+
+        <a href="/assets/screenshots/dashboard/dashboard-patterns.png" target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-patterns-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-patterns-thumb.png" alt="Learned Patterns" loading="lazy">
+          </picture>
+          <div class="visual-caption">
+            <strong>Pattern Learning</strong>
+            <p>Learned coding patterns and preferences</p>
+          </div>
+        </a>
+      </div>
+
       <!-- Community -->
       <h2 style="margin-bottom: 1.5rem;">Community & Support</h2>
       <div class="grid grid-2" style="margin-bottom: 3rem;">
@@ -134,4 +253,135 @@ cd SuperLocalMemoryV2
       </div>
     </div>
   </section>
+
+  <style>
+    .filter-buttons {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .filter-btn {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--color-border);
+      background: var(--color-bg-secondary);
+      color: var(--color-text-primary);
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--color-accent);
+      background: var(--color-bg-tertiary);
+    }
+
+    .filter-btn.active {
+      background: var(--color-accent);
+      color: white;
+      border-color: var(--color-accent);
+    }
+
+    .visual-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .visual-item {
+      display: block;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      border: 1px solid var(--color-border);
+      transition: all 0.3s ease;
+      background: var(--color-bg-secondary);
+      text-decoration: none;
+    }
+
+    .visual-item.hidden {
+      display: none;
+    }
+
+    .visual-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      border-color: var(--color-accent);
+    }
+
+    .visual-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .visual-item:hover img {
+      transform: scale(1.05);
+    }
+
+    .visual-caption {
+      padding: 1rem;
+    }
+
+    .visual-caption strong {
+      display: block;
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+      color: var(--color-text-primary);
+    }
+
+    .visual-caption p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      line-height: 1.4;
+    }
+
+    @media (max-width: 768px) {
+      .visual-gallery {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .filter-buttons {
+        gap: 0.5rem;
+      }
+
+      .filter-btn {
+        padding: 0.4rem 1rem;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+
+  <script>
+    // Filter functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      const visualItems = document.querySelectorAll('.visual-item');
+
+      filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const filter = button.dataset.filter;
+
+          // Update active button
+          filterButtons.forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+
+          // Filter items
+          visualItems.forEach(item => {
+            const category = item.dataset.category;
+            if (filter === 'all' || category === filter) {
+              item.classList.remove('hidden');
+            } else {
+              item.classList.add('hidden');
+            }
+          });
+        });
+      });
+    });
+  </script>
 </BaseLayout>

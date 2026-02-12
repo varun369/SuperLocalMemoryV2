@@ -57,6 +57,9 @@ slm status
 ✓ Current Profile: default
 ```
 
+![CLI Status Output](../assets/screenshots/cli/cli-status.png)
+*Figure 1: The `slm status` command shows system health and database statistics*
+
 For detailed installation troubleshooting, see the [Installation Guide](Installation).
 
 ---
@@ -80,12 +83,18 @@ Next steps:
   • Use `slm list` to see recent memories
 ```
 
+![CLI Remember Command](../assets/screenshots/cli/cli-remember.png)
+*Figure 2: Saving your first memory with the `slm remember` command*
+
 **What just happened:**
 - Content saved to local SQLite database (`~/.claude-memory/memory.db`)
 - TF-IDF vectors generated for semantic search
 - Entities extracted ("FastAPI", "REST APIs")
 - Pattern learning analyzed your preference for FastAPI
 - Full-text search index updated
+
+![CLI Demo](../assets/gifs/cli-demo.gif)
+*Interactive demo: Watch how memories are saved and recalled in real-time*
 
 ### Step 2: Add More Context
 
@@ -139,6 +148,9 @@ Project: default
 Created: 2026-02-07 14:23
 ```
 
+![CLI Recall Results](../assets/screenshots/cli/cli-recall.png)
+*Figure 3: Search results showing relevance scores and memory metadata*
+
 **Three search methods working simultaneously:**
 1. **Semantic Search (TF-IDF)** - Finds conceptually similar content
 2. **Knowledge Graph** - Discovers related memories via graph edges
@@ -190,6 +202,9 @@ Project: default
 Created: 2026-02-07 14:23
 ```
 
+![CLI List Output](../assets/screenshots/cli/cli-list.png)
+*Figure 4: The `slm list` command displays recent memories with tags and metadata*
+
 ---
 
 ## Build Knowledge Graph
@@ -223,6 +238,9 @@ Graph Statistics:
   Edges: 8
   Density: 0.37%
 ```
+
+![CLI Build Graph](../assets/screenshots/cli/cli-build-graph.png)
+*Figure 5: Building the knowledge graph discovers relationships between memories*
 
 **Why build the graph:**
 - Improves search quality
@@ -340,6 +358,12 @@ python ~/.claude-memory/ui_server.py
 🌐 Dashboard running at: http://localhost:8765
 ```
 
+![Dashboard Overview](../assets/screenshots/dashboard/dashboard-overview.png)
+*Figure 6: The web dashboard provides visual exploration of your memory system*
+
+![Dashboard Navigation](../assets/gifs/dashboard-tabs.gif)
+*Interactive navigation: Explore Timeline, Search, Graph, and Statistics views*
+
 ### Explore Four Views
 
 **1. Timeline View**
@@ -376,6 +400,12 @@ Features:
   - Drag nodes to rearrange
 ```
 
+![Knowledge Graph Visualization](../assets/screenshots/dashboard/dashboard-graph.png)
+*Figure 7: Interactive graph view shows relationships between memories and entities*
+
+![Graph Interaction](../assets/gifs/graph-interaction.gif)
+*Click, drag, and explore the knowledge graph in real-time*
+
 **4. Statistics Dashboard**
 ```
 Navigate to: Statistics tab
@@ -386,6 +416,9 @@ Features:
   - Importance distribution
   - Pattern confidence scores
 ```
+
+![Dashboard Timeline View](../assets/screenshots/dashboard/dashboard-timeline.png)
+*Figure 8: Timeline view displays memories chronologically with importance indicators*
 
 ### Dashboard Features
 
@@ -467,13 +500,144 @@ Congratulations! You've completed the quick start tutorial.
 
 ---
 
-## Screenshots (Coming Soon)
+## Visual Gallery
 
-- Installation process
-- First memory saved
-- Search results with scores
-- Knowledge graph visualization
-- IDE integrations (Cursor, Windsurf, Claude Desktop)
+### Command Line Interface
+
+<table>
+<tr>
+<td width="50%">
+
+![Status Command](../assets/screenshots/cli/cli-status.png)
+*System status showing memory count and graph statistics*
+
+</td>
+<td width="50%">
+
+![Remember Command](../assets/screenshots/cli/cli-remember.png)
+*Saving a new memory with automatic entity extraction*
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+![Recall Command](../assets/screenshots/cli/cli-recall.png)
+*Search results with relevance scores and metadata*
+
+</td>
+<td width="50%">
+
+![List Command](../assets/screenshots/cli/cli-list.png)
+*Recent memories organized chronologically*
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+![Build Graph](../assets/screenshots/cli/cli-build-graph.png)
+*Knowledge graph construction with entity extraction*
+
+</td>
+<td width="50%">
+
+![Profile Switch](../assets/screenshots/cli/cli-profile-switch.png)
+*Multi-profile support for context isolation*
+
+</td>
+</tr>
+</table>
+
+### Web Dashboard (v2.2.0+)
+
+<table>
+<tr>
+<td width="50%">
+
+![Dashboard Overview](../assets/screenshots/dashboard/dashboard-overview.png)
+*Main dashboard with memory statistics and quick actions*
+
+</td>
+<td width="50%">
+
+![Memory Browser](../assets/screenshots/dashboard/dashboard-memories.png)
+*Browse and filter memories with advanced search*
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+![Knowledge Graph](../assets/screenshots/dashboard/dashboard-graph.png)
+*Interactive graph visualization with zoom and pan*
+
+</td>
+<td width="50%">
+
+![Cluster View](../assets/screenshots/dashboard/dashboard-clusters.png)
+*Explore memory clusters and topic relationships*
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+![Pattern Learning](../assets/screenshots/dashboard/dashboard-patterns.png)
+*View learned patterns and confidence scores*
+
+</td>
+<td width="50%">
+
+![Filtered Results](../assets/screenshots/dashboard/dashboard-filtered.png)
+*Advanced filtering by tags, projects, and importance*
+
+</td>
+</tr>
+</table>
+
+### NEW in v2.5: Live Events & Agent Tracking
+
+<table>
+<tr>
+<td width="50%">
+
+![Live Events Stream](../assets/screenshots/v25/v25-live-events-working.png)
+*Real-time event stream showing memory operations across all agents*
+
+</td>
+<td width="50%">
+
+![Agents Tab](../assets/screenshots/v25/v25-agents-tab.png)
+*Track active AI agents and their memory access patterns*
+
+</td>
+</tr>
+</table>
+
+**v2.5 Features (Released Feb 2026):**
+- **Event Bus**: Real-time memory operation broadcasting via WebSocket/SSE
+- **Agent Registry**: Track which AI assistants are accessing your memories
+- **Provenance Tracking**: Know which agent created each memory (CLI, Cursor, Claude, etc.)
+- **Trust Scoring**: Silent collection of agent behavior patterns
+- **Live Dashboard**: Watch memory operations happen in real-time
+
+![Event Stream Demo](../assets/gifs/event-stream.gif)
+*Watch memories flow through the system in real-time with the Event Bus*
+
+### Interactive Demos
+
+![CLI Demo](../assets/gifs/cli-demo.gif)
+*Complete CLI workflow: remember → recall → list → build-graph*
+
+![Dashboard Search](../assets/gifs/dashboard-search.gif)
+*Real-time search with instant results and relevance scoring*
+
+![Graph Interaction](../assets/gifs/graph-interaction.gif)
+*Explore the knowledge graph: click, drag, and discover connections*
+
+![Dashboard Tabs](../assets/gifs/dashboard-tabs.gif)
+*Navigate between Timeline, Search, Graph, and Statistics views*
 
 ---
 

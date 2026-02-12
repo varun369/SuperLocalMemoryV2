@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperLocalMemory V2 - Screenshot Contact Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #ffffff;
+            padding: 40px;
+            color: #1a1a1a;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .category {
+            margin-bottom: 50px;
+        }
+
+        .category h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .item {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .item img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            display: block;
+        }
+
+        .item p {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #555;
+            text-align: center;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .count {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SuperLocalMemory V2 - Screenshot Contact Sheet</h1>
+        <p>Complete visual index of all project screenshots</p>
+    </div>
+
+    <div class="category">
+        <h2>Dashboard Screenshots <span class="count">12</span></h2>
+        <div class="grid">
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-overview.png" alt="dashboard-overview">
+                <p>dashboard-overview</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-overview-dark.png" alt="dashboard-overview-dark">
+                <p>dashboard-overview-dark</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-overview-annotated.png" alt="dashboard-overview-annotated">
+                <p>dashboard-overview-annotated</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-memories.png" alt="dashboard-memories">
+                <p>dashboard-memories</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-memories-dark.png" alt="dashboard-memories-dark">
+                <p>dashboard-memories-dark</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-memories-annotated.png" alt="dashboard-memories-annotated">
+                <p>dashboard-memories-annotated</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-graph.png" alt="dashboard-graph">
+                <p>dashboard-graph</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-graph-annotated.png" alt="dashboard-graph-annotated">
+                <p>dashboard-graph-annotated</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-patterns.png" alt="dashboard-patterns">
+                <p>dashboard-patterns</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-timeline.png" alt="dashboard-timeline">
+                <p>dashboard-timeline</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-clusters.png" alt="dashboard-clusters">
+                <p>dashboard-clusters</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-filtered.png" alt="dashboard-filtered">
+                <p>dashboard-filtered</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>CLI Screenshots <span class="count">7</span></h2>
+        <div class="grid">
+            <div class="item">
+                <img src="assets/screenshots/cli/cli-help.png" alt="cli-help">
+                <p>cli-help</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/cli/cli-remember.png" alt="cli-remember">
+                <p>cli-remember</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/cli/cli-recall.png" alt="cli-recall">
+                <p>cli-recall</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/cli/cli-list.png" alt="cli-list">
+                <p>cli-list</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/cli/cli-status.png" alt="cli-status">
+                <p>cli-status</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/cli/cli-build-graph.png" alt="cli-build-graph">
+                <p>cli-build-graph</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/cli/cli-profile-switch.png" alt="cli-profile-switch">
+                <p>cli-profile-switch</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>v2.5 Live Events & Agents <span class="count">5</span></h2>
+        <div class="grid">
+            <div class="item">
+                <img src="assets/screenshots/v25/v25-agents-tab.png" alt="v25-agents-tab">
+                <p>v25-agents-tab</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/v25/v25-live-events-working.png" alt="v25-live-events-working">
+                <p>v25-live-events-working</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-agents.png" alt="dashboard-agents">
+                <p>dashboard-agents</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-agents-annotated.png" alt="dashboard-agents-annotated">
+                <p>dashboard-agents-annotated</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-live-events.png" alt="dashboard-live-events">
+                <p>dashboard-live-events</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-live-events-dark.png" alt="dashboard-live-events-dark">
+                <p>dashboard-live-events-dark</p>
+            </div>
+            <div class="item">
+                <img src="assets/screenshots/dashboard/dashboard-live-events-annotated.png" alt="dashboard-live-events-annotated">
+                <p>dashboard-live-events-annotated</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>Total Screenshots: 24</strong> | Dashboard: 12 | CLI: 7 | v2.5: 5</p>
+        <p style="margin-top: 10px;">SuperLocalMemory V2 - Universal AI Memory System</p>
+        <p style="margin-top: 5px; font-size: 12px;">Created by Varun Pratap Bhardwaj | MIT License</p>
+    </div>
+</body>
+</html>

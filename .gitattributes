@@ -1,0 +1,11 @@
+# Git LFS Configuration for SuperLocalMemory V2
+# Large visual assets are stored in LFS to keep repo lightweight
+# Videos (largest files)
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+# Animated GIFs
+*.gif filter=lfs diff=lfs merge=lfs -text
+# Large PNGs (> 1MB)
+assets/contact-sheet.png filter=lfs diff=lfs merge=lfs -text
+assets/screenshots/**/*-annotated.png filter=lfs diff=lfs merge=lfs -text
+# Keep small files in git (CLI mockups, thumbnails, optimized WebP)
+# These are needed for quick preview and don't bloat repo significantly

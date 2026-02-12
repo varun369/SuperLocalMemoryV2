@@ -250,6 +250,95 @@ python ~/.claude-memory/auto_backup.py status   # Backup status</code></pre>
         </div>
       </div>
 
+      <!-- Screenshot Gallery -->
+      <h2 style="margin-bottom: 1.5rem; margin-top: 3rem;">📸 See It In Action</h2>
+      <p style="font-size: 1.125rem; color: var(--color-text-secondary); margin-bottom: 2rem;">
+        Visual tour of SuperLocalMemory V2's dashboard and capabilities.
+      </p>
+
+      <!-- Dashboard Views -->
+      <h3 style="margin-bottom: 1rem; color: var(--color-accent);">Dashboard Views</h3>
+      <div class="screenshot-gallery" style="margin-bottom: 3rem;">
+        <a href="/assets/screenshots/dashboard/dashboard-overview.png" target="_blank" rel="noopener" class="screenshot-item">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-overview-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-overview-thumb.png" alt="Dashboard Overview" loading="lazy">
+          </picture>
+          <div class="screenshot-caption">Overview</div>
+        </a>
+        <a href="/assets/screenshots/dashboard/dashboard-memories.png" target="_blank" rel="noopener" class="screenshot-item">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-memories-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-memories-thumb.png" alt="Memory List" loading="lazy">
+          </picture>
+          <div class="screenshot-caption">Memory List</div>
+        </a>
+        <a href="/assets/screenshots/dashboard/dashboard-timeline.png" target="_blank" rel="noopener" class="screenshot-item">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-timeline-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-timeline-thumb.png" alt="Timeline View" loading="lazy">
+          </picture>
+          <div class="screenshot-caption">Timeline</div>
+        </a>
+        <a href="/assets/screenshots/dashboard/dashboard-filtered.png" target="_blank" rel="noopener" class="screenshot-item">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-filtered-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-filtered-thumb.png" alt="Advanced Search" loading="lazy">
+          </picture>
+          <div class="screenshot-caption">Advanced Search</div>
+        </a>
+      </div>
+
+      <!-- Knowledge Graph -->
+      <h3 style="margin-bottom: 1rem; color: var(--color-accent);">Knowledge Graph</h3>
+      <div class="screenshot-gallery" style="margin-bottom: 3rem;">
+        <a href="/assets/screenshots/dashboard/dashboard-graph.png" target="_blank" rel="noopener" class="screenshot-item">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-graph-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-graph-thumb.png" alt="Interactive Graph" loading="lazy">
+          </picture>
+          <div class="screenshot-caption">Interactive Graph</div>
+        </a>
+        <a href="/assets/screenshots/dashboard/dashboard-clusters.png" target="_blank" rel="noopener" class="screenshot-item">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-clusters-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-clusters-thumb.png" alt="Cluster Analysis" loading="lazy">
+          </picture>
+          <div class="screenshot-caption">Clusters</div>
+        </a>
+      </div>
+
+      <!-- Live Events (v2.5) -->
+      <h3 style="margin-bottom: 1rem; color: var(--color-accent);">Live Events (v2.5)</h3>
+      <div class="screenshot-gallery" style="margin-bottom: 3rem;">
+        <a href="/assets/screenshots/dashboard/dashboard-live-events.png" target="_blank" rel="noopener" class="screenshot-item">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-live-events-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-live-events-thumb.png" alt="Live Event Stream" loading="lazy">
+          </picture>
+          <div class="screenshot-caption">Event Stream</div>
+        </a>
+        <a href="/assets/screenshots/dashboard/dashboard-agents.png" target="_blank" rel="noopener" class="screenshot-item">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-agents-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-agents-thumb.png" alt="Agent Connections" loading="lazy">
+          </picture>
+          <div class="screenshot-caption">Agent Tracking</div>
+        </a>
+      </div>
+
+      <!-- Pattern Learning -->
+      <h3 style="margin-bottom: 1rem; color: var(--color-accent);">Pattern Learning</h3>
+      <div class="screenshot-gallery" style="margin-bottom: 3rem;">
+        <a href="/assets/screenshots/dashboard/dashboard-patterns.png" target="_blank" rel="noopener" class="screenshot-item">
+          <picture>
+            <source srcset="/assets/thumbnails/dashboard-patterns-thumb.webp" type="image/webp">
+            <img src="/assets/thumbnails/dashboard-patterns-thumb.png" alt="Learned Patterns" loading="lazy">
+          </picture>
+          <div class="screenshot-caption">Learned Patterns</div>
+        </a>
+      </div>
+
       <!-- CTA -->
       <div style="background: var(--color-bg-secondary); border: 2px solid var(--color-accent); border-radius: var(--border-radius); padding: 2rem; text-align: center;">
         <h3 style="margin-bottom: 1rem;">Experience These Features</h3>
@@ -260,4 +349,56 @@ python ~/.claude-memory/auto_backup.py status   # Backup status</code></pre>
       </div>
     </div>
   </section>
+
+  <style>
+    .screenshot-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .screenshot-item {
+      position: relative;
+      display: block;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      border: 1px solid var(--color-border);
+      transition: all 0.3s ease;
+      background: var(--color-bg-secondary);
+      text-decoration: none;
+    }
+
+    .screenshot-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      border-color: var(--color-accent);
+    }
+
+    .screenshot-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .screenshot-item:hover img {
+      transform: scale(1.05);
+    }
+
+    .screenshot-caption {
+      padding: 0.75rem;
+      text-align: center;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-text-primary);
+      background: var(--color-bg-secondary);
+    }
+
+    @media (max-width: 768px) {
+      .screenshot-gallery {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+      }
+    }
+  </style>
 </BaseLayout>

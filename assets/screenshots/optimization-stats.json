@@ -1,0 +1,152 @@
+{
+  "timestamp": "2026-02-12T09:59:33.707602",
+  "total_files": 12,
+  "processed": 12,
+  "skipped": 0,
+  "files": [
+    {
+      "name": "dashboard-agents.png",
+      "category": "dashboard",
+      "png": {
+        "size": 141913,
+        "reduction_pct": 0.0
+      },
+      "webp": {
+        "size": 145206,
+        "path": "dashboard/web/dashboard-agents.webp"
+      }
+    },
+    {
+      "name": "dashboard-clusters.png",
+      "category": "dashboard",
+      "png": {
+        "size": 123721,
+        "reduction_pct": 0.0
+      },
+      "webp": {
+        "size": 133204,
+        "path": "dashboard/web/dashboard-clusters.webp"
+      }
+    },
+    {
+      "name": "dashboard-filtered.png",
+      "category": "dashboard",
+      "png": {
+        "size": 221340,
+        "reduction_pct": 0.0
+      },
+      "webp": {
+        "size": 273026,
+        "path": "dashboard/web/dashboard-filtered.webp"
+      }
+    },
+    {
+      "name": "dashboard-graph.png",
+      "category": "dashboard",
+      "png": {
+        "size": 113943,
+        "reduction_pct": 0.0
+      },
+      "webp": {
+        "size": 88586,
+        "path": "dashboard/web/dashboard-graph.webp"
+      }
+    },
+    {
+      "name": "dashboard-live-events-dark.png",
+      "category": "dashboard",
+      "png": {
+        "size": 158534,
+        "reduction_pct": 0.0
+      },
+      "webp": {
+        "size": 166052,
+        "path": "dashboard/web/dashboard-live-events-dark.webp"
+      }
+    },
+    {
+      "name": "dashboard-live-events.png",
+      "category": "dashboard",
+      "png": {
+        "size": 158534,
+        "reduction_pct": 0.0
+      },
+      "webp": {
+        "size": 166052,
+        "path": "dashboard/web/dashboard-live-events.webp"
+      }
+    },
+    {
+      "name": "dashboard-memories-dark.png",
+      "category": "dashboard",
+      "png": {
+        "size": 221340,
+        "reduction_pct": 0.0
+      },
+      "webp": {
+        "size": 273026,
+        "path": "dashboard/web/dashboard-memories-dark.webp"
+      }
+    },
+    {
+      "name": "dashboard-memories.png",
+      "category": "dashboard",
+      "png": {
+        "size": 221340,
+        "reduction_pct": 0.0
+      },
+      "webp": {
+        "size": 273026,
+        "path": "dashboard/web/dashboard-memories.webp"
+      }
+    },
+    {
+      "name": "dashboard-overview-dark.png",
+      "category": "dashboard",
+      "png": {
+        "size": 114471,
+        "reduction_pct": 0.0
+      },
+      "webp": {
+        "size": 88776,
+        "path": "dashboard/web/dashboard-overview-dark.webp"
+      }
+    },
+    {
+      "name": "dashboard-overview.png",
+      "category": "dashboard",
+      "png": {
+        "size": 113943,
+        "reduction_pct": 0.0
+      },
+      "webp": {
+        "size": 88586,
+        "path": "dashboard/web/dashboard-overview.webp"
+      }
+    },
+    {
+      "name": "dashboard-patterns.png",
+      "category": "dashboard",
+      "png": {
+        "size": 97478,
+        "reduction_pct": 0.0
+      },
+      "webp": {
+        "size": 78286,
+        "path": "dashboard/web/dashboard-patterns.webp"
+      }
+    },
+    {
+      "name": "dashboard-timeline.png",
+      "category": "dashboard",
+      "png": {
+        "size": 97371,
+        "reduction_pct": 0.0
+      },
+      "webp": {
+        "size": 78762,
+        "path": "dashboard/web/dashboard-timeline.webp"
+      }
+    }
+  ]
+}

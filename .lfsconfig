@@ -1,0 +1,7 @@
+[lfs]
+	# Fetch LFS files during git clone by default
+	# Set to false for developers who don't need assets
+	fetchinclude = assets/**,website/public/assets/**
+
+	# Skip LFS fetch during npm install (developers can fetch manually if needed)
+	skipdownloaderrors = true
