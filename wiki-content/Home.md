@@ -1,4 +1,8 @@
-# 🧠 SuperLocalMemory V2
+<p align="center">
+  <img src="https://varun369.github.io/SuperLocalMemoryV2/assets/branding/icon-192.png" alt="SuperLocalMemory V2" width="96"/>
+</p>
+
+# SuperLocalMemory V2
 
 <p align="center">
   <strong>Your AI Finally Remembers You</strong><br/>

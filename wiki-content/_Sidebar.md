@@ -1,4 +1,4 @@
-## 🧠 SuperLocalMemory V2
+## <img src="https://varun369.github.io/SuperLocalMemoryV2/assets/branding/icon-32.png" alt="" width="28" style="vertical-align: middle;"/> SuperLocalMemory V2
 
 **[[Home]]**
 
