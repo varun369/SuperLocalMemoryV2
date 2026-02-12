@@ -6,6 +6,7 @@
 </p>
 
 <p align="center">
+  <a href="https://varun369.github.io/SuperLocalMemoryV2/">🌐 Official Website</a> •
   <a href="https://github.com/varun369/SuperLocalMemoryV2">⭐ Star on GitHub</a> •
   <a href="https://buymeacoffee.com/varunpratah">☕ Buy Me a Coffee</a> •
   <a href="https://paypal.me/varunpratapbhardwaj">💸 PayPal</a>
@@ -225,3 +226,10 @@ If SuperLocalMemory saves you time:
   <strong>100% local. 100% private. 100% yours.</strong><br/>
   <em>Created by Varun Pratap Bhardwaj</em>
 </p>
+
+---
+
+**🌐 Official Website:** [varun369.github.io/SuperLocalMemoryV2](https://varun369.github.io/SuperLocalMemoryV2/)
+**📦 NPM Package:** [npmjs.com/package/superlocalmemory](https://www.npmjs.com/package/superlocalmemory)
+**📖 Documentation:** [GitHub Wiki](https://github.com/varun369/SuperLocalMemoryV2/wiki)
+**💬 Support:** [GitHub Issues](https://github.com/varun369/SuperLocalMemoryV2/issues)

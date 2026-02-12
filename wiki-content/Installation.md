@@ -225,6 +225,12 @@ python ~/.claude-memory/ui_server.py --debug
 
 ---
 
+---
+
+**🌐 Official Website:** [varun369.github.io/SuperLocalMemoryV2](https://varun369.github.io/SuperLocalMemoryV2/) | **📦 NPM:** [npmjs.com/package/superlocalmemory](https://www.npmjs.com/package/superlocalmemory)
+
+---
+
 ## 📁 Installation Directory
 
 Everything is installed to `~/.claude-memory/`:

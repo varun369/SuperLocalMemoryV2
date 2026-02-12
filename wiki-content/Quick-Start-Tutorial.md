@@ -2,6 +2,8 @@
 
 **Your first memory in 2 minutes** - Get started with SuperLocalMemory V2's intelligent local memory system for AI coding assistants.
 
+**🌐 Official Website:** [varun369.github.io/SuperLocalMemoryV2](https://varun369.github.io/SuperLocalMemoryV2/) | **📦 NPM:** [npmjs.com/package/superlocalmemory](https://www.npmjs.com/package/superlocalmemory)
+
 ---
 
 ## Prerequisites

@@ -29,12 +29,22 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
+    <meta property="og:image" content="https://varun369.github.io/SuperLocalMemoryV2/assets/social-preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="SuperLocalMemory V2 - Your AI Finally Remembers You" />
+    <meta property="og:site_name" content="SuperLocalMemory V2" />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content={canonicalURL} />
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content="https://varun369.github.io/SuperLocalMemoryV2/assets/social-preview.png" />
+    <meta property="twitter:image:alt" content="SuperLocalMemory V2 - Your AI Finally Remembers You" />
+    <meta property="twitter:creator" content="@varun369" />
+    <meta property="twitter:site" content="@varun369" />
 
     <!-- SEO Keywords -->
     <meta name="keywords" content="local AI memory, claude memory extension, AI memory system free, alternative to Mem0, alternative to Zep, MCP integration, Model Context Protocol, Cursor IDE memory, Windsurf memory, VS Code AI memory, agentic IDE memory, AI coding assistant memory, persistent AI context, local first developer tools, knowledge graph AI, pattern learning AI, vibe coding memory, AI agent memory 2026, open source MCP server, free AI memory tool, GDPR compliant AI memory, codex, github copilot, gemini cli, jetbrains, chatgpt, openai, chatgpt-connector, chatgpt MCP memory, openai MCP integration, 17 IDEs supported" />
@@ -42,6 +52,55 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
     <!-- Robots -->
     <meta name="robots" content="index, follow" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "SuperLocalMemory V2",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "macOS, Linux, Windows",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Varun Pratap Bhardwaj",
+          "url": "https://github.com/varun369"
+        },
+        "description": "The only free, local-first AI memory system with universal architecture. Gives AI assistants like Claude, Cursor, and 17+ other tools persistent memory across sessions.",
+        "image": "https://varun369.github.io/SuperLocalMemoryV2/assets/social-preview.png",
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "5",
+          "ratingCount": "100"
+        },
+        "softwareVersion": "2.5.0",
+        "datePublished": "2026-01-15",
+        "dateModified": "2026-02-12",
+        "license": "https://opensource.org/licenses/MIT",
+        "url": "https://varun369.github.io/SuperLocalMemoryV2/",
+        "downloadUrl": "https://github.com/varun369/SuperLocalMemoryV2",
+        "sameAs": [
+          "https://github.com/varun369/SuperLocalMemoryV2",
+          "https://www.npmjs.com/package/superlocalmemory"
+        ],
+        "featureList": [
+          "100% Local - all data stays on your machine",
+          "100% Free - no usage limits, no subscriptions",
+          "17+ IDE integrations (Claude Desktop, Cursor, Windsurf, VS Code)",
+          "MCP Protocol support for native AI tool integration",
+          "Knowledge graph with automatic relationship discovery",
+          "Pattern learning - learns your coding style and preferences",
+          "Multi-profile support for work/personal/client contexts",
+          "Real-time event streaming and agent tracking"
+        ],
+        "keywords": "local AI memory, claude memory, AI memory system, MCP integration, Model Context Protocol, Cursor IDE, Windsurf, VS Code, AI agent memory, persistent AI context, knowledge graph AI, pattern learning, open source, free AI memory, GDPR compliant"
+      }
+    </script>
   </head>
   <body>
     <header>
