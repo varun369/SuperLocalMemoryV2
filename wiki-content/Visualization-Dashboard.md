@@ -10,7 +10,7 @@
 
 **Watch the full dashboard walkthrough** (2 minutes):
 
-https://github.com/varun369/SuperLocalMemoryV2/raw/mahttps://varun369.github.io/SuperLocalMemoryV2/assets/videos/dashboard-tour.mp4
+https://varun369.github.io/SuperLocalMemoryV2/assets/videos/dashboard-tour.mp4
 
 ---
 
