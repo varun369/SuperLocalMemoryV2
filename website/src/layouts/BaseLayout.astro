@@ -15,7 +15,11 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/SuperLocalMemoryV2/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/SuperLocalMemoryV2/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/SuperLocalMemoryV2/assets/branding/icon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/SuperLocalMemoryV2/assets/branding/icon-16.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/SuperLocalMemoryV2/assets/branding/icon-192.png" />
+    <link rel="icon" type="image/svg+xml" href="/SuperLocalMemoryV2/assets/branding/icon.svg" />
     <meta name="generator" content={Astro.generator} />
 
     <title>{title}</title>

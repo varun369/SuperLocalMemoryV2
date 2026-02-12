@@ -1,8 +1,9 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/🧠_SuperLocalMemory-V2-blueviolet?style=for-the-badge" alt="SuperLocalMemory V2"/>
+  <img src="https://varun369.github.io/SuperLocalMemoryV2/assets/branding/icon-512.png" alt="SuperLocalMemory V2" width="200"/>
 </p>
 
-<h1 align="center">Your AI Finally Remembers You</h1>
+<h1 align="center">SuperLocalMemory V2</h1>
+<p align="center"><strong>Your AI Finally Remembers You</strong></p>
 
 <p align="center">
   <strong>⚡ Created & Architected by <a href="https://github.com/varun369">Varun Pratap Bhardwaj</a> ⚡</strong><br/>
