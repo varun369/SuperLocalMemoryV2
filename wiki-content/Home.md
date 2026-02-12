@@ -15,7 +15,7 @@
 
 ## Visual Overview
 
-![SuperLocalMemory V2 Features](../assets/contact-sheet.png)
+![SuperLocalMemory V2 Features](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/contact-sheet.png)
 *All SuperLocalMemory V2 features at a glance: Dashboard, CLI, Live Events, Agents, Knowledge Graph*
 
 ---
@@ -56,24 +56,24 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 ## Key Features in Action
 
 ### 🎯 Real-Time Memory Operations
-![Live Events](../assets/gifs/event-stream.gif)
+![Live Events](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/event-stream.gif)
 
 ### 🔍 Intelligent Search
-![Hybrid Search](../assets/gifs/dashboard-search.gif)
+![Hybrid Search](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/dashboard-search.gif)
 
 ### 🕸️ Knowledge Graph
-![Interactive Graph](../assets/gifs/graph-interaction.gif)
+![Interactive Graph](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/graph-interaction.gif)
 
 ### 💻 Simple CLI
-![CLI Demo](../assets/gifs/cli-demo.gif)
+![CLI Demo](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/cli-demo.gif)
 
 ---
 
 ## Video Walkthroughs
 
-- [Installation (1 min)](../assets/videos/installation-walkthrough.mp4)
-- [Quick Start (2 min)](../assets/videos/quick-start.mp4)
-- [Dashboard Tour (2 min)](../assets/videos/dashboard-tour.mp4)
+- [Installation (1 min)](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/videos/installation-walkthrough.mp4)
+- [Quick Start (2 min)](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/videos/quick-start.mp4)
+- [Dashboard Tour (2 min)](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/videos/dashboard-tour.mp4)
 
 ---
 
