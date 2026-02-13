@@ -39,33 +39,4 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- GitHub Wiki Links -->
-  <url>
-    <loc>https://github.com/varun369/SuperLocalMemoryV2/wiki</loc>
-    <lastmod>2026-02-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://github.com/varun369/SuperLocalMemoryV2/wiki/Installation</loc>
-    <lastmod>2026-02-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://github.com/varun369/SuperLocalMemoryV2/wiki/Quick-Start-Tutorial</loc>
-    <lastmod>2026-02-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://github.com/varun369/SuperLocalMemoryV2/wiki/MCP-Integration</loc>
-    <lastmod>2026-02-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
 </urlset>
