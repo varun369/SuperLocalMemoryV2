@@ -29,7 +29,7 @@ No slash commands needed. The AI assistant naturally uses your memory system.
 
 SuperLocalMemory runs an MCP server locally on your machine. When you open Claude Desktop, Cursor, or any supported IDE, it automatically connects to this server. Every time you ask your AI assistant to remember something or search your memory, it's making a direct local call — no cloud, no delays, complete privacy.
 
-![MCP Protocol Diagram](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/v25/v25-agents-tab.png)
+![MCP Protocol Diagram](https://superlocalmemory.com/assets/screenshots/v25/v25-agents-tab.png)
 *Figure: MCP client connected to SuperLocalMemory, showing protocol and trust score*
 
 ---
@@ -345,7 +345,7 @@ python3 ~/.claude-memory/ui_server.py
 
 You should see your IDE listed as a connected MCP client:
 
-![MCP Agents Connected](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/v25/v25-agents-tab.png)
+![MCP Agents Connected](https://superlocalmemory.com/assets/screenshots/v25/v25-agents-tab.png)
 *Figure: Dashboard showing MCP client connected with trust score 1.00*
 
 **Key indicators:**

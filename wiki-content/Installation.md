@@ -26,7 +26,7 @@ Complete installation instructions for SuperLocalMemory V2.3.0 with universal MC
 
 Watch the step-by-step installation process:
 
-![Installation Walkthrough Video](https://varun369.github.io/SuperLocalMemoryV2/assets/videos/installation-walkthrough.mp4)
+![Installation Walkthrough Video](https://superlocalmemory.com/assets/videos/installation-walkthrough.mp4)
 
 Or follow the detailed guide below.
 
@@ -77,7 +77,7 @@ source ~/.zshrc
 slm status
 ```
 
-![CLI Status Output](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-status.png)
+![CLI Status Output](https://superlocalmemory.com/assets/screenshots/cli/cli-status.png)
 *Figure: Successful Mac/Linux installation showing 0 memories and all systems ready*
 
 ### Windows (PowerShell — Manual Install)
@@ -110,7 +110,7 @@ slm status
 
 **Expected output:**
 
-![Successful Installation](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-status.png)
+![Successful Installation](https://superlocalmemory.com/assets/screenshots/cli/cli-status.png)
 
 *Figure: Fresh installation showing 0 memories and all systems ready*
 
@@ -227,7 +227,7 @@ python ~/.claude-memory/ui_server.py --debug
 
 ---
 
-**🌐 Official Website:** [varun369.github.io/SuperLocalMemoryV2](https://varun369.github.io/SuperLocalMemoryV2/) | **📦 NPM:** [npmjs.com/package/superlocalmemory](https://www.npmjs.com/package/superlocalmemory)
+**🌐 Official Website:** [superlocalmemory.com](https://superlocalmemory.com/) | **📦 NPM:** [npmjs.com/package/superlocalmemory](https://www.npmjs.com/package/superlocalmemory)
 
 ---
 

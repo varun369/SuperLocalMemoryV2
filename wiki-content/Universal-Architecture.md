@@ -6,7 +6,7 @@ SuperLocalMemory V2's 10-layer universal architecture with A2A agent collaborati
 
 ---
 
-> **[View Interactive Architecture Diagram](https://varun369.github.io/SuperLocalMemoryV2/architecture.html)** — Explore all 10 layers, MCP + A2A dual protocol, and v2.5 components in an interactive visualization. Click any layer for details.
+> **[View Interactive Architecture Diagram](https://superlocalmemory.com/architecture.html)** — Explore all 10 layers, MCP + A2A dual protocol, and v2.5 components in an interactive visualization. Click any layer for details.
 
 ---
 

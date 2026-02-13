@@ -1,4 +1,4 @@
-## <img src="https://varun369.github.io/SuperLocalMemoryV2/assets/branding/icon-32.png" alt="" width="28" style="vertical-align: middle;"/> SuperLocalMemory V2
+## <img src="https://superlocalmemory.com/assets/branding/icon-32.png" alt="" width="28" style="vertical-align: middle;"/> SuperLocalMemory V2
 
 **[[Home]]**
 
@@ -12,7 +12,7 @@
 ---
 
 ### 🏗️ Core Concepts
-- [Interactive Architecture Diagram](https://varun369.github.io/SuperLocalMemoryV2/architecture.html)
+- [Interactive Architecture Diagram](https://superlocalmemory.com/architecture.html)
 - [[Universal-Architecture]]
 - [[Architecture-V2.5]]
 - [[Visualization-Dashboard]]

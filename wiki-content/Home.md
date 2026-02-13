@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://varun369.github.io/SuperLocalMemoryV2/assets/branding/icon-192.png" alt="SuperLocalMemory V2" width="96"/>
+  <img src="https://superlocalmemory.com/assets/branding/icon-192.png" alt="SuperLocalMemory V2" width="96"/>
 </p>
 
 # SuperLocalMemory V2
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://varun369.github.io/SuperLocalMemoryV2/">🌐 Official Website</a> •
+  <a href="https://superlocalmemory.com/">🌐 Official Website</a> •
   <a href="https://github.com/varun369/SuperLocalMemoryV2">⭐ Star on GitHub</a> •
   <a href="https://buymeacoffee.com/varunpratah">☕ Buy Me a Coffee</a> •
   <a href="https://paypal.me/varunpratapbhardwaj">💸 PayPal</a>
@@ -20,7 +20,7 @@
 
 ## Visual Overview
 
-![SuperLocalMemory V2 Features](https://varun369.github.io/SuperLocalMemoryV2/assets/contact-sheet.png)
+![SuperLocalMemory V2 Features](https://superlocalmemory.com/assets/contact-sheet.png)
 *All SuperLocalMemory V2 features at a glance: Dashboard, CLI, Live Events, Agents, Knowledge Graph*
 
 ---
@@ -61,24 +61,24 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 ## Key Features in Action
 
 ### 🎯 Real-Time Memory Operations
-![Live Events](https://varun369.github.io/SuperLocalMemoryV2/assets/gifs/event-stream.gif)
+![Live Events](https://superlocalmemory.com/assets/gifs/event-stream.gif)
 
 ### 🔍 Intelligent Search
-![Hybrid Search](https://varun369.github.io/SuperLocalMemoryV2/assets/gifs/dashboard-search.gif)
+![Hybrid Search](https://superlocalmemory.com/assets/gifs/dashboard-search.gif)
 
 ### 🕸️ Knowledge Graph
-![Interactive Graph](https://varun369.github.io/SuperLocalMemoryV2/assets/gifs/graph-interaction.gif)
+![Interactive Graph](https://superlocalmemory.com/assets/gifs/graph-interaction.gif)
 
 ### 💻 Simple CLI
-![CLI Demo](https://varun369.github.io/SuperLocalMemoryV2/assets/gifs/cli-demo.gif)
+![CLI Demo](https://superlocalmemory.com/assets/gifs/cli-demo.gif)
 
 ---
 
 ## Video Walkthroughs
 
-- [Installation (1 min)](https://varun369.github.io/SuperLocalMemoryV2/assets/videos/installation-walkthrough.mp4)
-- [Quick Start (2 min)](https://varun369.github.io/SuperLocalMemoryV2/assets/videos/quick-start.mp4)
-- [Dashboard Tour (2 min)](https://varun369.github.io/SuperLocalMemoryV2/assets/videos/dashboard-tour.mp4)
+- [Installation (1 min)](https://superlocalmemory.com/assets/videos/installation-walkthrough.mp4)
+- [Quick Start (2 min)](https://superlocalmemory.com/assets/videos/quick-start.mp4)
+- [Dashboard Tour (2 min)](https://superlocalmemory.com/assets/videos/dashboard-tour.mp4)
 
 ---
 
@@ -233,7 +233,7 @@ If SuperLocalMemory saves you time:
 
 ---
 
-**🌐 Official Website:** [varun369.github.io/SuperLocalMemoryV2](https://varun369.github.io/SuperLocalMemoryV2/)
+**🌐 Official Website:** [superlocalmemory.com](https://superlocalmemory.com/)
 **📦 NPM Package:** [npmjs.com/package/superlocalmemory](https://www.npmjs.com/package/superlocalmemory)
 **📖 Documentation:** [GitHub Wiki](https://github.com/varun369/SuperLocalMemoryV2/wiki)
 **💬 Support:** [GitHub Issues](https://github.com/varun369/SuperLocalMemoryV2/issues)

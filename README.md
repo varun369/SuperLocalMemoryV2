@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://varun369.github.io/SuperLocalMemoryV2/assets/branding/icon-512.png" alt="SuperLocalMemory V2" width="200"/>
+  <img src="https://superlocalmemory.com/assets/branding/icon-512.png" alt="SuperLocalMemory V2" width="200"/>
 </p>
 
 <h1 align="center">SuperLocalMemory V2</h1>
@@ -57,7 +57,7 @@
 
 **Dashboard:** `python3 ~/.claude-memory/ui_server.py` then open `http://localhost:8765`
 
-[Interactive Architecture Diagram](https://varun369.github.io/SuperLocalMemoryV2/architecture.html) | [Architecture Doc](docs/ARCHITECTURE-V2.5.md) | [Full Changelog](CHANGELOG.md)
+[Interactive Architecture Diagram](https://superlocalmemory.com/architecture.html) | [Architecture Doc](docs/ARCHITECTURE-V2.5.md) | [Full Changelog](CHANGELOG.md)
 
 ---
 
@@ -493,7 +493,7 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 
 ### Multi-Layer Memory Architecture
 
-**[View Interactive Architecture Diagram](https://varun369.github.io/SuperLocalMemoryV2/architecture.html)** — Click any layer for details, research references, and file paths.
+**[View Interactive Architecture Diagram](https://superlocalmemory.com/architecture.html)** — Click any layer for details, research references, and file paths.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

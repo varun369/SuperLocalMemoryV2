@@ -4,7 +4,7 @@ Official static website for SuperLocalMemory V2, built with Astro and deployed t
 
 ## 🌐 Live Site
 
-**Production:** https://varun369.github.io/SuperLocalMemoryV2
+**Production:** https://superlocalmemory.com
 
 **Future Domain:** superlocalmemory.is-a.dev (planned)
 
@@ -106,7 +106,7 @@ git push origin main
 1. Go to **Actions** tab on GitHub
 2. Watch "Deploy Website to GitHub Pages" workflow
 3. Should complete in 2-3 minutes
-4. Visit: https://varun369.github.io/SuperLocalMemoryV2
+4. Visit: https://superlocalmemory.com
 
 ---
 

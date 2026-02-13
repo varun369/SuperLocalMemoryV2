@@ -2,7 +2,7 @@
 
 **Your first memory in 2 minutes** - Get started with SuperLocalMemory V2's intelligent local memory system for AI coding assistants.
 
-**🌐 Official Website:** [varun369.github.io/SuperLocalMemoryV2](https://varun369.github.io/SuperLocalMemoryV2/) | **📦 NPM:** [npmjs.com/package/superlocalmemory](https://www.npmjs.com/package/superlocalmemory)
+**🌐 Official Website:** [superlocalmemory.com](https://superlocalmemory.com/) | **📦 NPM:** [npmjs.com/package/superlocalmemory](https://www.npmjs.com/package/superlocalmemory)
 
 ---
 
@@ -59,7 +59,7 @@ slm status
 ✓ Current Profile: default
 ```
 
-![CLI Status Output](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-status.png)
+![CLI Status Output](https://superlocalmemory.com/assets/screenshots/cli/cli-status.png)
 *Figure 1: The `slm status` command shows system health and database statistics*
 
 For detailed installation troubleshooting, see the [Installation Guide](Installation).
@@ -85,7 +85,7 @@ Next steps:
   • Use `slm list` to see recent memories
 ```
 
-![CLI Remember Command](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-remember.png)
+![CLI Remember Command](https://superlocalmemory.com/assets/screenshots/cli/cli-remember.png)
 *Figure 2: Saving your first memory with the `slm remember` command*
 
 **What just happened:**
@@ -95,7 +95,7 @@ Next steps:
 - Pattern learning analyzed your preference for FastAPI
 - Full-text search index updated
 
-![CLI Demo](https://varun369.github.io/SuperLocalMemoryV2/assets/gifs/cli-demo.gif)
+![CLI Demo](https://superlocalmemory.com/assets/gifs/cli-demo.gif)
 *Interactive demo: Watch how memories are saved and recalled in real-time*
 
 ### Step 2: Add More Context
@@ -150,7 +150,7 @@ Project: default
 Created: 2026-02-07 14:23
 ```
 
-![CLI Recall Results](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-recall.png)
+![CLI Recall Results](https://superlocalmemory.com/assets/screenshots/cli/cli-recall.png)
 *Figure 3: Search results showing relevance scores and memory metadata*
 
 **Three search methods working simultaneously:**
@@ -204,7 +204,7 @@ Project: default
 Created: 2026-02-07 14:23
 ```
 
-![CLI List Output](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-list.png)
+![CLI List Output](https://superlocalmemory.com/assets/screenshots/cli/cli-list.png)
 *Figure 4: The `slm list` command displays recent memories with tags and metadata*
 
 ---
@@ -241,7 +241,7 @@ Graph Statistics:
   Density: 0.37%
 ```
 
-![CLI Build Graph](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-build-graph.png)
+![CLI Build Graph](https://superlocalmemory.com/assets/screenshots/cli/cli-build-graph.png)
 *Figure 5: Building the knowledge graph discovers relationships between memories*
 
 **Why build the graph:**
@@ -360,10 +360,10 @@ python ~/.claude-memory/ui_server.py
 🌐 Dashboard running at: http://localhost:8765
 ```
 
-![Dashboard Overview](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/dashboard/dashboard-overview.png)
+![Dashboard Overview](https://superlocalmemory.com/assets/screenshots/dashboard/dashboard-overview.png)
 *Figure 6: The web dashboard provides visual exploration of your memory system*
 
-![Dashboard Navigation](https://varun369.github.io/SuperLocalMemoryV2/assets/gifs/dashboard-tabs.gif)
+![Dashboard Navigation](https://superlocalmemory.com/assets/gifs/dashboard-tabs.gif)
 *Interactive navigation: Explore Timeline, Search, Graph, and Statistics views*
 
 ### Explore Four Views
@@ -402,10 +402,10 @@ Features:
   - Drag nodes to rearrange
 ```
 
-![Knowledge Graph Visualization](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/dashboard/dashboard-graph.png)
+![Knowledge Graph Visualization](https://superlocalmemory.com/assets/screenshots/dashboard/dashboard-graph.png)
 *Figure 7: Interactive graph view shows relationships between memories and entities*
 
-![Graph Interaction](https://varun369.github.io/SuperLocalMemoryV2/assets/gifs/graph-interaction.gif)
+![Graph Interaction](https://superlocalmemory.com/assets/gifs/graph-interaction.gif)
 *Click, drag, and explore the knowledge graph in real-time*
 
 **4. Statistics Dashboard**
@@ -419,7 +419,7 @@ Features:
   - Pattern confidence scores
 ```
 
-![Dashboard Timeline View](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/dashboard/dashboard-timeline.png)
+![Dashboard Timeline View](https://superlocalmemory.com/assets/screenshots/dashboard/dashboard-timeline.png)
 *Figure 8: Timeline view displays memories chronologically with importance indicators*
 
 ### Dashboard Features
@@ -510,13 +510,13 @@ Congratulations! You've completed the quick start tutorial.
 <tr>
 <td width="50%">
 
-![Status Command](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-status.png)
+![Status Command](https://superlocalmemory.com/assets/screenshots/cli/cli-status.png)
 *System status showing memory count and graph statistics*
 
 </td>
 <td width="50%">
 
-![Remember Command](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-remember.png)
+![Remember Command](https://superlocalmemory.com/assets/screenshots/cli/cli-remember.png)
 *Saving a new memory with automatic entity extraction*
 
 </td>
@@ -524,13 +524,13 @@ Congratulations! You've completed the quick start tutorial.
 <tr>
 <td width="50%">
 
-![Recall Command](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-recall.png)
+![Recall Command](https://superlocalmemory.com/assets/screenshots/cli/cli-recall.png)
 *Search results with relevance scores and metadata*
 
 </td>
 <td width="50%">
 
-![List Command](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-list.png)
+![List Command](https://superlocalmemory.com/assets/screenshots/cli/cli-list.png)
 *Recent memories organized chronologically*
 
 </td>
@@ -538,13 +538,13 @@ Congratulations! You've completed the quick start tutorial.
 <tr>
 <td width="50%">
 
-![Build Graph](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-build-graph.png)
+![Build Graph](https://superlocalmemory.com/assets/screenshots/cli/cli-build-graph.png)
 *Knowledge graph construction with entity extraction*
 
 </td>
 <td width="50%">
 
-![Profile Switch](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/cli/cli-profile-switch.png)
+![Profile Switch](https://superlocalmemory.com/assets/screenshots/cli/cli-profile-switch.png)
 *Multi-profile support for context isolation*
 
 </td>
@@ -557,13 +557,13 @@ Congratulations! You've completed the quick start tutorial.
 <tr>
 <td width="50%">
 
-![Dashboard Overview](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/dashboard/dashboard-overview.png)
+![Dashboard Overview](https://superlocalmemory.com/assets/screenshots/dashboard/dashboard-overview.png)
 *Main dashboard with memory statistics and quick actions*
 
 </td>
 <td width="50%">
 
-![Memory Browser](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/dashboard/dashboard-memories.png)
+![Memory Browser](https://superlocalmemory.com/assets/screenshots/dashboard/dashboard-memories.png)
 *Browse and filter memories with advanced search*
 
 </td>
@@ -571,13 +571,13 @@ Congratulations! You've completed the quick start tutorial.
 <tr>
 <td width="50%">
 
-![Knowledge Graph](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/dashboard/dashboard-graph.png)
+![Knowledge Graph](https://superlocalmemory.com/assets/screenshots/dashboard/dashboard-graph.png)
 *Interactive graph visualization with zoom and pan*
 
 </td>
 <td width="50%">
 
-![Cluster View](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/dashboard/dashboard-clusters.png)
+![Cluster View](https://superlocalmemory.com/assets/screenshots/dashboard/dashboard-clusters.png)
 *Explore memory clusters and topic relationships*
 
 </td>
@@ -585,13 +585,13 @@ Congratulations! You've completed the quick start tutorial.
 <tr>
 <td width="50%">
 
-![Pattern Learning](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/dashboard/dashboard-patterns.png)
+![Pattern Learning](https://superlocalmemory.com/assets/screenshots/dashboard/dashboard-patterns.png)
 *View learned patterns and confidence scores*
 
 </td>
 <td width="50%">
 
-![Filtered Results](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/dashboard/dashboard-filtered.png)
+![Filtered Results](https://superlocalmemory.com/assets/screenshots/dashboard/dashboard-filtered.png)
 *Advanced filtering by tags, projects, and importance*
 
 </td>
@@ -604,13 +604,13 @@ Congratulations! You've completed the quick start tutorial.
 <tr>
 <td width="50%">
 
-![Live Events Stream](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/v25/v25-live-events-working.png)
+![Live Events Stream](https://superlocalmemory.com/assets/screenshots/v25/v25-live-events-working.png)
 *Real-time event stream showing memory operations across all agents*
 
 </td>
 <td width="50%">
 
-![Agents Tab](https://varun369.github.io/SuperLocalMemoryV2/assets/screenshots/v25/v25-agents-tab.png)
+![Agents Tab](https://superlocalmemory.com/assets/screenshots/v25/v25-agents-tab.png)
 *Track active AI agents and their memory access patterns*
 
 </td>
@@ -624,21 +624,21 @@ Congratulations! You've completed the quick start tutorial.
 - **Trust Scoring**: Silent collection of agent behavior patterns
 - **Live Dashboard**: Watch memory operations happen in real-time
 
-![Event Stream Demo](https://varun369.github.io/SuperLocalMemoryV2/assets/gifs/event-stream.gif)
+![Event Stream Demo](https://superlocalmemory.com/assets/gifs/event-stream.gif)
 *Watch memories flow through the system in real-time with the Event Bus*
 
 ### Interactive Demos
 
-![CLI Demo](https://varun369.github.io/SuperLocalMemoryV2/assets/gifs/cli-demo.gif)
+![CLI Demo](https://superlocalmemory.com/assets/gifs/cli-demo.gif)
 *Complete CLI workflow: remember → recall → list → build-graph*
 
-![Dashboard Search](https://varun369.github.io/SuperLocalMemoryV2/assets/gifs/dashboard-search.gif)
+![Dashboard Search](https://superlocalmemory.com/assets/gifs/dashboard-search.gif)
 *Real-time search with instant results and relevance scoring*
 
-![Graph Interaction](https://varun369.github.io/SuperLocalMemoryV2/assets/gifs/graph-interaction.gif)
+![Graph Interaction](https://superlocalmemory.com/assets/gifs/graph-interaction.gif)
 *Explore the knowledge graph: click, drag, and discover connections*
 
-![Dashboard Tabs](https://varun369.github.io/SuperLocalMemoryV2/assets/gifs/dashboard-tabs.gif)
+![Dashboard Tabs](https://superlocalmemory.com/assets/gifs/dashboard-tabs.gif)
 *Navigate between Timeline, Search, Graph, and Statistics views*
 
 ---

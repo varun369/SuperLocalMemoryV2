@@ -31,7 +31,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/varun369/SuperLocalMemoryV2"
-Documentation = "https://varun369.github.io/SuperLocalMemoryV2/"
+Documentation = "https://superlocalmemory.com/"
 Repository = "https://github.com/varun369/SuperLocalMemoryV2"
 
 [tool.pytest.ini_options]

@@ -102,5 +102,5 @@ MIT -- see [LICENSE](../../LICENSE) for details.
 ## Links
 
 - [SuperLocalMemory V2 Repository](https://github.com/varun369/SuperLocalMemoryV2)
-- [Documentation](https://varun369.github.io/SuperLocalMemoryV2/)
+- [Documentation](https://superlocalmemory.com/)
 - [LangChain Documentation](https://python.langchain.com/)
