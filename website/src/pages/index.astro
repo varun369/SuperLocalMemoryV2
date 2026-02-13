@@ -10,7 +10,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <section style="padding: 1rem 0; background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); text-align: center;">
     <div class="container">
       <p style="color: white; margin: 0; font-size: 1.1rem; font-weight: 600;">
-        NEW: v2.5 — "Your AI Memory Has a Heartbeat" — Real-time events, agent tracking, trust scoring, zero database locks.
+        NEW: v2.5.1 — Now on PyPI! <code style="background:rgba(255,255,255,0.2);padding:0.1rem 0.4rem;border-radius:4px;">pip install langchain-superlocalmemory</code> &amp; <code style="background:rgba(255,255,255,0.2);padding:0.1rem 0.4rem;border-radius:4px;">pip install llama-index-storage-chat-store-superlocalmemory</code>
         <a href="https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md" target="_blank" rel="noopener" style="color: #fde68a; margin-left: 0.5rem;">See what's new</a>
       </p>
     </div>
@@ -111,6 +111,62 @@ cd SuperLocalMemoryV2
 # Or: .\install.ps1  # Windows</code></pre>
         </details>
       </div>
+    </div>
+  </section>
+
+  <!-- Framework Integrations -->
+  <section style="padding: 4rem 0; background: linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(16,185,129,0.06) 100%);">
+    <div class="container">
+      <h2 class="text-center" style="margin-bottom: 0.75rem;">Framework Integrations</h2>
+      <p class="text-center" style="margin-bottom: 2.5rem; color: var(--color-text-secondary);">
+        Use SuperLocalMemory as a memory backend in your LangChain and LlamaIndex applications
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; max-width: 900px; margin: 0 auto;">
+        <!-- LangChain -->
+        <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+            <span style="font-size: 1.5rem;">🦜</span>
+            <h3 style="margin: 0;">LangChain</h3>
+            <a href="https://pypi.org/project/langchain-superlocalmemory/" target="_blank" rel="noopener" style="margin-left: auto;">
+              <img src="https://img.shields.io/pypi/v/langchain-superlocalmemory?style=flat-square&label=PyPI&color=blue" alt="PyPI" />
+            </a>
+          </div>
+          <pre style="margin: 0 0 1rem 0; font-size: 0.9rem;"><code>pip install langchain-superlocalmemory</code></pre>
+          <pre style="margin: 0; font-size: 0.8rem; line-height: 1.5;"><code>from langchain_superlocalmemory import SuperLocalMemoryChatMessageHistory
+
+history = SuperLocalMemoryChatMessageHistory(
+    session_id="my-session"
+)
+# Messages persist locally across sessions</code></pre>
+          <div style="margin-top: 1rem;">
+            <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/LangChain-Integration" target="_blank" rel="noopener" style="font-size: 0.875rem; color: var(--color-accent);">View full guide &rarr;</a>
+          </div>
+        </div>
+
+        <!-- LlamaIndex -->
+        <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+            <span style="font-size: 1.5rem;">🦙</span>
+            <h3 style="margin: 0;">LlamaIndex</h3>
+            <a href="https://pypi.org/project/llama-index-storage-chat-store-superlocalmemory/" target="_blank" rel="noopener" style="margin-left: auto;">
+              <img src="https://img.shields.io/pypi/v/llama-index-storage-chat-store-superlocalmemory?style=flat-square&label=PyPI&color=blue" alt="PyPI" />
+            </a>
+          </div>
+          <pre style="margin: 0 0 1rem 0; font-size: 0.9rem;"><code>pip install llama-index-storage-chat-store-superlocalmemory</code></pre>
+          <pre style="margin: 0; font-size: 0.8rem; line-height: 1.5;"><code>from llama_index.storage.chat_store.superlocalmemory import SuperLocalMemoryChatStore
+
+chat_store = SuperLocalMemoryChatStore()
+# Local SQLite backend, zero cloud</code></pre>
+          <div style="margin-top: 1rem;">
+            <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/LlamaIndex-Integration" target="_blank" rel="noopener" style="font-size: 0.875rem; color: var(--color-accent);">View full guide &rarr;</a>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-center" style="margin-top: 1.5rem; font-size: 0.875rem; color: var(--color-text-secondary);">
+        Both packages are 100% local — no cloud calls, no API keys for the memory layer. Your data stays on your machine.
+      </p>
     </div>
   </section>
 
