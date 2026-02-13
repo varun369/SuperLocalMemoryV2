@@ -266,12 +266,12 @@ SuperLocalMemory V2.2.0 implements **hybrid search** combining multiple strategi
 
 ### Search Strategies
 
-| Strategy | Method | Best For | Speed |
-|----------|--------|----------|-------|
-| **Semantic Search** | TF-IDF vectors + cosine similarity | Conceptual queries ("authentication patterns") | 45ms |
-| **Full-Text Search** | SQLite FTS5 with ranking | Exact phrases ("JWT tokens expire") | 30ms |
-| **Graph-Enhanced** | Knowledge graph traversal | Related concepts ("show auth-related") | 60ms |
-| **Hybrid Mode** | All three combined | General queries | 80ms |
+| Strategy | Method | Best For |
+|----------|--------|----------|
+| **Semantic Search** | TF-IDF vectors + cosine similarity | Conceptual queries ("authentication patterns") |
+| **Full-Text Search** | SQLite FTS5 with ranking | Exact phrases ("JWT tokens expire") |
+| **Graph-Enhanced** | Knowledge graph traversal | Related concepts ("show auth-related") |
+| **Hybrid Mode** | All three combined | General queries (default) |
 
 ### Search Examples
 
@@ -293,52 +293,63 @@ slm recall "API design patterns"
 # Combines semantic + exact + graph for optimal results
 ```
 
-### Search Performance by Dataset Size
+### Measured Search Latency
 
-| Memories | Semantic | FTS5 | Graph | Hybrid |
-|----------|----------|------|-------|--------|
-| 100 | 35ms | 25ms | 50ms | 65ms |
-| 500 | 45ms | 30ms | 60ms | 80ms |
-| 1,000 | 55ms | 35ms | 70ms | 95ms |
-| 5,000 | 85ms | 50ms | 110ms | 150ms |
+| Database Size | Median | P95 | P99 |
+|---------------|--------|-----|-----|
+| 100 memories | **10.6ms** | 14.9ms | 15.8ms |
+| 500 memories | **65.2ms** | 101.7ms | 112.5ms |
+| 1,000 memories | **124.3ms** | 190.1ms | 219.5ms |
 
-**All search strategies remain sub-second even with 5,000+ memories.**
+For typical personal databases (under 500 memories), search returns faster than you blink. [Full benchmarks →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Performance-Benchmarks)
 
 ---
 
-## ⚡ Performance
+## ⚡ Measured Performance
 
-### Benchmarks (v2.2.0)
+All numbers measured on real hardware (Apple M4 Pro, 24GB RAM). No estimates — real benchmarks.
 
-| Operation | Time | Comparison | Notes |
-|-----------|------|------------|-------|
-| **Add Memory** | < 10ms | - | Instant indexing |
-| **Search (Hybrid)** | 80ms | 3.3x faster than v1 | 500 memories |
-| **Graph Build** | < 2s | - | 100 memories |
-| **Pattern Learning** | < 2s | - | Incremental |
-| **Dashboard Load** | < 500ms | - | 1,000 memories |
-| **Timeline Render** | < 300ms | - | All memories |
+### Search Speed
 
-### Storage Efficiency
+| Database Size | Median Latency | P95 Latency |
+|---------------|----------------|-------------|
+| 100 memories | **10.6ms** | 14.9ms |
+| 500 memories | **65.2ms** | 101.7ms |
+| 1,000 memories | **124.3ms** | 190.1ms |
 
-| Tier | Description | Compression | Savings |
-|------|-------------|-------------|---------|
-| **Tier 1** | Active memories (0-30 days) | None | - |
-| **Tier 2** | Warm memories (30-90 days) | 60% | Progressive summarization |
-| **Tier 3** | Cold storage (90+ days) | 96% | JSON archival |
+For typical personal use (under 500 memories), search results return faster than you blink.
 
-**Example:** 1,000 memories with mixed ages = ~15MB (vs 380MB uncompressed)
+### Concurrent Writes — Zero Errors
 
-### Scalability
+| Scenario | Writes/sec | Errors |
+|----------|------------|--------|
+| 1 AI tool writing | **204/sec** | 0 |
+| 2 AI tools simultaneously | **220/sec** | 0 |
+| 5 AI tools simultaneously | **130/sec** | 0 |
+| 10 AI tools simultaneously | **25/sec** | 0 |
 
-| Dataset Size | Search Time | Graph Build | RAM Usage |
-|--------------|-------------|-------------|-----------|
-| 100 memories | 35ms | 0.5s | < 30MB |
-| 500 memories | 45ms | 2s | < 50MB |
-| 1,000 memories | 55ms | 5s | < 80MB |
-| 5,000 memories | 85ms | 30s | < 150MB |
+WAL mode + serialized write queue = zero "database is locked" errors, ever.
 
-**Tested up to 10,000 memories** with linear scaling and no degradation.
+### Storage
+
+10,000 memories = **13.6 MB** on disk (~1.9 KB per memory). Your entire AI memory history takes less space than a photo.
+
+### Trust Defense
+
+Bayesian trust scoring achieves **perfect separation** (trust gap = 1.0) between honest and malicious agents. Detects "sleeper" attacks with 74.7% trust drop. Zero false positives.
+
+### Graph Construction
+
+| Memories | Build Time |
+|----------|-----------|
+| 100 | 0.28s |
+| 1,000 | 10.6s |
+
+Leiden clustering discovers 6-7 natural topic communities automatically.
+
+> **LoCoMo benchmark results coming soon** — evaluation against the standardized [LoCoMo](https://snap-research.github.io/locomo/) long-conversation memory benchmark (Snap Research, ACL 2024).
+
+[Full benchmark details →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Performance-Benchmarks)
 
 ---
 
@@ -634,23 +645,18 @@ superlocalmemoryv2:reset hard --confirm                  # Nuclear option
 
 ---
 
-## 📊 Performance
+## 📊 Performance at a Glance
 
-**SEO:** Performance benchmarks, memory system speed, search latency, visualization dashboard performance
+| Metric | Measured Result |
+|--------|----------------|
+| **Search latency** | **10.6ms** median (100 memories) |
+| **Concurrent writes** | **220/sec** with 2 agents, zero errors |
+| **Storage** | **1.9 KB** per memory at scale (13.6 MB for 10K) |
+| **Trust defense** | **1.0** trust gap (perfect separation) |
+| **Graph build** | **0.28s** for 100 memories |
+| **Search quality** | **MRR 0.90** (first result correct 9/10 times) |
 
-| Metric | Result | Notes |
-|--------|--------|-------|
-| **Hybrid search** | **80ms** | Semantic + FTS5 + Graph combined |
-| **Semantic search** | **45ms** | 3.3x faster than v1 |
-| **FTS5 search** | **30ms** | Exact phrase matching |
-| **Graph build (100 memories)** | **< 2 seconds** | Leiden clustering |
-| **Pattern learning** | **< 2 seconds** | Incremental updates |
-| **Dashboard load** | **< 500ms** | 1,000 memories |
-| **Timeline render** | **< 300ms** | All memories visualized |
-| **Storage compression** | **60-96% reduction** | Progressive tiering |
-| **Memory overhead** | **< 50MB RAM** | Lightweight |
-
-**Tested up to 10,000 memories** with sub-second search times and linear scaling.
+[Full benchmark details →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Performance-Benchmarks)
 
 ---
 

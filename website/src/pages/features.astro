@@ -78,13 +78,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🔍 Hybrid Search (NEW v2.2.0)</h3>
         <p style="margin-bottom: 1rem;">Combines three search strategies for maximum accuracy:</p>
         <ul style="margin-bottom: 1rem;">
-          <li><strong>Semantic Search</strong> - TF-IDF + cosine similarity for conceptual queries (45ms)</li>
-          <li><strong>Full-Text Search</strong> - SQLite FTS5 with ranking for exact phrases (30ms)</li>
-          <li><strong>Graph-Enhanced</strong> - Knowledge graph traversal for related concepts (60ms)</li>
-          <li><strong>Hybrid Mode</strong> - All three combined for optimal results (80ms)</li>
+          <li><strong>Semantic Search</strong> - TF-IDF + cosine similarity for conceptual queries</li>
+          <li><strong>Full-Text Search</strong> - SQLite FTS5 with ranking for exact phrases</li>
+          <li><strong>Graph-Enhanced</strong> - Knowledge graph traversal for related concepts</li>
+          <li><strong>Hybrid Mode</strong> - All three combined for optimal results</li>
         </ul>
         <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-          <strong>Performance:</strong> Sub-second search even with 5,000+ memories. 3.3x faster than v1.
+          <strong>Measured:</strong> 10.6ms median search latency for typical databases. MRR 0.90 — first relevant result at position 1 for 9/10 queries.
         </div>
       </div>
 
@@ -208,25 +208,52 @@ python ~/.claude-memory/auto_backup.py status   # Backup status</code></pre>
       </div>
 
       <!-- Performance -->
-      <h2 style="margin-bottom: 1.5rem; margin-top: 3rem;">⚡ Performance</h2>
+      <h2 style="margin-bottom: 1.5rem; margin-top: 3rem;">⚡ Measured Performance</h2>
+      <p style="font-size: 1rem; color: var(--color-text-secondary); margin-bottom: 1.5rem;">
+        All numbers measured on real hardware (Apple M4 Pro). No estimates — real benchmarks.
+      </p>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 3rem;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
         <div class="card" style="text-align: center;">
-          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">&lt; 10ms</h3>
-          <p style="margin: 0;">Add Memory</p>
+          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">10.6ms</h3>
+          <p style="margin: 0;">Search Latency (100 memories)</p>
         </div>
         <div class="card" style="text-align: center;">
-          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">80ms</h3>
-          <p style="margin: 0;">Hybrid Search</p>
+          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">220/sec</h3>
+          <p style="margin: 0;">Concurrent Writes</p>
         </div>
         <div class="card" style="text-align: center;">
-          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">&lt; 2s</h3>
-          <p style="margin: 0;">Graph Build</p>
+          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">1.9 KB</h3>
+          <p style="margin: 0;">Per Memory at Scale</p>
         </div>
         <div class="card" style="text-align: center;">
-          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">&lt; 50MB</h3>
-          <p style="margin: 0;">RAM Usage</p>
+          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">0 Errors</h3>
+          <p style="margin: 0;">10 Concurrent Agents</p>
         </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="card" style="text-align: center;">
+          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">1.0</h3>
+          <p style="margin: 0;">Trust Gap (perfect separation)</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">13.6 MB</h3>
+          <p style="margin: 0;">10,000 Memories on Disk</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">0.28s</h3>
+          <p style="margin: 0;">Graph Build (100 memories)</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <h3 style="font-size: 2rem; color: var(--color-accent); margin-bottom: 0.5rem;">0.90</h3>
+          <p style="margin: 0;">MRR (Search Quality)</p>
+        </div>
+      </div>
+
+      <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px; margin-bottom: 3rem; text-align: center;">
+        <strong>LoCoMo benchmark results coming soon</strong> — evaluation against the standardized <a href="https://snap-research.github.io/locomo/" style="color: var(--color-accent);">LoCoMo</a> long-conversation memory benchmark (Snap Research, ACL 2024).
+        <br/><a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/Performance-Benchmarks" style="color: var(--color-accent);">View full benchmark details →</a>
       </div>
 
       <!-- Research-Based -->

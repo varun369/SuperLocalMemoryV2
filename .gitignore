@@ -8,6 +8,10 @@ memory.db
 !demo-memory.db
 backups/
 profiles/
+
+# ==== BENCHMARKS (Internal — code, data, results) ====
+benchmarks/
+docs/plans/
 vectors/
 cold-storage/
 jobs/

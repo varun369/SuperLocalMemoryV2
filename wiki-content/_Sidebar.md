@@ -28,6 +28,7 @@
 - [[CLI-Cheatsheet]]
 - [[Python-API]]
 - [[Configuration]]
+- [[Performance-Benchmarks]]
 - [CHANGELOG](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md)
 
 ---
