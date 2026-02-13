@@ -123,10 +123,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <!-- Screenshot Grid -->
       <div class="visual-gallery" style="margin-bottom: 3rem;">
         <!-- Dashboard -->
-        <a href="/assets/screenshots/dashboard/dashboard-overview.png" target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
+        <a href={`${import.meta.env.BASE_URL}assets/screenshots/dashboard/dashboard-overview.png`} target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
           <picture>
-            <source srcset="/assets/thumbnails/dashboard-overview-thumb.webp" type="image/webp">
-            <img src="/assets/thumbnails/dashboard-overview-thumb.png" alt="Dashboard Overview" loading="lazy">
+            <source srcset={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-overview-thumb.webp`} type="image/webp">
+            <img src={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-overview-thumb.png`} alt="Dashboard Overview" loading="lazy">
           </picture>
           <div class="visual-caption">
             <strong>Dashboard Overview</strong>
@@ -134,10 +134,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           </div>
         </a>
 
-        <a href="/assets/screenshots/dashboard/dashboard-memories.png" target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
+        <a href={`${import.meta.env.BASE_URL}assets/screenshots/dashboard/dashboard-memories.png`} target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
           <picture>
-            <source srcset="/assets/thumbnails/dashboard-memories-thumb.webp" type="image/webp">
-            <img src="/assets/thumbnails/dashboard-memories-thumb.png" alt="Memory List" loading="lazy">
+            <source srcset={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-memories-thumb.webp`} type="image/webp">
+            <img src={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-memories-thumb.png`} alt="Memory List" loading="lazy">
           </picture>
           <div class="visual-caption">
             <strong>Memory List</strong>
@@ -145,10 +145,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           </div>
         </a>
 
-        <a href="/assets/screenshots/dashboard/dashboard-timeline.png" target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
+        <a href={`${import.meta.env.BASE_URL}assets/screenshots/dashboard/dashboard-timeline.png`} target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
           <picture>
-            <source srcset="/assets/thumbnails/dashboard-timeline-thumb.webp" type="image/webp">
-            <img src="/assets/thumbnails/dashboard-timeline-thumb.png" alt="Timeline View" loading="lazy">
+            <source srcset={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-timeline-thumb.webp`} type="image/webp">
+            <img src={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-timeline-thumb.png`} alt="Timeline View" loading="lazy">
           </picture>
           <div class="visual-caption">
             <strong>Timeline View</strong>
@@ -156,10 +156,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           </div>
         </a>
 
-        <a href="/assets/screenshots/dashboard/dashboard-filtered.png" target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
+        <a href={`${import.meta.env.BASE_URL}assets/screenshots/dashboard/dashboard-filtered.png`} target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
           <picture>
-            <source srcset="/assets/thumbnails/dashboard-filtered-thumb.webp" type="image/webp">
-            <img src="/assets/thumbnails/dashboard-filtered-thumb.png" alt="Advanced Search" loading="lazy">
+            <source srcset={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-filtered-thumb.webp`} type="image/webp">
+            <img src={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-filtered-thumb.png`} alt="Advanced Search" loading="lazy">
           </picture>
           <div class="visual-caption">
             <strong>Advanced Search</strong>
@@ -168,10 +168,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
 
         <!-- Knowledge Graph -->
-        <a href="/assets/screenshots/dashboard/dashboard-graph.png" target="_blank" rel="noopener" class="visual-item" data-category="graph">
+        <a href={`${import.meta.env.BASE_URL}assets/screenshots/dashboard/dashboard-graph.png`} target="_blank" rel="noopener" class="visual-item" data-category="graph">
           <picture>
-            <source srcset="/assets/thumbnails/dashboard-graph-thumb.webp" type="image/webp">
-            <img src="/assets/thumbnails/dashboard-graph-thumb.png" alt="Interactive Graph" loading="lazy">
+            <source srcset={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-graph-thumb.webp`} type="image/webp">
+            <img src={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-graph-thumb.png`} alt="Interactive Graph" loading="lazy">
           </picture>
           <div class="visual-caption">
             <strong>Knowledge Graph</strong>
@@ -179,10 +179,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           </div>
         </a>
 
-        <a href="/assets/screenshots/dashboard/dashboard-clusters.png" target="_blank" rel="noopener" class="visual-item" data-category="graph">
+        <a href={`${import.meta.env.BASE_URL}assets/screenshots/dashboard/dashboard-clusters.png`} target="_blank" rel="noopener" class="visual-item" data-category="graph">
           <picture>
-            <source srcset="/assets/thumbnails/dashboard-clusters-thumb.webp" type="image/webp">
-            <img src="/assets/thumbnails/dashboard-clusters-thumb.png" alt="Cluster Analysis" loading="lazy">
+            <source srcset={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-clusters-thumb.webp`} type="image/webp">
+            <img src={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-clusters-thumb.png`} alt="Cluster Analysis" loading="lazy">
           </picture>
           <div class="visual-caption">
             <strong>Clusters</strong>
@@ -191,10 +191,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
 
         <!-- v2.5 Features -->
-        <a href="/assets/screenshots/dashboard/dashboard-live-events.png" target="_blank" rel="noopener" class="visual-item" data-category="v25">
+        <a href={`${import.meta.env.BASE_URL}assets/screenshots/dashboard/dashboard-live-events.png`} target="_blank" rel="noopener" class="visual-item" data-category="v25">
           <picture>
-            <source srcset="/assets/thumbnails/dashboard-live-events-thumb.webp" type="image/webp">
-            <img src="/assets/thumbnails/dashboard-live-events-thumb.png" alt="Live Event Stream" loading="lazy">
+            <source srcset={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-live-events-thumb.webp`} type="image/webp">
+            <img src={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-live-events-thumb.png`} alt="Live Event Stream" loading="lazy">
           </picture>
           <div class="visual-caption">
             <strong>Live Events</strong>
@@ -202,10 +202,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           </div>
         </a>
 
-        <a href="/assets/screenshots/dashboard/dashboard-agents.png" target="_blank" rel="noopener" class="visual-item" data-category="v25">
+        <a href={`${import.meta.env.BASE_URL}assets/screenshots/dashboard/dashboard-agents.png`} target="_blank" rel="noopener" class="visual-item" data-category="v25">
           <picture>
-            <source srcset="/assets/thumbnails/dashboard-agents-thumb.webp" type="image/webp">
-            <img src="/assets/thumbnails/dashboard-agents-thumb.png" alt="Agent Connections" loading="lazy">
+            <source srcset={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-agents-thumb.webp`} type="image/webp">
+            <img src={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-agents-thumb.png`} alt="Agent Connections" loading="lazy">
           </picture>
           <div class="visual-caption">
             <strong>Agent Tracking</strong>
@@ -213,10 +213,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           </div>
         </a>
 
-        <a href="/assets/screenshots/dashboard/dashboard-patterns.png" target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
+        <a href={`${import.meta.env.BASE_URL}assets/screenshots/dashboard/dashboard-patterns.png`} target="_blank" rel="noopener" class="visual-item" data-category="dashboard">
           <picture>
-            <source srcset="/assets/thumbnails/dashboard-patterns-thumb.webp" type="image/webp">
-            <img src="/assets/thumbnails/dashboard-patterns-thumb.png" alt="Learned Patterns" loading="lazy">
+            <source srcset={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-patterns-thumb.webp`} type="image/webp">
+            <img src={`${import.meta.env.BASE_URL}assets/thumbnails/dashboard-patterns-thumb.png`} alt="Learned Patterns" loading="lazy">
           </picture>
           <div class="visual-caption">
             <strong>Pattern Learning</strong>
