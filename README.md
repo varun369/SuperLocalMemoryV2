@@ -61,6 +61,42 @@
 
 ---
 
+## NEW: Framework Integrations (v2.5.1)
+
+Use SuperLocalMemory as a memory backend in your LangChain and LlamaIndex applications — 100% local, zero cloud.
+
+### LangChain
+
+```bash
+pip install langchain-superlocalmemory
+```
+
+```python
+from langchain_superlocalmemory import SuperLocalMemoryChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
+
+history = SuperLocalMemoryChatMessageHistory(session_id="my-session")
+# Messages persist across sessions, stored locally in ~/.claude-memory/memory.db
+```
+
+### LlamaIndex
+
+```bash
+pip install llama-index-storage-chat-store-superlocalmemory
+```
+
+```python
+from llama_index.storage.chat_store.superlocalmemory import SuperLocalMemoryChatStore
+from llama_index.core.memory import ChatMemoryBuffer
+
+chat_store = SuperLocalMemoryChatStore()
+memory = ChatMemoryBuffer.from_defaults(chat_store=chat_store, chat_store_key="user-1")
+```
+
+[LangChain Guide](https://github.com/varun369/SuperLocalMemoryV2/wiki/LangChain-Integration) | [LlamaIndex Guide](https://github.com/varun369/SuperLocalMemoryV2/wiki/LlamaIndex-Integration)
+
+---
+
 ## Install in One Command
 
 ```bash

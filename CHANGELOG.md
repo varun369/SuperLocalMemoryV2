@@ -16,6 +16,22 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.5.1] - 2026-02-13
+
+**Release Type:** Framework Integration Release — "Plugged Into the Ecosystem"
+**Backward Compatible:** Yes (additive packages only, no core changes)
+
+### The Big Picture
+SuperLocalMemory is now a first-class memory backend for LangChain and LlamaIndex — the two largest AI/LLM frameworks. Two pip-installable packages, zero cloud dependencies.
+
+### Added
+- **LangChain Integration** (`langchain-superlocalmemory`): Persistent chat message history backed by local SQLite. Works with `RunnableWithMessageHistory` and LCEL chains. `pip install langchain-superlocalmemory`
+- **LlamaIndex Integration** (`llama-index-storage-chat-store-superlocalmemory`): Full `BaseChatStore` implementation. Works with `ChatMemoryBuffer` and `SimpleChatEngine`. `pip install llama-index-storage-chat-store-superlocalmemory`
+- **Example scripts** for both frameworks in `examples/` directory — runnable without API keys
+- **Session isolation**: Framework memories are tagged separately and never appear in normal `slm recall`
+
+---
+
 ## [2.5.0] - 2026-02-12
 
 **Release Type:** Major Feature Release — "Your AI Memory Has a Heartbeat"
