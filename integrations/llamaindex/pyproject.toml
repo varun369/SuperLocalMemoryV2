@@ -29,6 +29,9 @@ Homepage = "https://github.com/varun369/SuperLocalMemoryV2"
 Documentation = "https://varun369.github.io/SuperLocalMemoryV2/"
 Repository = "https://github.com/varun369/SuperLocalMemoryV2"
 
+[tool.hatch.build.targets.wheel]
+packages = ["llama_index"]
+
 [tool.llamahub]
 contains_example = false
 import_path = "llama_index.storage.chat_store.superlocalmemory"
