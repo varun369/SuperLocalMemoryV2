@@ -15,6 +15,10 @@
 </p>
 
 <p align="center">
+  <a href="https://superlocalmemory.com"><img src="https://img.shields.io/badge/🌐_Website-superlocalmemory.com-ff6b35?style=for-the-badge" alt="Official Website"/></a>
+</p>
+
+<p align="center">
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.8+"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License"/></a>
   <a href="#"><img src="https://img.shields.io/badge/local--first-100%25-brightgreen?style=flat-square" alt="100% Local"/></a>
@@ -24,6 +28,7 @@
 </p>
 
 <p align="center">
+  <a href="https://superlocalmemory.com"><strong>superlocalmemory.com</strong></a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-why-superlocalemory">Why This?</a> •
   <a href="#-features">Features</a> •
