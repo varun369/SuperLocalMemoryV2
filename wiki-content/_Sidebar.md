@@ -12,6 +12,7 @@
 ---
 
 ### 🏗️ Core Concepts
+- [Interactive Architecture Diagram](https://varun369.github.io/SuperLocalMemoryV2/architecture.html)
 - [[Universal-Architecture]]
 - [[Architecture-V2.5]]
 - [[Visualization-Dashboard]]

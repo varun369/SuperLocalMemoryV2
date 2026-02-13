@@ -57,7 +57,7 @@
 
 **Dashboard:** `python3 ~/.claude-memory/ui_server.py` then open `http://localhost:8765`
 
-[Architecture Doc](docs/ARCHITECTURE-V2.5.md) | [Full Changelog](CHANGELOG.md)
+[Interactive Architecture Diagram](https://varun369.github.io/SuperLocalMemoryV2/architecture.html) | [Architecture Doc](docs/ARCHITECTURE-V2.5.md) | [Full Changelog](CHANGELOG.md)
 
 ---
 
@@ -445,6 +445,8 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 ## ✨ Features
 
 ### Multi-Layer Memory Architecture
+
+**[View Interactive Architecture Diagram](https://varun369.github.io/SuperLocalMemoryV2/architecture.html)** — Click any layer for details, research references, and file paths.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
