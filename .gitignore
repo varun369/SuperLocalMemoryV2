@@ -16,6 +16,28 @@ profiles.json
 # ==== BACKUP DIRECTORY (Internal/archived files) ====
 .backup/
 
+# ==== INTERNAL PROCESS DOCS (Never commit) ====
+# Strategy, planning, test reports, screenshot tooling
+*STRATEGY*.md
+*SCREENSHOT*.md
+*THUMBNAIL*.md
+*QUALITY-CHECK*.md
+*GIF-CREATION*.md
+*OPTIMIZATION-REPORT*.md
+*QUICK-REFERENCE*.md
+SEO-*.md
+MARKETING-*.md
+AGENT-*.md
+TASK-*.md
+annotate_screenshots.py
+capture-screenshots.py
+add_attribution.py
+
+# Stray screenshots in repo root (should be in website/public/assets/)
+/*.png
+/*.jpg
+/*.jpeg
+
 # ==== BUILD ARTIFACTS ====
 build/
 dist/
