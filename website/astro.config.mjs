@@ -4,8 +4,8 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://varun369.github.io',
-  base: '/SuperLocalMemoryV2/',
+  site: 'https://superlocalmemory.com',
+  base: '/',
   integrations: [mdx(), sitemap()],
   markdown: {
     shikiConfig: {
