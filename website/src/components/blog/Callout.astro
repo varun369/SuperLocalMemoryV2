@@ -1,0 +1,103 @@
+---
+interface Props {
+  type: 'info' | 'tip' | 'warning' | 'danger';
+  title?: string;
+}
+
+const { type = 'info', title } = Astro.props;
+
+const typeConfig = {
+  info: {
+    borderColor: 'var(--color-link)',
+    bgColor: 'rgba(88, 166, 255, 0.08)',
+    iconColor: 'var(--color-link)',
+    icon: 'i',
+  },
+  tip: {
+    borderColor: 'var(--color-success)',
+    bgColor: 'rgba(63, 185, 80, 0.08)',
+    iconColor: 'var(--color-success)',
+    icon: '*',
+  },
+  warning: {
+    borderColor: '#d29922',
+    bgColor: 'rgba(210, 153, 34, 0.08)',
+    iconColor: '#d29922',
+    icon: '!',
+  },
+  danger: {
+    borderColor: '#f85149',
+    bgColor: 'rgba(248, 81, 73, 0.08)',
+    iconColor: '#f85149',
+    icon: 'x',
+  },
+};
+
+const config = typeConfig[type];
+---
+
+<div
+  class={`callout callout-${type}`}
+  style={`border-left-color: ${config.borderColor}; background: ${config.bgColor};`}
+>
+  {title && (
+    <div class="callout-title" style={`color: ${config.iconColor};`}>
+      <span class="callout-icon" aria-hidden="true">{config.icon}</span>
+      <strong>{title}</strong>
+    </div>
+  )}
+  <div class="callout-content">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .callout {
+    border-left: 4px solid;
+    border-radius: var(--border-radius);
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+    border: 1px solid var(--color-border);
+    border-left-width: 4px;
+  }
+
+  .callout-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+
+  .callout-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 2px solid currentColor;
+    flex-shrink: 0;
+  }
+
+  .callout-content {
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+  }
+
+  .callout-content :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .callout-content :global(ul),
+  .callout-content :global(ol) {
+    margin-bottom: 0;
+  }
+
+  .callout-content :global(code) {
+    font-size: 0.85em;
+  }
+</style>

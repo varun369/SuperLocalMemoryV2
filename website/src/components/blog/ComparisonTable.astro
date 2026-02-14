@@ -1,0 +1,91 @@
+---
+// ComparisonTable wraps a markdown table with enhanced styling,
+// horizontal scroll support, and visual emphasis on the first data column.
+---
+
+<div class="comparison-table-wrapper">
+  <div class="comparison-table">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .comparison-table-wrapper {
+    margin: 2rem 0;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+
+  .comparison-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .comparison-table :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    min-width: 600px;
+  }
+
+  .comparison-table :global(thead th) {
+    background: var(--color-bg-tertiary);
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text);
+    padding: 1rem 1.25rem;
+    white-space: nowrap;
+    border-bottom: 2px solid var(--color-accent);
+  }
+
+  .comparison-table :global(thead th:first-child) {
+    text-align: left;
+  }
+
+  .comparison-table :global(tbody td) {
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    vertical-align: top;
+  }
+
+  .comparison-table :global(tbody td:first-child) {
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+
+  /* Highlight the SuperLocalMemory column (second column) */
+  .comparison-table :global(thead th:nth-child(2)) {
+    color: var(--color-accent);
+  }
+
+  .comparison-table :global(tbody td:nth-child(2)) {
+    color: var(--color-text);
+    font-weight: 500;
+  }
+
+  .comparison-table :global(tbody tr:hover) {
+    background: rgba(124, 58, 237, 0.04);
+  }
+
+  .comparison-table :global(tbody tr:last-child td) {
+    border-bottom: none;
+  }
+
+  @media (max-width: 768px) {
+    .comparison-table-wrapper {
+      margin-left: -1rem;
+      margin-right: -1rem;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+    }
+  }
+</style>
