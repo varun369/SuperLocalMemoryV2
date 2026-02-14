@@ -5,14 +5,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://superlocalmemory.com/sitemap.xml
-
-# Crawl-delay for polite bots
-Crawl-delay: 1
-
-# Allow search engines to index everything
-Allow: /
-Allow: /docs
-Allow: /features
-Allow: /comparison
-Allow: /assets/
+Sitemap: https://superlocalmemory.com/sitemap-index.xml

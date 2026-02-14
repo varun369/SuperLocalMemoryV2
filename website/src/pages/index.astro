@@ -33,13 +33,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       <!-- Badges -->
       <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem;">
-        <img src="https://img.shields.io/badge/python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.8+" />
-        <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License" />
-        <img src="https://img.shields.io/badge/local--first-100%25-brightgreen?style=flat-square" alt="100% Local" />
-        <img src="https://img.shields.io/badge/setup-5%20min-orange?style=flat-square" alt="5 Min Setup" />
-        <img src="https://img.shields.io/badge/platform-Mac%20%7C%20Linux%20%7C%20Windows-blue?style=flat-square" alt="Cross Platform" />
+        <img src="https://img.shields.io/badge/python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.8+" width="110" height="20" />
+        <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License" width="80" height="20" />
+        <img src="https://img.shields.io/badge/local--first-100%25-brightgreen?style=flat-square" alt="100% Local" width="105" height="20" />
+        <img src="https://img.shields.io/badge/setup-5%20min-orange?style=flat-square" alt="5 Min Setup" width="82" height="20" />
+        <img src="https://img.shields.io/badge/platform-Mac%20%7C%20Linux%20%7C%20Windows-blue?style=flat-square" alt="Cross Platform" width="175" height="20" />
         <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener">
-          <img src="https://img.shields.io/github/stars/varun369/SuperLocalMemoryV2?style=flat-square" alt="GitHub stars" />
+          <img src="https://img.shields.io/github/stars/varun369/SuperLocalMemoryV2?style=flat-square" alt="GitHub stars" width="80" height="20" />
         </a>
       </div>
 
@@ -58,7 +58,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       <!-- Downloads -->
       <div style="max-width: 800px; margin: 0 auto;">
-        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem; text-align: center;">Install in One Command</h3>
+        <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem; text-align: center;">Install in One Command</h2>
 
         <!-- npm primary install -->
         <div style="background: var(--color-bg-secondary); border: 2px solid var(--color-accent); border-radius: var(--border-radius); padding: 1.5rem; text-align: center; margin-bottom: 1.5rem;">
@@ -80,21 +80,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem;">
             <!-- macOS DMG -->
             <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem; text-align: center;">
-              <h4 style="margin-bottom: 0.5rem;">macOS</h4>
+              <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">macOS</h3>
               <a href="https://github.com/varun369/SuperLocalMemoryV2/releases/download/v2.4.1/SuperLocalMemory-v2.4.1-macos.dmg" class="btn btn-secondary" style="width: 100%; box-sizing: border-box;">
                 Download DMG
               </a>
             </div>
             <!-- Windows -->
             <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem; text-align: center;">
-              <h4 style="margin-bottom: 0.5rem;">Windows</h4>
+              <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Windows</h3>
               <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/Installation#windows" class="btn btn-secondary" style="width: 100%; box-sizing: border-box;">
                 Install Guide
               </a>
             </div>
             <!-- Linux -->
             <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem; text-align: center;">
-              <h4 style="margin-bottom: 0.5rem;">Linux</h4>
+              <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Linux</h3>
               <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/Installation#linux" class="btn btn-secondary" style="width: 100%; box-sizing: border-box;">
                 Install Guide
               </a>
@@ -129,7 +129,7 @@ cd SuperLocalMemoryV2
             <span style="font-size: 1.5rem;">🦜</span>
             <h3 style="margin: 0;">LangChain</h3>
             <a href="https://pypi.org/project/langchain-superlocalmemory/" target="_blank" rel="noopener" style="margin-left: auto;">
-              <img src="https://img.shields.io/pypi/v/langchain-superlocalmemory?style=flat-square&label=PyPI&color=blue" alt="PyPI" />
+              <img src="https://img.shields.io/pypi/v/langchain-superlocalmemory?style=flat-square&label=PyPI&color=blue" alt="PyPI" width="70" height="20" />
             </a>
           </div>
           <pre style="margin: 0 0 1rem 0; font-size: 0.9rem;"><code>pip install langchain-superlocalmemory</code></pre>
@@ -150,7 +150,7 @@ history = SuperLocalMemoryChatMessageHistory(
             <span style="font-size: 1.5rem;">🦙</span>
             <h3 style="margin: 0;">LlamaIndex</h3>
             <a href="https://pypi.org/project/llama-index-storage-chat-store-superlocalmemory/" target="_blank" rel="noopener" style="margin-left: auto;">
-              <img src="https://img.shields.io/pypi/v/llama-index-storage-chat-store-superlocalmemory?style=flat-square&label=PyPI&color=blue" alt="PyPI" />
+              <img src="https://img.shields.io/pypi/v/llama-index-storage-chat-store-superlocalmemory?style=flat-square&label=PyPI&color=blue" alt="PyPI" width="70" height="20" />
             </a>
           </div>
           <pre style="margin: 0 0 1rem 0; font-size: 0.9rem;"><code>pip install llama-index-storage-chat-store-superlocalmemory</code></pre>
@@ -181,37 +181,37 @@ chat_store = SuperLocalMemoryChatStore()
       <div class="screenshot-carousel-container">
         <div class="screenshot-carousel-wrapper">
           <div class="screenshot-carousel-slide active">
-            <img src="/assets/screenshots/dashboard/dashboard-overview.png" alt="SuperLocalMemory V2 dashboard - local AI memory management interface with real-time stats and quick actions" />
+            <img src="/assets/screenshots/dashboard/dashboard-overview.png" alt="SuperLocalMemory V2 dashboard - local AI memory management interface with real-time stats and quick actions" width="1200" height="750" />
             <div class="screenshot-carousel-caption">
               <strong>Dashboard Overview</strong> — Real-time memory stats, recent activity, and quick actions
             </div>
           </div>
           <div class="screenshot-carousel-slide">
-            <img src="/assets/screenshots/dashboard/dashboard-live-events.png" alt="Live event stream showing real-time AI memory operations across Claude, Cursor, and Windsurf MCP integrations" />
+            <img src="/assets/screenshots/dashboard/dashboard-live-events.png" alt="Live event stream showing real-time AI memory operations across Claude, Cursor, and Windsurf MCP integrations" width="1200" height="750" />
             <div class="screenshot-carousel-caption">
               <strong>Live Event Stream</strong> — Watch every memory operation in real-time across all AI tools
             </div>
           </div>
           <div class="screenshot-carousel-slide">
-            <img src="/assets/screenshots/dashboard/dashboard-graph.png" alt="AI knowledge graph with automatic relationship discovery and clustering for persistent AI context" />
+            <img src="/assets/screenshots/dashboard/dashboard-graph.png" alt="AI knowledge graph with automatic relationship discovery and clustering for persistent AI context" width="1200" height="750" />
             <div class="screenshot-carousel-caption">
               <strong>Knowledge Graph</strong> — Auto-discovered relationships and community clustering
             </div>
           </div>
           <div class="screenshot-carousel-slide">
-            <img src="/assets/screenshots/dashboard/dashboard-agents.png" alt="Multi-agent tracking dashboard showing connected AI tools via MCP protocol with trust scores" />
+            <img src="/assets/screenshots/dashboard/dashboard-agents.png" alt="Multi-agent tracking dashboard showing connected AI tools via MCP protocol with trust scores" width="1200" height="750" />
             <div class="screenshot-carousel-caption">
               <strong>Agent Tracking</strong> — Monitor all connected AI tools and their memory activity
             </div>
           </div>
           <div class="screenshot-carousel-slide">
-            <img src="/assets/screenshots/dashboard/dashboard-memories.png" alt="AI memory browser with search, filter, and explore capabilities for local AI memory database" />
+            <img src="/assets/screenshots/dashboard/dashboard-memories.png" alt="AI memory browser with search, filter, and explore capabilities for local AI memory database" width="1200" height="750" />
             <div class="screenshot-carousel-caption">
               <strong>Memory Browser</strong> — Search, filter, and explore your entire memory database
             </div>
           </div>
           <div class="screenshot-carousel-slide">
-            <img src="/assets/screenshots/dashboard/dashboard-patterns.png" alt="Pattern learning system showing AI learning coding style and preferences from local memory" />
+            <img src="/assets/screenshots/dashboard/dashboard-patterns.png" alt="Pattern learning system showing AI learning coding style and preferences from local memory" width="1200" height="750" />
             <div class="screenshot-carousel-caption">
               <strong>Pattern Learning</strong> — AI learns your coding style and preferences over time
             </div>
@@ -222,12 +222,12 @@ chat_store = SuperLocalMemoryChatStore()
         <button class="screenshot-carousel-btn screenshot-carousel-btn-next" aria-label="Next screenshot">›</button>
 
         <div class="screenshot-carousel-dots">
-          <span class="screenshot-dot active" data-index="0" aria-label="View screenshot 1"></span>
-          <span class="screenshot-dot" data-index="1" aria-label="View screenshot 2"></span>
-          <span class="screenshot-dot" data-index="2" aria-label="View screenshot 3"></span>
-          <span class="screenshot-dot" data-index="3" aria-label="View screenshot 4"></span>
-          <span class="screenshot-dot" data-index="4" aria-label="View screenshot 5"></span>
-          <span class="screenshot-dot" data-index="5" aria-label="View screenshot 6"></span>
+          <button class="screenshot-dot active" data-index="0" aria-label="View screenshot 1"></button>
+          <button class="screenshot-dot" data-index="1" aria-label="View screenshot 2"></button>
+          <button class="screenshot-dot" data-index="2" aria-label="View screenshot 3"></button>
+          <button class="screenshot-dot" data-index="3" aria-label="View screenshot 4"></button>
+          <button class="screenshot-dot" data-index="4" aria-label="View screenshot 5"></button>
+          <button class="screenshot-dot" data-index="5" aria-label="View screenshot 6"></button>
         </div>
       </div>
     </div>
@@ -283,7 +283,7 @@ superlocalmemoryv2:recall "auth bug"
       <!-- Feature 1: Real-Time Event Stream -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem;">
         <div>
-          <img src="/assets/screenshots/v25/v25-live-events-working.png" alt="SuperLocalMemory V2.5 real-time event stream - watch AI memory operations live across MCP-enabled tools like Claude Desktop and Cursor" style="width: 100%; border-radius: var(--border-radius); border: 2px solid var(--color-border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+          <img src="/assets/screenshots/v25/v25-live-events-working.png" alt="SuperLocalMemory V2.5 real-time event stream - watch AI memory operations live across MCP-enabled tools like Claude Desktop and Cursor" width="600" height="375" style="width: 100%; height: auto; border-radius: var(--border-radius); border: 2px solid var(--color-border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
         </div>
         <div>
           <div style="display: inline-block; padding: 0.25rem 0.75rem; background: var(--color-accent); color: white; border-radius: 999px; font-size: 0.75rem; font-weight: 600; margin-bottom: 1rem;">NEW IN V2.5</div>
@@ -297,7 +297,7 @@ superlocalmemoryv2:recall "auth bug"
       <!-- Feature 2: Agent Trust Tracking -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem;">
         <div style="order: 2;">
-          <img src="/assets/screenshots/v25/v25-agents-tab.png" alt="AI agent tracking with trust scores - monitor connected MCP clients like Claude, Cursor, Windsurf with memory provenance" style="width: 100%; border-radius: var(--border-radius); border: 2px solid var(--color-border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+          <img src="/assets/screenshots/v25/v25-agents-tab.png" alt="AI agent tracking with trust scores - monitor connected MCP clients like Claude, Cursor, Windsurf with memory provenance" width="600" height="375" style="width: 100%; height: auto; border-radius: var(--border-radius); border: 2px solid var(--color-border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
         </div>
         <div style="order: 1;">
           <div style="display: inline-block; padding: 0.25rem 0.75rem; background: var(--color-accent); color: white; border-radius: 999px; font-size: 0.75rem; font-weight: 600; margin-bottom: 1rem;">NEW IN V2.5</div>
@@ -311,7 +311,7 @@ superlocalmemoryv2:recall "auth bug"
       <!-- Feature 3: Knowledge Graph -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem;">
         <div>
-          <img src="/assets/screenshots/dashboard/dashboard-graph.png" alt="Knowledge graph visualization" style="width: 100%; border-radius: var(--border-radius); border: 2px solid var(--color-border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+          <img src="/assets/screenshots/dashboard/dashboard-graph.png" alt="Knowledge graph visualization" width="600" height="375" style="width: 100%; height: auto; border-radius: var(--border-radius); border: 2px solid var(--color-border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
         </div>
         <div>
           <h3 style="font-size: 1.75rem; margin-bottom: 1rem; border-left: 4px solid var(--color-accent); padding-left: 1rem;">Knowledge Graph Discovery</h3>
@@ -324,7 +324,7 @@ superlocalmemoryv2:recall "auth bug"
       <!-- Feature 4: Hybrid Search -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem;">
         <div style="order: 2;">
-          <img src="/assets/screenshots/dashboard/dashboard-memories.png" alt="Hybrid search interface" style="width: 100%; border-radius: var(--border-radius); border: 2px solid var(--color-border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+          <img src="/assets/screenshots/dashboard/dashboard-memories.png" alt="Hybrid search interface" width="600" height="375" style="width: 100%; height: auto; border-radius: var(--border-radius); border: 2px solid var(--color-border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
         </div>
         <div style="order: 1;">
           <h3 style="font-size: 1.75rem; margin-bottom: 1rem; border-left: 4px solid var(--color-accent); padding-left: 1rem;">Hybrid Search That Never Misses</h3>
@@ -879,6 +879,9 @@ superlocalmemoryv2:recall "auth bug"
     cursor: pointer;
     transition: all 0.3s ease;
     border: 2px solid transparent;
+    padding: 0;
+    appearance: none;
+    -webkit-appearance: none;
   }
 
   .screenshot-dot:hover {

@@ -6,7 +6,7 @@
   --color-bg-tertiary: #1c2128;
   --color-border: #30363d;
   --color-text: #e6edf3;
-  --color-text-secondary: #8b949e;
+  --color-text-secondary: #9ca3af;
   --color-accent: #7c3aed;
   --color-accent-hover: #9333ea;
   --color-success: #3fb950;
@@ -52,12 +52,21 @@ p {
 
 a {
   color: var(--color-link);
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
   transition: color 0.2s;
 }
 
 a:hover {
   color: var(--color-accent-hover);
+}
+
+/* Navigation and button links don't need underlines */
+nav a,
+.btn,
+footer a {
+  text-decoration: none;
 }
 
 /* Code blocks */
