@@ -700,6 +700,48 @@ superlocalmemoryv2:recall "auth bug"
     </div>
   </section>
 
+  <!-- Interactive Architecture Diagram -->
+  <section style="padding: 4rem 0; background: var(--color-bg-secondary);">
+    <div class="container" style="text-align: center;">
+      <h2 style="margin-bottom: 1rem;">10-Layer Architecture — Interactive Diagram</h2>
+      <p style="max-width: 700px; margin: 0 auto 2.5rem; color: var(--color-text-secondary); font-size: 1.1rem;">
+        Explore every layer of the system — from raw SQLite storage to the A2A agent collaboration protocol. Fully interactive, with protocol panels, color-coded layers, and drill-down detail.
+      </p>
+
+      <!-- Architecture Preview Card -->
+      <a href="/architecture.html" style="display: block; max-width: 900px; margin: 0 auto 2.5rem; text-decoration: none; color: inherit; transition: transform 0.2s ease, box-shadow 0.2s ease;" class="architecture-preview-link">
+        <div style="background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1a1040 100%); border: 2px solid var(--color-accent); border-radius: var(--border-radius); padding: 2.5rem 2rem; position: relative; overflow: hidden;">
+          <!-- Grid background effect -->
+          <div style="position: absolute; inset: 0; background-image: linear-gradient(rgba(124,58,237,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(124,58,237,0.05) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none;"></div>
+
+          <!-- Layer stack visualization -->
+          <div style="position: relative; display: flex; flex-direction: column; gap: 0.4rem; max-width: 600px; margin: 0 auto;">
+            <div style="padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; background: linear-gradient(90deg, rgba(239,68,68,0.2), rgba(239,68,68,0.05)); border-left: 4px solid #ef4444; text-align: left; color: #fca5a5;">Layer 10: A2A Agent Collaboration</div>
+            <div style="padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; background: linear-gradient(90deg, rgba(249,115,22,0.2), rgba(249,115,22,0.05)); border-left: 4px solid #f97316; text-align: left; color: #fdba74;">Layer 9: Visualization Dashboard</div>
+            <div style="padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; background: linear-gradient(90deg, rgba(234,179,8,0.2), rgba(234,179,8,0.05)); border-left: 4px solid #eab308; text-align: left; color: #fde047;">Layer 8: Hybrid Search Engine</div>
+            <div style="padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; background: linear-gradient(90deg, rgba(34,197,94,0.2), rgba(34,197,94,0.05)); border-left: 4px solid #22c55e; text-align: left; color: #86efac;">Layer 7: Universal Access (MCP + Skills + CLI)</div>
+            <div style="padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; background: linear-gradient(90deg, rgba(6,182,212,0.2), rgba(6,182,212,0.05)); border-left: 4px solid #06b6d4; text-align: left; color: #67e8f9;">Layer 6: MCP Integration</div>
+            <div style="padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; background: linear-gradient(90deg, rgba(59,130,246,0.2), rgba(59,130,246,0.05)); border-left: 4px solid #3b82f6; text-align: left; color: #93c5fd;">Layer 5: Skills Layer</div>
+            <div style="padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; background: linear-gradient(90deg, rgba(99,102,241,0.2), rgba(99,102,241,0.05)); border-left: 4px solid #6366f1; text-align: left; color: #a5b4fc;">Layer 4: Pattern Learning</div>
+            <div style="padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; background: linear-gradient(90deg, rgba(139,92,246,0.2), rgba(139,92,246,0.05)); border-left: 4px solid #8b5cf6; text-align: left; color: #c4b5fd;">Layer 3: Knowledge Graph</div>
+            <div style="padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; background: linear-gradient(90deg, rgba(168,85,247,0.2), rgba(168,85,247,0.05)); border-left: 4px solid #a855f7; text-align: left; color: #d8b4fe;">Layer 2: Hierarchical Index</div>
+            <div style="padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; background: linear-gradient(90deg, rgba(236,72,153,0.2), rgba(236,72,153,0.05)); border-left: 4px solid #ec4899; text-align: left; color: #f9a8d4;">Layer 1: Raw Storage (SQLite + FTS5)</div>
+          </div>
+
+          <!-- Hover overlay -->
+          <div style="margin-top: 1.5rem; position: relative;">
+            <span style="display: inline-block; padding: 0.5rem 1.5rem; background: var(--color-accent); color: white; border-radius: 999px; font-weight: 600; font-size: 0.95rem;">Explore Interactive Diagram &rarr;</span>
+          </div>
+        </div>
+      </a>
+
+      <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
+        <a href="/architecture.html" class="btn">View Full Architecture Diagram</a>
+        <a href="/features" class="btn btn-secondary">Detailed Feature Breakdown</a>
+      </div>
+    </div>
+  </section>
+
   <!-- CTA Section -->
   <section style="padding: 4rem 0; background: linear-gradient(135deg, var(--color-accent) 0%, #ec4899 100%); text-align: center;">
     <div class="container">
@@ -886,6 +928,12 @@ superlocalmemoryv2:recall "auth bug"
       width: 10px;
       height: 10px;
     }
+  }
+
+  /* Architecture Preview Link */
+  .architecture-preview-link:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(124, 58, 237, 0.3);
   }
 
   /* Features in Action - Responsive Layout */
