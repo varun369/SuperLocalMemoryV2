@@ -1,0 +1,68 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  tags: string[];
+  category: string;
+  slug: string;
+}
+
+const { title, description, pubDate, tags, category, slug } = Astro.props;
+const formattedDate = pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+---
+
+<a href={`/blog/${slug}/`} class="blog-card card">
+  <div class="blog-card-meta">
+    <span class="badge badge-accent">{category}</span>
+    <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+  </div>
+  <h3 class="blog-card-title">{title}</h3>
+  <p class="blog-card-description">{description}</p>
+  <div class="blog-card-tags">
+    {tags.slice(0, 3).map(tag => <span class="badge">{tag}</span>)}
+  </div>
+</a>
+
+<style>
+  .blog-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .blog-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+
+  .blog-card-title {
+    color: var(--color-text);
+    margin-bottom: 0.5rem;
+    transition: color 0.2s;
+  }
+
+  .blog-card:hover .blog-card-title {
+    color: var(--color-accent);
+  }
+
+  .blog-card-description {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.75rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .blog-card-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+</style>

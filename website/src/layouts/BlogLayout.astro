@@ -1,0 +1,201 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  author: string;
+  tags: string[];
+  category: string;
+  image?: string;
+  keywords?: string;
+}
+
+const { title, description, pubDate, updatedDate, author, tags, category, image, keywords } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const formattedDate = pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+const formattedUpdatedDate = updatedDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<BaseLayout title={`${title} | SuperLocalMemory V2 Blog`} description={description}>
+  <Fragment slot="head">
+    <meta property="og:type" content="article" />
+    <meta property="article:published_time" content={pubDate.toISOString()} />
+    {updatedDate && <meta property="article:modified_time" content={updatedDate.toISOString()} />}
+    <meta property="article:author" content={author} />
+    {tags.map(tag => <meta property="article:tag" content={tag} />)}
+    {keywords && <meta name="keywords" content={keywords} />}
+    {image && <meta property="og:image" content={new URL(image, Astro.site)} />}
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": title,
+      "description": description,
+      "image": image ? new URL(image, Astro.site).toString() : "https://superlocalmemory.com/assets/social-preview.png",
+      "datePublished": pubDate.toISOString(),
+      "dateModified": (updatedDate || pubDate).toISOString(),
+      "author": {
+        "@type": "Person",
+        "name": author,
+        "url": "https://github.com/varun369"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "SuperLocalMemory",
+        "url": "https://superlocalmemory.com"
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": canonicalURL.toString()
+      }
+    })} />
+  </Fragment>
+
+  <article class="container blog-post">
+    <header class="blog-header">
+      <div class="blog-meta">
+        <span class="badge badge-accent">{category}</span>
+        <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+        {updatedDate && <span class="blog-updated">(Updated: {formattedUpdatedDate})</span>}
+      </div>
+      <h1>{title}</h1>
+      <p class="blog-description">{description}</p>
+      <div class="blog-author">
+        By <strong>{author}</strong>
+      </div>
+      {tags.length > 0 && (
+        <div class="blog-tags">
+          {tags.map(tag => <span class="badge">{tag}</span>)}
+        </div>
+      )}
+    </header>
+
+    <div class="blog-content">
+      <slot />
+    </div>
+
+    <footer class="blog-footer">
+      <a href="/blog" class="btn btn-secondary">Back to Blog</a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .blog-post {
+    max-width: 800px;
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+  }
+
+  .blog-header {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .blog-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+
+  .blog-updated {
+    color: var(--color-text-secondary);
+    font-style: italic;
+  }
+
+  .blog-header h1 {
+    font-size: 2.25rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+
+  .blog-description {
+    font-size: 1.125rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 1rem;
+  }
+
+  .blog-author {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+
+  .blog-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .blog-content {
+    line-height: 1.8;
+  }
+
+  .blog-content :global(h2) {
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .blog-content :global(h3) {
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .blog-content :global(p) {
+    margin-bottom: 1.25rem;
+    color: var(--color-text);
+  }
+
+  .blog-content :global(ul),
+  .blog-content :global(ol) {
+    margin-bottom: 1.25rem;
+    color: var(--color-text);
+  }
+
+  .blog-content :global(li) {
+    margin-bottom: 0.5rem;
+  }
+
+  .blog-content :global(blockquote) {
+    margin: 1.5rem 0;
+    padding: 1rem 1.5rem;
+    background: var(--color-bg-secondary);
+    border-left: 4px solid var(--color-accent);
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  }
+
+  .blog-content :global(pre) {
+    margin: 1.5rem 0;
+  }
+
+  .blog-content :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius);
+    margin: 1.5rem 0;
+  }
+
+  .blog-content :global(a) {
+    color: var(--color-accent);
+  }
+
+  .blog-footer {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  @media (max-width: 768px) {
+    .blog-header h1 {
+      font-size: 1.75rem;
+    }
+  }
+</style>

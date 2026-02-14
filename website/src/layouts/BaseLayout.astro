@@ -20,6 +20,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/branding/icon-white-16.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/assets/branding/icon-white-192.png" />
     <link rel="icon" type="image/svg+xml" href="/assets/branding/icon-white.svg" />
+    <link rel="alternate" type="application/rss+xml" title="SuperLocalMemory V2 Blog" href="/rss.xml" />
     <meta name="generator" content={Astro.generator} />
 
     <title>{title}</title>
@@ -105,6 +106,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         "keywords": "local AI memory, claude memory, AI memory system, MCP integration, Model Context Protocol, Cursor IDE, Windsurf, VS Code, AI agent memory, persistent AI context, knowledge graph AI, pattern learning, open source, free AI memory, GDPR compliant"
       }
     </script>
+    <slot name="head" />
   </head>
   <body>
     <header>
@@ -119,6 +121,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
             <a href="/features">Features</a>
             <a href="/architecture.html">Architecture</a>
             <a href="/comparison">vs Alternatives</a>
+            <a href="/blog">Blog</a>
             <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener">GitHub</a>
             <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki" target="_blank" rel="noopener">Wiki</a>
           </div>

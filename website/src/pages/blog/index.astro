@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlogCard from '../../components/BlogCard.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout
+  title="Blog | SuperLocalMemory V2"
+  description="Tutorials, guides, and comparisons for AI memory systems. Learn how to give Claude Code, Cursor, Windsurf, and 17+ AI tools persistent memory."
+>
+  <section class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <header style="margin-bottom: 3rem;">
+      <h1>Blog</h1>
+      <p style="font-size: 1.125rem; max-width: 600px;">
+        Tutorials, guides, and comparisons for AI memory systems. Learn how to give your AI tools persistent memory.
+      </p>
+    </header>
+
+    {posts.length === 0 ? (
+      <div class="card" style="text-align: center; padding: 3rem;">
+        <p style="color: var(--color-text-secondary);">No posts yet. Check back soon.</p>
+      </div>
+    ) : (
+      <div class="grid grid-2">
+        {posts.map(post => (
+          <BlogCard
+            title={post.data.title}
+            description={post.data.description}
+            pubDate={post.data.pubDate}
+            tags={post.data.tags}
+            category={post.data.category}
+            slug={post.id}
+          />
+        ))}
+      </div>
+    )}
+  </section>
+</BaseLayout>
