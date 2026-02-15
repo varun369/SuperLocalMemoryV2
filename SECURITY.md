@@ -24,8 +24,10 @@ This document outlines the security policy for SuperLocalMemory V2, including su
 
 | Version | Status | Support Level | Security Updates |
 |---------|--------|---------------|------------------|
-| 2.0.x   | Active | Full support  | Yes              |
-| 1.x.x   | Legacy | Limited       | Critical only    |
+| 2.6.x   | Active | Full support  | Yes              |
+| 2.5.x   | Active | Full support  | Yes              |
+| 2.0.x   | Legacy | Limited       | Critical only    |
+| 1.x.x   | EOL    | None          | No               |
 
 ### Support Timeline
 
@@ -246,6 +248,32 @@ No external transmission at any stage
 - Parameterized SQL queries (no string concatenation)
 - Input validation
 - No eval or exec on user input
+
+### Data-at-Rest Encryption
+
+**Current posture (v2.6):** SuperLocalMemory stores data as plain SQLite — this is a deliberate design choice to maintain zero external dependencies and maximum compatibility.
+
+**Defense in depth:**
+
+| Layer | Protection | Status |
+|-------|-----------|--------|
+| **OS-level encryption** | FileVault (macOS), BitLocker (Windows), LUKS (Linux) | **Recommended** — user responsibility |
+| **File permissions** | `chmod 600 ~/.claude-memory/memory.db` | **Recommended** — set by installer |
+| **Application-level encryption** | SQLCipher transparent encryption | **Planned for v3.0** |
+| **Secret scrubbing** | Regex-based detection and redaction of API keys, tokens | **Active (v2.6)** |
+| **Trust enforcement** | Bayesian trust scoring blocks untrusted agent writes | **Active (v2.6)** |
+
+**Why not encrypt by default?**
+1. SQLCipher adds a binary dependency (C library compilation), breaking "pure Python" guarantee
+2. Key management becomes a new attack surface (where to store the encryption key?)
+3. OS-level full-disk encryption already protects the database file
+4. For 99% of users (single-user, personal machine), OS encryption + file permissions is sufficient
+
+**For sensitive environments:**
+- Enable full-disk encryption on your OS (FileVault/BitLocker/LUKS)
+- Set restrictive file permissions: `chmod 600 ~/.claude-memory/memory.db`
+- Do not store API keys or passwords in memories (use a password manager)
+- SQLCipher integration is planned for v3.0 for enterprise deployments
 
 ### What We DON'T Protect Against
 

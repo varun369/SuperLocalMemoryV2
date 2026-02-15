@@ -79,6 +79,25 @@ try:
 except ImportError:
     pass  # Rate limiter not available — continue without it
 
+# Optional API key authentication (v2.6)
+try:
+    from auth_middleware import check_api_key
+
+    @app.middleware("http")
+    async def auth_middleware(request, call_next):
+        is_write = request.method in ("POST", "PUT", "DELETE", "PATCH")
+        headers = dict(request.headers)
+        if not check_api_key(headers, is_write=is_write):
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=401,
+                content={"error": "Invalid or missing API key. Set X-SLM-API-Key header."}
+            )
+        response = await call_next(request)
+        return response
+except ImportError:
+    pass  # Auth middleware not available
+
 
 # ============================================================================
 # Request/Response Models
