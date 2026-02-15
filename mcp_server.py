@@ -28,6 +28,7 @@ Usage:
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 import sys
+import os
 import json
 from pathlib import Path
 from typing import Optional
@@ -309,8 +310,17 @@ async def recall(
         # Use existing MemoryStoreV2 class
         store = get_store()
 
-        # Call existing search method
-        results = store.search(query, limit=limit)
+        # Hybrid search (opt-in via env var, v2.6)
+        _use_hybrid = os.environ.get('SLM_HYBRID_SEARCH', 'false').lower() == 'true'
+        if _use_hybrid:
+            try:
+                from hybrid_search import HybridSearchEngine
+                engine = HybridSearchEngine(store=store)
+                results = engine.search(query, limit=limit)
+            except (ImportError, Exception):
+                results = store.search(query, limit=limit)
+        else:
+            results = store.search(query, limit=limit)
 
         # Filter by minimum score
         filtered_results = [

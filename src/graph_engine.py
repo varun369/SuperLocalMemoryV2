@@ -15,12 +15,12 @@ Implements GraphRAG with Leiden community detection to:
 All processing is local - no external APIs.
 
 LIMITS:
-- MAX_MEMORIES_FOR_GRAPH: 5000 (prevents O(n²) explosion)
+- MAX_MEMORIES_FOR_GRAPH: 10000 (prevents O(n²) explosion)
 - For larger datasets, use incremental updates
 """
 
 # SECURITY: Graph build limits to prevent resource exhaustion
-MAX_MEMORIES_FOR_GRAPH = 5000
+MAX_MEMORIES_FOR_GRAPH = 10000
 
 import sqlite3
 import json
@@ -157,43 +157,82 @@ class EdgeBuilder:
             logger.warning("Need at least 2 memories to build edges")
             return 0
 
-        # Compute pairwise cosine similarity
-        similarity_matrix = cosine_similarity(vectors)
+        # Try HNSW-accelerated edge building first (O(n log n))
+        use_hnsw = False
+        try:
+            from hnsw_index import HNSWIndex
+            if len(memory_ids) >= 50:  # HNSW overhead not worth it for small sets
+                use_hnsw = True
+        except ImportError:
+            pass
 
         edges_added = 0
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
         try:
-            for i in range(len(memory_ids)):
-                for j in range(i + 1, len(memory_ids)):
-                    sim = similarity_matrix[i, j]
+            if use_hnsw:
+                logger.info("Using HNSW-accelerated edge building for %d memories", len(memory_ids))
+                try:
+                    dim = vectors.shape[1]
+                    hnsw = HNSWIndex(dimension=dim, max_elements=len(memory_ids))
+                    hnsw.build(vectors, memory_ids)
 
-                    if sim >= self.min_similarity:
-                        # Find shared entities
-                        entities_i = set(entities_list[i])
-                        entities_j = set(entities_list[j])
-                        shared = list(entities_i & entities_j)
+                    for i in range(len(memory_ids)):
+                        neighbors = hnsw.search(vectors[i], k=min(20, len(memory_ids) - 1))
+                        for neighbor_id, similarity in neighbors:
+                            if neighbor_id == memory_ids[i]:
+                                continue  # Skip self
+                            # Only process each pair once (lower ID first)
+                            if memory_ids[i] > neighbor_id:
+                                continue
+                            if similarity >= self.min_similarity:
+                                # Find indices for entity lookup
+                                j = memory_ids.index(neighbor_id)
+                                entities_i = set(entities_list[i])
+                                entities_j = set(entities_list[j])
+                                shared = list(entities_i & entities_j)
+                                rel_type = self._classify_relationship(similarity, shared)
 
-                        # Classify relationship type
-                        rel_type = self._classify_relationship(sim, shared)
+                                cursor.execute('''
+                                    INSERT OR REPLACE INTO graph_edges
+                                    (source_memory_id, target_memory_id, relationship_type,
+                                     weight, shared_entities, similarity_score)
+                                    VALUES (?, ?, ?, ?, ?, ?)
+                                ''', (
+                                    memory_ids[i], neighbor_id, rel_type,
+                                    float(similarity), json.dumps(shared), float(similarity)
+                                ))
+                                edges_added += 1
 
-                        # Insert edge (or update if exists)
-                        cursor.execute('''
-                            INSERT OR REPLACE INTO graph_edges
-                            (source_memory_id, target_memory_id, relationship_type,
-                             weight, shared_entities, similarity_score)
-                            VALUES (?, ?, ?, ?, ?, ?)
-                        ''', (
-                            memory_ids[i],
-                            memory_ids[j],
-                            rel_type,
-                            float(sim),
-                            json.dumps(shared),
-                            float(sim)
-                        ))
+                except Exception as e:
+                    logger.warning("HNSW edge building failed, falling back to O(n²): %s", e)
+                    use_hnsw = False  # Fall through to O(n²) below
 
-                        edges_added += 1
+            if not use_hnsw:
+                # Fallback: O(n²) pairwise cosine similarity
+                similarity_matrix = cosine_similarity(vectors)
+
+                for i in range(len(memory_ids)):
+                    for j in range(i + 1, len(memory_ids)):
+                        sim = similarity_matrix[i, j]
+
+                        if sim >= self.min_similarity:
+                            entities_i = set(entities_list[i])
+                            entities_j = set(entities_list[j])
+                            shared = list(entities_i & entities_j)
+                            rel_type = self._classify_relationship(sim, shared)
+
+                            cursor.execute('''
+                                INSERT OR REPLACE INTO graph_edges
+                                (source_memory_id, target_memory_id, relationship_type,
+                                 weight, shared_entities, similarity_score)
+                                VALUES (?, ?, ?, ?, ?, ?)
+                            ''', (
+                                memory_ids[i], memory_ids[j], rel_type,
+                                float(sim), json.dumps(shared), float(sim)
+                            ))
+                            edges_added += 1
 
             conn.commit()
             logger.info(f"Created {edges_added} edges")
@@ -829,7 +868,7 @@ class GraphEngine:
             Dictionary with build statistics
 
         Raises:
-            ValueError: If too many memories (>5000) for safe processing
+            ValueError: If too many memories (>10000) for safe processing
         """
         start_time = time.time()
         logger.info("Starting full graph build...")
@@ -882,17 +921,47 @@ class GraphEngine:
                     'fix': "Add more memories: superlocalmemoryv2:remember 'Your content here'"
                 }
 
-            # SECURITY: Prevent O(n²) explosion for large datasets
+            # SCALABILITY: Intelligent sampling for large datasets (v2.6)
             if len(memories) > MAX_MEMORIES_FOR_GRAPH:
-                logger.error(f"Too many memories for graph build: {len(memories)}")
-                return {
-                    'success': False,
-                    'error': 'too_many_memories',
-                    'message': f"Graph build limited to {MAX_MEMORIES_FOR_GRAPH} memories for performance.",
-                    'memories': len(memories),
-                    'limit': MAX_MEMORIES_FOR_GRAPH,
-                    'fix': "Use incremental updates or reduce memory count with compression."
-                }
+                logger.warning(
+                    "Memory count (%d) exceeds graph cap (%d). Using intelligent sampling.",
+                    len(memories), MAX_MEMORIES_FOR_GRAPH
+                )
+                # Sample: 60% most recent + 40% highest importance (with overlap dedup)
+                recent_count = int(MAX_MEMORIES_FOR_GRAPH * 0.6)
+                important_count = int(MAX_MEMORIES_FOR_GRAPH * 0.4)
+
+                recent_memories = cursor.execute('''
+                    SELECT id, content, summary FROM memories
+                    WHERE profile = ?
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                ''', (active_profile, recent_count)).fetchall()
+
+                important_memories = cursor.execute('''
+                    SELECT id, content, summary FROM memories
+                    WHERE profile = ?
+                    ORDER BY importance DESC, access_count DESC
+                    LIMIT ?
+                ''', (active_profile, important_count)).fetchall()
+
+                # Deduplicate by ID, preserving order
+                seen_ids = set()
+                memories = []
+                for m in recent_memories + important_memories:
+                    if m[0] not in seen_ids:
+                        seen_ids.add(m[0])
+                        memories.append(m)
+                memories = memories[:MAX_MEMORIES_FOR_GRAPH]
+                logger.info("Sampled %d memories for graph build", len(memories))
+
+            elif len(memories) > MAX_MEMORIES_FOR_GRAPH * 0.8:
+                logger.warning(
+                    "Approaching graph cap: %d/%d memories (%.0f%%). "
+                    "Consider running memory compression.",
+                    len(memories), MAX_MEMORIES_FOR_GRAPH,
+                    len(memories) / MAX_MEMORIES_FOR_GRAPH * 100
+                )
 
             # Clear existing graph data for this profile's memories
             profile_memory_ids = [m[0] for m in memories]

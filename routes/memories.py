@@ -6,6 +6,7 @@ Routes: /api/memories, /api/graph, /api/search, /api/clusters, /api/clusters/{id
 """
 
 import json
+import os
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -205,7 +206,16 @@ async def search_memories(request: SearchRequest):
     """Advanced semantic search with filters."""
     try:
         store = MemoryStoreV2(DB_PATH)
-        results = store.search(query=request.query, limit=request.limit * 2)
+        _use_hybrid = os.environ.get('SLM_HYBRID_SEARCH', 'false').lower() == 'true'
+        if _use_hybrid:
+            try:
+                from hybrid_search import HybridSearchEngine
+                engine = HybridSearchEngine(store=store)
+                results = engine.search(request.query, limit=request.limit * 2)
+            except (ImportError, Exception):
+                results = store.search(query=request.query, limit=request.limit * 2)
+        else:
+            results = store.search(query=request.query, limit=request.limit * 2)
 
         filtered = []
         for result in results:
