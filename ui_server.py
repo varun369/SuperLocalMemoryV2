@@ -64,7 +64,14 @@ app = FastAPI(
 # Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:*", "http://127.0.0.1:*"],
+    allow_origins=[
+        "http://localhost:8765",    # Dashboard
+        "http://127.0.0.1:8765",
+        "http://localhost:8417",    # MCP
+        "http://127.0.0.1:8417",
+        "http://localhost:8766",    # A2A (planned)
+        "http://127.0.0.1:8766",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
