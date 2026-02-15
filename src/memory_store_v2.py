@@ -227,6 +227,14 @@ class MemoryStoreV2:
         def _do_init(conn):
             cursor = conn.cursor()
 
+            # Database integrity check (v2.6: detect corruption early)
+            try:
+                result = cursor.execute('PRAGMA quick_check').fetchone()
+                if result[0] != 'ok':
+                    logger.warning("Database integrity issue detected: %s", result[0])
+            except Exception:
+                logger.warning("Could not run database integrity check")
+
             # Check if we need to add V2 columns to existing table
             cursor.execute("PRAGMA table_info(memories)")
             existing_columns = {row[1] for row in cursor.fetchall()}

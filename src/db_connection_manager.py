@@ -190,6 +190,8 @@ class DbConnectionManager:
             conn.execute(f"PRAGMA busy_timeout={DEFAULT_BUSY_TIMEOUT_MS}")
             # Sync mode NORMAL is safe with WAL and faster than FULL
             conn.execute("PRAGMA synchronous=NORMAL")
+            # Incremental auto-vacuum reclaims space without full rebuild (v2.6)
+            conn.execute("PRAGMA auto_vacuum=INCREMENTAL")
             conn.close()
         except Exception:
             conn.close()
