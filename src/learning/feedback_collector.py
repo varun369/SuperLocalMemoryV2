@@ -122,9 +122,16 @@ class FeedbackCollector:
         """
         Args:
             learning_db: LearningDB instance for persisting feedback.
-                         If None, feedback is logged but not stored.
+                         If None, auto-creates a LearningDB instance.
         """
-        self.learning_db = learning_db
+        if learning_db is None:
+            try:
+                from .learning_db import LearningDB
+                self.learning_db = LearningDB()
+            except Exception:
+                self.learning_db = None
+        else:
+            self.learning_db = learning_db
 
         # In-memory buffer for passive decay tracking.
         # Structure: {query_hash: {memory_id: times_returned_count}}
