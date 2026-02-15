@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SuperLocalMemory V2 — How Your AI Learns You</title>
+<meta name="description" content="SuperLocalMemory v2.7 adaptive learning system. Three-layer local-only learning with LightGBM re-ranking. Privacy-first, GDPR-compliant, zero telemetry.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&family=Lexend+Deca:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #0d1117;
+  --bg-surface: #0c1018;
+  --bg-card: #111827;
+  --bg-card-hover: #1a2332;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: #1e293b;
+  --purple: #8b5cf6;
+  --amber: #d97706;
+  --gold: #fbbf24;
+  --blue: #3b82f6;
+  --green: #10b981;
+  --red: #ef4444;
+  --cyan: #06b6d4;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'Lexend Deca', sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(rgba(139,92,246,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139,92,246,0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ===================== NAV ===================== */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(13,17,23,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-brand {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--amber);
+  text-decoration: none;
+  letter-spacing: 1px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-family: 'Share Tech Mono', monospace;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text-primary); }
+
+@media (max-width: 640px) {
+  .nav-links { gap: 12px; }
+  .nav-links a { font-size: 11px; }
+}
+
+/* ===================== HERO ===================== */
+.hero {
+  padding: 80px 0 60px;
+  text-align: center;
+}
+
+.hero-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border: 1px solid var(--amber);
+  border-radius: 20px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--gold);
+  background: rgba(217,119,6,0.1);
+  margin-bottom: 24px;
+  animation: badge-pulse 3s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(217,119,6,0.2); }
+  50% { box-shadow: 0 0 20px rgba(217,119,6,0.5); }
+}
+
+.hero h1 {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: clamp(32px, 5vw, 52px);
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, var(--amber) 0%, var(--gold) 40%, var(--purple) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
+}
+
+.hero-sub {
+  font-size: 18px;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto 48px;
+}
+
+/* Flow diagram */
+.flow-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: wrap;
+  margin: 0 auto;
+  max-width: 800px;
+}
+
+.flow-box {
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+  min-width: 120px;
+  transition: all 0.3s;
+}
+
+.flow-box.query {
+  background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(59,130,246,0.3);
+  color: #60a5fa;
+}
+
+.flow-box.retrieval {
+  background: rgba(99,102,241,0.12);
+  border: 1px solid rgba(99,102,241,0.3);
+  color: #818cf8;
+}
+
+.flow-box.ranker {
+  background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(217,119,6,0.15));
+  border: 2px solid var(--amber);
+  color: var(--gold);
+  animation: ranker-glow 2s ease-in-out infinite;
+  position: relative;
+}
+
+@keyframes ranker-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(217,119,6,0.2); }
+  50% { box-shadow: 0 0 28px rgba(217,119,6,0.5), 0 0 8px rgba(139,92,246,0.3); }
+}
+
+.flow-box.results {
+  background: rgba(16,185,129,0.12);
+  border: 1px solid rgba(16,185,129,0.3);
+  color: #34d399;
+}
+
+.flow-box .flow-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+.flow-arrow {
+  font-size: 20px;
+  color: var(--text-muted);
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .flow-box { min-width: 90px; padding: 10px 12px; font-size: 12px; }
+  .flow-arrow { font-size: 16px; padding: 0 4px; }
+}
+
+/* ===================== SECTION COMMON ===================== */
+.section {
+  padding: 64px 0;
+  border-top: 1px solid var(--border);
+}
+
+.section-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--amber);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: clamp(24px, 3.5vw, 36px);
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.section-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 640px;
+  margin-bottom: 40px;
+}
+
+/* ===================== LEARNING LAYERS ===================== */
+.layers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.layer-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.layer-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  transition: opacity 0.3s;
+  opacity: 0.5;
+}
+
+.layer-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--amber);
+  box-shadow: 0 8px 32px rgba(217,119,6,0.1);
+}
+
+.layer-card:hover::before { opacity: 1; }
+
+.layer-card[data-layer="1"]::before { background: var(--blue); }
+.layer-card[data-layer="2"]::before { background: var(--purple); }
+.layer-card[data-layer="3"]::before { background: var(--cyan); }
+
+.layer-card .layer-num {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: 48px;
+  opacity: 0.08;
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  line-height: 1;
+}
+
+.layer-card .layer-title {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.layer-card[data-layer="1"] .layer-title { color: #60a5fa; }
+.layer-card[data-layer="2"] .layer-title { color: #a78bfa; }
+.layer-card[data-layer="3"] .layer-title { color: #22d3ee; }
+
+.layer-card .layer-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.layer-card .layer-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.layer-card .keyword {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-muted);
+  transition: all 0.5s;
+}
+
+.layer-card:hover .keyword {
+  border-color: rgba(217,119,6,0.3);
+  color: var(--text-secondary);
+}
+
+.layer-card .layer-expand {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.layer-card.expanded .layer-expand {
+  max-height: 300px;
+}
+
+.layer-card .expand-content {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.layer-card .expand-hint {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  text-align: right;
+}
+
+/* ===================== THREE-PHASE RANKING ===================== */
+.phase-timeline {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  margin-top: 8px;
+}
+
+.phase-item {
+  flex: 1;
+  position: relative;
+  padding: 24px 20px;
+  border: 1px solid var(--border);
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.phase-item:first-child { border-radius: 12px 0 0 12px; }
+.phase-item:last-child { border-radius: 0 12px 12px 0; }
+
+.phase-item .phase-num {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.phase-item .phase-name {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.phase-item .phase-signals {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  opacity: 0.7;
+  margin-bottom: 12px;
+}
+
+.phase-item .phase-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.phase-item.p0 {
+  background: rgba(100,116,139,0.08);
+  border-color: rgba(100,116,139,0.2);
+  color: #94a3b8;
+}
+.phase-item.p0 .phase-num { color: #64748b; }
+
+.phase-item.p1 {
+  background: rgba(59,130,246,0.08);
+  border-color: rgba(59,130,246,0.2);
+  color: #60a5fa;
+}
+.phase-item.p1 .phase-num { color: var(--blue); }
+
+.phase-item.p2 {
+  background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(217,119,6,0.08));
+  border-color: rgba(217,119,6,0.3);
+  color: var(--gold);
+}
+.phase-item.p2 .phase-num { color: var(--amber); }
+
+/* Progress bar beneath phases */
+.phase-progress {
+  height: 4px;
+  border-radius: 2px;
+  margin-top: 24px;
+  background: var(--border);
+  overflow: hidden;
+  position: relative;
+}
+
+.phase-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #64748b 0%, var(--blue) 40%, var(--amber) 70%, var(--gold) 100%);
+  width: 0%;
+  animation: progress-fill 3s ease-out 0.5s forwards;
+}
+
+@keyframes progress-fill {
+  to { width: 100%; }
+}
+
+.phase-progress-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (max-width: 700px) {
+  .phase-timeline { flex-direction: column; }
+  .phase-item:first-child { border-radius: 12px 12px 0 0; }
+  .phase-item:last-child { border-radius: 0 0 12px 12px; }
+}
+
+/* ===================== PRIVACY COMPARISON ===================== */
+.privacy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 700px) {
+  .privacy-grid { grid-template-columns: 1fr; }
+}
+
+.privacy-card {
+  padding: 28px;
+  border-radius: 12px;
+  border: 1px solid;
+}
+
+.privacy-card.cloud {
+  background: rgba(239,68,68,0.04);
+  border-color: rgba(239,68,68,0.2);
+}
+
+.privacy-card.local {
+  background: rgba(16,185,129,0.04);
+  border-color: rgba(16,185,129,0.2);
+}
+
+.privacy-card .privacy-icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.privacy-card .privacy-title {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.privacy-card.cloud .privacy-title { color: #f87171; }
+.privacy-card.local .privacy-title { color: #34d399; }
+
+.privacy-card .privacy-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.privacy-card .privacy-list li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding-left: 20px;
+  position: relative;
+}
+
+.privacy-card.cloud .privacy-list li::before {
+  content: '\2717';
+  position: absolute;
+  left: 0;
+  color: #f87171;
+  font-weight: bold;
+}
+
+.privacy-card.local .privacy-list li::before {
+  content: '\2713';
+  position: absolute;
+  left: 0;
+  color: #34d399;
+  font-weight: bold;
+}
+
+/* GDPR Table */
+.gdpr-table {
+  margin-top: 32px;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.gdpr-table th {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gdpr-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(30,41,59,0.4);
+  color: var(--text-secondary);
+}
+
+.gdpr-table tr:hover td { background: rgba(16,185,129,0.03); }
+
+.gdpr-check { color: #34d399; font-weight: bold; }
+
+/* ===================== RESEARCH TABLE ===================== */
+.research-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.research-table th {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.research-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(30,41,59,0.4);
+  color: var(--text-secondary);
+  vertical-align: top;
+}
+
+.research-table tr:hover td { background: rgba(139,92,246,0.03); }
+
+.research-table .paper-title {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.research-table .venue {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 700px) {
+  .research-table { font-size: 11px; }
+  .research-table th, .research-table td { padding: 8px 10px; }
+}
+
+/* ===================== GET STARTED ===================== */
+.cta-section {
+  padding: 64px 0 80px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+
+.cta-section .cta-title {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: clamp(24px, 3.5vw, 36px);
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--amber), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cta-section .cta-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.code-block {
+  display: inline-block;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 24px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  color: var(--gold);
+  text-align: left;
+  margin-bottom: 12px;
+  max-width: 100%;
+  overflow-x: auto;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.code-block:hover {
+  border-color: var(--amber);
+  box-shadow: 0 0 16px rgba(217,119,6,0.15);
+}
+
+.code-block .code-comment {
+  color: var(--text-muted);
+}
+
+.cta-links {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.cta-links a {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  color: var(--purple);
+  text-decoration: none;
+  padding: 8px 16px;
+  border: 1px solid rgba(139,92,246,0.3);
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.cta-links a:hover {
+  background: rgba(139,92,246,0.1);
+  border-color: var(--purple);
+}
+
+/* ===================== FOOTER ===================== */
+.footer {
+  text-align: center;
+  padding: 24px;
+  border-top: 1px solid var(--border);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.footer a { color: var(--purple); text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+
+/* ===================== ANIMATIONS ===================== */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Keyword float animation for layer 1 */
+@keyframes float-keyword {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.layer-card:hover .keyword:nth-child(odd) {
+  animation: float-keyword 1.5s ease-in-out infinite;
+}
+
+.layer-card:hover .keyword:nth-child(even) {
+  animation: float-keyword 1.5s ease-in-out 0.3s infinite;
+}
+
+/* Sequence arrow animation for layer 3 */
+.sequence-flow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.sequence-step {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  background: rgba(6,182,212,0.1);
+  border: 1px solid rgba(6,182,212,0.2);
+  color: #22d3ee;
+}
+
+.sequence-arrow {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <a class="nav-brand" href="/">SuperLocalMemory V2</a>
+  <ul class="nav-links">
+    <li><a href="#layers">Layers</a></li>
+    <li><a href="#phases">Phases</a></li>
+    <li><a href="#privacy">Privacy</a></li>
+    <li><a href="#research">Research</a></li>
+    <li><a href="/features">Features</a></li>
+    <li><a href="/architecture.html">Architecture</a></li>
+    <li><a href="/">Home</a></li>
+  </ul>
+</nav>
+
+<!-- Section 1: Hero -->
+<section class="hero container">
+  <div class="hero-badge">v2.7.0 — Adaptive Learning Engine</div>
+  <h1>How Your AI Learns You</h1>
+  <p class="hero-sub">SuperLocalMemory v2.7 introduces a three-layer learning system that personalizes recall results based on your tech preferences, project context, and workflow patterns. All local. Zero telemetry.</p>
+
+  <div class="flow-diagram">
+    <div class="flow-box query">
+      Query
+      <div class="flow-sub">Natural language</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box retrieval">
+      Candidate Retrieval
+      <div class="flow-sub">FTS5 + TF-IDF + Graph</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box ranker">
+      Adaptive Re-Ranker
+      <div class="flow-sub">LightGBM + 200 signals</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box results">
+      Personalized Results
+      <div class="flow-sub">Ranked for you</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 2: Three Learning Layers -->
+<section class="section container fade-in" id="layers">
+  <div class="section-label">Layer Architecture</div>
+  <div class="section-title">Three Learning Layers</div>
+  <p class="section-desc">Each layer captures a different dimension of your behavior. Together they build a complete model of how you work, entirely on your local machine.</p>
+
+  <div class="layers-grid">
+    <!-- Layer 1: Tech Preferences -->
+    <div class="layer-card" data-layer="1" id="layerCard1">
+      <div class="layer-num">01</div>
+      <div class="layer-title">Tech Preferences</div>
+      <div class="layer-desc">Detects your preferred technologies, frameworks, and patterns across all projects. Transfers knowledge between workspaces.</div>
+      <div class="layer-keywords">
+        <span class="keyword">Python</span>
+        <span class="keyword">FastAPI</span>
+        <span class="keyword">pytest</span>
+        <span class="keyword">TypeScript</span>
+        <span class="keyword">SQLite</span>
+        <span class="keyword">Docker</span>
+        <span class="keyword">Tailwind</span>
+        <span class="keyword">Astro</span>
+      </div>
+      <div class="expand-hint">Click to expand</div>
+      <div class="layer-expand">
+        <div class="expand-content">
+          The Cross-Project Aggregator scans all your memories to detect technology preferences. It learns that you prefer pytest over unittest, FastAPI over Flask, TypeScript over plain JavaScript. These preferences transfer between projects automatically, so when you start a new project, your AI already knows your stack.
+        </div>
+      </div>
+    </div>
+
+    <!-- Layer 2: Project Context -->
+    <div class="layer-card" data-layer="2" id="layerCard2">
+      <div class="layer-num">02</div>
+      <div class="layer-title">Project Context</div>
+      <div class="layer-desc">4-signal detection identifies which project you are working in and boosts relevant memories automatically.</div>
+      <div class="layer-keywords">
+        <span class="keyword">Tags</span>
+        <span class="keyword">File Paths</span>
+        <span class="keyword">Profile</span>
+        <span class="keyword">Graph Clusters</span>
+      </div>
+      <div class="expand-hint">Click to expand</div>
+      <div class="layer-expand">
+        <div class="expand-content">
+          The Project Context Manager uses four signals to detect your current project: memory tags, file path patterns in recent memories, active profile, and knowledge graph cluster proximity. When you are working on "SuperLocalMemory", it boosts SLM-related memories. Switch to a different project, and context automatically shifts.
+        </div>
+      </div>
+    </div>
+
+    <!-- Layer 3: Workflow Patterns -->
+    <div class="layer-card" data-layer="3" id="layerCard3">
+      <div class="layer-num">03</div>
+      <div class="layer-title">Workflow Patterns</div>
+      <div class="layer-desc">Learns your temporal work sequences using sliding-window mining. Predicts what you will need next.</div>
+      <div class="sequence-flow">
+        <span class="sequence-step">docs</span>
+        <span class="sequence-arrow">&rarr;</span>
+        <span class="sequence-step">arch</span>
+        <span class="sequence-arrow">&rarr;</span>
+        <span class="sequence-step">code</span>
+        <span class="sequence-arrow">&rarr;</span>
+        <span class="sequence-step">test</span>
+        <span class="sequence-arrow">&rarr;</span>
+        <span class="sequence-step">deploy</span>
+      </div>
+      <div class="expand-hint">Click to expand</div>
+      <div class="layer-expand">
+        <div class="expand-content">
+          The Workflow Pattern Miner uses sliding-window sequence analysis (based on PrefixSpan) to discover your temporal work patterns. If you typically read docs, then design architecture, then write code, then write tests, the system learns this sequence and proactively surfaces the right memories at the right time in your workflow.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 3: Three-Phase Ranking -->
+<section class="section container fade-in" id="phases">
+  <div class="section-label">Ranking Evolution</div>
+  <div class="section-title">Three-Phase Adaptive Ranking</div>
+  <p class="section-desc">The ranking system automatically evolves from simple to sophisticated as you use it. No configuration needed. The system bootstraps ML features from your existing data on day one.</p>
+
+  <div class="phase-timeline">
+    <div class="phase-item p0">
+      <div class="phase-num">Phase 0</div>
+      <div class="phase-name">Baseline</div>
+      <div class="phase-signals">0 learning signals</div>
+      <div class="phase-desc">Standard FTS5 + TF-IDF retrieval. No personalization. Same as v2.6 and earlier.</div>
+    </div>
+    <div class="phase-item p1">
+      <div class="phase-num">Phase 1</div>
+      <div class="phase-name">Rule-Based</div>
+      <div class="phase-signals">20+ signals</div>
+      <div class="phase-desc">Hand-crafted boosting rules: recency, frequency, project match, tech preference overlap, source quality.</div>
+    </div>
+    <div class="phase-item p2">
+      <div class="phase-num">Phase 2</div>
+      <div class="phase-name">ML Model</div>
+      <div class="phase-signals">200+ signals</div>
+      <div class="phase-desc">LightGBM LambdaRank with synthetic bootstrap. Full ML ranking from day 1. Improves with every interaction.</div>
+    </div>
+  </div>
+
+  <div class="phase-progress">
+    <div class="phase-progress-fill"></div>
+  </div>
+  <div class="phase-progress-label">
+    <span>Install</span>
+    <span>First feedback</span>
+    <span>10+ sessions</span>
+    <span>Fully personalized</span>
+  </div>
+</section>
+
+<!-- Section 4: Privacy Comparison -->
+<section class="section container fade-in" id="privacy">
+  <div class="section-label">Privacy First</div>
+  <div class="section-title">Privacy by Design</div>
+  <p class="section-desc">Learning about you does not mean sending your data anywhere. Every byte stays on your machine. Compare with cloud alternatives.</p>
+
+  <div class="privacy-grid">
+    <div class="privacy-card cloud">
+      <div class="privacy-title">Cloud Alternatives</div>
+      <ul class="privacy-list">
+        <li>Your data stored on their servers</li>
+        <li>Their terms of service, their control</li>
+        <li>Submit deletion request, wait weeks</li>
+        <li>Usage analytics tracking your behavior</li>
+        <li>$24-50/month subscription fees</li>
+        <li>Vendor lock-in to proprietary formats</li>
+        <li>Data may be used for model training</li>
+      </ul>
+    </div>
+    <div class="privacy-card local">
+      <div class="privacy-title">SuperLocalMemory</div>
+      <ul class="privacy-list">
+        <li>Your data on YOUR machine only</li>
+        <li>Two SQLite files you fully own</li>
+        <li>slm learning reset -- instant delete</li>
+        <li>Zero telemetry. Absolutely none.</li>
+        <li>Free forever. No API keys needed.</li>
+        <li>Open SQLite format, MIT licensed</li>
+        <li>Your data never leaves localhost</li>
+      </ul>
+    </div>
+  </div>
+
+  <table class="gdpr-table">
+    <thead>
+      <tr>
+        <th>GDPR Article</th>
+        <th>Requirement</th>
+        <th>SLM Compliance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Art. 17</td>
+        <td>Right to Erasure</td>
+        <td><span class="gdpr-check">&#10003;</span> slm learning reset -- instant, complete</td>
+      </tr>
+      <tr>
+        <td>Art. 20</td>
+        <td>Data Portability</td>
+        <td><span class="gdpr-check">&#10003;</span> Standard SQLite files, copy anywhere</td>
+      </tr>
+      <tr>
+        <td>Art. 25</td>
+        <td>Data Protection by Design</td>
+        <td><span class="gdpr-check">&#10003;</span> Local-only, no cloud, no network calls</td>
+      </tr>
+      <tr>
+        <td>Art. 5(1)(c)</td>
+        <td>Data Minimization</td>
+        <td><span class="gdpr-check">&#10003;</span> Separate learning.db, minimal data capture</td>
+      </tr>
+      <tr>
+        <td>Art. 13</td>
+        <td>Transparency</td>
+        <td><span class="gdpr-check">&#10003;</span> slm learning status -- full visibility</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Section 5: Research Foundations -->
+<section class="section container fade-in" id="research">
+  <div class="section-label">Academic Foundations</div>
+  <div class="section-title">Research Behind v2.7</div>
+  <p class="section-desc">Every architectural decision is grounded in published research. Eight papers back the v2.7 learning system.</p>
+
+  <table class="research-table">
+    <thead>
+      <tr>
+        <th>Paper</th>
+        <th>Venue</th>
+        <th>Component</th>
+        <th>Relevance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="paper-title">BM25-to-Re-Ranker Pipeline</td>
+        <td class="venue">eKNOW 2025</td>
+        <td>Adaptive Ranker</td>
+        <td>Two-stage retrieve-then-rerank architecture</td>
+      </tr>
+      <tr>
+        <td class="paper-title">Cold-Start Recommendation via Feature Synthesis</td>
+        <td class="venue">FCS LREC 2024</td>
+        <td>Synthetic Bootstrap</td>
+        <td>Generating training data from existing patterns</td>
+      </tr>
+      <tr>
+        <td class="paper-title">MACLA: Multi-Armed Contextual Learning Agents</td>
+        <td class="venue">arXiv:2512.18950</td>
+        <td>Confidence Scoring</td>
+        <td>Beta-Binomial Bayesian confidence for pattern detection</td>
+      </tr>
+      <tr>
+        <td class="paper-title">TSW-PrefixSpan: Temporal Sequence Mining</td>
+        <td class="venue">IEEE 2020</td>
+        <td>Workflow Miner</td>
+        <td>Sliding-window sequential pattern discovery</td>
+      </tr>
+      <tr>
+        <td class="paper-title">ADPMF: Adaptive Privacy-Preserving Feedback</td>
+        <td class="venue">IPM 2024</td>
+        <td>Feedback Collector</td>
+        <td>Privacy-aware implicit feedback collection</td>
+      </tr>
+      <tr>
+        <td class="paper-title">MemoryBank: Long-Term Memory for LLMs</td>
+        <td class="venue">AAAI 2024</td>
+        <td>Pattern Learner</td>
+        <td>Persistent memory with forgetting curves</td>
+      </tr>
+      <tr>
+        <td class="paper-title">GraphRAG: Graph-Based Retrieval-Augmented Generation</td>
+        <td class="venue">Microsoft 2024</td>
+        <td>Knowledge Graph</td>
+        <td>Community-level context for retrieval</td>
+      </tr>
+      <tr>
+        <td class="paper-title">Hindsight: Posterior-Guided Training for LLMs</td>
+        <td class="venue">arXiv:2512.12818</td>
+        <td>Pattern Learner</td>
+        <td>Learning from interaction history</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Section 6: Get Started -->
+<section class="cta-section container" id="start">
+  <div class="cta-title">Get Started</div>
+  <p class="cta-desc">Install SuperLocalMemory in under 60 seconds. The learning system activates automatically in v2.7.</p>
+
+  <div class="code-block" id="installCmd" title="Click to copy">
+    <span class="code-comment"># Install or upgrade</span><br>
+    npm install -g superlocalmemoryv2@latest
+  </div>
+  <br>
+  <div class="code-block" id="upgradeCmd" title="Click to copy">
+    <span class="code-comment"># Check learning status</span><br>
+    slm learning status
+  </div>
+  <br>
+  <div class="code-block" id="resetCmd" title="Click to copy">
+    <span class="code-comment"># Reset learned data (GDPR Art. 17)</span><br>
+    slm learning reset
+  </div>
+
+  <div class="cta-links">
+    <a href="https://github.com/varun369/SuperLocalMemoryV2">GitHub Repository</a>
+    <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki">Documentation Wiki</a>
+    <a href="architecture.html">Architecture Diagram</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  SuperLocalMemory V2 &copy; 2026 Created by Varun Pratap Bhardwaj &bull;
+  <a href="https://github.com/varun369/SuperLocalMemoryV2">GitHub</a> &bull;
+  <a href="architecture.html">Architecture</a> &bull;
+  MIT License &bull; Local-First &bull; Privacy-First &bull; Free Forever
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  // Intersection Observer for fade-in animations
+  var fadeElements = document.querySelectorAll('.fade-in');
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    fadeElements.forEach(function(el) {
+      observer.observe(el);
+    });
+  } else {
+    // Fallback: show all immediately
+    fadeElements.forEach(function(el) {
+      el.classList.add('visible');
+    });
+  }
+
+  // Layer card expand/collapse
+  var layerCards = document.querySelectorAll('.layer-card');
+  layerCards.forEach(function(card) {
+    card.addEventListener('click', function() {
+      var wasExpanded = this.classList.contains('expanded');
+      // Collapse all first
+      layerCards.forEach(function(c) { c.classList.remove('expanded'); });
+      // Toggle clicked
+      if (!wasExpanded) {
+        this.classList.add('expanded');
+      }
+    });
+  });
+
+  // Copy-to-clipboard for code blocks
+  var codeBlocks = document.querySelectorAll('.code-block');
+  codeBlocks.forEach(function(block) {
+    block.addEventListener('click', function() {
+      var text = this.textContent.replace(/# .*\n?/g, '').trim();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+          block.style.borderColor = '#34d399';
+          setTimeout(function() {
+            block.style.borderColor = '';
+          }, 1500);
+        });
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

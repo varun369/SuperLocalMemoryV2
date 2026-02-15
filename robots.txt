@@ -1,11 +1,8 @@
 # robots.txt for SuperLocalMemory V2
-# https://varun369.github.io/SuperLocalMemoryV2
+# https://superlocalmemory.com/
 
 User-agent: *
 Allow: /
 
-# Sitemaps
-Sitemap: https://varun369.github.io/SuperLocalMemoryV2/sitemap.xml
-
-# Crawl-delay for polite bots
-Crawl-delay: 1
+# Sitemap
+Sitemap: https://superlocalmemory.com/sitemap-index.xml
