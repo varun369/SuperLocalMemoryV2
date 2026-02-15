@@ -20,7 +20,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
         <div style="font-family: monospace; font-size: 0.875rem; line-height: 1.8; background: var(--color-bg-tertiary); padding: 1.5rem; border-radius: 8px; overflow-x: auto;">
 <pre style="margin: 0; background: none; padding: 0; border: none;">┌─────────────────────────────────────────────────────┐
-│ Layer 10: A2A AGENT COLLABORATION (v2.7)            │
+│ Layer 10: A2A AGENT COLLABORATION (v2.8)            │
 │  Agent-to-Agent protocol for multi-agent sync      │
 ├─────────────────────────────────────────────────────┤
 │ Layer 9: VISUALIZATION (v2.2.0)                    │
@@ -33,10 +33,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 │  MCP + Skills + CLI (works everywhere)             │
 ├─────────────────────────────────────────────────────┤
 │ Layer 6: MCP INTEGRATION                           │
-│  6 tools, 4 resources, 2 prompts                   │
+│  12 tools, 6 resources, 2 prompts                  │
+├─────────────────────────────────────────────────────┤
+│ <span style="color: #f59e0b; font-weight: bold;">★ Layer 5½: ADAPTIVE LEARNING (v2.7 — NEW)</span>          │
+│  <span style="color: #f59e0b;">Three-layer learning + LightGBM re-ranking</span>       │
 ├─────────────────────────────────────────────────────┤
 │ Layer 5: SKILLS LAYER                              │
-│  6 universal slash-commands                        │
+│  7 universal slash-commands                        │
 ├─────────────────────────────────────────────────────┤
 │ Layer 4: PATTERN LEARNING + MACLA (v2.4.0)         │
 │  Bayesian Beta-Binomial confidence scoring         │
@@ -56,7 +59,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <!-- A2A Protocol - Coming Soon -->
       <div class="card" style="margin-bottom: 2rem; border: 2px solid var(--color-accent);">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-          <h3 style="color: var(--color-accent); margin: 0;">🤝 A2A Agent Collaboration (Coming v2.7)</h3>
+          <h3 style="color: var(--color-accent); margin: 0;">🤝 A2A Agent Collaboration (Coming v2.8)</h3>
           <span style="background: var(--color-accent); color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">NEW</span>
         </div>
         <p style="margin-bottom: 1rem;">Multi-agent collaboration through the <strong>A2A Protocol</strong> (Google/Linux Foundation). Your AI tools finally talk to each other through shared memory.</p>
@@ -68,6 +71,66 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </ul>
         <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px;">
           <strong>Why both MCP + A2A?</strong> MCP connects tools to memory (vertical). A2A connects agents to each other through memory (horizontal). Together, they make SuperLocalMemory the complete memory backbone for multi-agent workflows.
+        </div>
+      </div>
+
+      <!-- Adaptive Learning System (v2.7) -->
+      <div class="card" style="margin-bottom: 2rem; border: 2px solid #f59e0b; position: relative;">
+        <div style="position: absolute; top: -12px; left: 1.5rem; background: #f59e0b; color: #000; padding: 0.2rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.03em;">v2.7 — NEW</div>
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; margin-top: 0.5rem;">
+          <h3 style="color: #f59e0b; margin: 0;">🧠 Adaptive Learning System</h3>
+        </div>
+        <p style="margin-bottom: 1.5rem;">Your AI learns <strong>you</strong> — your preferences, your workflows, your patterns. Three-layer local-only learning with LightGBM LambdaRank adaptive re-ranking. All processing local. Zero cloud. GDPR compliant by architecture.</p>
+
+        <h4 style="margin-bottom: 0.75rem; font-size: 1rem;">Three Learning Layers</h4>
+        <div class="grid grid-3" style="gap: 1rem; margin-bottom: 1.5rem;">
+          <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px; border-left: 3px solid #f59e0b;">
+            <h5 style="font-size: 0.875rem; margin-bottom: 0.5rem; color: #f59e0b;">Layer 1: Cross-Project</h5>
+            <p style="font-size: 0.8125rem; margin: 0;">Transferable tech preferences across all profiles. "You prefer FastAPI over Flask" — learned once, applied everywhere.</p>
+          </div>
+          <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px; border-left: 3px solid #f59e0b;">
+            <h5 style="font-size: 0.875rem; margin-bottom: 0.5rem; color: #f59e0b;">Layer 2: Project Context</h5>
+            <p style="font-size: 0.8125rem; margin: 0;">Multi-signal project detection (4 signals). Knows which project you're in and surfaces the right memories.</p>
+          </div>
+          <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px; border-left: 3px solid #f59e0b;">
+            <h5 style="font-size: 0.875rem; margin-bottom: 0.5rem; color: #f59e0b;">Layer 3: Workflow Patterns</h5>
+            <p style="font-size: 0.8125rem; margin: 0;">Sliding-window sequence mining + temporal patterns. Detects "Monday = architecture reviews" and pre-surfaces relevant context.</p>
+          </div>
+        </div>
+
+        <h4 style="margin-bottom: 0.75rem; font-size: 1rem;">Adaptive Ranking (3 Phases)</h4>
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.5rem;">
+          <div style="background: var(--color-bg-tertiary); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; flex: 1; min-width: 180px;">
+            <strong>Phase 1:</strong> Rule-based heuristics (day 1)
+          </div>
+          <span style="font-size: 1.25rem; color: #f59e0b;">→</span>
+          <div style="background: var(--color-bg-tertiary); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; flex: 1; min-width: 180px;">
+            <strong>Phase 2:</strong> Synthetic bootstrap ML model
+          </div>
+          <span style="font-size: 1.25rem; color: #f59e0b;">→</span>
+          <div style="background: var(--color-bg-tertiary); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; flex: 1; min-width: 180px;">
+            <strong>Phase 3:</strong> Full LightGBM LambdaRank
+          </div>
+        </div>
+
+        <h4 style="margin-bottom: 0.75rem; font-size: 1rem;">Privacy Architecture</h4>
+        <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <ul style="margin: 0; font-size: 0.875rem;">
+            <li><strong>Separate <code>learning.db</code></strong> — Behavioral data isolated from memory storage. Delete it anytime, memories stay intact.</li>
+            <li><strong>Zero telemetry</strong> — All ML training happens locally. No data leaves your machine. Ever.</li>
+            <li><strong>GDPR by design</strong> — One command to erase all learned patterns: <code>rm ~/.claude-memory/learning.db</code></li>
+            <li><strong>Feedback via MCP</strong> — New <code>memory_used</code> tool lets your AI tell the system which memories were actually helpful.</li>
+          </ul>
+        </div>
+
+        <h4 style="margin-bottom: 0.75rem; font-size: 1rem;">Research Foundations</h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+          <a href="https://arxiv.org/abs/2512.18950" target="_blank" rel="noopener" style="background: var(--color-bg-tertiary); padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; text-decoration: none; color: var(--color-text-secondary); border: 1px solid var(--color-border);">MACLA (arXiv:2512.18950)</a>
+          <span style="background: var(--color-bg-tertiary); padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; color: var(--color-text-secondary); border: 1px solid var(--color-border);">eKNOW 2025 — BM25→Re-Ranker</span>
+          <span style="background: var(--color-bg-tertiary); padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; color: var(--color-text-secondary); border: 1px solid var(--color-border);">FCS LREC 2024 — Cold-Start</span>
+          <span style="background: var(--color-bg-tertiary); padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; color: var(--color-text-secondary); border: 1px solid var(--color-border);">TSW-PrefixSpan (IEEE 2020)</span>
+          <span style="background: var(--color-bg-tertiary); padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; color: var(--color-text-secondary); border: 1px solid var(--color-border);">ADPMF (IPM 2024)</span>
+          <a href="https://arxiv.org/abs/2404.16130" target="_blank" rel="noopener" style="background: var(--color-bg-tertiary); padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; text-decoration: none; color: var(--color-text-secondary); border: 1px solid var(--color-border);">GraphRAG (arXiv:2404.16130)</a>
         </div>
       </div>
 
@@ -261,7 +324,7 @@ python ~/.claude-memory/auto_backup.py status   # Backup status</code></pre>
 
       <!-- Research-Based -->
       <h2 style="margin-bottom: 1.5rem;">🔬 Built on Research</h2>
-      <div class="grid grid-2" style="margin-bottom: 3rem;">
+      <div class="grid grid-2" style="margin-bottom: 1.5rem;">
         <div class="card">
           <h3>📄 PageIndex (VectifyAI)</h3>
           <p>Hierarchical memory organization with tree structures for O(log n) navigation.</p>
@@ -277,6 +340,25 @@ python ~/.claude-memory/auto_backup.py status   # Backup status</code></pre>
         <div class="card">
           <h3>⚡ A-RAG</h3>
           <p>Multi-level retrieval with context awareness.</p>
+        </div>
+      </div>
+      <h3 style="margin-bottom: 1rem; color: #f59e0b;">v2.7 Learning System Research</h3>
+      <div class="grid grid-2" style="margin-bottom: 3rem;">
+        <div class="card">
+          <h3>🧠 eKNOW 2025</h3>
+          <p>BM25-to-re-ranker pipeline architecture for adaptive search result personalization.</p>
+        </div>
+        <div class="card">
+          <h3>🔄 FCS LREC 2024</h3>
+          <p>Cold-start strategies for ML ranking — synthetic bootstrap from existing data patterns.</p>
+        </div>
+        <div class="card">
+          <h3>⛏️ TSW-PrefixSpan (IEEE 2020)</h3>
+          <p>Time-weighted sequential pattern mining for workflow discovery.</p>
+        </div>
+        <div class="card">
+          <h3>🔒 ADPMF (IPM 2024)</h3>
+          <p>Privacy-preserving feedback collection for local recommendation systems.</p>
         </div>
       </div>
 

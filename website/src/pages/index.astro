@@ -6,13 +6,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   title="SuperLocalMemory V2 - Your AI Finally Remembers You"
   description="The only free, local-first AI memory system with universal architecture. Works with ChatGPT, Claude, Cursor, Windsurf, VS Code, Codex, Gemini CLI, JetBrains, and 17+ AI tools. 100% local, 100% private, 100% free forever."
 >
-  <!-- v2.5 Announcement Banner -->
-  <section style="padding: 1rem 0; background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); text-align: center;">
+  <!-- v2.7 Announcement Banner -->
+  <section style="padding: 1.25rem 0; background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); text-align: center;">
     <div class="container">
-      <p style="color: white; margin: 0; font-size: 1.1rem; font-weight: 600;">
-        NEW: v2.5.1 — Now on PyPI! <code style="background:rgba(255,255,255,0.2);padding:0.1rem 0.4rem;border-radius:4px;">pip install langchain-superlocalmemory</code> &amp; <code style="background:rgba(255,255,255,0.2);padding:0.1rem 0.4rem;border-radius:4px;">pip install llama-index-storage-chat-store-superlocalmemory</code>
-        <a href="https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md" target="_blank" rel="noopener" style="color: #fde68a; margin-left: 0.5rem;">See what's new</a>
+      <p style="color: white; margin: 0 0 0.5rem 0; font-size: 1.2rem; font-weight: 700;">
+        NEW: v2.7.0 — Your AI Learns You
       </p>
+      <p style="color: rgba(255,255,255,0.9); margin: 0 0 0.75rem 0; font-size: 0.95rem; max-width: 700px; margin-left: auto; margin-right: auto;">
+        Adaptive learning with local ML ranking. Your memory system now learns your tech preferences, workflow patterns, and project context — all 100% locally. GDPR Article 17 compliant by design.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="/learning" style="display: inline-block; padding: 0.4rem 1.25rem; background: white; color: #7c3aed; border-radius: 999px; font-weight: 600; font-size: 0.875rem; text-decoration: none;">Learn More &rarr;</a>
+        <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/Upgrade-Guide" target="_blank" rel="noopener" style="display: inline-block; padding: 0.4rem 1.25rem; background: rgba(255,255,255,0.2); color: white; border-radius: 999px; font-weight: 600; font-size: 0.875rem; text-decoration: none; border: 1px solid rgba(255,255,255,0.4);">Upgrade Guide &rarr;</a>
+      </div>
     </div>
   </section>
 
@@ -81,7 +87,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             <!-- macOS DMG -->
             <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem; text-align: center;">
               <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">macOS</h3>
-              <a href="https://github.com/varun369/SuperLocalMemoryV2/releases/download/v2.4.1/SuperLocalMemory-v2.4.1-macos.dmg" class="btn btn-secondary" style="width: 100%; box-sizing: border-box;">
+              <a href="https://github.com/varun369/SuperLocalMemoryV2/releases/download/v2.7.0/SuperLocalMemory-v2.7.0-macos.dmg" class="btn btn-secondary" style="width: 100%; box-sizing: border-box;">
                 Download DMG
               </a>
             </div>
@@ -360,38 +366,46 @@ superlocalmemoryv2:recall "auth bug"
     </div>
   </section>
 
-  <!-- v2.5 Feature Highlights -->
+  <!-- v2.7 Feature Highlights -->
   <section style="padding: 3rem 0; background: var(--color-bg-secondary);">
     <div class="container">
-      <h2 class="text-center" style="margin-bottom: 0.5rem;">v2.5 — Your AI Memory Has a Heartbeat</h2>
-      <p class="text-center" style="margin-bottom: 2rem; color: var(--color-text-secondary);">From passive storage to active coordination layer</p>
+      <h2 class="text-center" style="margin-bottom: 0.5rem;">v2.7.0 — Your AI Learns You</h2>
+      <p class="text-center" style="margin-bottom: 2rem; color: var(--color-text-secondary);">Three-layer adaptive learning — tech preferences, project context, workflow patterns. All local, all private.</p>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-        <div class="card">
-          <h3>Real-Time Event Stream</h3>
-          <p>Every memory operation fires a live event to the dashboard via SSE. No refresh needed. Cross-process — CLI, MCP, REST all visible in one stream.</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="card" style="border: 2px solid var(--color-accent);">
+          <h3>Three-Layer Learning</h3>
+          <p>Cross-project tech preferences (Layer 1), multi-signal project context detection (Layer 2), and sliding-window workflow pattern mining (Layer 3). Each layer builds on the previous.</p>
+        </div>
+        <div class="card" style="border: 2px solid var(--color-accent);">
+          <h3>Adaptive ML Ranking</h3>
+          <p>LightGBM LambdaRank re-ranker trained locally on your behavior. Synthetic bootstrap gives full ML from day one — no cold-start problem. Ranking improves automatically as you use it.</p>
+        </div>
+        <div class="card" style="border: 2px solid var(--color-accent);">
+          <h3>Privacy by Design</h3>
+          <p>Separate <code>learning.db</code> for behavioral data — one command deletes everything. GDPR Article 17 right-to-erasure compliant. Zero telemetry, zero cloud, zero tracking.</p>
         </div>
         <div class="card">
-          <h3>Zero Database Locks</h3>
-          <p>WAL mode + serialized write queue. 50 agents writing simultaneously? Zero "database locked" errors. Reads never block during writes.</p>
+          <h3>Research-Backed</h3>
+          <p>Built on 8 peer-reviewed papers: LambdaRank, TSW-PrefixSpan, MACLA Bayesian confidence, eKNOW retrieval pipelines, and more. Novel local-only adaptive re-ranking contribution.</p>
         </div>
         <div class="card">
-          <h3>Agent Tracking</h3>
-          <p>Know exactly which AI tool wrote what. Claude, Cursor, Windsurf, Perplexity — all auto-registered with protocol, write counts, and last-seen timestamps.</p>
+          <h3>12 MCP Tools, 7 Skills</h3>
+          <p>New <code>memory_used</code>, <code>get_learned_patterns</code>, and <code>correct_pattern</code> MCP tools. Implicit feedback from every recall. Explicit correction when needed.</p>
         </div>
         <div class="card">
-          <h3>Trust Scoring</h3>
-          <p>Bayesian trust signals detect quality. Cross-agent validation boosts trust. Spam and quick-deletes lower it. Silent collection now — enforcement in v2.6.</p>
-        </div>
-        <div class="card">
-          <h3>Memory Provenance</h3>
-          <p>Every memory records its creator, protocol, trust score, and derivation lineage. Full audit trail for enterprise compliance.</p>
-        </div>
-        <div class="card">
-          <h3>Production-Grade Code</h3>
-          <p>28 API endpoints across 8 modular routes. 13 modular JS files. 63 pytest tests covering concurrency, security, edge cases.</p>
+          <h3>319 Tests</h3>
+          <p>63 pytest + 27 e2e + 15 fresh-DB edge cases + 17 backward-compat + 197 learning module tests. Every change validated against full regression suite.</p>
         </div>
       </div>
+
+      <!-- Collapsed v2.5 highlights -->
+      <details style="background: var(--color-bg-tertiary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1.5rem;">
+        <summary style="cursor: pointer; font-weight: 600; color: var(--color-text-secondary);">v2.5.0 — Your AI Memory Has a Heartbeat (previous release)</summary>
+        <p style="margin-top: 1rem; color: var(--color-text-secondary); line-height: 1.7;">
+          v2.5 transformed SuperLocalMemory from passive storage to an active coordination layer: real-time SSE event stream across all processes, WAL mode with zero database locks, automatic agent tracking with protocol badges, Bayesian trust scoring, full memory provenance with audit trails, and 28 API endpoints across 8 modular routes. 63 pytest tests covering concurrency, security, and edge cases.
+        </p>
+      </details>
     </div>
   </section>
 
@@ -401,6 +415,17 @@ superlocalmemoryv2:recall "auth bug"
       <h2 class="text-center" style="margin-bottom: 3rem;">Why SuperLocalMemory?</h2>
 
       <div class="grid grid-3">
+        <div class="card" style="border: 2px solid var(--color-accent); position: relative;">
+          <div style="position: absolute; top: -0.5rem; right: 1rem; background: var(--color-accent); color: white; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 999px;">NEW v2.7</div>
+          <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🧪 Adaptive Learning</h3>
+          <p>Learns your tech preferences, workflow patterns, and project context. Ranking improves automatically as you use it.</p>
+          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.75rem;">
+            <span style="font-size: 0.7rem; padding: 0.15rem 0.5rem; background: var(--color-bg-tertiary); border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text-secondary);">LightGBM</span>
+            <span style="font-size: 0.7rem; padding: 0.15rem 0.5rem; background: var(--color-bg-tertiary); border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text-secondary);">Local ML</span>
+            <span style="font-size: 0.7rem; padding: 0.15rem 0.5rem; background: var(--color-bg-tertiary); border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text-secondary);">Zero Cloud</span>
+          </div>
+        </div>
+
         <div class="card">
           <h3 style="color: var(--color-accent); margin-bottom: 1rem;">🔐 100% Local</h3>
           <p>Your data never leaves your machine. Zero cloud dependencies. GDPR/HIPAA compliant by default.</p>
@@ -450,7 +475,7 @@ superlocalmemoryv2:recall "auth bug"
         <div style="background: var(--color-bg-tertiary); border: 1px solid var(--color-accent); border-radius: var(--border-radius); padding: 1rem 1.5rem; text-align: center;">
           <div style="font-weight: 700; color: var(--color-accent); font-size: 1.1rem;">A2A Protocol</div>
           <div style="font-size: 0.875rem; color: var(--color-text-secondary);">Agent ↔ Agent (Google/LF)</div>
-          <div style="font-size: 0.75rem; margin-top: 0.25rem;">🔜 Coming v2.7</div>
+          <div style="font-size: 0.75rem; margin-top: 0.25rem;">🔜 Coming v2.8</div>
         </div>
       </div>
 
@@ -569,7 +594,21 @@ superlocalmemoryv2:recall "auth bug"
               <td>❌</td>
               <td>❌</td>
               <td>❌</td>
-              <td><span class="badge badge-success">🔜 v2.5.0</span></td>
+              <td><span class="badge badge-success">🔜 v2.8</span></td>
+            </tr>
+            <tr>
+              <td><strong>Adaptive ML Ranking</strong></td>
+              <td>Cloud LLM</td>
+              <td>❌</td>
+              <td>❌</td>
+              <td><span class="badge badge-success">✅ Local ML</span></td>
+            </tr>
+            <tr>
+              <td><strong>GDPR by Design</strong></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+              <td><span class="badge badge-success">✅ Art. 17</span></td>
             </tr>
             <tr>
               <td><strong>Pattern Learning</strong></td>
@@ -609,52 +648,52 @@ superlocalmemoryv2:recall "auth bug"
 
       <div class="grid grid-2">
         <div>
-          <h3 style="margin-bottom: 1.5rem;">Benchmarks (v2.2.0)</h3>
+          <h3 style="margin-bottom: 1.5rem;">Measured Search Latency</h3>
           <table>
             <tr>
-              <td><strong>Add Memory</strong></td>
-              <td>&lt; 10ms</td>
+              <td><strong>100 memories</strong></td>
+              <td>10.6ms median</td>
             </tr>
             <tr>
-              <td><strong>Hybrid Search</strong></td>
-              <td>80ms</td>
+              <td><strong>500 memories</strong></td>
+              <td>65.2ms median</td>
             </tr>
             <tr>
-              <td><strong>Graph Build</strong></td>
-              <td>&lt; 2s (100 memories)</td>
+              <td><strong>1,000 memories</strong></td>
+              <td>124.3ms median</td>
             </tr>
             <tr>
-              <td><strong>Pattern Learning</strong></td>
-              <td>&lt; 2s</td>
+              <td><strong>5,000 memories</strong></td>
+              <td>1,172ms median</td>
             </tr>
           </table>
         </div>
 
         <div>
-          <h3 style="margin-bottom: 1.5rem;">Scalability</h3>
+          <h3 style="margin-bottom: 1.5rem;">Storage &amp; Concurrency</h3>
           <table>
             <tr>
-              <td><strong>100 memories</strong></td>
-              <td>35ms search, 30MB RAM</td>
+              <td><strong>10K memories</strong></td>
+              <td>13.6 MB (1.9 KB each)</td>
             </tr>
             <tr>
-              <td><strong>500 memories</strong></td>
-              <td>45ms search, 50MB RAM</td>
+              <td><strong>Concurrent writes</strong></td>
+              <td>220/sec peak, 0 errors</td>
             </tr>
             <tr>
-              <td><strong>1,000 memories</strong></td>
-              <td>55ms search, 80MB RAM</td>
+              <td><strong>Graph (100 mem)</strong></td>
+              <td>0.28s build time</td>
             </tr>
             <tr>
-              <td><strong>5,000 memories</strong></td>
-              <td>85ms search, 150MB RAM</td>
+              <td><strong>MRR (all configs)</strong></td>
+              <td>0.90 retrieval quality</td>
             </tr>
           </table>
         </div>
       </div>
 
       <p class="text-center" style="margin-top: 2rem; font-size: 1.1rem;">
-        <strong>Tested up to 10,000 memories</strong> with linear scaling and no degradation.
+        <strong>Real measured benchmarks</strong> on Apple M4 Pro, 24GB RAM. Tested up to 10,000 memories across 6 benchmark suites (BM1-BM6).
       </p>
     </div>
   </section>
@@ -668,6 +707,21 @@ superlocalmemoryv2:recall "auth bug"
       </p>
 
       <div class="grid grid-3">
+        <div class="card" style="border: 2px solid var(--color-accent);">
+          <h3>🧪 LambdaRank (Burges 2010)</h3>
+          <p>Adaptive LightGBM re-ranker trained locally on your usage patterns. Novel local-only, zero-communication ranking. <strong>New in v2.7.</strong></p>
+        </div>
+
+        <div class="card" style="border: 2px solid var(--color-accent);">
+          <h3>⛏️ TSW-PrefixSpan (IEEE 2020)</h3>
+          <p>Sliding-window sequential pattern mining for workflow discovery. Learns your remember/recall/build sequences. <strong>New in v2.7.</strong></p>
+        </div>
+
+        <div class="card" style="border: 2px solid var(--color-accent);">
+          <h3>📊 MACLA (arXiv:2512.18950)</h3>
+          <p>Beta-Binomial Bayesian confidence scoring for learned patterns. Cold-start bootstrap from existing data. <strong>New in v2.7.</strong></p>
+        </div>
+
         <div class="card">
           <h3>📄 PageIndex (VectifyAI)</h3>
           <p>Hierarchical memory organization with tree structures and breadcrumbs for O(log n) lookups.</p>
@@ -684,18 +738,23 @@ superlocalmemoryv2:recall "auth bug"
         </div>
 
         <div class="card">
-          <h3>⚡ A-RAG</h3>
-          <p>Multi-level retrieval with context awareness. Hybrid search combining semantic, FTS5, and graph.</p>
+          <h3>⚡ A-RAG + eKNOW 2025</h3>
+          <p>Multi-level retrieval with context awareness. BM25-to-re-ranker pipeline validated in eKNOW 2025 retrieval research.</p>
+        </div>
+
+        <div class="card">
+          <h3>🔒 LREC 2024 Cold-Start</h3>
+          <p>Synthetic bootstrap from existing memory patterns. Full ML model from day one — no degradation during cold-start period.</p>
         </div>
 
         <div class="card" style="border: 1px solid var(--color-accent);">
           <h3>🤝 A2A Protocol (Google/LF)</h3>
-          <p>Agent-to-Agent collaboration. AI agents discover each other and share memory context in real-time. Coming v2.7.</p>
+          <p>Agent-to-Agent collaboration. AI agents discover each other and share memory context in real-time. Coming v2.8.</p>
         </div>
       </div>
 
       <p class="text-center" style="margin-top: 2rem; font-size: 1.1rem;">
-        <strong>The only open-source memory system with both MCP + A2A protocol support.</strong>
+        <strong>Grounded in 12+ peer-reviewed papers. The only open-source memory system with adaptive local ML ranking and dual MCP + A2A protocol support.</strong>
       </p>
     </div>
   </section>

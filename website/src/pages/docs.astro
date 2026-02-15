@@ -3,14 +3,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout
-  title="Documentation - SuperLocalMemory V2"
-  description="Complete documentation for SuperLocalMemory V2. Installation guides, CLI commands, API reference, and integration tutorials for 17+ IDEs including ChatGPT."
+  title="Documentation - SuperLocalMemory V2.7"
+  description="Complete documentation for SuperLocalMemory V2.7. Installation guides, CLI commands, API reference, adaptive learning system, and integration tutorials for 17+ IDEs including ChatGPT."
 >
   <section style="padding: 4rem 0;">
     <div class="container">
       <h1 style="margin-bottom: 2rem;">Documentation</h1>
       <p style="font-size: 1.125rem; margin-bottom: 3rem;">
-        Complete guides and reference documentation for SuperLocalMemory V2.
+        Complete guides and reference documentation for SuperLocalMemory V2.7.
       </p>
 
       <!-- Getting Started -->
@@ -48,6 +48,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
       </div>
 
+      <!-- Interactive Learning Diagram -->
+      <div style="background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(245,158,11,0.08) 100%); border: 1px solid rgba(16,185,129,0.2); border-radius: var(--border-radius); padding: 2rem; text-align: center; margin-bottom: 3rem;">
+        <h2 style="margin-bottom: 0.75rem;">Interactive Learning Diagram</h2>
+        <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem;">
+          See how the v2.7 adaptive learning pipeline works — three learning layers, LightGBM re-ranking, and the feedback loop that personalizes your results over time.
+        </p>
+        <a href="/learning.html" class="btn" style="font-size: 1rem;">
+          View Learning Diagram &rarr;
+        </a>
+      </div>
+
       <!-- Core Concepts -->
       <h2 style="margin-bottom: 1.5rem;">Core Concepts</h2>
       <div class="grid grid-2" style="margin-bottom: 3rem;">
@@ -79,6 +90,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/Multi-Profile-Workflows" target="_blank" rel="noopener" class="card" style="text-decoration: none;">
           <h3 style="color: var(--color-accent); margin-bottom: 0.75rem;">👤 Multi-Profile</h3>
           <p>Separate contexts for work, personal, and client projects.</p>
+        </a>
+
+        <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/Learning-System" target="_blank" rel="noopener" class="card" style="text-decoration: none;">
+          <h3 style="color: var(--color-accent); margin-bottom: 0.75rem;">🧠 Learning System</h3>
+          <p>How adaptive learning works, three phases, privacy architecture.</p>
+        </a>
+
+        <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki/Upgrading-to-v2.7" target="_blank" rel="noopener" class="card" style="text-decoration: none;">
+          <h3 style="color: var(--color-accent); margin-bottom: 0.75rem;">🎓 Upgrading to v2.7</h3>
+          <p>Migration guide, new dependencies, and what changes for existing users.</p>
         </a>
       </div>
 
@@ -268,7 +289,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <!-- Quick Install Box -->
       <div style="background: var(--color-bg-secondary); border: 2px solid var(--color-accent); border-radius: var(--border-radius); padding: 2rem; text-align: center; margin-top: 3rem;">
         <h3 style="margin-bottom: 1rem;">Ready to Get Started?</h3>
-        <p style="margin-bottom: 1.5rem;">Install SuperLocalMemory V2 in 5 minutes.</p>
+        <p style="margin-bottom: 1.5rem;">Install SuperLocalMemory V2.7 in 5 minutes.</p>
         <pre style="max-width: 600px; margin: 0 auto; text-align: left;"><code>git clone https://github.com/varun369/SuperLocalMemoryV2.git
 cd SuperLocalMemoryV2
 ./install.sh</code></pre>

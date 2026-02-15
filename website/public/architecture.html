@@ -21,6 +21,7 @@
     --l3: #ef4444; --l3-bg: rgba(239,68,68,0.08);
     --l4: #ec4899; --l4-bg: rgba(236,72,153,0.08);
     --l5: #a855f7; --l5-bg: rgba(168,85,247,0.08);
+    --l5h: #d97706; --l5h-bg: rgba(217,119,6,0.08);
     --l6: #8b5cf6; --l6-bg: rgba(139,92,246,0.08);
     --l7: #6366f1; --l7-bg: rgba(99,102,241,0.08);
     --l8: #3b82f6; --l8-bg: rgba(59,130,246,0.08);
@@ -30,6 +31,7 @@
     --mcp-color: #8b5cf6;
     --a2a-color: #10b981;
     --v25-accent: #f59e0b;
+    --learning-color: #d97706;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -159,6 +161,12 @@
   .badge-live { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
   .badge-planned { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
   .badge-v25 { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); animation: pulse-border 3s ease-in-out infinite; }
+  .badge-v27 { background: rgba(217,119,6,0.15); color: #fbbf24; border: 1px solid rgba(217,119,6,0.4); animation: pulse-learning 2s ease-in-out infinite; }
+
+  @keyframes pulse-learning {
+    0%, 100% { box-shadow: 0 0 4px rgba(217,119,6,0.2); }
+    50% { box-shadow: 0 0 20px rgba(217,119,6,0.6); }
+  }
 
   .agent-list {
     display: flex;
@@ -300,6 +308,35 @@
   .layer[data-layer="5"]:hover { border-color: var(--l5); box-shadow: 0 0 24px rgba(168,85,247,0.15); }
   .layer[data-layer="5"]::before { background: linear-gradient(90deg, rgba(168,85,247,0.06) 0%, transparent 100%); }
 
+  /* Layer 5.5: Adaptive Learning — special styling with gradient border */
+  .layer[data-layer="5.5"] {
+    background: linear-gradient(135deg, rgba(217,119,6,0.10) 0%, rgba(245,158,11,0.06) 50%, rgba(234,179,8,0.10) 100%);
+    border-color: rgba(217,119,6,0.35);
+    border-width: 2px;
+    position: relative;
+  }
+  .layer[data-layer="5.5"] .num {
+    background: linear-gradient(135deg, rgba(217,119,6,0.25), rgba(245,158,11,0.20));
+    color: var(--l5h);
+    animation: pulse-learning 2s ease-in-out infinite;
+  }
+  .layer[data-layer="5.5"] .name {
+    color: var(--l5h);
+    font-size: 16px;
+  }
+  .layer[data-layer="5.5"]:hover {
+    border-color: var(--l5h);
+    box-shadow: 0 0 32px rgba(217,119,6,0.25), 0 0 8px rgba(245,158,11,0.15);
+  }
+  .layer[data-layer="5.5"]::before {
+    background: linear-gradient(90deg, rgba(217,119,6,0.08) 0%, rgba(245,158,11,0.04) 50%, transparent 100%);
+  }
+  .layer[data-layer="5.5"] .tag {
+    background: rgba(217,119,6,0.12);
+    color: #fbbf24;
+    border: 1px solid rgba(217,119,6,0.3);
+  }
+
   .layer[data-layer="6"]  { background: var(--l6-bg); border-color: rgba(139,92,246,0.15); }
   .layer[data-layer="6"]  .num { background: rgba(139,92,246,0.15); color: var(--l6); }
   .layer[data-layer="6"]  .name { color: var(--l6); }
@@ -342,6 +379,22 @@
     56% { transform: scale(1); }
   }
 
+  /* NEW badge on learning layer */
+  .new-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    background: rgba(217,119,6,0.25);
+    color: #fbbf24;
+    border: 1px solid rgba(217,119,6,0.4);
+    margin-left: 8px;
+    vertical-align: middle;
+    animation: pulse-learning 2s ease-in-out infinite;
+  }
+
   .detail-overlay {
     display: none;
     position: fixed;
@@ -363,10 +416,12 @@
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 32px;
-    max-width: 600px;
+    max-width: 640px;
     width: 100%;
     position: relative;
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    max-height: 90vh;
+    overflow-y: auto;
   }
 
   @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -439,6 +494,10 @@
     border-left: 3px solid var(--border);
   }
 
+  .detail-card .detail-extra {
+    margin-top: 16px;
+  }
+
   .detail-card .research-ref {
     margin-top: 16px;
     padding: 10px 14px;
@@ -448,6 +507,51 @@
     font-family: 'Share Tech Mono', monospace;
     font-size: 11px;
     color: var(--text-muted);
+  }
+
+  /* Phase progression bar for learning layer detail */
+  .phase-bar {
+    display: flex;
+    gap: 4px;
+    margin-top: 16px;
+  }
+  .phase-bar .phase {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.5;
+    transition: all 0.3s;
+    cursor: default;
+  }
+  .phase-bar .phase .phase-label {
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .phase-bar .phase .phase-detail {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    opacity: 0.7;
+  }
+  .phase-bar .phase-0 {
+    background: rgba(100,116,139,0.15);
+    border: 1px solid rgba(100,116,139,0.3);
+    color: #94a3b8;
+  }
+  .phase-bar .phase-1 {
+    background: rgba(59,130,246,0.15);
+    border: 1px solid rgba(59,130,246,0.3);
+    color: #60a5fa;
+  }
+  .phase-bar .phase-2 {
+    background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(217,119,6,0.15));
+    border: 1px solid rgba(217,119,6,0.4);
+    color: #fbbf24;
   }
 
   .v25-section {
@@ -465,6 +569,7 @@
     margin-bottom: 24px;
     padding-bottom: 16px;
     border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
   }
 
   .v25-header h2 {
@@ -523,6 +628,13 @@
   .v25-card.prerequisite { border-color: rgba(239,68,68,0.3); border-style: solid; }
   .v25-card.prerequisite::after { background: var(--l3); }
 
+  .v25-card.learning-card { border-color: rgba(217,119,6,0.4); border-style: solid; }
+  .v25-card.learning-card::after { background: var(--learning-color); }
+  .v25-card.learning-card:hover {
+    border-color: rgba(217,119,6,0.7);
+    box-shadow: 0 0 24px rgba(217,119,6,0.12);
+  }
+
   .v25-card .card-name {
     font-family: 'Chakra Petch', sans-serif;
     font-weight: 600;
@@ -554,6 +666,19 @@
     border-radius: 4px;
     background: rgba(239,68,68,0.15);
     color: #f87171;
+    letter-spacing: 1px;
+  }
+
+  .v25-card .v27-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(217,119,6,0.2);
+    color: #fbbf24;
     letter-spacing: 1px;
   }
 
@@ -615,6 +740,7 @@
   .legend-dot.live { background: #34d399; }
   .legend-dot.planned { background: #fbbf24; border: 1px dashed rgba(251,191,36,0.5); }
   .legend-dot.v25 { background: var(--v25-accent); animation: heartbeat 2.5s ease-in-out infinite; }
+  .legend-dot.v27 { background: var(--learning-color); animation: pulse-learning 2s ease-in-out infinite; }
 
   .footer {
     position: relative;
@@ -634,9 +760,17 @@
 <body>
 
 <header class="header">
-  <h1>SuperLocalMemory V2</h1>
-  <div class="subtitle">10-LAYER UNIVERSAL MEMORY SYSTEM &bull; MCP + A2A DUAL PROTOCOL</div>
-  <span class="version-badge">v2.5 &mdash; "Your AI Memory Has a Heartbeat"</span>
+  <a href="/" style="text-decoration:none;color:inherit;"><h1 style="cursor:pointer;">SuperLocalMemory V2</h1></a>
+  <nav style="display:flex;gap:1.5rem;justify-content:center;margin:0.5rem 0;font-size:0.85rem;">
+    <a href="/" style="color:var(--text-secondary);text-decoration:none;">Home</a>
+    <a href="/features" style="color:var(--text-secondary);text-decoration:none;">Features</a>
+    <a href="/learning.html" style="color:var(--learning-color);text-decoration:none;font-weight:500;">Learning</a>
+    <a href="/comparison" style="color:var(--text-secondary);text-decoration:none;">Compare</a>
+    <a href="/docs" style="color:var(--text-secondary);text-decoration:none;">Docs</a>
+    <a href="https://github.com/varun369/SuperLocalMemoryV2" style="color:var(--text-secondary);text-decoration:none;">GitHub</a>
+  </nav>
+  <div class="subtitle">11-LAYER UNIVERSAL MEMORY SYSTEM &bull; MCP + A2A DUAL PROTOCOL</div>
+  <span class="version-badge">v2.7.0 &mdash; "Your AI Learns You"</span>
 </header>
 
 <section class="main" id="mainGrid">
@@ -647,7 +781,7 @@
     <span class="protocol-badge badge-live">LIVE</span>
     <div style="font-size:11px; color:var(--text-muted); text-align:center; margin-top:4px;">
       Model Context Protocol<br>
-      <span style="color:var(--mcp-color)">6 tools &bull; 4 resources &bull; 2 prompts</span>
+      <span style="color:var(--mcp-color)">12 tools &bull; 6 resources &bull; 2 prompts</span>
     </div>
     <div class="agent-list">
       <div class="agent-chip">Claude Desktop</div>
@@ -685,12 +819,20 @@
     <div class="layer" data-layer="5">
       <div class="num">05</div>
       <div class="info"><div class="name">Skills Layer</div><div class="file">skills/*</div></div>
-      <div class="tags"><span class="tag">6 Commands</span><span class="tag">Universal</span></div>
+      <div class="tags"><span class="tag">7 Commands</span><span class="tag">Universal</span></div>
+    </div>
+    <div class="layer" data-layer="5.5">
+      <div class="num" style="font-size:16px;">5&frac12;</div>
+      <div class="info">
+        <div class="name">Adaptive Learning<span class="new-badge">NEW v2.7</span></div>
+        <div class="file">src/learning/* &mdash; Three-Layer Learning + LightGBM LambdaRank</div>
+      </div>
+      <div class="tags"><span class="tag">Tech Prefs</span><span class="tag">Project Context</span><span class="tag">Workflow Patterns</span></div>
     </div>
     <div class="layer" data-layer="6">
       <div class="num">06</div>
       <div class="info"><div class="name">MCP Integration</div><div class="file">mcp_server.py</div></div>
-      <div class="tags"><span class="tag">6 Tools</span><span class="tag">4 Resources</span><span class="tag">2 Prompts</span></div>
+      <div class="tags"><span class="tag">12 Tools</span><span class="tag">6 Resources</span><span class="tag">2 Prompts</span></div>
     </div>
     <div class="layer" data-layer="7">
       <div class="num">07</div>
@@ -709,7 +851,7 @@
     </div>
     <div class="layer" data-layer="10">
       <div class="num">10</div>
-      <div class="info"><div class="name">A2A Agent Collaboration</div><div class="file">src/a2a_server.py &mdash; PLANNED v2.7</div></div>
+      <div class="info"><div class="name">A2A Agent Collaboration</div><div class="file">src/a2a_server.py &mdash; PLANNED v2.8</div></div>
       <div class="tags"><span class="tag" style="border:1px dashed rgba(16,185,129,0.4); color:#34d399;">A2A Protocol</span><span class="tag" style="border:1px dashed rgba(251,191,36,0.4); color:#fbbf24;">PLANNED</span></div>
     </div>
   </div>
@@ -717,7 +859,7 @@
   <div class="protocol-panel a2a">
     <div class="protocol-label a2a">A2A</div>
     <div class="protocol-direction">Agent &harr; Agent</div>
-    <span class="protocol-badge badge-planned">PLANNED v2.7</span>
+    <span class="protocol-badge badge-planned">PLANNED v2.8</span>
     <div style="font-size:11px; color:var(--text-muted); text-align:center; margin-top:4px;">
       Agent-to-Agent Protocol<br>
       <span style="color:var(--a2a-color)">Google/LF &bull; 150+ orgs</span>
@@ -738,11 +880,54 @@
 
 </section>
 
+<!-- v2.7 Learning Components Section -->
+<section class="v25-section">
+  <div class="v25-header">
+    <h2 style="color:var(--learning-color);">v2.7 Learning Components</h2>
+    <span class="tagline">"Your AI Learns You"</span>
+    <span class="protocol-badge badge-v27">NEW</span>
+  </div>
+  <div class="v25-grid">
+    <div class="v25-card learning-card">
+      <span class="v27-badge">CORE</span>
+      <div class="card-name">Adaptive Ranker</div>
+      <div class="card-file">src/learning/adaptive_ranker.py</div>
+      <div class="card-desc">LightGBM LambdaRank re-ranker. Three phases: baseline, rule-based (20+ signals), ML model (200+ signals). Synthetic bootstrap from existing data for day-1 personalization.</div>
+    </div>
+    <div class="v25-card learning-card">
+      <div class="card-name">Cross-Project Aggregator</div>
+      <div class="card-file">src/learning/cross_project_aggregator.py</div>
+      <div class="card-desc">Layer 1: Detects transferable tech preferences across all projects. Knows you prefer pytest over unittest, FastAPI over Flask, TypeScript over JavaScript.</div>
+    </div>
+    <div class="v25-card learning-card">
+      <div class="card-name">Project Context Manager</div>
+      <div class="card-file">src/learning/project_context_manager.py</div>
+      <div class="card-desc">Layer 2: 4-signal project detection (tags, file paths, profiles, graph clusters). Boosts project-relevant memories during recall.</div>
+    </div>
+    <div class="v25-card learning-card">
+      <div class="card-name">Workflow Pattern Miner</div>
+      <div class="card-file">src/learning/workflow_pattern_miner.py</div>
+      <div class="card-desc">Layer 3: Sliding-window sequence mining with temporal patterns. Learns your flow: docs first, then architecture, then code, then tests.</div>
+    </div>
+    <div class="v25-card learning-card">
+      <div class="card-name">Feedback Collector</div>
+      <div class="card-file">src/learning/feedback_collector.py</div>
+      <div class="card-desc">Multi-channel feedback: MCP memory_used tool, CLI slm useful command, dashboard clicks. Drives the learning loop without explicit ratings.</div>
+    </div>
+    <div class="v25-card learning-card">
+      <div class="card-name">Learning Database</div>
+      <div class="card-file">src/learning/learning_db.py</div>
+      <div class="card-desc">Separate learning.db for all behavioral data. GDPR-friendly: slm learning reset instantly deletes all learned patterns while keeping memories intact.</div>
+    </div>
+  </div>
+</section>
+
+<!-- v2.5 Components Section -->
 <section class="v25-section">
   <div class="v25-header">
     <h2>v2.5 Components</h2>
     <span class="tagline">"Your AI Memory Has a Heartbeat"</span>
-    <span class="protocol-badge badge-v25">IN DEVELOPMENT</span>
+    <span class="protocol-badge badge-live">SHIPPED</span>
   </div>
   <div class="v25-grid">
     <div class="v25-card prerequisite">
@@ -802,7 +987,7 @@
         <td>Agent &harr; Agent</td>
         <td>AI agents collaborate via memory</td>
         <td style="font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--text-muted);">Internet protocol</td>
-        <td><span class="protocol-badge badge-planned">v2.6</span></td>
+        <td><span class="protocol-badge badge-planned">v2.8</span></td>
       </tr>
       <tr>
         <td style="color:var(--l5); font-weight:600;">Skills</td>
@@ -824,14 +1009,16 @@
 
 <div class="legend">
   <div class="legend-item"><div class="legend-dot live"></div> Live</div>
-  <div class="legend-item"><div class="legend-dot planned"></div> Planned v2.7</div>
-  <div class="legend-item"><div class="legend-dot v25"></div> v2.5 In Development</div>
+  <div class="legend-item"><div class="legend-dot v27"></div> v2.7 Learning</div>
+  <div class="legend-item"><div class="legend-dot planned"></div> Planned v2.8</div>
+  <div class="legend-item"><div class="legend-dot v25"></div> v2.5 Shipped</div>
   <div class="legend-item" style="margin-left:24px; font-family:'Share Tech Mono',monospace; font-size:10px;">Click any layer for details</div>
 </div>
 
 <footer class="footer">
   SuperLocalMemory V2 &copy; 2026 Varun Pratap Bhardwaj &bull;
   <a href="https://github.com/varun369/SuperLocalMemoryV2">GitHub</a> &bull;
+  <a href="learning.html">Learning System</a> &bull;
   MIT License &bull; Local-First &bull; Privacy-First &bull; Free Forever
 </footer>
 
@@ -843,6 +1030,7 @@
     <div class="detail-file" id="detailFile"></div>
     <div class="detail-desc" id="detailDesc"></div>
     <ul class="detail-features" id="detailFeatures"></ul>
+    <div class="detail-extra" id="detailExtra"></div>
     <div class="research-ref" id="detailResearch"></div>
   </div>
 </div>
@@ -878,41 +1066,73 @@
     },
     5: {
       title: 'Skills Layer', file: 'skills/*', color: '#a855f7',
-      desc: 'Six universal slash-command skills that work across Claude Code, Continue.dev, Cody, Cursor, Windsurf, and other IDEs supporting the skills protocol.',
-      features: ['/remember \u2014 Save a memory with tags and project context', '/recall \u2014 Search memories by natural language query', '/list-recent \u2014 Show latest N memories', '/status \u2014 System health check and statistics', '/build-graph \u2014 Rebuild knowledge graph', '/switch-profile \u2014 Change active identity profile'],
+      desc: 'Seven universal slash-command skills that work across Claude Code, Continue.dev, Cody, Cursor, Windsurf, and other IDEs supporting the skills protocol.',
+      features: ['/remember \u2014 Save a memory with tags and project context', '/recall \u2014 Search memories by natural language query', '/list-recent \u2014 Show latest N memories', '/status \u2014 System health check and statistics', '/build-graph \u2014 Rebuild knowledge graph', '/switch-profile \u2014 Change active identity profile', '/useful \u2014 Mark a memory as useful (v2.7 feedback loop)'],
       research: 'Universal skills protocol \u2014 cross-IDE compatibility layer'
+    },
+    '5.5': {
+      title: 'Adaptive Learning', file: 'src/learning/*', color: '#d97706',
+      desc: 'Three-layer local-only learning architecture with LightGBM LambdaRank adaptive re-ranking. Your AI learns your tech preferences, project context, and workflow patterns \u2014 all without any cloud calls or telemetry.',
+      features: [
+        'Layer 1: Cross-project tech preferences (Python, FastAPI, pytest...)',
+        'Layer 2: 4-signal project context detection (tags, paths, profile, clusters)',
+        'Layer 3: Workflow pattern mining (docs \u2192 arch \u2192 code \u2192 test)',
+        'LightGBM LambdaRank re-ranker with 200+ feature signals',
+        'Synthetic bootstrap \u2014 full ML model from day 1, no cold-start',
+        'Separate learning.db \u2014 GDPR-friendly, instant reset',
+        '3 new MCP tools: memory_used, get_learned_patterns, correct_pattern'
+      ],
+      research: 'eKNOW 2025 (BM25\u2192re-ranker), FCS LREC 2024 (cold-start), MACLA arXiv:2512.18950 (Bayesian), TSW-PrefixSpan IEEE 2020 (sequence mining), ADPMF IPM 2024 (privacy feedback)',
+      extra: 'phases'
     },
     6: {
       title: 'MCP Integration', file: 'mcp_server.py', color: '#8b5cf6',
       desc: 'Model Context Protocol server exposing memory operations as structured tools, resources, and prompts. Primary real-time integration for AI IDEs.',
-      features: ['6 MCP tools: remember, recall, search, list, status, graph', '4 MCP resources: recent memories, stats, graph data, patterns', '2 MCP prompts: analyze-memory, suggest-recall', '700+ lines of production code', 'Singleton pattern needed for v2.5 (shared state)'],
+      features: ['12 MCP tools: remember, recall, search, list, status, graph, memory_used, get_learned_patterns, correct_pattern + 3 more', '6 MCP resources: recent memories, stats, graph data, patterns, learning status, agent info', '2 MCP prompts: analyze-memory, suggest-recall', '1000+ lines of production code', 'Singleton pattern for shared state across tool calls'],
       research: 'Model Context Protocol (Anthropic, 2024) \u2014 agent-to-tool standard'
     },
     7: {
       title: 'Universal Access', file: 'MCP + Skills + CLI', color: '#6366f1',
       desc: 'Three independent access methods all share the same SQLite database. Any memory saved from any tool is instantly available to all others.',
-      features: ['MCP Protocol \u2014 real-time, IDE-integrated', 'Universal Skills \u2014 slash commands across 16+ IDEs', 'CLI (slm command) \u2014 terminal and scripts', 'All methods share one ~/.claude-memory/memory.db', 'A2A becomes the 4th access method in v2.7'],
+      features: ['MCP Protocol \u2014 real-time, IDE-integrated', 'Universal Skills \u2014 slash commands across 16+ IDEs', 'CLI (slm command) \u2014 terminal and scripts', 'All methods share one ~/.claude-memory/memory.db', 'A2A becomes the 4th access method in v2.8'],
       research: 'Multi-level Retrieval: A-RAG (arXiv:2602.03442)'
     },
     8: {
       title: 'Hybrid Search', file: 'src/hybrid_search.py', color: '#3b82f6',
-      desc: 'Combines three search strategies \u2014 semantic similarity, FTS5 full-text, and knowledge graph traversal \u2014 into a unified retrieval pipeline with score fusion.',
-      features: ['Semantic search via TF-IDF cosine similarity', 'FTS5 full-text search with BM25 ranking', 'Graph-aware search traversing community clusters', 'Score fusion combining all three signals', 'Optional: BM25, HNSW, neural embeddings add-ons'],
-      research: 'Combines techniques from GraphRAG + A-RAG + PageIndex'
+      desc: 'Combines three search strategies \u2014 semantic similarity, FTS5 full-text, and knowledge graph traversal \u2014 into a unified retrieval pipeline with score fusion. v2.7 adds adaptive re-ranking on top.',
+      features: ['Semantic search via TF-IDF cosine similarity', 'FTS5 full-text search with BM25 ranking', 'Graph-aware search traversing community clusters', 'Score fusion combining all three signals', 'v2.7: Adaptive LightGBM re-ranking layer', 'Optional: BM25, HNSW, neural embeddings add-ons'],
+      research: 'Combines techniques from GraphRAG + A-RAG + PageIndex + eKNOW 2025 re-ranking pipeline'
     },
     9: {
       title: 'Visualization', file: 'ui_server.py', color: '#06b6d4',
       desc: 'Interactive web dashboard at localhost:8765. Memory timeline, knowledge graph explorer, pattern viewer. Designed for non-technical users too.',
-      features: ['Interactive web dashboard at http://localhost:8765', 'Memory timeline with search and filters', 'Knowledge graph visualization with cluster view', 'Pattern and preference viewer', 'v2.5: Real-time SSE event stream, agent connections panel'],
+      features: ['Interactive web dashboard at http://localhost:8765', 'Memory timeline with search and filters', 'Knowledge graph visualization with cluster view', 'Interactive Cytoscape.js graph with 6 layouts', 'Pattern and preference viewer', 'Real-time SSE event stream, agent connections panel'],
       research: 'Dashboard for non-technical users \u2014 no jargon, visual-first'
     },
     10: {
-      title: 'A2A Agent Collaboration', file: 'src/a2a_server.py \u2014 PLANNED v2.7', color: '#10b981',
+      title: 'A2A Agent Collaboration', file: 'src/a2a_server.py \u2014 PLANNED v2.8', color: '#10b981',
       desc: 'Agent-to-Agent Protocol (Google/Linux Foundation, 2025). Enables AI agents to discover SLM via Agent Card. A2A has NO shared memory \u2014 SLM fills that gap.',
       features: ['JSON-RPC 2.0 + SSE streaming transport', 'Agent Card at /.well-known/agent-card.json', 'Agent discovery, task management, broadcasting', 'Ed25519 signed security cards for identity', 'SLM = the shared memory layer A2A was missing', '150+ organizations in A2A TSC'],
       research: 'A2A Protocol (Google/LF 2025), Multi-Agent Blackboard (arXiv:2510.01285)'
     }
   };
+
+  function createPhaseBox(className, label, name, detail) {
+    var phase = document.createElement('div');
+    phase.className = 'phase ' + className;
+    var lbl = document.createElement('div');
+    lbl.className = 'phase-label';
+    lbl.textContent = label;
+    var nm = document.createElement('div');
+    nm.textContent = name;
+    var det = document.createElement('div');
+    det.className = 'phase-detail';
+    det.textContent = detail;
+    phase.appendChild(lbl);
+    phase.appendChild(nm);
+    phase.appendChild(det);
+    return phase;
+  }
 
   function showDetail(num) {
     var d = layerData[num];
@@ -924,9 +1144,10 @@
     var descEl = document.getElementById('detailDesc');
     var featEl = document.getElementById('detailFeatures');
     var resEl = document.getElementById('detailResearch');
+    var extraEl = document.getElementById('detailExtra');
     var card = document.getElementById('detailCard');
 
-    numEl.textContent = String(num).padStart(2, '0');
+    numEl.textContent = num === '5.5' ? '5\u00BD' : String(num).padStart(2, '0');
     numEl.style.color = d.color;
     titleEl.textContent = d.title;
     titleEl.style.color = d.color;
@@ -941,6 +1162,30 @@
       featEl.appendChild(li);
     });
 
+    // Clear extra content
+    while (extraEl.firstChild) { extraEl.removeChild(extraEl.firstChild); }
+
+    // Add phase progression for learning layer
+    if (d.extra === 'phases') {
+      var phaseBar = document.createElement('div');
+      phaseBar.className = 'phase-bar';
+      phaseBar.appendChild(createPhaseBox('phase-0', 'Phase 0', 'Baseline', '0 signals \u2022 No re-ranking'));
+      phaseBar.appendChild(createPhaseBox('phase-1', 'Phase 1', 'Rule-Based', '20+ signals \u2022 Boosting rules'));
+      phaseBar.appendChild(createPhaseBox('phase-2', 'Phase 2', 'ML Model', '200+ signals \u2022 LightGBM'));
+      extraEl.appendChild(phaseBar);
+
+      var note = document.createElement('div');
+      note.style.cssText = 'margin-top:12px; padding:8px 12px; border-radius:6px; background:rgba(217,119,6,0.08); border:1px solid rgba(217,119,6,0.2); font-size:11px; color:var(--text-muted); text-align:center;';
+      var noteText = document.createTextNode('System auto-progresses from Phase 0 \u2192 1 \u2192 2 as feedback accumulates. ');
+      var noteBold = document.createElement('span');
+      noteBold.style.color = '#fbbf24';
+      noteBold.textContent = 'Synthetic bootstrap provides ML ranking from day 1.';
+      note.appendChild(noteText);
+      note.appendChild(document.createElement('br'));
+      note.appendChild(noteBold);
+      extraEl.appendChild(note);
+    }
+
     resEl.textContent = d.research;
     card.style.borderColor = d.color + '40';
     document.getElementById('detailOverlay').classList.add('active');
@@ -953,8 +1198,12 @@
   var layers = document.querySelectorAll('.layer');
   layers.forEach(function(layer) {
     layer.addEventListener('click', function() {
-      var num = parseInt(this.getAttribute('data-layer'), 10);
-      showDetail(num);
+      var num = this.getAttribute('data-layer');
+      if (num === '5.5') {
+        showDetail('5.5');
+      } else {
+        showDetail(parseInt(num, 10));
+      }
     });
   });
 

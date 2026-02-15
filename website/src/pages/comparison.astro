@@ -119,7 +119,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             </tr>
             <tr>
               <td><strong>Universal Skills</strong></td>
-              <td><span class="badge badge-success">✅ 6 skills</span></td>
+              <td><span class="badge badge-success">✅ 7 skills</span></td>
               <td>❌</td>
               <td>❌</td>
               <td>❌</td>
@@ -165,6 +165,34 @@ import BaseLayout from '../layouts/BaseLayout.astro';
               <td>❌</td>
               <td>❌</td>
               <td>❌</td>
+            </tr>
+            <tr style="background: rgba(245, 158, 11, 0.08);">
+              <td><strong>Adaptive ML Ranking</strong> <span style="background: #f59e0b; color: #000; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem; font-weight: 700; vertical-align: middle;">v2.7</span></td>
+              <td><span class="badge badge-success">✅ LightGBM LambdaRank</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+            </tr>
+            <tr style="background: rgba(245, 158, 11, 0.08);">
+              <td><strong>Local Behavioral Learning</strong> <span style="background: #f59e0b; color: #000; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem; font-weight: 700; vertical-align: middle;">v2.7</span></td>
+              <td><span class="badge badge-success">✅ 3-layer local ML</span></td>
+              <td>❌</td>
+              <td>⚠️ Cloud-only</td>
+              <td>❌</td>
+            </tr>
+            <tr style="background: rgba(245, 158, 11, 0.08);">
+              <td><strong>GDPR by Design</strong> <span style="background: #f59e0b; color: #000; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem; font-weight: 700; vertical-align: middle;">v2.7</span></td>
+              <td><span class="badge badge-success">✅ Separate learning.db</span></td>
+              <td>⚠️ Requires config</td>
+              <td>⚠️ Requires config</td>
+              <td>❌</td>
+            </tr>
+            <tr style="background: rgba(245, 158, 11, 0.08);">
+              <td><strong>Zero Telemetry</strong> <span style="background: #f59e0b; color: #000; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem; font-weight: 700; vertical-align: middle;">v2.7</span></td>
+              <td><span class="badge badge-success">✅ Guaranteed</span></td>
+              <td>❌ Analytics</td>
+              <td>❌ Analytics</td>
+              <td>⚠️ Optional</td>
             </tr>
             <tr>
               <td><strong>Zero Setup</strong></td>
@@ -315,6 +343,22 @@ import BaseLayout from '../layouts/BaseLayout.astro';
               <td>⚠️ Partial</td>
               <td>✅</td>
             </tr>
+            <tr style="background: rgba(245, 158, 11, 0.08);">
+              <td><strong>Local ML Learning</strong> <span style="background: #f59e0b; color: #000; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem; font-weight: 700; vertical-align: middle;">v2.7</span></td>
+              <td><span class="badge badge-success">✅</span></td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>❌</td>
+            </tr>
+            <tr style="background: rgba(245, 158, 11, 0.08);">
+              <td><strong>Erasable Learning Data</strong> <span style="background: #f59e0b; color: #000; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem; font-weight: 700; vertical-align: middle;">v2.7</span></td>
+              <td><span class="badge badge-success">✅ One command</span></td>
+              <td>❌ Cloud retention</td>
+              <td>❌ Cloud retention</td>
+              <td>⚠️ DIY</td>
+              <td>⚠️ DIY</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -335,7 +379,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <tbody>
             <tr>
               <td><strong>Search Latency</strong></td>
-              <td><span class="badge badge-success">45-80ms</span></td>
+              <td><span class="badge badge-success">10.6ms median (100 memories)</span></td>
               <td>200-500ms</td>
               <td>100-300ms</td>
               <td>500-1000ms</td>
@@ -409,6 +453,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
+      <!-- GDPR & Privacy (v2.7) -->
+      <div style="background: var(--color-bg-secondary); border: 1px solid #f59e0b; border-radius: var(--border-radius); padding: 2rem; margin-bottom: 3rem; position: relative;">
+        <div style="position: absolute; top: -12px; left: 1.5rem; background: #f59e0b; color: #000; padding: 0.2rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700;">v2.7</div>
+        <h2 style="margin-bottom: 1rem; margin-top: 0.25rem;">🔒 Your Data, Your Rules</h2>
+        <p style="margin-bottom: 1.5rem; font-size: 1.0625rem;">With v2.7's adaptive learning, SuperLocalMemory now learns your patterns and preferences. Unlike cloud alternatives, that behavioral data <strong>never leaves your machine</strong>.</p>
+        <div class="grid grid-2" style="gap: 1rem;">
+          <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px;">
+            <h4 style="font-size: 0.9375rem; margin-bottom: 0.5rem; color: var(--color-success);">Your behavioral learning data is yours.</h4>
+            <p style="font-size: 0.875rem; margin: 0;">One command to delete it all: <code>rm ~/.claude-memory/learning.db</code>. Your memories stay intact. No cloud admin ticket. No retention policy fine print.</p>
+          </div>
+          <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px;">
+            <h4 style="font-size: 0.9375rem; margin-bottom: 0.5rem; color: var(--color-success);">Your patterns never leave your machine.</h4>
+            <p style="font-size: 0.875rem; margin: 0;">Unlike cloud alternatives that analyze your behavior on their servers, all ML training in SuperLocalMemory runs locally. Zero telemetry. Zero cloud calls. Zero exceptions.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Why Choose SuperLocalMemory -->
       <div style="background: var(--color-bg-secondary); border: 2px solid var(--color-accent); border-radius: var(--border-radius); padding: 2rem; margin-bottom: 3rem;">
         <h2 style="margin-bottom: 1.5rem;">Why Choose SuperLocalMemory V2?</h2>
@@ -420,7 +481,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
               <li>You want <strong>zero ongoing costs</strong></li>
               <li>You need <strong>universal IDE support</strong> (Cursor, Windsurf, Claude, VS Code, etc.)</li>
               <li>You prefer <strong>local-first architecture</strong></li>
-              <li>You want <strong>pattern learning</strong> and identity profiles</li>
+              <li>You want <strong>adaptive learning</strong> that personalizes search results locally</li>
               <li>You need <strong>GDPR/HIPAA compliance</strong></li>
               <li>You work in <strong>air-gapped environments</strong></li>
             </ul>
