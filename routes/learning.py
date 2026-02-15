@@ -65,6 +65,42 @@ async def learning_status():
         result["stats"] = status.get("learning_db_stats")
         result["dependencies"] = status.get("dependencies")
 
+        # Auto-mine: if learning.db has zero patterns but memories exist, mine now
+        ldb = get_learning_db()
+        if ldb:
+            stats = result["stats"] or {}
+            has_no_patterns = (stats.get("transferable_patterns", 0) == 0
+                              and stats.get("workflow_patterns", 0) == 0)
+            if has_no_patterns:
+                try:
+                    import sqlite3
+                    mem_db = MEMORY_DIR / "memory.db"
+                    if mem_db.exists():
+                        conn = sqlite3.connect(str(mem_db))
+                        mem_count = conn.execute("SELECT COUNT(*) FROM memories").fetchone()[0]
+                        conn.close()
+                        if mem_count >= 10:
+                            logger.info("Auto-mining patterns from %d memories (first run)", mem_count)
+                            try:
+                                from learning.cross_project_aggregator import CrossProjectAggregator
+                                CrossProjectAggregator(learning_db=ldb).aggregate_all_profiles()
+                            except Exception as e:
+                                logger.warning("Auto-mine aggregator failed: %s", e)
+                            try:
+                                from learning.workflow_pattern_miner import WorkflowPatternMiner
+                                WorkflowPatternMiner(learning_db=ldb).mine_all()
+                            except Exception as e:
+                                logger.warning("Auto-mine workflow failed: %s", e)
+                            try:
+                                from learning.source_quality_scorer import SourceQualityScorer
+                                SourceQualityScorer(learning_db=ldb).compute_source_scores()
+                            except Exception as e:
+                                logger.warning("Auto-mine source quality failed: %s", e)
+                            # Refresh stats after mining
+                            result["stats"] = ldb.get_stats()
+                except Exception as e:
+                    logger.warning("Auto-mine check failed: %s", e)
+
         # Ranking phase
         ranker = get_adaptive_ranker()
         if ranker:
@@ -73,7 +109,6 @@ async def learning_status():
             result["ranking_phase"] = "baseline"
 
         # Tech preferences (Layer 1)
-        ldb = get_learning_db()
         if ldb:
             patterns = ldb.get_transferable_patterns(min_confidence=0.3)
             result["tech_preferences"] = [

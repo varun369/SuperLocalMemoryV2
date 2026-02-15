@@ -186,6 +186,43 @@ function renderWorkflowPatterns(workflows) {
                 flowDiv.appendChild(badge);
             }
             card.appendChild(flowDiv);
+        } else if (w.type === 'temporal') {
+            // Parse temporal pattern: show "Morning: code (26%)" format
+            var parsed = {};
+            try { parsed = JSON.parse(w.value); } catch(e) { parsed = {}; }
+            var timeBadge = document.createElement('span');
+            timeBadge.className = 'badge bg-info bg-opacity-75 me-2';
+            timeBadge.textContent = (w.key || '').charAt(0).toUpperCase() + (w.key || '').slice(1);
+            card.appendChild(timeBadge);
+
+            var activity = document.createElement('span');
+            activity.className = 'fw-bold';
+            activity.textContent = parsed.dominant_activity || w.value;
+            card.appendChild(activity);
+
+            var evCount = document.createElement('small');
+            evCount.className = 'text-muted ms-2';
+            evCount.textContent = '(' + (parsed.evidence_count || 0) + ' memories)';
+            card.appendChild(evCount);
+
+            // Show distribution as mini bar
+            if (parsed.distribution) {
+                var distDiv = document.createElement('div');
+                distDiv.className = 'd-flex flex-wrap gap-1 mt-1';
+                var sortedActivities = Object.entries(parsed.distribution).sort(function(a, b) { return b[1] - a[1]; });
+                var total = sortedActivities.reduce(function(s, e) { return s + e[1]; }, 0);
+                for (var k = 0; k < sortedActivities.length; k++) {
+                    var actName = sortedActivities[k][0];
+                    var actCount = sortedActivities[k][1];
+                    var actPct = Math.round((actCount / total) * 100);
+                    var actBadge = document.createElement('span');
+                    actBadge.className = 'badge bg-light text-dark';
+                    actBadge.style.fontSize = '0.65rem';
+                    actBadge.textContent = actName + ' ' + actPct + '%';
+                    distDiv.appendChild(actBadge);
+                }
+                card.appendChild(distDiv);
+            }
         } else {
             var typeBadge = document.createElement('span');
             typeBadge.className = 'badge bg-info bg-opacity-75';
