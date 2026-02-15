@@ -352,6 +352,8 @@ Bayesian trust scoring achieves **perfect separation** (trust gap = 1.0) between
 
 Leiden clustering discovers 6-7 natural topic communities automatically.
 
+> **Graph Scaling:** Knowledge graph features work best with up to 10,000 memories. For larger databases, the system uses intelligent sampling (most recent + highest importance memories) for graph construction. Core search and memory storage have no upper limit.
+
 > **LoCoMo benchmark results coming soon** — evaluation against the standardized [LoCoMo](https://snap-research.github.io/locomo/) long-conversation memory benchmark (Snap Research, ACL 2024).
 
 [Full benchmark details →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Performance-Benchmarks)

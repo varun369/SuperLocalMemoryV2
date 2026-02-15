@@ -65,6 +65,8 @@ Building the relationship graph from your memories.
 
 **What this means:** Graph builds in under a second for most users. The Leiden algorithm consistently discovers 6-7 natural topic communities with up to 3 levels of hierarchy. At 5,000 memories (the design limit), a full rebuild takes about 4.5 minutes — an explicit design choice balancing graph utility against compute cost.
 
+> **Graph Scaling:** Knowledge graph features work best with up to 10,000 memories. For larger databases, the system uses intelligent sampling (most recent + highest importance memories) for graph construction. Core search and memory storage have no upper limit.
+
 ---
 
 ## Trust Scoring — Memory Poisoning Defense

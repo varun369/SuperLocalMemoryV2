@@ -66,6 +66,9 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
 
+import logging
+logger = logging.getLogger(__name__)
+
 MEMORY_DIR = Path.home() / ".claude-memory"
 DB_PATH = MEMORY_DIR / "memory.db"
 VECTORS_PATH = MEMORY_DIR / "vectors"
@@ -138,6 +141,19 @@ class MemoryStoreV2:
         self.vectors = None
         self.memory_ids = []
         self._load_vectors()
+
+        # HNSW index for O(log n) search (v2.6, optional)
+        self._hnsw_index = None
+        try:
+            from hnsw_index import HNSWIndex
+            if self.vectors is not None and len(self.memory_ids) > 0:
+                dim = self.vectors.shape[1]
+                self._hnsw_index = HNSWIndex(dimension=dim, max_elements=max(len(self.memory_ids) * 2, 1000))
+                self._hnsw_index.build(self.vectors.toarray() if hasattr(self.vectors, 'toarray') else self.vectors, self.memory_ids)
+                logger.info("HNSW index built with %d vectors", len(self.memory_ids))
+        except (ImportError, Exception) as e:
+            logger.debug("HNSW index not available: %s", e)
+            self._hnsw_index = None
 
     # =========================================================================
     # Connection helpers — abstract ConnectionManager vs direct sqlite3
@@ -608,8 +624,34 @@ class MemoryStoreV2:
         active_profile = self._get_active_profile()
 
         with self._read_connection() as conn:
-            # Method 1: TF-IDF semantic search
+            # Method 0: HNSW accelerated search (O(log n), v2.6)
+            _hnsw_used = False
             if SKLEARN_AVAILABLE and self.vectorizer is not None and self.vectors is not None:
+                try:
+                    from hnsw_index import HNSWIndex
+                    if hasattr(self, '_hnsw_index') and self._hnsw_index is not None:
+                        query_vec = self.vectorizer.transform([query]).toarray().flatten()
+                        hnsw_results = self._hnsw_index.search(query_vec, k=limit * 2)
+                        cursor = conn.cursor()
+                        for memory_id, score in hnsw_results:
+                            if score > 0.05:
+                                cursor.execute('''
+                                    SELECT id, content, summary, project_path, project_name, tags,
+                                           category, parent_id, tree_path, depth,
+                                           memory_type, importance, created_at, cluster_id,
+                                           last_accessed, access_count
+                                    FROM memories WHERE id = ? AND profile = ?
+                                ''', (memory_id, active_profile))
+                                row = cursor.fetchone()
+                                if row and self._apply_filters(row, project_path, memory_type,
+                                                              category, cluster_id, min_importance):
+                                    results.append(self._row_to_dict(row, score, 'hnsw'))
+                        _hnsw_used = len(results) > 0
+                except (ImportError, Exception):
+                    pass  # HNSW not available, fall through to TF-IDF
+
+            # Method 1: TF-IDF semantic search (fallback if HNSW unavailable or returned no results)
+            if not _hnsw_used and SKLEARN_AVAILABLE and self.vectorizer is not None and self.vectors is not None:
                 try:
                     query_vec = self.vectorizer.transform([query])
                     similarities = cosine_similarity(query_vec, self.vectors).flatten()
