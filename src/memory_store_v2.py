@@ -544,7 +544,7 @@ class MemoryStoreV2:
 
         # Emit event (v2.5 — Event Bus)
         self._emit_event("memory.created", memory_id=memory_id,
-                         content_preview=content[:100], tags=tags,
+                         content_preview="[redacted]", tags=tags,
                          project=project_name, importance=importance)
 
         # Record provenance (v2.5 — who created this memory)

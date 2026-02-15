@@ -323,6 +323,39 @@ class AgentRegistry:
             logger.error("Failed to list agents: %s", e)
             return []
 
+    def list_active_agents(self, timeout_minutes: int = 5) -> List[dict]:
+        """
+        List only active agents (seen within timeout_minutes).
+
+        Used by dashboard to filter out ghost/disconnected agents.
+        Default: agents seen within last 5 minutes are considered active.
+
+        Args:
+            timeout_minutes: Consider agents active if seen within this many minutes
+
+        Returns:
+            List of active agent dicts
+        """
+        try:
+            from db_connection_manager import DbConnectionManager
+            mgr = DbConnectionManager.get_instance(self.db_path)
+
+            with mgr.read_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT agent_id, agent_name, protocol, first_seen, last_seen,
+                           memories_written, memories_recalled, trust_score, metadata
+                    FROM agent_registry
+                    WHERE last_seen >= datetime('now', '-' || ? || ' minutes')
+                    ORDER BY last_seen DESC
+                """, (timeout_minutes,))
+                rows = cursor.fetchall()
+
+            return [self._row_to_dict(row) for row in rows]
+        except Exception as e:
+            logger.error("Failed to list active agents: %s", e)
+            return []
+
     def get_stats(self) -> dict:
         """Get agent registry statistics."""
         try:
