@@ -73,6 +73,7 @@ logger = logging.getLogger("superlocalmemory.db")
 DEFAULT_BUSY_TIMEOUT_MS = 5000
 DEFAULT_READ_POOL_SIZE = 4
 WRITE_QUEUE_SENTINEL = None  # Signals the writer thread to stop
+MAX_READ_CONNECTIONS = 50  # Maximum concurrent read connections
 
 
 class DbConnectionManager:
@@ -254,7 +255,18 @@ class DbConnectionManager:
                 self._remove_from_pool(conn)
                 conn = None
 
-        # Create new read connection for this thread
+        # Create new read connection for this thread (with pool limit)
+        with self._read_connections_lock:
+            if len(self._read_connections) >= MAX_READ_CONNECTIONS:
+                logger.warning(
+                    "Read connection pool at capacity (%d). Reusing oldest connection.",
+                    MAX_READ_CONNECTIONS
+                )
+                # Reuse the least recently used connection
+                conn = self._read_connections[0]
+                self._local.read_conn = conn
+                return conn
+
         conn = self._create_connection(readonly=True)
         self._local.read_conn = conn
 

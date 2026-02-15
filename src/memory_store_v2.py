@@ -140,6 +140,7 @@ class MemoryStoreV2:
         self.vectorizer = None
         self.vectors = None
         self.memory_ids = []
+        self._last_vector_count = 0
         self._load_vectors()
 
         # HNSW index for O(log n) search (v2.6, optional)
@@ -915,6 +916,25 @@ class MemoryStoreV2:
         if not SKLEARN_AVAILABLE:
             return
 
+        # Incremental optimization: skip rebuild if memory count hasn't changed much (v2.6)
+        if hasattr(self, '_last_vector_count') and self._last_vector_count > 0:
+            with self._read_connection() as conn:
+                cursor = conn.cursor()
+                active_profile = self._get_active_profile()
+                cursor.execute("PRAGMA table_info(memories)")
+                columns = {row[1] for row in cursor.fetchall()}
+                if 'profile' in columns:
+                    cursor.execute('SELECT COUNT(*) FROM memories WHERE profile = ?', (active_profile,))
+                else:
+                    cursor.execute('SELECT COUNT(*) FROM memories')
+                current_count = cursor.fetchone()[0]
+
+            # Only rebuild if count changed by more than 5% or is the first few memories
+            if self._last_vector_count > 10:
+                change_ratio = abs(current_count - self._last_vector_count) / self._last_vector_count
+                if change_ratio < 0.05:
+                    return  # Skip rebuild — vectors are still accurate enough
+
         active_profile = self._get_active_profile()
 
         with self._read_connection() as conn:
@@ -953,6 +973,7 @@ class MemoryStoreV2:
             ngram_range=(1, 2)
         )
         self.vectors = self.vectorizer.fit_transform(texts)
+        self._last_vector_count = len(self.memory_ids)
 
         # Save memory IDs as JSON (safe serialization)
         self.vectors_path.mkdir(exist_ok=True)
