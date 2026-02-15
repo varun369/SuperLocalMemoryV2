@@ -944,7 +944,8 @@ class MemoryStoreV2:
         return results
 
     def get_by_id(self, memory_id: int) -> Optional[Dict[str, Any]]:
-        """Get a specific memory by ID (V1 compatible)."""
+        """Get a specific memory by ID (V1 compatible, profile-aware)."""
+        active_profile = self._get_active_profile()
         with self._read_connection() as conn:
             cursor = conn.cursor()
 
@@ -952,8 +953,8 @@ class MemoryStoreV2:
                 SELECT id, content, summary, project_path, project_name, tags,
                        category, parent_id, tree_path, depth, memory_type, importance,
                        created_at, cluster_id, last_accessed, access_count
-                FROM memories WHERE id = ?
-            ''', (memory_id,))
+                FROM memories WHERE id = ? AND profile = ?
+            ''', (memory_id, active_profile))
 
             row = cursor.fetchone()
 
@@ -966,10 +967,11 @@ class MemoryStoreV2:
         return self._row_to_dict(row, 1.0, 'direct')
 
     def delete_memory(self, memory_id: int) -> bool:
-        """Delete a specific memory (V1 compatible)."""
+        """Delete a specific memory (V1 compatible, profile-aware)."""
+        active_profile = self._get_active_profile()
         def _do_delete(conn):
             cursor = conn.cursor()
-            cursor.execute('DELETE FROM memories WHERE id = ?', (memory_id,))
+            cursor.execute('DELETE FROM memories WHERE id = ? AND profile = ?', (memory_id, active_profile))
             deleted = cursor.rowcount > 0
             conn.commit()
             return deleted

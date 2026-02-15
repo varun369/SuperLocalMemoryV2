@@ -155,7 +155,7 @@ class DbConnectionManager:
         self._read_connections_lock = threading.Lock()
 
         # Write queue and dedicated writer thread
-        self._write_queue: Queue = Queue()
+        self._write_queue: Queue = Queue(maxsize=1000)
         self._writer_thread = threading.Thread(
             target=self._writer_loop,
             name="slm-db-writer",

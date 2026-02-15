@@ -178,7 +178,7 @@ class CacheManager:
 
             # For other types, try JSON serialization size
             return len(json.dumps(value, default=str))
-        except:
+        except Exception:
             # Fallback: assume moderate size
             return 1000
 

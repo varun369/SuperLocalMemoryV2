@@ -54,6 +54,13 @@ try:
 except ImportError:
     PROVENANCE_AVAILABLE = False
 
+# Trust Scorer (v2.6 — enforcement)
+try:
+    from trust_scorer import TrustScorer
+    TRUST_AVAILABLE = True
+except ImportError:
+    TRUST_AVAILABLE = False
+
 # Parse command line arguments early (needed for port in constructor)
 import argparse as _argparse
 _parser = _argparse.ArgumentParser(add_help=False)
@@ -131,6 +138,19 @@ def get_provenance_tracker():
     return _provenance_tracker
 
 
+_trust_scorer = None
+
+
+def get_trust_scorer():
+    """Get shared TrustScorer singleton (v2.6+). Returns None if unavailable."""
+    global _trust_scorer
+    if not TRUST_AVAILABLE:
+        return None
+    if _trust_scorer is None:
+        _trust_scorer = TrustScorer.get_instance(DB_PATH)
+    return _trust_scorer
+
+
 def _register_mcp_agent(agent_name: str = "mcp-client"):
     """Register the calling MCP agent and record activity. Non-blocking."""
     registry = get_agent_registry()
@@ -187,6 +207,18 @@ async def remember(
     try:
         # Register MCP agent (v2.5 — agent tracking)
         _register_mcp_agent()
+
+        # Trust enforcement (v2.6) — block untrusted agents from writing
+        try:
+            trust = get_trust_scorer()
+            if trust and not trust.check_trust("mcp:mcp-client", "write"):
+                return {
+                    "success": False,
+                    "error": "Agent trust score too low for write operations",
+                    "message": "Trust enforcement blocked this operation"
+                }
+        except Exception:
+            pass  # Trust check failure should not block operations
 
         # Use existing MemoryStoreV2 class (no duplicate logic)
         store = get_store()

@@ -314,15 +314,16 @@ async def get_cluster_detail(cluster_id: int, limit: int = Query(50, ge=1, le=20
         conn.row_factory = dict_factory
         cursor = conn.cursor()
 
+        active_profile = get_active_profile()
         cursor.execute("""
             SELECT m.id, m.content, m.summary, m.category,
                    m.project_name, m.importance, m.created_at,
                    m.tags, gn.entities
             FROM memories m
             LEFT JOIN graph_nodes gn ON m.id = gn.memory_id
-            WHERE m.cluster_id = ?
+            WHERE m.cluster_id = ? AND m.profile = ?
             ORDER BY m.importance DESC, m.created_at DESC LIMIT ?
-        """, (cluster_id, limit))
+        """, (cluster_id, active_profile, limit))
         members = cursor.fetchall()
 
         if not members:
@@ -339,8 +340,8 @@ async def get_cluster_detail(cluster_id: int, limit: int = Query(50, ge=1, le=20
             SELECT COUNT(*) as total_members, AVG(importance) as avg_importance,
                    COUNT(DISTINCT category) as category_count,
                    COUNT(DISTINCT project_name) as project_count
-            FROM memories WHERE cluster_id = ?
-        """, (cluster_id,))
+            FROM memories WHERE cluster_id = ? AND profile = ?
+        """, (cluster_id, active_profile))
         stats = cursor.fetchone()
 
         member_ids = [m['id'] for m in members]

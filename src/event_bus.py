@@ -131,6 +131,10 @@ class EventBus:
         self._listeners: List[Callable[[dict], None]] = []
         self._listeners_lock = threading.Lock()
 
+        # Auto-prune tracking: lightweight heuristic trigger
+        self._write_count = 0
+        self._last_prune = datetime.now()
+
         # Initialize schema
         self._init_schema()
 
@@ -266,6 +270,17 @@ class EventBus:
         self._notify_listeners(event)
 
         logger.debug("Event emitted: type=%s, id=%s, memory_id=%s", event_type, event_id, memory_id)
+
+        # Auto-prune every 100 events or every 24 hours, whichever comes first
+        self._write_count += 1
+        if self._write_count >= 100 or (datetime.now() - self._last_prune).total_seconds() > 86400:
+            try:
+                self.prune_events()
+                self._write_count = 0
+                self._last_prune = datetime.now()
+            except Exception:
+                pass  # Don't let prune failures block event emission
+
         return event_id
 
     def _persist_event(self, event: dict) -> Optional[int]:
