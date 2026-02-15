@@ -67,7 +67,7 @@
         </mxCell>
 
         <!-- Layer 10: A2A Agent Collaboration -->
-        <mxCell id="L10" value="&lt;b&gt;Layer 10: A2A Agent Collaboration&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size:10px;color:#ECFDF5;&#39;&gt;src/a2a_server.py (PLANNED v2.6) &amp;mdash; Agent-to-Agent Protocol (Google/Linux Foundation)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#FFFFFF;strokeColor=#059669;arcSize=8;fontSize=12;align=center;verticalAlign=middle;shadow=1;dashed=1;dashPattern=8 4;" vertex="1" parent="1">
+        <mxCell id="L10" value="&lt;b&gt;Layer 10: A2A Agent Collaboration&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size:10px;color:#ECFDF5;&#39;&gt;src/a2a_server.py (PLANNED v2.7) &amp;mdash; Agent-to-Agent Protocol (Google/Linux Foundation)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#FFFFFF;strokeColor=#059669;arcSize=8;fontSize=12;align=center;verticalAlign=middle;shadow=1;dashed=1;dashPattern=8 4;" vertex="1" parent="1">
           <mxGeometry x="340" y="165" width="520" height="55" as="geometry" />
         </mxCell>
 
@@ -181,7 +181,7 @@
         </mxCell>
 
         <!-- A2A Path Label -->
-        <mxCell id="a2a_label" value="&lt;font color=&#39;#6EE7B7&#39; style=&#39;font-size:14px;font-weight:bold;&#39;&gt;A2A Protocol&lt;/font&gt;&lt;br&gt;&lt;font color=&#39;#34D399&#39; style=&#39;font-size:11px;&#39;&gt;Agent &amp;harr; Agent&lt;/font&gt;&lt;br&gt;&lt;font color=&#39;#FBBF24&#39; style=&#39;font-size:10px;font-weight:bold;&#39;&gt;PLANNED v2.6&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+        <mxCell id="a2a_label" value="&lt;font color=&#39;#6EE7B7&#39; style=&#39;font-size:14px;font-weight:bold;&#39;&gt;A2A Protocol&lt;/font&gt;&lt;br&gt;&lt;font color=&#39;#34D399&#39; style=&#39;font-size:11px;&#39;&gt;Agent &amp;harr; Agent&lt;/font&gt;&lt;br&gt;&lt;font color=&#39;#FBBF24&#39; style=&#39;font-size:10px;font-weight:bold;&#39;&gt;PLANNED v2.7&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="960" y="172" width="140" height="60" as="geometry" />
         </mxCell>
 
@@ -316,11 +316,11 @@
           <mxGeometry x="105" y="600" width="110" height="25" as="geometry" />
         </mxCell>
 
-        <!-- Legend: Planned v2.6 -->
+        <!-- Legend: Planned v2.7 -->
         <mxCell id="legend_planned_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10B981;strokeColor=#059669;arcSize=30;dashed=1;dashPattern=4 2;" vertex="1" parent="1">
           <mxGeometry x="85" y="628" width="14" height="14" as="geometry" />
         </mxCell>
-        <mxCell id="legend_planned_text" value="&lt;font color=&#39;#D1D5DB&#39; style=&#39;font-size:10px;&#39;&gt;Planned v2.6 (A2A)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+        <mxCell id="legend_planned_text" value="&lt;font color=&#39;#D1D5DB&#39; style=&#39;font-size:10px;&#39;&gt;Planned v2.7 (A2A)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="105" y="623" width="120" height="25" as="geometry" />
         </mxCell>
 

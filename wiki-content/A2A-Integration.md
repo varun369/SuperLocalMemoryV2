@@ -407,7 +407,7 @@ Yes. Every agent must be explicitly authorized by you. You control permissions (
 
 - [[Universal-Architecture]] - Full 10-layer architecture overview
 - [[MCP-Integration]] - MCP protocol setup (agent-to-tool)
-- [[Roadmap]] - v2.5.0 A2A milestone details
+- [[Roadmap]] - v2.7 A2A milestone details
 - [[Why-Local-Matters]] - Privacy and local-first philosophy
 
 ---

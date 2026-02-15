@@ -1,6 +1,6 @@
 # Universal Architecture
 
-SuperLocalMemory V2's 10-layer universal architecture with A2A agent collaboration, visualization dashboard, hybrid search, MCP integration, agent-skills, and local-first system-design that works across 16+ IDEs. This dual-protocol (MCP + A2A) architecture is unique — no competitor offers both agent-to-tool and agent-to-agent communication with local-first privacy.
+SuperLocalMemory V2's 10-layer universal architecture with A2A agent collaboration, visualization dashboard, hybrid search, MCP integration, agent-skills, and local-first system-design that works across 17+ IDEs. This dual-protocol (MCP + A2A) architecture is unique — no competitor offers both agent-to-tool and agent-to-agent communication with local-first privacy.
 
 **Keywords:** universal architecture, system design, mcp protocol, a2a protocol, agent-to-agent, local-first, ai memory, visualization, hybrid search, semantic search, multi-agent
 
@@ -18,7 +18,7 @@ SuperLocalMemory V2's 10-layer universal architecture with A2A agent collaborati
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │  LAYER 10: A2A AGENT COLLABORATION (PLANNED v2.5.0)     │   │
+│  │  LAYER 10: A2A AGENT COLLABORATION (PLANNED v2.7)       │   │
 │  │  ─────────────────────────────────────────────────────  │   │
 │  │  • Agent-to-Agent Protocol (Google/Linux Foundation)    │   │
 │  │  • Agent discovery via Agent Cards                      │   │
@@ -51,7 +51,7 @@ SuperLocalMemory V2's 10-layer universal architecture with A2A agent collaborati
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │  LAYER 7: UNIVERSAL ACCESS                              │   │
 │  │  ─────────────────────────────────────────────────────  │   │
-│  │  • MCP (Model Context Protocol) - 16+ IDEs             │   │
+│  │  • MCP (Model Context Protocol) - 17+ IDEs             │   │
 │  │  • Skills (slash-commands) - Claude/Continue/Cody       │   │
 │  │  • CLI (Universal) - Any terminal                       │   │
 │  └─────────────────────────────────────────────────────────┘   │
@@ -120,7 +120,7 @@ SuperLocalMemory V2's 10-layer universal architecture with A2A agent collaborati
 
 ---
 
-## Layer 10: A2A Agent Collaboration (PLANNED v2.5.0)
+## Layer 10: A2A Agent Collaboration (PLANNED v2.7)
 
 **Purpose:** Enable AI agents to collaborate through shared memory using the Agent-to-Agent (A2A) protocol.
 
@@ -446,7 +446,7 @@ SuperLocalMemory V2.1.0 provides **three ways to access** the same local databas
 
 - **Single Database:** All three methods use the same SQLite database
 - **Zero Conflicts:** No data duplication or sync issues
-- **Universal:** Works with 16+ IDEs and any terminal
+- **Universal:** Works with 17+ IDEs and any terminal
 - **Local-First:** Everything runs on your machine
 
 [[Learn more: MCP Integration →|MCP-Integration]]
@@ -743,7 +743,7 @@ Claude: Got it! I'll suggest React solutions, prioritize
 | Mem0 | 2 | Limited (Cloud) | ❌ | ❌ | ❌ | No A2A, no MCP, no patterns, no hierarchy, cloud-only |
 | Zep | 2 | 1-2 IDEs | ❌ | ❌ | ❌ | No A2A, no MCP, no patterns, cloud-only |
 | Khoj | 2-3 | Limited | ❌ | ❌ | Basic | No A2A, no MCP, no graph, limited search |
-| **SuperLocalMemory V2** | **10** | **16+ IDEs** | **✅ Planned** | **✅ Native** | **✅ Full** | **Dual-protocol: MCP + A2A** |
+| **SuperLocalMemory V2** | **10** | **17+ IDEs** | **✅ Planned** | **✅ Native** | **✅ Full** | **Dual-protocol: MCP + A2A** |
 
 ### Each Layer Adds Value
 
@@ -837,9 +837,9 @@ Created by **Varun Pratap Bhardwaj**.
 
 ## Next Steps
 
-- [[A2A Integration →|A2A-Integration]] - Agent-to-Agent collaboration (PLANNED v2.5.0)
+- [[A2A Integration →|A2A-Integration]] - Agent-to-Agent collaboration (PLANNED v2.7)
 - [[Visualization Dashboard →|Visualization-Dashboard]] - Interactive visual exploration
-- [[MCP Integration Guide →|MCP-Integration]] - Setup for 16+ IDEs
+- [[MCP Integration Guide →|MCP-Integration]] - Setup for 17+ IDEs
 - [[Universal Skills Guide →|Universal-Skills]] - Learn slash-commands
 - [[Knowledge Graph Guide →|Knowledge-Graph-Guide]] - Understand clustering
 - [[Installation →|Installation]] - Get started in 5 minutes

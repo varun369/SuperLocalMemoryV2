@@ -16,7 +16,7 @@ SuperLocalMemory V2 is an **intelligent local memory system** for AI assistants.
 
 ### Does it only work with Claude?
 
-No! SuperLocalMemory V2.1.0 is **universal** and works with 16+ IDEs:
+No! SuperLocalMemory V2.1.0 is **universal** and works with 17+ IDEs:
 - **MCP Integration:** Cursor, Windsurf, Claude Desktop, Continue.dev, ChatGPT Desktop, Perplexity, Zed, OpenCode, Antigravity
 - **Skills:** Claude Code, Continue.dev, Cody
 - **CLI:** Aider, any terminal
@@ -69,7 +69,7 @@ SuperLocalMemory V2.2.0 has a **9-layer universal architecture**:
 2. **Layer 8: Hybrid Search** — Multi-strategy retrieval (NEW v2.2.0)
 
 3. **Layer 7: Universal Access** — MCP + Skills + CLI (works everywhere)
-4. **Layer 6: MCP Integration** — Model Context Protocol for 16+ IDEs
+4. **Layer 6: MCP Integration** — Model Context Protocol for 17+ IDEs
 5. **Layer 5: Skills Layer** — 6 universal slash-commands
 6. **Layer 4: Pattern Learning** — Learns your preferences
 7. **Layer 3: Knowledge Graph** — Auto-discovers relationships
@@ -146,7 +146,7 @@ Yes. Your data is in `~/.claude-memory/memory.db`. You can:
 |--------|-----|------------------|
 | **Price** | $50/month | Free forever |
 | **Data location** | Cloud | 100% local |
-| **IDE Support** | 1-2 | 16+ IDEs |
+| **IDE Support** | 1-2 | 17+ IDEs |
 | **Universal Architecture** | No | Yes (9 layers) |
 | **MCP Integration** | No | Yes |
 | **Credit limits** | Yes | No limits |
@@ -297,7 +297,7 @@ Dashboard → Search tab → Type "authentication" → See visual scores → Fil
 
 ### What's new in v2.1.0?
 
-**Universal integration across 16+ IDEs:**
+**Universal integration across 17+ IDEs:**
 - **MCP Server** - Native integration with Cursor, Windsurf, Claude Desktop, Continue.dev, and 7+ more
 - **6 Universal Skills** - Slash-commands for Claude Code, Continue.dev, Cody
 - **Universal CLI** - `slm` command works in any terminal

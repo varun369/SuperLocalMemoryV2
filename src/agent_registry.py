@@ -31,7 +31,7 @@ Protocols:
     cli     — Command-line interface (slm command, bin/ scripts)
     rest    — REST API (api_server.py)
     python  — Direct Python import
-    a2a     — Agent-to-Agent Protocol (v2.6+)
+    a2a     — Agent-to-Agent Protocol (v2.7+)
 """
 
 import json

@@ -1,6 +1,6 @@
 # Installation Guide
 
-Complete installation instructions for SuperLocalMemory V2.3.0 with universal MCP integration on all platforms. This guide covers setup for 16+ IDEs including Claude Desktop, Cursor IDE, Windsurf, VS Code, and more.
+Complete installation instructions for SuperLocalMemory V2.3.0 with universal MCP integration on all platforms. This guide covers setup for 17+ IDEs including Claude Desktop, Cursor IDE, Windsurf, VS Code, and more.
 
 ---
 
@@ -441,7 +441,7 @@ slm status
 - ✅ **Real-time Analytics** - Memory trends, tag clouds, pattern insights
 
 **v2.1.0 Features (Still Included):**
-- ✅ MCP server for 16+ IDEs
+- ✅ MCP server for 17+ IDEs
 - ✅ 6 universal skills
 - ✅ Universal CLI (`slm` command)
 - ✅ Auto-detection and configuration

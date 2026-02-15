@@ -17,7 +17,7 @@ wiki-content/
 ├── Quick-Start-Tutorial.md          # Getting started
 ├── CLI-Cheatsheet.md                # Command reference
 ├── Universal-Architecture.md        # System architecture
-├── MCP-Integration.md               # MCP setup (16+ IDEs)
+├── MCP-Integration.md               # MCP setup (17+ IDEs)
 ├── Universal-Skills.md              # Skills documentation
 ├── Knowledge-Graph-Guide.md         # Graph system
 ├── Pattern-Learning-Explained.md    # Pattern learning

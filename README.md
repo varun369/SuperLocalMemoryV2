@@ -113,7 +113,7 @@ Or clone manually:
 git clone https://github.com/varun369/SuperLocalMemoryV2.git && cd SuperLocalMemoryV2 && ./install.sh
 ```
 
-Both methods auto-detect and configure **16+ IDEs and AI tools** — Cursor, VS Code/Copilot, Codex, Claude, Windsurf, Gemini CLI, JetBrains, and more.
+Both methods auto-detect and configure **17+ IDEs and AI tools** — Cursor, VS Code/Copilot, Codex, Claude, Windsurf, Gemini CLI, JetBrains, and more.
 
 ---
 
@@ -259,7 +259,7 @@ python ~/.claude-memory/ui_server.py
 | **Hierarchical Leiden** | Recursive community detection — clusters within clusters up to 3 levels. "Python" → "FastAPI" → "Auth patterns" |
 | **Community Summaries** | TF-IDF structured reports per cluster: key topics, projects, categories at a glance |
 | **MACLA Confidence** | Bayesian Beta-Binomial scoring (arXiv:2512.18950) — calibrated confidence, not raw frequency |
-| **Auto-Backup** | Configurable SQLite backups with retention policies, one-click restore from dashboard |
+| **Auto-Backup** | Configurable SQLite backups with retention policies, restore from any backup via CLI |
 | **Profile UI** | Create, switch, delete profiles from the web dashboard — full isolation per context |
 | **Profile Isolation** | All API endpoints (graph, clusters, patterns, timeline) scoped to active profile |
 
@@ -486,7 +486,7 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 | **Completely Free** | Limited | Limited | Partial | ✅ | ✅ |
 
 **SuperLocalMemory V2 is the ONLY solution that:**
-- ✅ Works across 16+ IDEs and CLI tools
+- ✅ Works across 17+ IDEs and CLI tools
 - ✅ Remains 100% local (no cloud dependencies)
 - ✅ Completely free with unlimited memories
 
@@ -512,7 +512,7 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 7: UNIVERSAL ACCESS                                  │
 │  MCP + Skills + CLI (works everywhere)                      │
-│  16+ IDEs with single database                              │
+│  17+ IDEs with single database                              │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 6: MCP INTEGRATION                                   │
 │  Model Context Protocol: 6 tools, 4 resources, 2 prompts    │

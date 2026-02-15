@@ -72,7 +72,7 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 **Major Release: Universal Integration**
 
 **Completed Features:**
-- ✅ 16+ IDE support (Cursor, Windsurf, Claude Desktop, Continue, Cody, Aider)
+- ✅ 17+ IDE support (Cursor, Windsurf, Claude Desktop, Continue, Cody, Aider)
 - ✅ MCP (Model Context Protocol) server implementation
 - ✅ Universal CLI wrapper (`slm` command)
 - ✅ 6 production-ready skills (remember, recall, list, status, build-graph, switch-profile)
@@ -399,7 +399,7 @@ related = graph.get_related(42, rel_type="SUPERSEDES")
 
 ---
 
-### v2.5.0 (Q2-Q3 2026) - A2A Protocol Integration
+### v2.7 (Q2-Q3 2026) - A2A Protocol Integration
 
 **Theme:** Multi-agent collaboration via Agent-to-Agent protocol
 
@@ -698,7 +698,7 @@ store.compare_experiments("bert-finetuning-v2", "bert-finetuning-v3")
 
 1. ✅ **Multi-IDE support** (Completed in v2.1.0)
 2. 🔨 **REST API** (In progress, v2.2.0)
-3. 📝 **A2A Protocol support** (Planned, v2.5.0) — Multi-agent collaboration
+3. 📝 **A2A Protocol support** (Planned, v2.7) — Multi-agent collaboration
 4. 📝 **Web UI** (Planned, v2.3.0)
 5. 📝 **Docker container** (Planned, v2.2.0)
 6. 📝 **OpenAI embeddings** (Planned, v2.3.0)
