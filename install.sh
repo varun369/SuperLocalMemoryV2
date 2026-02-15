@@ -187,6 +187,32 @@ if [ -f "${REPO_DIR}/api_server.py" ]; then
     echo "✓ API server copied"
 fi
 
+# Copy UI server + dashboard files
+if [ -f "${REPO_DIR}/ui_server.py" ]; then
+    cp "${REPO_DIR}/ui_server.py" "${INSTALL_DIR}/"
+    echo "✓ UI server copied"
+fi
+
+if [ -d "${REPO_DIR}/ui" ]; then
+    mkdir -p "${INSTALL_DIR}/ui/js"
+    cp "${REPO_DIR}/ui/index.html" "${INSTALL_DIR}/ui/" 2>/dev/null || true
+    cp "${REPO_DIR}/ui/js/"*.js "${INSTALL_DIR}/ui/js/" 2>/dev/null || true
+    echo "✓ Dashboard UI copied"
+fi
+
+# Copy route modules (v2.5+ dashboard API)
+if [ -d "${REPO_DIR}/routes" ]; then
+    mkdir -p "${INSTALL_DIR}/routes"
+    cp "${REPO_DIR}/routes/"*.py "${INSTALL_DIR}/routes/"
+    echo "✓ Dashboard routes copied"
+fi
+
+# Copy MCP server
+if [ -f "${REPO_DIR}/mcp_server.py" ]; then
+    cp "${REPO_DIR}/mcp_server.py" "${INSTALL_DIR}/"
+    echo "✓ MCP server copied"
+fi
+
 # Copy config if not exists
 if [ ! -f "${INSTALL_DIR}/config.json" ]; then
     echo "Creating default config..."
