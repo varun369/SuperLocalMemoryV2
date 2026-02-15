@@ -1,6 +1,6 @@
 # Installation Guide
 
-Complete installation instructions for SuperLocalMemory V2.3.0 with universal MCP integration on all platforms. This guide covers setup for 17+ IDEs including Claude Desktop, Cursor IDE, Windsurf, VS Code, and more.
+Complete installation instructions for SuperLocalMemory V2.6.0 with universal MCP integration on all platforms. This guide covers setup for 17+ IDEs including Claude Desktop, Cursor IDE, Windsurf, VS Code, and more.
 
 ---
 
@@ -117,7 +117,7 @@ slm status
 The output should show:
 ```
 ╔══════════════════════════════════════════════════════════════╗
-║  SuperLocalMemory V2.5.0 - System Status                     ║
+║  SuperLocalMemory V2.6.0 - System Status                     ║
 ╚══════════════════════════════════════════════════════════════╝
 ✓ Database: OK (0 memories)
 ✓ Graph: Ready

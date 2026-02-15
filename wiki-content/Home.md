@@ -25,20 +25,20 @@
 
 ---
 
-## NEW: v2.5.0 — "Your AI Memory Has a Heartbeat"
+## NEW: v2.6.0 — Security Hardening & Performance
 
-> **SuperLocalMemory is no longer passive storage — it's a real-time coordination layer.**
->
-> Every memory write triggers events. Agents are tracked. Trust is scored. The dashboard is live.
+> **SuperLocalMemory is now production-hardened with trust enforcement, rate limiting, and accelerated graph building.**
 >
 > | Feature | Benefit |
 > |---------|---------|
-> | **Real-Time Event Stream** | See memory operations live in the dashboard (SSE-powered) |
-> | **No More "Database Locked"** | WAL mode + write queue — 50 concurrent agents, zero errors |
-> | **Agent Tracking** | Know which AI tool wrote what — auto-registered on connect |
-> | **Trust Scoring** | Bayesian signals detect spam and cross-agent validation |
-> | **Memory Provenance** | Who created it, via which protocol, full lineage |
-> | **28 API Endpoints** | Modular FastAPI routes across 8 files |
+> | **Trust Enforcement** | Agents with trust < 0.3 blocked from write/delete operations |
+> | **Profile Isolation** | Full sandboxing — no cross-profile data leakage |
+> | **Rate Limiting** | Protects against memory flooding from misbehaving agents |
+> | **SSRF Protection** | Webhook dispatcher validates URLs to prevent SSRF attacks |
+> | **HNSW-Accelerated Graphs** | Faster knowledge graph construction at scale |
+> | **Hybrid Search Engine** | Combined semantic + FTS5 + graph retrieval |
+>
+> **v2.5 included:** Real-time event stream, WAL-mode concurrent writes, agent tracking, memory provenance, 28 API endpoints.
 >
 > **Upgrade:** `npm install -g superlocalmemory@latest`
 >

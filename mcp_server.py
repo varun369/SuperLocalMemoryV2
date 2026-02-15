@@ -30,6 +30,7 @@ from mcp.types import ToolAnnotations
 import sys
 import os
 import json
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -61,6 +62,18 @@ try:
     TRUST_AVAILABLE = True
 except ImportError:
     TRUST_AVAILABLE = False
+
+def _sanitize_error(error: Exception) -> str:
+    """Strip internal paths and structure from error messages."""
+    msg = str(error)
+    # Strip file paths containing claude-memory
+    msg = re.sub(r'/[\w./-]*claude-memory[\w./-]*', '[internal-path]', msg)
+    # Strip file paths containing SuperLocalMemory
+    msg = re.sub(r'/[\w./-]*SuperLocalMemory[\w./-]*', '[internal-path]', msg)
+    # Strip SQLite table names from error messages
+    msg = re.sub(r'table\s+\w+', 'table [redacted]', msg)
+    return msg
+
 
 # Parse command line arguments early (needed for port in constructor)
 import argparse as _argparse
@@ -261,7 +274,7 @@ async def remember(
     except Exception as e:
         return {
             "success": False,
-            "error": str(e),
+            "error": _sanitize_error(e),
             "message": "Failed to save memory"
         }
 
@@ -339,7 +352,7 @@ async def recall(
     except Exception as e:
         return {
             "success": False,
-            "error": str(e),
+            "error": _sanitize_error(e),
             "message": "Failed to search memories",
             "results": [],
             "count": 0
@@ -380,7 +393,7 @@ async def list_recent(limit: int = 10) -> dict:
     except Exception as e:
         return {
             "success": False,
-            "error": str(e),
+            "error": _sanitize_error(e),
             "message": "Failed to list memories",
             "memories": [],
             "count": 0
@@ -419,7 +432,7 @@ async def get_status() -> dict:
     except Exception as e:
         return {
             "success": False,
-            "error": str(e),
+            "error": _sanitize_error(e),
             "message": "Failed to get status"
         }
 
@@ -460,7 +473,7 @@ async def build_graph() -> dict:
     except Exception as e:
         return {
             "success": False,
-            "error": str(e),
+            "error": _sanitize_error(e),
             "message": "Failed to build graph"
         }
 
@@ -528,7 +541,7 @@ async def switch_profile(name: str) -> dict:
     except Exception as e:
         return {
             "success": False,
-            "error": str(e),
+            "error": _sanitize_error(e),
             "message": "Failed to switch profile"
         }
 
@@ -573,7 +586,7 @@ async def backup_status() -> dict:
     except Exception as e:
         return {
             "success": False,
-            "error": str(e),
+            "error": _sanitize_error(e),
             "message": "Failed to get backup status"
         }
 
@@ -625,7 +638,7 @@ async def search(query: str) -> dict:
         return {"results": results}
 
     except Exception as e:
-        return {"results": [], "error": str(e)}
+        return {"results": [], "error": _sanitize_error(e)}
 
 
 @mcp.tool(annotations=ToolAnnotations(
@@ -677,7 +690,7 @@ async def fetch(id: str) -> dict:
         }
 
     except Exception as e:
-        raise ValueError(f"Failed to fetch memory {id}: {str(e)}")
+        raise ValueError(f"Failed to fetch memory {id}: {_sanitize_error(e)}")
 
 
 # ============================================================================
@@ -696,7 +709,7 @@ async def get_recent_memories_resource(limit: str) -> str:
         memories = store.list_all(limit=int(limit))
         return json.dumps(memories, indent=2)
     except Exception as e:
-        return json.dumps({"error": str(e)}, indent=2)
+        return json.dumps({"error": _sanitize_error(e)}, indent=2)
 
 
 @mcp.resource("memory://stats")
@@ -711,7 +724,7 @@ async def get_stats_resource() -> str:
         stats = store.get_stats()
         return json.dumps(stats, indent=2)
     except Exception as e:
-        return json.dumps({"error": str(e)}, indent=2)
+        return json.dumps({"error": _sanitize_error(e)}, indent=2)
 
 
 @mcp.resource("memory://graph/clusters")
@@ -727,7 +740,7 @@ async def get_clusters_resource() -> str:
         clusters = stats.get('clusters', [])
         return json.dumps(clusters, indent=2)
     except Exception as e:
-        return json.dumps({"error": str(e)}, indent=2)
+        return json.dumps({"error": _sanitize_error(e)}, indent=2)
 
 
 @mcp.resource("memory://patterns/identity")
@@ -742,7 +755,7 @@ async def get_coding_identity_resource() -> str:
         patterns = learner.get_identity_context(min_confidence=0.5)
         return json.dumps(patterns, indent=2)
     except Exception as e:
-        return json.dumps({"error": str(e)}, indent=2)
+        return json.dumps({"error": _sanitize_error(e)}, indent=2)
 
 
 # ============================================================================
@@ -784,7 +797,7 @@ async def coding_identity_prompt() -> str:
         return prompt
 
     except Exception as e:
-        return f"# Coding Identity\n\nError loading patterns: {str(e)}"
+        return f"# Coding Identity\n\nError loading patterns: {_sanitize_error(e)}"
 
 
 @mcp.prompt()
@@ -822,7 +835,7 @@ async def project_context_prompt(project_name: str) -> str:
         return prompt
 
     except Exception as e:
-        return f"# Project Context: {project_name}\n\nError loading context: {str(e)}"
+        return f"# Project Context: {project_name}\n\nError loading context: {_sanitize_error(e)}"
 
 
 # ============================================================================

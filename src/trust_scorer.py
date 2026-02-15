@@ -201,7 +201,7 @@ class TrustScorer:
         agent_id: str,
         signal_type: str,
         context: Optional[dict] = None,
-    ):
+    ) -> bool:
         """
         Record a trust signal for an agent.
 

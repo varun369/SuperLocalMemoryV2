@@ -45,18 +45,20 @@
 
 ---
 
-## NEW: v2.5 — "Your AI Memory Has a Heartbeat"
+## NEW: v2.6 — Security Hardening & Performance
 
-> **SuperLocalMemory is no longer passive storage — it's a real-time coordination layer.**
+> **SuperLocalMemory is now production-hardened with trust enforcement, rate limiting, and accelerated graph building.**
 
-| What's New | Why It Matters |
-|------------|----------------|
-| **Real-Time Event Stream** | See every memory operation live in the dashboard — no refresh needed. SSE-powered, cross-process. |
-| **No More "Database Locked"** | WAL mode + serialized write queue. 50 concurrent agents writing? Zero errors. |
-| **Agent Tracking** | Know exactly which AI tool wrote what. Claude, Cursor, Windsurf, CLI — all tracked automatically. |
-| **Trust Scoring** | Bayesian trust signals detect spam, quick-deletes, and cross-agent validation. Silent in v2.5, enforced in v2.6. |
-| **Memory Provenance** | Every memory records who created it, via which protocol, with full derivation lineage. |
-| **Production-Grade Code** | 28 API endpoints across 8 modular route files. 13 modular JS files. 63 pytest tests. |
+| What's New in v2.6 | Why It Matters |
+|---------------------|----------------|
+| **Trust Enforcement** | Agents with trust below 0.3 are blocked from write/delete — Bayesian scoring now actively protects your memory. |
+| **Profile Isolation** | Memory profiles are fully sandboxed — no cross-profile data leakage. |
+| **Rate Limiting** | Protects against memory flooding and spam from misbehaving agents. |
+| **SSRF Protection** | Webhook dispatcher validates URLs to prevent server-side request forgery. |
+| **HNSW-Accelerated Graphs** | Knowledge graph edge building uses HNSW index for faster construction at scale. |
+| **Hybrid Search Engine** | Combined semantic + FTS5 + graph retrieval for maximum accuracy. |
+
+**v2.5 highlights (included):** Real-time event stream, WAL-mode concurrent writes, agent tracking, memory provenance, 28 API endpoints.
 
 **Upgrade:** `npm install -g superlocalmemory@latest`
 
