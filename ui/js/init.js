@@ -29,3 +29,7 @@ if (eventsTab) eventsTab.addEventListener('shown.bs.tab', loadEventStats);
 
 var agentsTab = document.getElementById('agents-tab');
 if (agentsTab) agentsTab.addEventListener('shown.bs.tab', loadAgents);
+
+// v2.7 learning tab (graceful)
+var learningTab = document.getElementById('learning-tab');
+if (learningTab) learningTab.addEventListener('shown.bs.tab', loadLearning);

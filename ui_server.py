@@ -142,6 +142,13 @@ from routes.events import router as events_router, register_event_listener
 from routes.agents import router as agents_router
 from routes.ws import router as ws_router, manager as ws_manager
 
+# v2.7 Learning routes (graceful)
+try:
+    from routes.learning import router as learning_router
+    LEARNING_ROUTES = True
+except ImportError:
+    LEARNING_ROUTES = False
+
 app.include_router(memories_router)
 app.include_router(stats_router)
 app.include_router(profiles_router)
@@ -150,6 +157,8 @@ app.include_router(data_io_router)
 app.include_router(events_router)
 app.include_router(agents_router)
 app.include_router(ws_router)
+if LEARNING_ROUTES:
+    app.include_router(learning_router)
 
 # Wire WebSocket manager into routes that need broadcast capability
 import routes.profiles as _profiles_mod

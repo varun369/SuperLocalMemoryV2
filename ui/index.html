@@ -721,6 +721,11 @@
                 </button>
             </li>
             <li class="nav-item">
+                <button class="nav-link" id="learning-tab" data-bs-toggle="tab" data-bs-target="#learning-pane">
+                    <i class="bi bi-mortarboard"></i> Learning <span class="badge bg-warning text-dark" style="font-size:0.6rem;vertical-align:top;">v2.7</span>
+                </button>
+            </li>
+            <li class="nav-item">
                 <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events-pane">
                     <i class="bi bi-broadcast"></i> Live Events
                 </button>
@@ -901,6 +906,144 @@
                         <div class="loading">
                             <div class="spinner-border text-primary" role="status"></div>
                             <div>Loading timeline...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Learning System (v2.7) -->
+            <div class="tab-pane fade" id="learning-pane">
+                <!-- Ranking Phase & Engagement -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <div class="card p-3 text-center">
+                            <div class="fw-bold text-muted small">RANKING PHASE</div>
+                            <div class="fs-3 fw-bold" id="learning-phase" style="color: var(--bs-primary);">--</div>
+                            <small class="text-muted" id="learning-phase-detail">Loading...</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card p-3 text-center">
+                            <div class="fw-bold text-muted small">FEEDBACK SIGNALS</div>
+                            <div class="fs-3 fw-bold" id="learning-feedback-count">0</div>
+                            <small class="text-muted" id="learning-feedback-detail">0 unique queries</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card p-3 text-center">
+                            <div class="fw-bold text-muted small">ENGAGEMENT HEALTH</div>
+                            <div class="fs-3 fw-bold" id="learning-health" style="color: var(--bs-success);">--</div>
+                            <small class="text-muted" id="learning-health-detail">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase Progress Bar -->
+                <div class="card p-3 mb-3">
+                    <h6 class="mb-2"><i class="bi bi-bar-chart-steps"></i> Adaptive Ranking Progress</h6>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="flex-grow-1">
+                            <div class="progress" style="height: 24px; border-radius: 12px;">
+                                <div class="progress-bar" id="learning-progress" role="progressbar" style="width: 0%; border-radius: 12px; transition: width 0.8s ease;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Baseline (0)</span>
+                        <span>Rule-Based (20+)</span>
+                        <span>ML Model (200+)</span>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <!-- Tech Preferences (Layer 1) -->
+                    <div class="col-md-6">
+                        <div class="card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0"><i class="bi bi-cpu"></i> Tech Preferences</h6>
+                                <span class="badge bg-primary">Layer 1</span>
+                            </div>
+                            <div id="learning-tech-prefs">
+                                <div class="text-center text-muted py-3">
+                                    <i class="bi bi-hourglass-split" style="font-size: 1.5rem;"></i>
+                                    <p class="mt-2 mb-0 small">Patterns detected after using recall with feedback</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workflow Patterns (Layer 3) -->
+                    <div class="col-md-6">
+                        <div class="card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0"><i class="bi bi-diagram-3"></i> Workflow Patterns</h6>
+                                <span class="badge bg-info">Layer 3</span>
+                            </div>
+                            <div id="learning-workflows">
+                                <div class="text-center text-muted py-3">
+                                    <i class="bi bi-hourglass-split" style="font-size: 1.5rem;"></i>
+                                    <p class="mt-2 mb-0 small">Sequences detected after 30+ memories</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-0">
+                    <!-- Source Quality -->
+                    <div class="col-md-6">
+                        <div class="card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0"><i class="bi bi-stars"></i> Source Quality</h6>
+                                <span class="badge bg-success">Per-Tool Scoring</span>
+                            </div>
+                            <div id="learning-sources">
+                                <div class="text-center text-muted py-3">
+                                    <i class="bi bi-hourglass-split" style="font-size: 1.5rem;"></i>
+                                    <p class="mt-2 mb-0 small">Quality scores computed after feedback signals</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Engagement & Privacy -->
+                    <div class="col-md-6">
+                        <div class="card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0"><i class="bi bi-shield-lock"></i> Privacy & Data</h6>
+                                <span class="badge bg-secondary">GDPR Compliant</span>
+                            </div>
+                            <div id="learning-privacy">
+                                <div class="small">
+                                    <div class="d-flex justify-content-between border-bottom py-1">
+                                        <span class="text-muted">Learning DB</span>
+                                        <span class="fw-bold" id="learning-db-size">--</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between border-bottom py-1">
+                                        <span class="text-muted">Patterns learned</span>
+                                        <span class="fw-bold" id="learning-pattern-count">0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between border-bottom py-1">
+                                        <span class="text-muted">Models trained</span>
+                                        <span class="fw-bold" id="learning-model-count">0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between border-bottom py-1">
+                                        <span class="text-muted">Sources tracked</span>
+                                        <span class="fw-bold" id="learning-source-count">0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between py-1">
+                                        <span class="text-muted">Telemetry</span>
+                                        <span class="text-success fw-bold">None</span>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-danger" onclick="resetLearning()">
+                                        <i class="bi bi-trash"></i> Reset Learning Data
+                                    </button>
+                                    <small class="text-muted d-block mt-1">Deletes learning.db. Memories preserved.</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1175,6 +1318,7 @@
     <script src="static/js/settings.js"></script>
     <script src="static/js/events.js"></script>
     <script src="static/js/agents.js"></script>
+    <script src="static/js/learning.js"></script>
     <script src="static/js/init.js"></script>
 
     <footer>

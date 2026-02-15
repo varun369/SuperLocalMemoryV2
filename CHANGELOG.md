@@ -16,6 +16,15 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.7.1] - 2026-02-16
+
+### Added
+- **Learning Dashboard Tab** — New "Learning" tab in the web dashboard showing ranking phase, tech preferences, workflow patterns, source quality, engagement health, and privacy controls
+- **Learning API Routes** — `/api/learning/status`, `/api/learning/reset`, `/api/learning/retrain` endpoints for the dashboard
+- **One-click Reset** — Reset all learning data directly from the dashboard UI
+
+---
+
 ## [2.7.0] - 2026-02-16
 
 **Release Type:** Major Feature Release — "Your AI Learns You"
