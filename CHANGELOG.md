@@ -16,6 +16,60 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.6.0] - 2026-02-15
+
+**Release Type:** Security Hardening & Scalability Release — "Battle-Tested"
+**Backward Compatible:** Yes (all changes are additive or opt-in)
+
+### The Big Picture
+Seven independent security audits were consolidated and remediated in a single release. SuperLocalMemory is now hardened against OWASP Agentic AI threats, scales to 10,000 memories with O(log n) search, and includes optional API authentication, rate limiting, and trust enforcement.
+
+### Added
+- **Rate Limiting** (`src/rate_limiter.py`): Sliding-window rate limiter — 100 writes/min and 300 reads/min per IP. Stdlib-only, no external dependencies. Applied to API and UI servers
+- **API Key Authentication** (`src/auth_middleware.py`): Optional API key auth — only active when `~/.claude-memory/api_key` file exists. Opt-in, zero impact on existing users
+- **CI Workflow** (`.github/workflows/test.yml`): GitHub Actions test pipeline across Python 3.8, 3.10, and 3.12. Runs on every push and PR to main
+- **Trust Enforcement Gate**: Agents with trust score below 0.3 are blocked from write/delete operations. New agents start at 1.0 — only repeated bad behavior triggers blocking
+- **Ghost Agent Cleanup**: `list_active_agents()` method in agent registry to identify and clean up stale agent connections
+- **HNSW-Accelerated Search**: HNSW vector index wired into memory search for O(log n) lookups. Falls back to TF-IDF if `hnswlib` not installed
+- **Hybrid Search Engine**: BM25 + Graph + TF-IDF fusion search available via `SLM_HYBRID_SEARCH=true` environment variable. Default OFF — opt-in feature flag
+- **SSRF Protection**: Webhook URLs validated against private IP ranges (RFC 1918, loopback, link-local). Blocks internal network access from webhook dispatcher
+
+### Changed
+- **Graph cap raised from 5,000 to 10,000 memories** with intelligent random sampling when limit exceeded. HNSW-accelerated edge building reduces complexity from O(n²) to O(n log n)
+- **Profile isolation hardened**: All database queries in `get_by_id`, `delete_memory`, stats, and cluster endpoints now enforce `WHERE profile = ?` filtering
+- **SQL table name validation**: Memory reset operations validate table names against a whitelist (`frozenset`) before use in queries
+- **Bounded write queue**: `db_connection_manager` write queue limited to 1,000 pending operations (was unbounded)
+- **Event bus auto-prune**: Events automatically pruned every 100 events or 24 hours (was manual only)
+- **CORS restricted**: UI server CORS limited to known local ports (8765, 8417, 8766) instead of wildcard
+- **Database integrity check**: `PRAGMA quick_check` runs on startup to detect corruption early
+- **Auto vacuum**: `PRAGMA auto_vacuum=INCREMENTAL` enabled for automatic space reclamation
+- **Read connection pool**: Capped at 50 connections (`MAX_READ_CONNECTIONS=50`)
+- **TF-IDF incremental rebuild**: Skips vector rebuild when memory count changes less than 5%, reducing redundant computation
+- **Error messages sanitized**: 15 error sites in MCP server now strip internal paths and table names from user-facing errors
+- **Event content preview redacted**: Event payloads show `[redacted]` instead of full memory content by default
+
+### Fixed
+- **Bare except clauses**: Replaced `except:` with specific exception types in `hybrid_search.py` (2 sites) and `cache_manager.py` (1 site)
+
+### Security
+- **SECURITY.md** updated with encryption posture section and version compatibility table
+- Trust enforcement active for write/delete operations (threshold: 0.3)
+- Rate limiting protects against memory flooding attacks
+- SSRF protection prevents webhook-based internal network scanning
+- Error sanitization prevents information leakage via error messages
+
+### Documentation
+- Graph scaling limits documented in README, wiki (Performance Benchmarks), and website (Features page)
+- Version references harmonized to v2.6 across README, wiki Home, and wiki Installation pages
+
+### Testing
+- CI pipeline passing on Python 3.8, 3.10, and 3.12
+- 24/24 core system tests passing
+- All 19 Python source files compile cleanly
+- Core module import and functional tests verified
+
+---
+
 ## [2.5.1] - 2026-02-13
 
 **Release Type:** Framework Integration Release — "Plugged Into the Ecosystem"
@@ -1904,10 +1958,11 @@ We use [Semantic Versioning](https://semver.org/):
 - **MINOR:** New features (backward compatible, e.g., 2.0.0 → 2.1.0)
 - **PATCH:** Bug fixes (backward compatible, e.g., 2.1.0 → 2.1.1)
 
-**Current Version:** v2.3.0-universal
-**Previous Version:** v2.2.0
-**Next Planned:** v2.4.0 (incremental graph updates, auto-compression)
-**npm:** `npm install -g superlocalmemory` (available since v2.1.0)
+**Current Version:** v2.6.0
+**Previous Version:** v2.5.1
+**Next Planned:** v2.7 (A2A Protocol integration)
+**npm:** `npm install -g superlocalmemory`
+**Website:** [superlocalmemory.com](https://superlocalmemory.com)
 
 ---
 
