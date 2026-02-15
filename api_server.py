@@ -51,6 +51,34 @@ app = FastAPI(
 UI_DIR.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(UI_DIR)), name="static")
 
+# Rate limiting (v2.6)
+try:
+    from rate_limiter import write_limiter, read_limiter
+
+    @app.middleware("http")
+    async def rate_limit_middleware(request, call_next):
+        client_ip = request.client.host if request.client else "unknown"
+
+        # Determine if this is a write or read endpoint
+        is_write = request.method in ("POST", "PUT", "DELETE", "PATCH")
+        limiter = write_limiter if is_write else read_limiter
+
+        allowed, remaining = limiter.is_allowed(client_ip)
+        if not allowed:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=429,
+                content={"error": "Too many requests. Please slow down."},
+                headers={"Retry-After": str(limiter.window)}
+            )
+
+        response = await call_next(request)
+        response.headers["X-RateLimit-Remaining"] = str(remaining)
+        return response
+
+except ImportError:
+    pass  # Rate limiter not available — continue without it
+
 
 # ============================================================================
 # Request/Response Models

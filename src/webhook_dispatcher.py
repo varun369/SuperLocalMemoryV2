@@ -24,10 +24,13 @@ Security:
     - No private/internal IP blocking in v2.5 (added in v2.6 with trust enforcement)
 """
 
+import ipaddress
 import json
 import logging
+import socket
 import threading
 import time
+import urllib.parse
 from queue import Queue, Empty
 from typing import Optional, Dict
 from datetime import datetime
@@ -47,6 +50,16 @@ try:
     HTTP_AVAILABLE = True
 except ImportError:
     HTTP_AVAILABLE = False
+
+
+def _is_private_ip(hostname: str) -> bool:
+    """Check if hostname resolves to a private/internal IP address."""
+    try:
+        ip_str = socket.gethostbyname(hostname)
+        ip = ipaddress.ip_address(ip_str)
+        return ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved
+    except (socket.gaierror, ValueError):
+        return False  # DNS resolution failed — allow (might be valid external hostname)
 
 
 class WebhookDispatcher:
@@ -118,6 +131,10 @@ class WebhookDispatcher:
 
         if not webhook_url or not (webhook_url.startswith("http://") or webhook_url.startswith("https://")):
             raise ValueError(f"Invalid webhook URL: {webhook_url}")
+
+        parsed = urllib.parse.urlparse(webhook_url)
+        if parsed.hostname and _is_private_ip(parsed.hostname):
+            raise ValueError(f"Webhook URL points to private/internal network: {webhook_url}")
 
         try:
             self._queue.put_nowait({

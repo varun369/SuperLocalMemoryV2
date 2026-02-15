@@ -20,13 +20,14 @@ v2.5 BEHAVIOR (this version):
     - Trust scores are updated in agent_registry.trust_score
     - Dashboard shows scores but they don't affect recall ordering yet
 
-v2.6 BEHAVIOR (future):
+v2.6 BEHAVIOR (this version):
     - Trust scores visible in dashboard
-    - Recall results ranked by trust (higher trust = higher in results)
+    - Active enforcement: agents with trust < 0.3 blocked from write/delete operations
+    - Quarantine and admin approval deferred to v3.0
 
 v3.0 BEHAVIOR (future):
-    - Active enforcement: quarantine low-trust memories, rate limiting
-    - Admin approval for untrusted agents
+    - Quarantine low-trust memories for manual review
+    - Admin approval workflow for untrusted agents
 
 Trust Signals (all silently collected):
     POSITIVE (increase trust):
@@ -376,6 +377,37 @@ class TrustScorer:
         score = self._get_agent_trust(agent_id)
         return score if score is not None else 1.0
 
+    def check_trust(self, agent_id: str, operation: str = "write") -> bool:
+        """
+        Check if agent is trusted enough for the given operation.
+
+        v2.6 enforcement: blocks write/delete for agents with trust < 0.3.
+        New agents start at 1.0 — only repeated bad behavior triggers blocking.
+
+        Args:
+            agent_id: The agent identifier
+            operation: One of "read", "write", "delete"
+
+        Returns:
+            True if operation is allowed, False if blocked
+        """
+        if operation == "read":
+            return True  # Reads are always allowed
+
+        score = self._get_agent_trust(agent_id)
+        if score is None:
+            return True  # Unknown agent = first-time = allowed (starts at 1.0)
+
+        threshold = 0.3  # Block write/delete below this
+        if score < threshold:
+            logger.warning(
+                "Trust enforcement: agent '%s' blocked from '%s' (trust=%.2f < %.2f)",
+                agent_id, operation, score, threshold
+            )
+            return False
+
+        return True
+
     def get_signals(self, agent_id: str, limit: int = 50) -> List[dict]:
         """Get recent trust signals for an agent."""
         try:
@@ -448,7 +480,7 @@ class TrustScorer:
                 "by_signal_type": by_type,
                 "by_agent": by_agent,
                 "avg_trust_score": round(avg, 4) if avg else 1.0,
-                "enforcement": "disabled (v2.5 — silent collection only)",
+                "enforcement": "enabled (v2.6 — write/delete blocked below 0.3 trust)",
             }
 
         except Exception as e:

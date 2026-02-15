@@ -81,9 +81,13 @@ class MemoryReset:
             'sessions'
         ]
 
+        VALID_TABLES = frozenset(tables)  # Whitelist from hardcoded list above
+
         for table in tables:
             try:
-                cursor.execute(f'DELETE FROM {table}')
+                if table not in VALID_TABLES:
+                    raise ValueError(f"Invalid table name: {table}")
+                cursor.execute(f'DELETE FROM {table}')  # Safe: validated against whitelist
                 count = cursor.rowcount
                 print(f"  ✓ Cleared {table}: {count} rows deleted")
             except sqlite3.OperationalError as e:
@@ -141,12 +145,18 @@ class MemoryReset:
             'archive': ['memory_archive']
         }
 
+        VALID_LAYER_TABLES = frozenset(
+            t for tables_list in layer_tables.values() for t in tables_list
+        )  # Whitelist from hardcoded dict above
+
         for layer in layers:
             if layer in layer_tables:
                 print(f"\n  Clearing Layer: {layer.upper()}")
                 for table in layer_tables[layer]:
                     try:
-                        cursor.execute(f'DELETE FROM {table}')
+                        if table not in VALID_LAYER_TABLES:
+                            raise ValueError(f"Invalid table name: {table}")
+                        cursor.execute(f'DELETE FROM {table}')  # Safe: validated against whitelist
                         count = cursor.rowcount
                         print(f"    ✓ Cleared {table}: {count} rows")
                     except sqlite3.OperationalError as e:
@@ -378,10 +388,14 @@ class MemoryReset:
             'Archived Memories': 'memory_archive'
         }
 
+        VALID_STAT_TABLES = frozenset(tables.values())  # Whitelist from hardcoded dict above
+
         print("\nTable Statistics:")
         for name, table in tables.items():
             try:
-                cursor.execute(f'SELECT COUNT(*) FROM {table}')
+                if table not in VALID_STAT_TABLES:
+                    raise ValueError(f"Invalid table name: {table}")
+                cursor.execute(f'SELECT COUNT(*) FROM {table}')  # Safe: validated against whitelist
                 count = cursor.fetchone()[0]
                 print(f"  {name:20s}: {count:>5} rows")
             except sqlite3.OperationalError:

@@ -50,16 +50,16 @@ async def get_stats():
         except Exception:
             total_graph_edges = 0
 
-        cursor.execute("SELECT category, COUNT(*) as count FROM memories WHERE category IS NOT NULL GROUP BY category ORDER BY count DESC LIMIT 10")
+        cursor.execute("SELECT category, COUNT(*) as count FROM memories WHERE category IS NOT NULL AND profile = ? GROUP BY category ORDER BY count DESC LIMIT 10", (active_profile,))
         categories = cursor.fetchall()
 
-        cursor.execute("SELECT project_name, COUNT(*) as count FROM memories WHERE project_name IS NOT NULL GROUP BY project_name ORDER BY count DESC LIMIT 10")
+        cursor.execute("SELECT project_name, COUNT(*) as count FROM memories WHERE project_name IS NOT NULL AND profile = ? GROUP BY project_name ORDER BY count DESC LIMIT 10", (active_profile,))
         projects = cursor.fetchall()
 
-        cursor.execute("SELECT COUNT(*) as count FROM memories WHERE created_at >= datetime('now', '-7 days')")
+        cursor.execute("SELECT COUNT(*) as count FROM memories WHERE created_at >= datetime('now', '-7 days') AND profile = ?", (active_profile,))
         recent_memories = cursor.fetchone()['count']
 
-        cursor.execute("SELECT importance, COUNT(*) as count FROM memories GROUP BY importance ORDER BY importance DESC")
+        cursor.execute("SELECT importance, COUNT(*) as count FROM memories WHERE profile = ? GROUP BY importance ORDER BY importance DESC", (active_profile,))
         importance_dist = cursor.fetchall()
 
         db_size = DB_PATH.stat().st_size if DB_PATH.exists() else 0

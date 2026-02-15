@@ -150,7 +150,7 @@ class HybridSearchEngine:
                 try:
                     tags = json.loads(row[3])
                     text_parts.extend(tags)
-                except:
+                except Exception:
                     pass
 
             doc_text = ' '.join(text_parts)
@@ -334,7 +334,7 @@ class HybridSearchEngine:
                         new_score = current_score * similarity * (0.7 ** depth)
                         queue.append((rel_id, new_score, depth + 1))
 
-            except:
+            except Exception:
                 # Graph operation failed - skip
                 continue
 
