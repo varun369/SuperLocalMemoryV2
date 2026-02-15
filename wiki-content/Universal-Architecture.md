@@ -18,7 +18,7 @@ SuperLocalMemory V2's 10-layer universal architecture with A2A agent collaborati
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │  LAYER 10: A2A AGENT COLLABORATION (PLANNED v2.7)       │   │
+│  │  LAYER 10: A2A AGENT COLLABORATION (PLANNED v2.8)       │   │
 │  │  ─────────────────────────────────────────────────────  │   │
 │  │  • Agent-to-Agent Protocol (Google/Linux Foundation)    │   │
 │  │  • Agent discovery via Agent Cards                      │   │
@@ -60,8 +60,8 @@ SuperLocalMemory V2's 10-layer universal architecture with A2A agent collaborati
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │  LAYER 6: MCP INTEGRATION                               │   │
 │  │  ─────────────────────────────────────────────────────  │   │
-│  │  • 6 Tools (remember, recall, status, etc.)             │   │
-│  │  • 4 Resources (graph, patterns, recent, identity)      │   │
+│  │  • 12 Tools (remember, recall, search, learning, etc.)   │   │
+│  │  • 6 Resources (graph, patterns, recent, learning)      │   │
 │  │  • 2 Prompts (context injection)                        │   │
 │  │  • Auto-configured for Cursor, Windsurf, Claude         │   │
 │  └─────────────────────────────────────────────────────────┘   │
@@ -70,7 +70,7 @@ SuperLocalMemory V2's 10-layer universal architecture with A2A agent collaborati
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │  LAYER 5: SKILLS LAYER                                  │   │
 │  │  ─────────────────────────────────────────────────────  │   │
-│  │  • 6 Universal Skills (slm-remember, slm-recall, etc.)  │   │
+│  │  • 7 Universal Skills (slm-remember, slm-recall, etc.)  │   │
 │  │  • Metadata-first design with SKILL.md                  │   │
 │  │  • Compatible with multiple IDEs                        │   │
 │  └─────────────────────────────────────────────────────────┘   │
@@ -120,7 +120,7 @@ SuperLocalMemory V2's 10-layer universal architecture with A2A agent collaborati
 
 ---
 
-## Layer 10: A2A Agent Collaboration (PLANNED v2.7)
+## Layer 10: A2A Agent Collaboration (PLANNED v2.8)
 
 **Purpose:** Enable AI agents to collaborate through shared memory using the Agent-to-Agent (A2A) protocol.
 
@@ -460,19 +460,27 @@ SuperLocalMemory V2.1.0 provides **three ways to access** the same local databas
 
 ### MCP Server Features
 
-**6 Tools:**
+**12 Tools:**
 1. `remember()` - Save memories with auto-indexing
 2. `recall()` - Multi-method search (semantic + FTS)
 3. `list_recent()` - Display recent memories
 4. `get_status()` - System statistics
 5. `build_graph()` - Rebuild knowledge graph
 6. `switch_profile()` - Change memory context
+7. `search()` - Search memories (OpenAI MCP spec for ChatGPT Connectors)
+8. `fetch()` - Fetch memory by ID (OpenAI MCP spec for ChatGPT Connectors)
+9. `backup_status()` - Auto-backup status
+10. `memory_used()` - Feedback for learning (v2.7)
+11. `get_learned_patterns()` - Retrieve learned patterns (v2.7)
+12. `correct_pattern()` - Correct a learned pattern (v2.7)
 
-**4 Resources:**
+**6 Resources:**
 1. `memory://graph/clusters` - View all knowledge clusters
 2. `memory://patterns/identity` - View learned patterns
-3. `memory://recent/10` - Recent memories feed
-4. `memory://identity/context` - Identity profile for AI
+3. `memory://recent/{limit}` - Recent memories feed
+4. `memory://stats` - System statistics
+5. `memory://learning/status` - Learning system status (v2.7)
+6. `memory://engagement` - Engagement metrics (v2.7)
 
 **2 Prompts:**
 1. Context injection for AI sessions
@@ -503,7 +511,7 @@ The install.sh script automatically detects and configures:
 
 **Purpose:** Slash-command based access for AI assistants.
 
-### 6 Universal Skills
+### 7 Universal Skills
 
 All skills follow the `slm-*` naming convention:
 
@@ -515,6 +523,7 @@ All skills follow the `slm-*` naming convention:
 | `slm-status` | System health | `/slm-status` |
 | `slm-build-graph` | Rebuild graph | `/slm-build-graph` |
 | `slm-switch-profile` | Change profile | `/slm-switch-profile personal` |
+| `slm-show-patterns` | Show learned patterns | `/slm-show-patterns` |
 
 ### Metadata-First Design
 
@@ -837,7 +846,7 @@ Created by **Varun Pratap Bhardwaj**.
 
 ## Next Steps
 
-- [[A2A Integration →|A2A-Integration]] - Agent-to-Agent collaboration (PLANNED v2.7)
+- [[A2A Integration →|A2A-Integration]] - Agent-to-Agent collaboration (Planned v2.8)
 - [[Visualization Dashboard →|Visualization-Dashboard]] - Interactive visual exploration
 - [[MCP Integration Guide →|MCP-Integration]] - Setup for 17+ IDEs
 - [[Universal Skills Guide →|Universal-Skills]] - Learn slash-commands

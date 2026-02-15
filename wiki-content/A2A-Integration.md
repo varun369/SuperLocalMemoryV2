@@ -1,6 +1,6 @@
 # A2A Integration (Agent-to-Agent Protocol)
 
-**Status:** Planned for v2.5.0 (Q2-Q3 2026)
+**Status:** Planned for v2.8.0 (Q3-Q4 2026)
 **Protocol:** A2A v0.3+ (Google/Linux Foundation)
 **SDK:** `a2a-sdk` v0.3.22+ (Official Python SDK)
 
@@ -40,7 +40,7 @@ After A2A + MCP:
 | **Purpose** | AI tool accesses external resources | AI agents discover & collaborate |
 | **SuperLocalMemory** | Memory as a tool (remember/recall) | Memory as a collaborative agent |
 | **Communication** | Request-response | Stateful tasks, streaming, push notifications |
-| **Already in SLM?** | ✅ Yes (since v2.0.0) | ⏳ Planned (v2.5.0) |
+| **Already in SLM?** | ✅ Yes (since v2.0.0) | ⏳ Planned (v2.8.0) |
 
 **Google explicitly states:** Use MCP for tool access, A2A for agent collaboration. They're designed to work together.
 
@@ -58,7 +58,7 @@ SuperLocalMemory publishes an **Agent Card** — a machine-readable description 
 {
   "name": "SuperLocalMemory",
   "description": "Local-first persistent memory with knowledge graph, pattern learning, and hybrid search",
-  "version": "2.5.0",
+  "version": "2.8.0",
   "url": "http://localhost:8766",
   "provider": {
     "organization": "SuperLocalMemory",
@@ -295,7 +295,7 @@ pip install a2a-sdk>=0.3.22 grpcio>=1.60.0 protobuf>=4.25.0
 
 **Core SuperLocalMemory requires NO additional dependencies.** A2A is fully optional.
 
-### New Files (v2.5.0)
+### New Files (v2.8.0)
 
 ```
 src/a2a_server.py          # A2A gRPC/JSON-RPC server (500-700 lines)
@@ -407,7 +407,7 @@ Yes. Every agent must be explicitly authorized by you. You control permissions (
 
 - [[Universal-Architecture]] - Full 10-layer architecture overview
 - [[MCP-Integration]] - MCP protocol setup (agent-to-tool)
-- [[Roadmap]] - v2.7 A2A milestone details
+- [[Roadmap]] - v2.8 A2A milestone details
 - [[Why-Local-Matters]] - Privacy and local-first philosophy
 
 ---

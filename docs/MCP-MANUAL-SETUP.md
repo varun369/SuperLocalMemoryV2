@@ -683,7 +683,7 @@ python3 ~/.claude-memory/mcp_server.py
 ```
 ============================================================
 SuperLocalMemory V2 - MCP Server
-Version: 2.4.1
+Version: 2.7.0
 ============================================================
 
 Transport: stdio
@@ -692,10 +692,16 @@ Database: /Users/yourusername/.claude-memory/memory.db
 MCP Tools Available:
   - remember(content, tags, project, importance)
   - recall(query, limit, min_score)
+  - search(query)          [ChatGPT Connector]
+  - fetch(id)              [ChatGPT Connector]
   - list_recent(limit)
   - get_status()
   - build_graph()
   - switch_profile(name)
+  - backup_status()        [Auto-Backup]
+  - memory_used(...)       [v2.7 Learning]
+  - get_learned_patterns(...)  [v2.7 Learning]
+  - correct_pattern(...)   [v2.7 Learning]
 
 ...
 ```
@@ -731,7 +737,7 @@ In your IDE/app, check:
 
 ## Available MCP Tools
 
-Once configured, these 8 tools are available:
+Once configured, these 12 tools are available:
 
 | Tool | Purpose | Example Usage |
 |------|---------|---------------|
@@ -743,10 +749,14 @@ Once configured, these 8 tools are available:
 | `switch_profile()` | Change profile | "Switch to work profile" |
 | `search()` | Search memories (OpenAI MCP spec) | Used by ChatGPT Connectors and Deep Research |
 | `fetch()` | Fetch memory by ID (OpenAI MCP spec) | Used by ChatGPT Connectors and Deep Research |
+| `backup_status()` | Auto-backup status | "What's the backup status?" |
+| `memory_used()` | Feedback for learning (v2.7) | Implicit — called when a recalled memory is used |
+| `get_learned_patterns()` | Retrieve learned patterns (v2.7) | "What patterns have you learned about me?" |
+| `correct_pattern()` | Correct a learned pattern (v2.7) | "I actually prefer Vue, not React" |
 
-**Note:** `search()` and `fetch()` are required by OpenAI's MCP specification for ChatGPT Connectors. They are available in all transports but primarily used by ChatGPT.
+**Note:** `search()` and `fetch()` are required by OpenAI's MCP specification for ChatGPT Connectors. They are available in all transports but primarily used by ChatGPT. The 3 learning tools (`memory_used`, `get_learned_patterns`, `correct_pattern`) require v2.7's optional learning dependencies.
 
-Plus **2 MCP prompts** and **4 MCP resources** for advanced use.
+Plus **2 MCP prompts** and **6 MCP resources** for advanced use.
 
 ---
 

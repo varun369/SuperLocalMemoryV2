@@ -10,8 +10,8 @@ SuperLocalMemory V2.1.0 includes a universal **mcp-server** that provides native
 
 **MCP (Model Context Protocol)** is Anthropic's open protocol that allows AI assistants to connect to external tools and data sources. SuperLocalMemory's MCP server provides:
 
-- **6 Tools** - AI-accessible functions (remember, recall, status, etc.)
-- **4 Resources** - Data feeds (graph, patterns, recent memories)
+- **12 Tools** - AI-accessible functions (remember, recall, search, status, learning, etc.)
+- **6 Resources** - Data feeds (graph, patterns, recent memories, learning status)
 - **2 Prompts** - Context injection templates
 - **100% Local** - No cloud dependencies, runs entirely on your machine
 
@@ -304,7 +304,7 @@ aider-smart myfile.py
 
 ## 🔧 MCP Server Tools
 
-### 6 Available Tools
+### 12 Available Tools
 
 | Tool | Purpose | Example AI Request |
 |------|---------|-------------------|
@@ -314,15 +314,23 @@ aider-smart myfile.py
 | `get_status()` | System statistics | "What's my memory system status?" |
 | `build_graph()` | Rebuild knowledge graph | "Rebuild my knowledge graph" |
 | `switch_profile()` | Change profile | "Switch to work profile" |
+| `search()` | Search memories (OpenAI MCP spec) | Used by ChatGPT Connectors |
+| `fetch()` | Fetch memory by ID (OpenAI MCP spec) | Used by ChatGPT Connectors |
+| `backup_status()` | Auto-backup status | "What's the backup status?" |
+| `memory_used()` | Feedback for learning (v2.7) | Implicit when recalled memory is used |
+| `get_learned_patterns()` | Retrieve learned patterns (v2.7) | "What patterns have you learned?" |
+| `correct_pattern()` | Correct a learned pattern (v2.7) | "I prefer Vue, not React" |
 
-### 4 Resources
+### 6 Resources
 
 | Resource | Content | Access |
 |----------|---------|--------|
 | `memory://graph/clusters` | Knowledge graph clusters | Read-only |
 | `memory://patterns/identity` | Learned patterns | Read-only |
-| `memory://recent/10` | Recent memories feed | Read-only |
-| `memory://identity/context` | Identity profile | Read-only |
+| `memory://recent/{limit}` | Recent memories feed | Read-only |
+| `memory://stats` | System statistics | Read-only |
+| `memory://learning/status` | Learning system status (v2.7) | Read-only |
+| `memory://engagement` | Engagement metrics (v2.7) | Read-only |
 
 ### 2 Prompts
 

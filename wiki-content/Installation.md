@@ -1,6 +1,6 @@
 # Installation Guide
 
-Complete installation instructions for SuperLocalMemory V2.6.0 with universal MCP integration on all platforms. This guide covers setup for 17+ IDEs including Claude Desktop, Cursor IDE, Windsurf, VS Code, and more.
+Complete installation instructions for SuperLocalMemory V2.7.0 with universal MCP integration on all platforms. This guide covers setup for 17+ IDEs including Claude Desktop, Cursor IDE, Windsurf, VS Code, and more.
 
 ---
 
@@ -117,13 +117,13 @@ slm status
 The output should show:
 ```
 ╔══════════════════════════════════════════════════════════════╗
-║  SuperLocalMemory V2.6.0 - System Status                     ║
+║  SuperLocalMemory V2.7.0 - System Status                     ║
 ╚══════════════════════════════════════════════════════════════╝
 ✓ Database: OK (0 memories)
 ✓ Graph: Ready
 ✓ Patterns: Ready
 ✓ MCP: Configured for 4 IDEs
-✓ Skills: Installed (6 skills)
+✓ Skills: Installed (7 skills)
 ```
 
 ### What Was Configured?
@@ -137,7 +137,7 @@ The installer automatically detects and configures:
 - ✅ Continue.dev - MCP + skills configured
 
 **Skills Installed:**
-- ✅ 6 universal skills (slm-remember, slm-recall, etc.)
+- ✅ 7 universal skills (slm-remember, slm-recall, slm-show-patterns, etc.)
 - ✅ Compatible with Claude Code, Continue.dev, Cody
 
 **CLI Access:**
@@ -442,7 +442,7 @@ slm status
 
 **v2.1.0 Features (Still Included):**
 - ✅ MCP server for 17+ IDEs
-- ✅ 6 universal skills
+- ✅ 7 universal skills
 - ✅ Universal CLI (`slm` command)
 - ✅ Auto-detection and configuration
 
@@ -457,7 +457,7 @@ slm status
 
 1. [[Visualization-Dashboard]] — Explore the interactive web UI (NEW v2.2.0)
 2. [[MCP-Integration]] — Learn about IDE integration
-3. [[Universal-Skills]] — Master the 6 skills
+3. [[Universal-Skills]] — Master the 7 skills
 4. [[Quick-Start-Tutorial]] — Create your first memory
 5. [[Universal-Architecture]] — Understand the 9-layer system
 6. [[CLI-Cheatsheet]] — Essential commands

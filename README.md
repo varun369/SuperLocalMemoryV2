@@ -44,21 +44,88 @@
 
 ---
 
-## What's New in v2.6.5
+## What's New in v2.7 — "Your AI Learns You"
 
-**Interactive Knowledge Graph** — Your memories, visually connected. Powered by [Cytoscape.js](https://js.cytoscape.org/) (the same library behind Obsidian's graph plugins):
+**SuperLocalMemory now learns your patterns, adapts to your workflow, and personalizes recall — all 100% locally on your machine.** No cloud. No LLM. Your behavioral data never leaves your device.
 
-- 🔍 **Zoom, pan, explore** — Mouse wheel to zoom, drag to pan, smooth navigation
-- 👆 **Click nodes** — Opens memory preview with "View Full Memory", "Expand Neighbors", "Filter to Cluster"
-- 🎨 **6 layout algorithms** — Force-directed (physics-based), circular, grid, hierarchical, concentric, breadthfirst
-- 🔗 **Smart filtering** — Click cluster cards or entity badges → graph instantly updates
-- ⚡ **Performance** — 3-tier rendering strategy handles 10,000+ nodes smoothly
+### Adaptive Learning System
 
-Launch the dashboard: `python3 ~/.claude-memory/ui_server.py` → `http://localhost:8765/graph.html`
+Your memory system evolves with you through three learning layers:
 
-**[[Complete Interactive Graph Guide →|Using-Interactive-Graph]]**
+| Layer | What It Learns | How |
+|-------|---------------|-----|
+| **Tech Preferences** | "You prefer FastAPI over Django" (83% confidence) | Cross-project frequency analysis with Bayesian scoring |
+| **Project Context** | Detects your active project from 4 signals | Path analysis, tags, profile, content clustering |
+| **Workflow Patterns** | "You typically: docs → architecture → code → test" | Time-weighted sliding-window sequence mining |
+
+### Three-Phase Adaptive Ranking
+
+Recall results get smarter over time — automatically:
+
+1. **Phase 1 (Baseline):** Standard search — same as v2.6
+2. **Phase 2 (Rule-Based):** After ~20 feedback signals — boosts results matching your preferences
+3. **Phase 3 (ML Ranking):** After ~200 signals — LightGBM LambdaRank re-ranks with 9 personalized features
+
+### Privacy by Design — GDPR Compliant
+
+| Concern | SuperLocalMemory v2.7 | Cloud-Based Alternatives |
+|---------|----------------------|--------------------------|
+| **Where is learning data?** | `~/.claude-memory/learning.db` on YOUR machine | Their servers, their terms |
+| **Who processes your behavior?** | Local gradient boosting (no LLM, no GPU) | Cloud LLMs process your data |
+| **Right to erasure (GDPR Art. 17)?** | `slm learning reset` — one command, instant | Submit a request, wait weeks |
+| **Data portability?** | Copy the SQLite file | Vendor lock-in |
+| **Telemetry?** | Zero. Absolutely none. | Usage analytics, behavior tracking |
+
+**Your learning data is stored separately from your memories.** Delete `learning.db` and your memories are untouched. Delete `memory.db` and your learning patterns are untouched. Full data sovereignty.
+
+### Research-Backed Architecture
+
+Every component is grounded in peer-reviewed research, adapted for local-first operation:
+
+| Component | Research Basis |
+|-----------|---------------|
+| Two-stage retrieval pipeline | BM25 → re-ranker (eKNOW 2025) |
+| Adaptive cold-start ranking | Hierarchical meta-learning (LREC 2024) |
+| Time-weighted sequence mining | TSW-PrefixSpan (IEEE 2020) |
+| Bayesian confidence scoring | MACLA (arXiv:2512.18950) |
+| LightGBM LambdaRank | Pairwise ranking (Burges 2010, MO-LightGBM SIGIR 2025) |
+| Privacy-preserving feedback | Zero-communication design — stronger than differential privacy (ADPMF, IPM 2024) |
+
+### New MCP Tools
+
+| Tool | Purpose |
+|------|---------|
+| `memory_used` | Tell the AI which recalled memories were useful — trains the ranking model |
+| `get_learned_patterns` | See what the system has learned about your preferences |
+| `correct_pattern` | Fix a wrong pattern — your correction overrides with maximum confidence |
+
+### New CLI Commands
+
+```bash
+slm useful 42 87           # Mark memories as useful (ranking feedback)
+slm patterns list           # See learned tech preferences
+slm learning status         # Learning system diagnostics
+slm learning reset          # Delete all behavioral data (memories preserved)
+slm engagement              # Local engagement health metrics
+```
+
+**Upgrade:** `npm install -g superlocalmemory@latest` — Learning dependencies install automatically.
+
+[Learning System Guide →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Learning-System) | [Upgrade Guide →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Upgrading-to-v2.7) | [Full Changelog](CHANGELOG.md)
 
 ---
+
+<details>
+<summary><strong>Previous: v2.6.5 — Interactive Knowledge Graph</strong></summary>
+
+- Fully interactive visualization with zoom, pan, click-to-explore (Cytoscape.js)
+- 6 layout algorithms, smart cluster filtering, 10,000+ node performance
+- Mobile & accessibility support: touch gestures, keyboard nav, screen reader
+
+</details>
+
+<details>
+<summary><strong>Previous: v2.6 — Security & Scale</strong></summary>
 
 ## What's New in v2.6
 
@@ -75,6 +142,8 @@ SuperLocalMemory is now **production-hardened** with security, performance, and 
 **Upgrade:** `npm install -g superlocalmemory@latest`
 
 [Interactive Architecture Diagram](https://superlocalmemory.com/architecture.html) | [Architecture Doc](docs/ARCHITECTURE-V2.5.md) | [Full Changelog](CHANGELOG.md)
+
+</details>
 
 ---
 
@@ -165,14 +234,18 @@ python3 ~/.claude-memory/ui_server.py
 
 ### Built on 2026 Research
 
-Not another simple key-value store. SuperLocalMemory implements **cutting-edge memory architecture**:
+Not another simple key-value store. SuperLocalMemory implements **cutting-edge memory architecture** backed by peer-reviewed research:
 
 - **PageIndex** (Meta AI) → Hierarchical memory organization
 - **GraphRAG** (Microsoft) → Knowledge graph with auto-clustering
 - **xMemory** (Stanford) → Identity pattern learning
 - **A-RAG** → Multi-level retrieval with context awareness
+- **LambdaRank** (Burges 2010, MO-LightGBM SIGIR 2025) → Adaptive re-ranking *(v2.7)*
+- **TSW-PrefixSpan** (IEEE 2020) → Time-weighted workflow pattern mining *(v2.7)*
+- **MACLA** (arXiv:2512.18950) → Bayesian temporal confidence scoring *(v2.7)*
+- **FCS** (LREC 2024) → Hierarchical cold-start mitigation *(v2.7)*
 
-**The only open-source implementation combining all four approaches.**
+**The only open-source implementation combining all eight approaches — entirely locally.**
 
 [See research citations →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Research-Foundations)
 
@@ -197,11 +270,16 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 │  17+ IDEs with single database                              │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 6: MCP INTEGRATION                                   │
-│  Model Context Protocol: 6 tools, 4 resources, 2 prompts    │
+│  Model Context Protocol: 12 tools, 6 resources, 2 prompts   │
 │  Auto-configured for Cursor, Windsurf, Claude               │
 ├─────────────────────────────────────────────────────────────┤
+│  Layer 5½: ADAPTIVE LEARNING (v2.7 — NEW)                   │
+│  Three-layer learning: tech prefs + project context + flow  │
+│  LightGBM LambdaRank re-ranking (fully local, no cloud)    │
+│  Research: eKNOW 2025, MACLA, TSW-PrefixSpan, LREC 2024    │
+├─────────────────────────────────────────────────────────────┤
 │  Layer 5: SKILLS LAYER                                      │
-│  6 universal slash-commands for AI assistants               │
+│  7 universal slash-commands for AI assistants               │
 │  Compatible with Claude Code, Continue, Cody                │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 4: PATTERN LEARNING + MACLA                          │
@@ -224,6 +302,7 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 
 ### Key Capabilities
 
+- **[Adaptive Learning System](https://github.com/varun369/SuperLocalMemoryV2/wiki/Learning-System)** — Learns your tech preferences, workflow patterns, and project context. Personalizes recall ranking using local ML (LightGBM). Zero cloud dependency. *New in v2.7*
 - **[Knowledge Graphs](https://github.com/varun369/SuperLocalMemoryV2/wiki/Knowledge-Graph)** — Automatic relationship discovery. Interactive visualization with zoom, pan, click.
 - **[Pattern Learning](https://github.com/varun369/SuperLocalMemoryV2/wiki/Pattern-Learning)** — Learns your coding preferences and style automatically.
 - **[Multi-Profile Support](https://github.com/varun369/SuperLocalMemoryV2/wiki/Using-Memory-Profiles)** — Isolated contexts for work, personal, clients. Zero context bleeding.
@@ -302,14 +381,18 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 | **Universal CLI** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Multi-Layer Architecture** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Pattern Learning** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Adaptive ML Ranking** | Cloud LLM | ❌ | ❌ | ❌ | ✅ **Local ML** |
 | **Knowledge Graphs** | ✅ | ✅ | ❌ | ❌ | ✅ |
 | **100% Local** | ❌ | ❌ | Partial | Partial | ✅ |
+| **GDPR by Design** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Zero Setup** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Completely Free** | Limited | Limited | Partial | ✅ | ✅ |
 
 **SuperLocalMemory V2 is the ONLY solution that:**
+- ✅ **Learns and adapts** locally — no cloud LLM needed for personalization
 - ✅ Works across 17+ IDEs and CLI tools
 - ✅ Remains 100% local (no cloud dependencies)
+- ✅ GDPR Article 17 compliant — one-command data erasure
 - ✅ Completely free with unlimited memories
 
 [See full competitive analysis →](docs/COMPETITIVE-ANALYSIS.md)

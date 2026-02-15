@@ -1,6 +1,6 @@
 # Universal Skills
 
-SuperLocalMemory V2.1.0 includes **6 universal agent-skills** that work as slash-commands in Claude Code, Continue.dev, and Cody. These ai-skills provide a consistent interface across different AI assistants while accessing the same local memory database.
+SuperLocalMemory V2.1.0 includes **7 universal agent-skills** that work as slash-commands in Claude Code, Continue.dev, and Cody. These ai-skills provide a consistent interface across different AI assistants while accessing the same local memory database.
 
 **Keywords:** agent-skills, slash-commands, ai-skills, claude-code, continue-dev, cody
 
@@ -19,7 +19,7 @@ SuperLocalMemory V2.1.0 includes **6 universal agent-skills** that work as slash
 
 ---
 
-## 📦 The 6 Universal Skills
+## 📦 The 7 Universal Skills
 
 All skills use the `slm-*` prefix for consistency:
 
@@ -31,6 +31,7 @@ All skills use the `slm-*` prefix for consistency:
 | **slm-status** | System health and stats | `/slm-status` |
 | **slm-build-graph** | Rebuild knowledge graph | `/slm-build-graph` |
 | **slm-switch-profile** | Change active profile | `/slm-switch-profile work` |
+| **slm-show-patterns** | Show learned patterns | `/slm-show-patterns` |
 
 ---
 
@@ -578,6 +579,7 @@ For complete documentation of each skill, see:
 - `skills/slm-status/SKILL.md`
 - `skills/slm-build-graph/SKILL.md`
 - `skills/slm-switch-profile/SKILL.md`
+- `skills/slm-show-patterns/SKILL.md`
 
 Or visit the [GitHub repository](https://github.com/varun369/SuperLocalMemoryV2/tree/main/skills).
 

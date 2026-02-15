@@ -1,7 +1,7 @@
 ---
 
 <p align="center">
-  <strong>SuperLocalMemory V2.6.0</strong> — Your AI Finally Remembers You<br/>
+  <strong>SuperLocalMemory V2.7.0</strong> — Your AI Learns You<br/>
   <a href="https://github.com/varun369/SuperLocalMemoryV2">GitHub</a> •
   <a href="https://buymeacoffee.com/varunpratah">Support</a> •
   <a href="https://github.com/varun369">@varun369</a><br/>

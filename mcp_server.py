@@ -63,6 +63,15 @@ try:
 except ImportError:
     TRUST_AVAILABLE = False
 
+# Learning System (v2.7+)
+try:
+    sys.path.insert(0, str(Path(__file__).parent / "src"))
+    from learning import get_learning_db, get_adaptive_ranker, get_feedback_collector, get_engagement_tracker, get_status as get_learning_status
+    from learning import FULL_LEARNING_AVAILABLE, ML_RANKING_AVAILABLE
+    LEARNING_AVAILABLE = True
+except ImportError:
+    LEARNING_AVAILABLE = False
+
 def _sanitize_error(error: Exception) -> str:
     """Strip internal paths and structure from error messages."""
     msg = str(error)
@@ -163,6 +172,18 @@ def get_trust_scorer():
     if _trust_scorer is None:
         _trust_scorer = TrustScorer.get_instance(DB_PATH)
     return _trust_scorer
+
+
+def get_learning_components():
+    """Get learning system components. Returns None if unavailable."""
+    if not LEARNING_AVAILABLE:
+        return None
+    return {
+        'db': get_learning_db(),
+        'ranker': get_adaptive_ranker(),
+        'feedback': get_feedback_collector(),
+        'engagement': get_engagement_tracker(),
+    }
 
 
 def _register_mcp_agent(agent_name: str = "mcp-client"):
@@ -334,6 +355,27 @@ async def recall(
                 results = store.search(query, limit=limit)
         else:
             results = store.search(query, limit=limit)
+
+        # v2.7: Learning-based re-ranking (optional, graceful fallback)
+        if LEARNING_AVAILABLE:
+            try:
+                ranker = get_adaptive_ranker()
+                if ranker:
+                    results = ranker.rerank(results, query)
+            except Exception:
+                pass  # Re-ranking failure must never break recall
+
+        # Track recall for passive feedback decay
+        if LEARNING_AVAILABLE:
+            try:
+                feedback = get_feedback_collector()
+                if feedback:
+                    feedback.record_recall_results(query, [r.get('id') for r in results if r.get('id')])
+                tracker = get_engagement_tracker()
+                if tracker:
+                    tracker.record_activity('recall_performed', source='mcp')
+            except Exception:
+                pass  # Tracking failure must never break recall
 
         # Filter by minimum score
         filtered_results = [
@@ -592,6 +634,212 @@ async def backup_status() -> dict:
 
 
 # ============================================================================
+# LEARNING TOOLS (v2.7 — feedback, transparency, user control)
+# ============================================================================
+
+@mcp.tool(annotations=ToolAnnotations(
+    readOnlyHint=False,
+    destructiveHint=False,
+    openWorldHint=False,
+))
+async def memory_used(
+    memory_id: int,
+    query: str = "",
+    usefulness: str = "high"
+) -> dict:
+    """
+    Signal that a recalled memory was useful. Call this when you reference
+    or apply a memory from recall results in your response.
+
+    This helps SuperLocalMemory learn which memories are most relevant
+    and improves future recall results.
+
+    Args:
+        memory_id: ID of the useful memory
+        query: The recall query that found it (optional)
+        usefulness: How useful - "high", "medium", or "low" (default "high")
+
+    Returns:
+        {"success": bool, "message": str}
+    """
+    try:
+        if not LEARNING_AVAILABLE:
+            return {"success": False, "message": "Learning features not available. Install: pip3 install lightgbm scipy"}
+
+        feedback = get_feedback_collector()
+        if feedback is None:
+            return {"success": False, "message": "Feedback collector not initialized"}
+
+        feedback.record_memory_used(
+            memory_id=memory_id,
+            query=query,
+            usefulness=usefulness,
+            source_tool="mcp-client",
+        )
+
+        return {
+            "success": True,
+            "message": f"Feedback recorded for memory #{memory_id} (usefulness: {usefulness})"
+        }
+    except Exception as e:
+        return {"success": False, "error": _sanitize_error(e)}
+
+
+@mcp.tool(annotations=ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    openWorldHint=False,
+))
+async def get_learned_patterns(
+    min_confidence: float = 0.6,
+    category: str = "all"
+) -> dict:
+    """
+    See what SuperLocalMemory has learned about your preferences,
+    projects, and workflow patterns.
+
+    Args:
+        min_confidence: Minimum confidence threshold 0.0-1.0 (default 0.6)
+        category: Filter by "tech", "workflow", "project", or "all" (default "all")
+
+    Returns:
+        {
+            "success": bool,
+            "patterns": {
+                "tech_preferences": [...],
+                "workflow_patterns": [...],
+            },
+            "ranking_phase": str,
+            "feedback_count": int
+        }
+    """
+    try:
+        if not LEARNING_AVAILABLE:
+            return {"success": False, "message": "Learning features not available. Install: pip3 install lightgbm scipy", "patterns": {}}
+
+        ldb = get_learning_db()
+        if ldb is None:
+            return {"success": False, "message": "Learning database not initialized", "patterns": {}}
+
+        result = {"success": True, "patterns": {}}
+
+        # Tech preferences (Layer 1)
+        if category in ("all", "tech"):
+            patterns = ldb.get_transferable_patterns(min_confidence=min_confidence)
+            result["patterns"]["tech_preferences"] = [
+                {
+                    "id": p["id"],
+                    "type": p["pattern_type"],
+                    "key": p["key"],
+                    "value": p["value"],
+                    "confidence": round(p["confidence"], 2),
+                    "evidence": p["evidence_count"],
+                    "profiles_seen": p["profiles_seen"],
+                }
+                for p in patterns
+            ]
+
+        # Workflow patterns (Layer 3)
+        if category in ("all", "workflow"):
+            workflows = ldb.get_workflow_patterns(min_confidence=min_confidence)
+            result["patterns"]["workflow_patterns"] = [
+                {
+                    "id": p["id"],
+                    "type": p["pattern_type"],
+                    "key": p["pattern_key"],
+                    "value": p["pattern_value"],
+                    "confidence": round(p["confidence"], 2),
+                }
+                for p in workflows
+            ]
+
+        # Ranking phase info
+        ranker = get_adaptive_ranker()
+        if ranker:
+            result["ranking_phase"] = ranker.get_phase()
+            result["feedback_count"] = ldb.get_feedback_count()
+
+        # Learning stats
+        result["stats"] = ldb.get_stats()
+
+        return result
+    except Exception as e:
+        return {"success": False, "error": _sanitize_error(e), "patterns": {}}
+
+
+@mcp.tool(annotations=ToolAnnotations(
+    readOnlyHint=False,
+    destructiveHint=False,
+    openWorldHint=False,
+))
+async def correct_pattern(
+    pattern_id: int,
+    correct_value: str,
+    reason: str = ""
+) -> dict:
+    """
+    Correct a learned pattern that is wrong. Use get_learned_patterns first
+    to see pattern IDs.
+
+    Args:
+        pattern_id: ID of the pattern to correct
+        correct_value: The correct value (e.g., "Vue" instead of "React")
+        reason: Why the correction (optional)
+
+    Returns:
+        {"success": bool, "message": str}
+    """
+    try:
+        if not LEARNING_AVAILABLE:
+            return {"success": False, "message": "Learning features not available"}
+
+        ldb = get_learning_db()
+        if ldb is None:
+            return {"success": False, "message": "Learning database not initialized"}
+
+        # Get existing pattern
+        conn = ldb._get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM transferable_patterns WHERE id = ?', (pattern_id,))
+            pattern = cursor.fetchone()
+            if not pattern:
+                return {"success": False, "message": f"Pattern #{pattern_id} not found"}
+
+            old_value = pattern['value']
+
+            # Update the pattern with correction
+            ldb.upsert_transferable_pattern(
+                pattern_type=pattern['pattern_type'],
+                key=pattern['key'],
+                value=correct_value,
+                confidence=1.0,  # User correction = maximum confidence
+                evidence_count=pattern['evidence_count'] + 1,
+                profiles_seen=pattern['profiles_seen'],
+                contradictions=[f"Corrected from '{old_value}' to '{correct_value}': {reason}"],
+            )
+
+            # Record as negative feedback for the old value
+            feedback = get_feedback_collector()
+            if feedback:
+                feedback.record_memory_used(
+                    memory_id=0,  # No specific memory
+                    query=f"correction:{pattern['key']}",
+                    usefulness="low",
+                    source_tool="mcp-correction",
+                )
+
+            return {
+                "success": True,
+                "message": f"Pattern '{pattern['key']}' corrected: '{old_value}' → '{correct_value}'"
+            }
+        finally:
+            conn.close()
+    except Exception as e:
+        return {"success": False, "error": _sanitize_error(e)}
+
+
+# ============================================================================
 # CHATGPT CONNECTOR TOOLS (search + fetch — required by OpenAI MCP spec)
 # These two tools are required for ChatGPT Connectors and Deep Research.
 # They wrap existing SuperLocalMemory search/retrieval logic.
@@ -758,6 +1006,41 @@ async def get_coding_identity_resource() -> str:
         return json.dumps({"error": _sanitize_error(e)}, indent=2)
 
 
+@mcp.resource("memory://learning/status")
+async def get_learning_status_resource() -> str:
+    """
+    Resource: Get learning system status.
+
+    Usage: memory://learning/status
+    """
+    try:
+        if not LEARNING_AVAILABLE:
+            return json.dumps({"available": False, "message": "Learning deps not installed"}, indent=2)
+        status = get_learning_status()
+        return json.dumps(status, indent=2)
+    except Exception as e:
+        return json.dumps({"error": _sanitize_error(e)}, indent=2)
+
+
+@mcp.resource("memory://engagement")
+async def get_engagement_resource() -> str:
+    """
+    Resource: Get engagement metrics.
+
+    Usage: memory://engagement
+    """
+    try:
+        if not LEARNING_AVAILABLE:
+            return json.dumps({"available": False}, indent=2)
+        tracker = get_engagement_tracker()
+        if tracker:
+            stats = tracker.get_engagement_stats()
+            return json.dumps(stats, indent=2)
+        return json.dumps({"available": False}, indent=2)
+    except Exception as e:
+        return json.dumps({"error": _sanitize_error(e)}, indent=2)
+
+
 # ============================================================================
 # MCP PROMPTS (Template injection)
 # ============================================================================
@@ -867,7 +1150,7 @@ if __name__ == "__main__":
     # Print startup message to stderr (stdout is used for MCP protocol)
     print("=" * 60, file=sys.stderr)
     print("SuperLocalMemory V2 - MCP Server", file=sys.stderr)
-    print("Version: 2.5.0", file=sys.stderr)
+    print("Version: 2.7.0", file=sys.stderr)
     print("=" * 60, file=sys.stderr)
     print("Created by: Varun Pratap Bhardwaj (Solution Architect)", file=sys.stderr)
     print("Repository: https://github.com/varun369/SuperLocalMemoryV2", file=sys.stderr)
@@ -891,12 +1174,19 @@ if __name__ == "__main__":
     print("  - build_graph()", file=sys.stderr)
     print("  - switch_profile(name)", file=sys.stderr)
     print("  - backup_status()        [Auto-Backup]", file=sys.stderr)
+    if LEARNING_AVAILABLE:
+        print("  - memory_used(memory_id, query, usefulness)  [v2.7 Learning]", file=sys.stderr)
+        print("  - get_learned_patterns(min_confidence, category) [v2.7 Learning]", file=sys.stderr)
+        print("  - correct_pattern(pattern_id, correct_value) [v2.7 Learning]", file=sys.stderr)
     print("", file=sys.stderr)
     print("MCP Resources Available:", file=sys.stderr)
     print("  - memory://recent/{limit}", file=sys.stderr)
     print("  - memory://stats", file=sys.stderr)
     print("  - memory://graph/clusters", file=sys.stderr)
     print("  - memory://patterns/identity", file=sys.stderr)
+    if LEARNING_AVAILABLE:
+        print("  - memory://learning/status", file=sys.stderr)
+        print("  - memory://engagement", file=sys.stderr)
     print("", file=sys.stderr)
     print("MCP Prompts Available:", file=sys.stderr)
     print("  - coding_identity_prompt()", file=sys.stderr)

@@ -25,7 +25,18 @@
 
 ---
 
-## NEW: v2.6.0 — Security Hardening & Performance
+## NEW: v2.7.0 — Your AI Learns You
+
+> SuperLocalMemory now **learns your patterns** and personalizes recall — all 100% locally. Adaptive ML ranking, workflow detection, and GDPR-compliant behavioral learning.
+>
+> **12 MCP tools** | **7 skills** | **6 resources** | **2 prompts**
+>
+> - [[Learning System]] — How the three-layer learning architecture works
+> - [[Upgrading to v2.7|Upgrading-to-v2.7]] — Step-by-step upgrade guide
+
+---
+
+## v2.6.0 — Security Hardening & Performance
 
 > **SuperLocalMemory is now production-hardened with trust enforcement, rate limiting, and accelerated graph building.**
 >
@@ -96,7 +107,7 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 |-------|-------------|
 | [[Universal-Architecture]] | 10-layer universal architecture with MCP + A2A integration |
 | [[MCP-Integration]] | Model Context Protocol support for 17+ IDEs |
-| [[Universal-Skills]] | 6 agent skills and slash-commands system |
+| [[Universal-Skills]] | 7 agent skills and slash-commands system |
 | [[Knowledge-Graph-Guide]] | Auto-discovery of relationships |
 | [[Pattern-Learning-Explained]] | How it learns your coding style |
 | [[Multi-Profile-Workflows]] | Separate contexts for work/personal/clients |
@@ -159,7 +170,7 @@ superlocalmemoryv2:recall "auth bug"
 | **IDE Support** | Limited | 1-2 | None | **✅ 17+ IDEs** |
 | **Universal Architecture** | ❌ | ❌ | ❌ | **✅ MCP + Skills + CLI** |
 | **MCP Integration** | ❌ | ❌ | ❌ | **✅ Native** |
-| **A2A Protocol** | ❌ | ❌ | ❌ | **🔜 v2.7** |
+| **A2A Protocol** | ❌ | ❌ | ❌ | **🔜 v2.8** |
 | **Pattern Learning** | ❌ | ❌ | Partial | **✅ Full** |
 | **Knowledge Graphs** | ✅ | ✅ | ❌ | **✅ Leiden Clustering** |
 | **Zero Setup** | ❌ | ❌ | ❌ | **✅ 5-min install** |

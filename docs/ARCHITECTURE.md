@@ -85,7 +85,7 @@ Simple Storage → Intelligent Organization → Adaptive Learning
 
 The MCP server provides native integration with modern AI tools:
 
-**8 Tools:**
+**12 Tools:**
 - `remember(content, tags, project)` - Save memories
 - `recall(query, limit)` - Search memories
 - `list_recent(limit)` - Recent memories
@@ -94,12 +94,18 @@ The MCP server provides native integration with modern AI tools:
 - `switch_profile(name)` - Change profile
 - `search(query)` - Search memories (OpenAI MCP spec for ChatGPT Connectors)
 - `fetch(id)` - Fetch memory by ID (OpenAI MCP spec for ChatGPT Connectors)
+- `backup_status()` - Auto-backup status
+- `memory_used(memory_id, query, usefulness)` - Feedback for learning (v2.7)
+- `get_learned_patterns(min_confidence, category)` - Retrieve learned patterns (v2.7)
+- `correct_pattern(pattern_id, correct_value)` - Correct a learned pattern (v2.7)
 
-**4 Resources:**
-- `memory://recent` - Recent memories feed
+**6 Resources:**
+- `memory://recent/{limit}` - Recent memories feed
 - `memory://stats` - System statistics
 - `memory://graph/clusters` - Graph clusters
 - `memory://patterns/identity` - Learned patterns
+- `memory://learning/status` - Learning system status (v2.7)
+- `memory://engagement` - Engagement metrics (v2.7)
 
 **2 Prompts:**
 - `coding_identity_prompt` - User's coding style
@@ -221,16 +227,16 @@ SuperLocalMemory V2 uses a hierarchical, additive architecture where each layer 
                             ↑
 ┌─────────────────────────────────────────────────────────────────┐
 │ Layer 6: MCP Integration (mcp_server.py)                       │
-│  6 tools, 4 resources, 2 prompts                               │
+│  12 tools, 6 resources, 2 prompts                              │
 │  Auto-configured for Claude Desktop, Cursor, Windsurf, etc.   │
 │  Output: Native AI tool access via Model Context Protocol      │
 └─────────────────────────────────────────────────────────────────┘
                             ↑
 ┌─────────────────────────────────────────────────────────────────┐
 │ Layer 5: Skills Layer (skills/*)                               │
-│  6 slash-command skills for Claude Code, Continue.dev, Cody    │
+│  7 slash-command skills for Claude Code, Continue.dev, Cody    │
 │  slm-remember, slm-recall, slm-status, slm-list-recent,       │
-│  slm-build-graph, slm-switch-profile                           │
+│  slm-build-graph, slm-switch-profile, slm-show-patterns       │
 │  Output: Familiar /command interface across AI tools           │
 └─────────────────────────────────────────────────────────────────┘
                             ↑

@@ -57,17 +57,86 @@ if [ "$NON_INTERACTIVE" = true ]; then
     echo ""
 fi
 
-# Check Python version
+# Check Python version — install if missing (non-tech user friendly)
 echo "Checking Python version..."
+
+install_python() {
+    echo ""
+    echo "Python 3 not found. Attempting automatic installation..."
+    if [ "$(uname)" = "Darwin" ]; then
+        # macOS: try Homebrew first, then Xcode CLI tools
+        if command -v brew &> /dev/null; then
+            echo "Installing Python via Homebrew..."
+            brew install python3 && return 0
+        fi
+        # Try installing Xcode Command Line Tools (includes Python 3)
+        echo "Installing Xcode Command Line Tools (includes Python 3)..."
+        echo "A system dialog may appear — click 'Install' to continue."
+        xcode-select --install 2>/dev/null
+        # Wait for user to complete the install dialog
+        echo "Waiting for Xcode CLI tools installation to complete..."
+        echo "Press Enter after the installation finishes."
+        if [ "$NON_INTERACTIVE" = false ]; then
+            read -r
+        else
+            # In non-interactive mode, wait and retry
+            sleep 30
+        fi
+        if command -v python3 &> /dev/null; then
+            return 0
+        fi
+        # Last resort: direct Python.org installer
+        echo ""
+        echo "Automatic installation could not complete."
+        echo "Please install Python 3.10+ from: https://www.python.org/downloads/"
+        echo "Then re-run this installer."
+        return 1
+    elif [ -f /etc/debian_version ]; then
+        # Debian/Ubuntu
+        echo "Installing Python via apt..."
+        sudo apt-get update -qq && sudo apt-get install -y python3 python3-pip && return 0
+    elif [ -f /etc/redhat-release ]; then
+        # RHEL/CentOS/Fedora
+        echo "Installing Python via dnf..."
+        sudo dnf install -y python3 python3-pip && return 0
+    elif [ -f /etc/arch-release ]; then
+        # Arch Linux
+        sudo pacman -S --noconfirm python python-pip && return 0
+    fi
+    echo "Could not auto-install Python. Please install Python 3.8+ manually."
+    echo "  macOS:  brew install python3"
+    echo "  Ubuntu: sudo apt install python3 python3-pip"
+    echo "  Fedora: sudo dnf install python3 python3-pip"
+    return 1
+}
+
+if ! command -v python3 &> /dev/null; then
+    install_python || exit 1
+fi
+
 PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
 PYTHON_MAJOR=$(python3 -c 'import sys; print(sys.version_info.major)')
 PYTHON_MINOR=$(python3 -c 'import sys; print(sys.version_info.minor)')
 
 if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 8 ]); then
-    echo "✗ Error: Python 3.8+ required (found $PYTHON_VERSION)"
-    exit 1
+    echo "Python $PYTHON_VERSION found but 3.8+ required."
+    install_python || exit 1
+    # Re-check after install
+    PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+    PYTHON_MAJOR=$(python3 -c 'import sys; print(sys.version_info.major)')
+    PYTHON_MINOR=$(python3 -c 'import sys; print(sys.version_info.minor)')
+    if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 8 ]); then
+        echo "✗ Error: Python 3.8+ still not available after install attempt"
+        exit 1
+    fi
 fi
 echo "✓ Python $PYTHON_VERSION"
+
+# Ensure pip3 is available
+if ! command -v pip3 &> /dev/null; then
+    echo "Installing pip..."
+    python3 -m ensurepip --upgrade 2>/dev/null || python3 -c "import urllib.request; urllib.request.urlretrieve('https://bootstrap.pypa.io/get-pip.py', '/tmp/get-pip.py')" && python3 /tmp/get-pip.py 2>/dev/null || true
+fi
 
 # Create installation directory
 echo ""
@@ -87,6 +156,13 @@ echo ""
 echo "Copying source files..."
 cp -r "${REPO_DIR}/src/"* "${INSTALL_DIR}/"
 echo "✓ Source files copied"
+
+# Copy learning modules explicitly (v2.7+ — ensures nested dir is handled)
+if [ -d "${REPO_DIR}/src/learning" ]; then
+    mkdir -p "${INSTALL_DIR}/learning"
+    cp -r "${REPO_DIR}/src/learning/"* "${INSTALL_DIR}/learning/"
+    echo "✓ Learning modules copied"
+fi
 
 # Copy hooks
 echo "Copying hooks..."
@@ -203,6 +279,22 @@ if [ -f "${REPO_DIR}/requirements-core.txt" ]; then
     fi
 else
     echo "⚠️  requirements-core.txt not found, skipping dependency installation"
+fi
+
+# Install learning dependencies (v2.7+)
+echo ""
+echo "Installing learning dependencies..."
+echo "  Enables intelligent pattern learning and personalized recall"
+
+if [ -f "${REPO_DIR}/requirements-learning.txt" ]; then
+    if pip3 install $PIP_FLAGS -q -r "${REPO_DIR}/requirements-learning.txt" 2>/dev/null; then
+        echo "✓ Learning dependencies installed (personalized ranking enabled)"
+    else
+        echo "○ Learning dependencies skipped (core features unaffected)"
+        echo "  To install later: pip3 install lightgbm scipy"
+    fi
+else
+    echo "○ requirements-learning.txt not found (learning features will use rule-based ranking)"
 fi
 
 # Initialize knowledge graph and pattern learning
@@ -676,6 +768,10 @@ echo "Quick start (try now):"
 echo "  slm status"
 echo "  slm remember 'My first memory'"
 echo "  slm recall 'first'"
+echo ""
+echo "Learning System (v2.7+):"
+echo "  slm learning status              - Check learning system"
+echo "  slm engagement                   - View engagement metrics"
 echo ""
 # Optional: Offer to install optional features
 if [ "$NON_INTERACTIVE" = true ]; then

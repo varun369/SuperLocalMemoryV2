@@ -6,7 +6,7 @@
 
 ## Version History
 
-### ✅ v2.5.0 (2026-02-12) - Current
+### ✅ v2.5.0 (2026-02-12)
 
 **Major Release: "Your AI Memory Has a Heartbeat"**
 
@@ -75,7 +75,7 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 - ✅ 17+ IDE support (Cursor, Windsurf, Claude Desktop, Continue, Cody, Aider)
 - ✅ MCP (Model Context Protocol) server implementation
 - ✅ Universal CLI wrapper (`slm` command)
-- ✅ 6 production-ready skills (remember, recall, list, status, build-graph, switch-profile)
+- ✅ 6 production-ready skills (remember, recall, list, status, build-graph, switch-profile) — expanded to 7 in v2.7
 - ✅ Auto-detection during installation
 - ✅ 6-layer attribution protection system
 - ✅ Enhanced documentation (1,400+ lines)
@@ -113,6 +113,41 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 - MACLA (Forouzandeh et al., Dec 2025, [arXiv:2512.18950](https://arxiv.org/abs/2512.18950))
 - Hindsight (Latimer et al., Dec 2025, [arXiv:2512.12818](https://arxiv.org/abs/2512.12818))
 - A-RAG (Multi-level Retrieval, [arXiv:2602.03442](https://arxiv.org/abs/2602.03442))
+
+---
+
+### ✅ v2.7.0 (2026-02-16) - Current
+
+**Major Release: "Your AI Learns You"**
+
+Three-layer local-only learning architecture with adaptive LightGBM re-ranking.
+
+**New Features:**
+- ✅ **Cross-Project Aggregator** — Transferable tech preferences across profiles
+- ✅ **Project Context Manager** — Multi-signal project detection
+- ✅ **Workflow Pattern Miner** — Sliding-window sequence + temporal patterns
+- ✅ **Adaptive Ranker** — LightGBM LambdaRank re-ranker with synthetic bootstrap
+- ✅ **Source Quality Scorer** — Per-source learning (which tools produce useful memories)
+- ✅ **Feedback Collector** — Multi-channel: MCP memory_used + CLI slm useful + dashboard clicks
+- ✅ **3 new MCP tools** — memory_used, get_learned_patterns, correct_pattern
+- ✅ **2 new MCP resources** — memory://learning/status, memory://engagement
+- ✅ **1 new skill** — slm-show-patterns
+
+**Totals:** 12 MCP tools, 6 resources, 2 prompts, 7 skills
+
+See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
+
+---
+
+### ✅ v2.6.5 (2026-02-16)
+
+**Release: "Interactive Knowledge Graph"**
+
+- ✅ **Cytoscape.js graph engine** — Zoom, pan, click, hover, 6 layouts, cluster filtering
+- ✅ **Security hardening** — Trust enforcement, rate limiting, SSRF protection, profile isolation
+- ✅ **HNSW-accelerated graphs** — Faster knowledge graph construction at scale
+
+See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
 
 ---
 
@@ -399,7 +434,7 @@ related = graph.get_related(42, rel_type="SUPERSEDES")
 
 ---
 
-### v2.7 (Q2-Q3 2026) - A2A Protocol Integration
+### v2.8 (Q3-Q4 2026) - A2A Protocol Integration
 
 **Theme:** Multi-agent collaboration via Agent-to-Agent protocol
 
@@ -698,7 +733,7 @@ store.compare_experiments("bert-finetuning-v2", "bert-finetuning-v3")
 
 1. ✅ **Multi-IDE support** (Completed in v2.1.0)
 2. 🔨 **REST API** (In progress, v2.2.0)
-3. 📝 **A2A Protocol support** (Planned, v2.7) — Multi-agent collaboration
+3. 📝 **A2A Protocol support** (Planned, v2.8) — Multi-agent collaboration
 4. 📝 **Web UI** (Planned, v2.3.0)
 5. 📝 **Docker container** (Planned, v2.2.0)
 6. 📝 **OpenAI embeddings** (Planned, v2.3.0)

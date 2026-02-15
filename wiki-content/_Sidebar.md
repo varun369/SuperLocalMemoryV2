@@ -6,6 +6,7 @@
 
 ### 🚀 Getting Started
 - [[Installation]]
+- [[Upgrading-to-v2.7]]
 - [[Quick-Start-Tutorial]]
 - [[CLI-Cheatsheet]]
 
@@ -15,6 +16,7 @@
 - [Interactive Architecture Diagram](https://superlocalmemory.com/architecture.html)
 - [[Universal-Architecture]]
 - [[Architecture-V2.5]]
+- [[Learning-System]]
 - [[Visualization-Dashboard]]
 - [[MCP-Integration]]
 - [[Universal-Skills]]

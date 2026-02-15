@@ -16,6 +16,54 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.7.0] - 2026-02-16
+
+**Release Type:** Major Feature Release — "Your AI Learns You"
+
+SuperLocalMemory now learns your patterns, adapts to your workflow, and personalizes recall. All processing happens 100% locally — your behavioral data never leaves your machine. GDPR Article 17 compliant by design.
+
+### Added
+- **Adaptive Learning System** — Three-layer learning architecture that detects tech preferences, project context, and workflow patterns across all your projects
+- **Personalized Recall Ranking** — Search results re-ranked using learned patterns. Three-phase adaptive system: baseline → rule-based → ML (LightGBM LambdaRank)
+- **Synthetic Bootstrap** — ML model works from day 1 by bootstrapping from existing memory patterns. No cold-start degradation.
+- **Multi-Channel Feedback** — Tell the system which memories were useful via MCP (`memory_used`), CLI (`slm useful`), or dashboard clicks
+- **Source Quality Scoring** — Learns which tools produce the most useful memories using Beta-Binomial Bayesian scoring
+- **Workflow Pattern Detection** — Detects your coding workflow sequences (e.g., docs → architecture → code → test) using time-weighted sliding-window mining
+- **Local Engagement Metrics** — Track memory system health locally with zero telemetry (`slm engagement`)
+- **Separate Learning Database** — Behavioral data in `learning.db`, isolated from `memory.db`. One-command erasure: `slm learning reset`
+- **3 New MCP Tools** — `memory_used` (feedback signal), `get_learned_patterns` (transparency), `correct_pattern` (user control)
+- **2 New MCP Resources** — `memory://learning/status`, `memory://engagement`
+- **New CLI Commands** — `slm useful`, `slm learning status/retrain/reset`, `slm engagement`, `slm patterns correct`
+- **New Skill** — `slm-show-patterns` for viewing learned preferences in Claude Code and compatible tools
+- **Auto Python Installation** — `install.sh` now auto-installs Python 3 on macOS (Homebrew/Xcode) and Linux (apt/dnf) for new users
+- **319 Tests** — 229 unit tests + 13 E2E + 14 regression + 19 fresh-install + 42 edge-case tests
+
+### Research Foundations
+- Two-stage BM25 → re-ranker pipeline (eKNOW 2025)
+- LightGBM LambdaRank pairwise ranking (Burges 2010, MO-LightGBM SIGIR 2025)
+- Three-phase cold-start mitigation (LREC 2024)
+- Time-weighted sequence mining (TSW-PrefixSpan, IEEE 2020)
+- Bayesian temporal confidence (MACLA, arXiv:2512.18950)
+- Privacy-preserving zero-communication feedback design
+
+### Changed
+- **MCP Tools** — Now 12 tools (was 9), 6 resources (was 4), 2 prompts
+- **Skills** — Now 7 universal skills (was 6)
+- **install.sh** — Auto-installs Python if missing, installs learning deps automatically
+- **DMG Installer** — Updated to v2.7.0 with learning modules
+
+### Dependencies (Optional)
+- `lightgbm>=4.0.0` — ML ranking (auto-installed, graceful fallback if unavailable)
+- `scipy>=1.9.0` — Statistical functions (auto-installed, graceful fallback if unavailable)
+
+### Performance
+- Re-ranking adds <15ms latency to recall queries
+- Learning DB typically <1MB for 1,000 memories
+- Bootstrap model trains in <30 seconds for 1,000 memories
+- All BM1-BM6 benchmarks: no regression >10%
+
+---
+
 ## [2.6.5] - 2026-02-16
 
 ### Added

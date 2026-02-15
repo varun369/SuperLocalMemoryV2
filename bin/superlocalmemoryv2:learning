@@ -1,0 +1,4 @@
+#!/bin/bash
+# SuperLocalMemory V2 - Learning System Status
+SLM_DIR="${HOME}/.claude-memory"
+exec "${SLM_DIR}/bin/slm" learning "${@:-status}"

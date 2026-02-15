@@ -17,7 +17,7 @@ set -e  # Exit on any error
 # CONFIGURATION
 # ============================================================================
 
-VERSION="2.1.0"
+VERSION="2.7.0"
 APP_NAME="SuperLocalMemory"
 DMG_NAME="SuperLocalMemory-v${VERSION}-macos"
 BUILD_DIR="build/dmg"
@@ -100,6 +100,7 @@ copy_installer_files() {
     cp requirements-full.txt "${INSTALLER_DIR}/"
     cp requirements-search.txt "${INSTALLER_DIR}/"
     cp requirements-ui.txt "${INSTALLER_DIR}/"
+    cp requirements-learning.txt "${INSTALLER_DIR}/" 2>/dev/null || true
     
     # UI server
     log_info "  → Copying ui_server.py..."
@@ -135,7 +136,7 @@ create_readme() {
     
     cat > "${INSTALLER_DIR}/README-INSTALLATION.txt" << 'READMEEOF'
 ================================================================================
-  SuperLocalMemory V2.1.0 - macOS Installation
+  SuperLocalMemory V2.7.0 - macOS Installation
 ================================================================================
 
 Thank you for downloading SuperLocalMemory V2!

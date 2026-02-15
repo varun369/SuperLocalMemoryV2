@@ -121,11 +121,176 @@ case "$1" in
             context)
                 python3 "$SLM_DIR/pattern_learner.py" context "$@"
                 ;;
+            correct)
+                # slm patterns correct <id> <new_value>
+                pattern_id="$1"
+                new_value="$2"
+                if [ -z "$pattern_id" ] || [ -z "$new_value" ]; then
+                    echo "Usage: slm patterns correct <pattern_id> <new_value>"
+                    exit 1
+                fi
+                python3 -c "
+import sys
+sys.path.insert(0, '${SLM_DIR}')
+sys.path.insert(0, '$(dirname "${SLM_DIR}")/Documents/AGENTIC_Official/SuperLocalMemoryV2-repo/src')
+try:
+    from learning import get_learning_db
+    ldb = get_learning_db()
+    if ldb:
+        conn = ldb._get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM transferable_patterns WHERE id = ?', (int(sys.argv[1]),))
+        p = cursor.fetchone()
+        conn.close()
+        if p:
+            ldb.upsert_transferable_pattern(
+                pattern_type=p['pattern_type'], key=p['key'],
+                value=sys.argv[2], confidence=1.0,
+                evidence_count=p['evidence_count']+1,
+                profiles_seen=p['profiles_seen'],
+                contradictions=[f\"Corrected from '{p['value']}' to '{sys.argv[2]}'\"],
+            )
+            print(f\"Pattern '{p['key']}' corrected: '{p['value']}' -> '{sys.argv[2]}'\")
+        else:
+            print(f'Pattern #{sys.argv[1]} not found')
+    else:
+        print('Learning database not available')
+except ImportError:
+    print('Learning features not available')
+except Exception as e:
+    print(f'Error: {e}')
+" "$pattern_id" "$new_value"
+                ;;
             *)
-                echo "Usage: slm patterns {update|list|context}"
+                echo "Usage: slm patterns {update|list|context|correct}"
                 exit 1
                 ;;
         esac
+        ;;
+
+    useful)
+        shift
+        # Mark memory IDs as useful (v2.7 learning feedback)
+        if [ -z "$1" ]; then
+            echo "Usage: slm useful <memory_id> [memory_id...]"
+            echo "  Mark recalled memories as useful to improve future ranking"
+            exit 1
+        fi
+        python3 -c "
+import sys
+sys.path.insert(0, '${SLM_DIR}')
+sys.path.insert(0, '$(dirname \"${SLM_DIR}\")/Documents/AGENTIC_Official/SuperLocalMemoryV2-repo/src')
+try:
+    from learning.feedback_collector import FeedbackCollector
+    fc = FeedbackCollector()
+    ids = [int(x) for x in sys.argv[1:]]
+    fc.record_cli_useful(ids, query='cli-feedback')
+    print(f'Marked {len(ids)} memor{\"y\" if len(ids)==1 else \"ies\"} as useful')
+except ImportError:
+    print('Learning features not available. Install: pip3 install lightgbm scipy')
+except Exception as e:
+    print(f'Error: {e}')
+" "$@"
+        ;;
+
+    learning)
+        shift
+        subcommand="${1:-status}"
+        shift 2>/dev/null || true
+        case "$subcommand" in
+            status)
+                python3 -c "
+import sys, json
+sys.path.insert(0, '${SLM_DIR}')
+sys.path.insert(0, '$(dirname \"${SLM_DIR}\")/Documents/AGENTIC_Official/SuperLocalMemoryV2-repo/src')
+try:
+    from learning import get_status
+    status = get_status()
+    print('SuperLocalMemory v2.7 — Learning System Status')
+    print('=' * 50)
+    deps = status['dependencies']
+    print(f'LightGBM:  {\"installed (\" + deps[\"lightgbm\"][\"version\"] + \")\" if deps[\"lightgbm\"][\"installed\"] else \"not installed\"}')
+    print(f'SciPy:     {\"installed (\" + deps[\"scipy\"][\"version\"] + \")\" if deps[\"scipy\"][\"installed\"] else \"not installed\"}')
+    print(f'ML Ranking:  {\"available\" if status[\"ml_ranking_available\"] else \"unavailable\"}')
+    print(f'Full Learning: {\"available\" if status[\"learning_available\"] else \"unavailable\"}')
+    if status.get('learning_db_stats'):
+        s = status['learning_db_stats']
+        print(f'')
+        print(f'Feedback signals: {s[\"feedback_count\"]}')
+        print(f'Unique queries:   {s[\"unique_queries\"]}')
+        print(f'Patterns learned: {s[\"transferable_patterns\"]} ({s[\"high_confidence_patterns\"]} high confidence)')
+        print(f'Workflow patterns: {s[\"workflow_patterns\"]}')
+        print(f'Sources tracked:  {s[\"tracked_sources\"]}')
+        print(f'Models trained:   {s[\"models_trained\"]}')
+        print(f'Learning DB size: {s[\"db_size_kb\"]} KB')
+except ImportError:
+    print('Learning features not available. Install: pip3 install lightgbm scipy')
+except Exception as e:
+    print(f'Error: {e}')
+"
+                ;;
+            retrain)
+                python3 -c "
+import sys
+sys.path.insert(0, '${SLM_DIR}')
+sys.path.insert(0, '$(dirname \"${SLM_DIR}\")/Documents/AGENTIC_Official/SuperLocalMemoryV2-repo/src')
+try:
+    from learning import get_adaptive_ranker
+    ranker = get_adaptive_ranker()
+    if ranker:
+        result = ranker.train(force=True)
+        if result:
+            print(f'Model retrained successfully')
+        else:
+            print('Insufficient data for training (need 200+ feedback signals)')
+    else:
+        print('Adaptive ranker not available')
+except ImportError:
+    print('Learning features not available. Install: pip3 install lightgbm scipy')
+except Exception as e:
+    print(f'Error: {e}')
+"
+                ;;
+            reset)
+                python3 -c "
+import sys
+sys.path.insert(0, '${SLM_DIR}')
+sys.path.insert(0, '$(dirname \"${SLM_DIR}\")/Documents/AGENTIC_Official/SuperLocalMemoryV2-repo/src')
+try:
+    from learning import get_learning_db
+    ldb = get_learning_db()
+    if ldb:
+        ldb.reset()
+        print('All learning data reset. Memories in memory.db preserved.')
+    else:
+        print('Learning database not available')
+except ImportError:
+    print('Learning features not available')
+except Exception as e:
+    print(f'Error: {e}')
+"
+                ;;
+            *)
+                echo "Usage: slm learning {status|retrain|reset}"
+                exit 1
+                ;;
+        esac
+        ;;
+
+    engagement)
+        python3 -c "
+import sys
+sys.path.insert(0, '${SLM_DIR}')
+sys.path.insert(0, '$(dirname \"${SLM_DIR}\")/Documents/AGENTIC_Official/SuperLocalMemoryV2-repo/src')
+try:
+    from learning.engagement_tracker import EngagementTracker
+    tracker = EngagementTracker()
+    print(tracker.format_for_cli())
+except ImportError:
+    print('Learning features not available. Install: pip3 install lightgbm scipy')
+except Exception as e:
+    print(f'Error: {e}')
+"
         ;;
 
     help|--help|-h)
@@ -154,6 +319,14 @@ PATTERN LEARNING:
   slm patterns update      Learn patterns from memories
   slm patterns list [threshold]  List learned patterns
   slm patterns context [threshold]  Get coding identity context
+  slm patterns correct <id> <value>  Correct a learned pattern
+
+LEARNING (v2.7):
+  slm useful <id> [id...]  Mark memories as useful (ranking feedback)
+  slm learning status      Learning system status
+  slm learning retrain     Force model retrain
+  slm learning reset       Delete all learning data (memories preserved)
+  slm engagement           Show engagement metrics
 
 WEB DASHBOARD:
   slm ui [PORT]            Start web dashboard (default port 8765)
@@ -187,13 +360,13 @@ DOCUMENTATION:
   README: https://github.com/varun369/SuperLocalMemoryV2
   Docs: ~/.claude-memory/docs/
 
-VERSION: 2.4.1
+VERSION: 2.7.0
 EOF
         ;;
 
     version|--version|-v)
         echo "SuperLocalMemory V2 - Universal CLI"
-        echo "Version: 2.4.1"
+        echo "Version: 2.7.0"
         echo "Database: $SLM_DIR/memory.db"
         ;;
 
@@ -213,6 +386,9 @@ EOF
         echo "  profile   - Manage profiles"
         echo "  graph     - Knowledge graph operations"
         echo "  patterns  - Pattern learning"
+        echo "  useful    - Mark memories as useful"
+        echo "  learning  - Learning system management"
+        echo "  engagement - Show engagement metrics"
         echo "  help      - Show detailed help"
         echo ""
         echo "Run 'slm help' for more information"

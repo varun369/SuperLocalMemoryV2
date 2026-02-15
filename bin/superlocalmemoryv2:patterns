@@ -1,0 +1,4 @@
+#!/bin/bash
+# SuperLocalMemory V2 - Show Learned Patterns
+SLM_DIR="${HOME}/.claude-memory"
+exec "${SLM_DIR}/bin/slm" patterns list "$@"

@@ -70,7 +70,7 @@ SuperLocalMemory V2.2.0 has a **9-layer universal architecture**:
 
 3. **Layer 7: Universal Access** — MCP + Skills + CLI (works everywhere)
 4. **Layer 6: MCP Integration** — Model Context Protocol for 17+ IDEs
-5. **Layer 5: Skills Layer** — 6 universal slash-commands
+5. **Layer 5: Skills Layer** — 7 universal slash-commands
 6. **Layer 4: Pattern Learning** — Learns your preferences
 7. **Layer 3: Knowledge Graph** — Auto-discovers relationships
 8. **Layer 2: Hierarchical Index** — Tree structure for navigation
@@ -299,7 +299,7 @@ Dashboard → Search tab → Type "authentication" → See visual scores → Fil
 
 **Universal integration across 17+ IDEs:**
 - **MCP Server** - Native integration with Cursor, Windsurf, Claude Desktop, Continue.dev, and 7+ more
-- **6 Universal Skills** - Slash-commands for Claude Code, Continue.dev, Cody
+- **7 Universal Skills** - Slash-commands for Claude Code, Continue.dev, Cody
 - **Universal CLI** - `slm` command works in any terminal
 - **Auto-Configuration** - Zero manual setup for major IDEs
 
@@ -324,6 +324,7 @@ Claude: [Uses remember tool automatically] ✓ Saved
 - `/slm-build-graph` - Rebuild graph
 - `/slm-list-recent` - Show recent
 - `/slm-switch-profile` - Change profile
+- `/slm-show-patterns` - Show learned patterns
 
 All skills use the **same local database** as MCP and CLI.
 
