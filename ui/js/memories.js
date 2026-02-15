@@ -147,3 +147,55 @@ function handleSort(th) {
     var showScores = memories.length > 0 && typeof memories[0].score === 'number';
     renderMemoriesTable(memories, showScores);
 }
+
+// ============================================================================
+// Navigation from Graph (v2.6.5)
+// ============================================================================
+
+// Scroll to a specific memory by ID (called from graph double-click)
+function scrollToMemory(memoryId) {
+    const container = document.getElementById('memories-list');
+    if (!container) return;
+
+    // Find the memory in current list
+    if (!window._slmMemories) {
+        console.warn('No memories loaded yet. Loading all memories...');
+        loadMemories().then(() => {
+            setTimeout(() => scrollToMemoryInTable(memoryId), 500);
+        });
+        return;
+    }
+
+    scrollToMemoryInTable(memoryId);
+}
+
+function scrollToMemoryInTable(memoryId) {
+    const memId = String(memoryId);
+
+    // Find the memory index
+    let idx = -1;
+    if (window._slmMemories) {
+        idx = window._slmMemories.findIndex(m => String(m.id) === memId);
+    }
+
+    if (idx === -1) {
+        console.warn(`Memory #${memoryId} not found in current list`);
+        return;
+    }
+
+    // Find the table row
+    const row = document.querySelector(`tr[data-mem-idx="${idx}"]`);
+    if (!row) {
+        console.warn(`Row for memory #${memoryId} not found in DOM`);
+        return;
+    }
+
+    // Scroll to row
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Highlight temporarily
+    row.style.backgroundColor = '#fff3cd';
+    setTimeout(() => {
+        row.style.backgroundColor = '';
+    }, 2000);
+}

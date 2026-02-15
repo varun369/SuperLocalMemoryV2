@@ -93,6 +93,12 @@
             width: 100% !important;
             position: relative;
             overflow: hidden;
+            /* Mobile touch support - prevent default gestures */
+            touch-action: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         #graph-container canvas {
@@ -385,6 +391,244 @@
         [data-bs-theme="dark"] footer a {
             color: #8fa4ff;
         }
+
+        /* ========================================
+           MOBILE & TABLET RESPONSIVE STYLES
+           ======================================== */
+
+        /* Tablet (768px and below) */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1rem;
+            }
+
+            #navbar-subtitle {
+                display: none !important;
+            }
+
+            .stat-card {
+                margin-bottom: 12px;
+            }
+
+            .stat-value {
+                font-size: 1.4rem;
+            }
+
+            .stat-icon {
+                font-size: 1.5rem;
+            }
+
+            /* Graph container - smaller on tablet */
+            #graph-container {
+                height: 450px !important;
+                max-height: 450px;
+            }
+
+            /* Stack controls vertically on tablet */
+            .tab-pane .row > .col-md-6,
+            .tab-pane .row > .col-md-8,
+            .tab-pane .row > .col-md-4 {
+                margin-bottom: 10px;
+            }
+
+            /* Smaller buttons on mobile */
+            .btn-sm {
+                font-size: 0.8rem;
+                padding: 4px 8px;
+            }
+
+            /* Memory table - hide less important columns */
+            .memory-table th:nth-child(4),
+            .memory-table td:nth-child(4),
+            .memory-table th:nth-child(5),
+            .memory-table td:nth-child(5) {
+                display: none;
+            }
+
+            .memory-content {
+                max-width: 200px;
+            }
+        }
+
+        /* Mobile (480px and below) */
+        @media (max-width: 480px) {
+            body {
+                font-size: 0.9rem;
+            }
+
+            .navbar-brand {
+                font-size: 0.9rem;
+            }
+
+            .container-fluid {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            /* Stat cards - 2 per row on mobile */
+            .col-6.mb-3 {
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+
+            .stat-card {
+                padding: 12px 8px !important;
+            }
+
+            .stat-value {
+                font-size: 1.2rem;
+            }
+
+            .stat-icon {
+                font-size: 1.2rem;
+            }
+
+            .stat-card small {
+                font-size: 0.7rem;
+            }
+
+            /* Graph container - even smaller on mobile */
+            #graph-container {
+                height: 350px !important;
+                max-height: 350px;
+                border-radius: 6px;
+            }
+
+            /* Tabs - smaller text */
+            .nav-tabs .nav-link {
+                font-size: 0.8rem;
+                padding: 8px 10px;
+            }
+
+            .nav-tabs .nav-link i {
+                display: none;
+            }
+
+            /* Search controls - stack vertically */
+            #memories-pane .row > div {
+                margin-bottom: 8px;
+            }
+
+            /* Memory table - show only essentials */
+            .memory-table {
+                font-size: 0.8rem;
+            }
+
+            .memory-table th:nth-child(3),
+            .memory-table td:nth-child(3),
+            .memory-table th:nth-child(4),
+            .memory-table td:nth-child(4),
+            .memory-table th:nth-child(5),
+            .memory-table td:nth-child(5) {
+                display: none;
+            }
+
+            .memory-content {
+                max-width: 150px;
+                font-size: 0.75rem;
+            }
+
+            /* Modal - full screen on mobile */
+            .modal-dialog {
+                margin: 0;
+                max-width: 100%;
+                height: 100vh;
+            }
+
+            .modal-content {
+                height: 100%;
+                border-radius: 0;
+            }
+
+            /* Dropdown controls */
+            .form-select-sm {
+                font-size: 0.8rem;
+                padding: 4px 8px;
+            }
+
+            /* Profile select - smaller */
+            .profile-select {
+                min-width: 90px;
+                font-size: 0.75rem;
+                padding: 2px 24px 2px 8px;
+            }
+
+            /* Theme toggle - smaller */
+            .theme-toggle {
+                font-size: 0.8rem;
+                padding: 3px 10px;
+            }
+
+            /* Footer - smaller text */
+            footer {
+                font-size: 0.75rem;
+                padding: 15px;
+                margin-top: 20px;
+            }
+
+            /* Graph controls - stack vertically on mobile */
+            #graph-pane .card .row > div {
+                margin-bottom: 10px;
+            }
+
+            /* Hide "Show All Memories" button text on mobile, icon only */
+            #graph-status-filtered .btn span {
+                display: none;
+            }
+
+            #graph-status-filtered .btn i::after {
+                content: ' All';
+            }
+        }
+
+        /* Landscape mobile (small height) */
+        @media (max-height: 500px) and (orientation: landscape) {
+            #graph-container {
+                height: 250px !important;
+                max-height: 250px;
+            }
+
+            .stat-card {
+                padding: 8px !important;
+            }
+
+            .stat-value {
+                font-size: 1rem;
+            }
+
+            .navbar {
+                padding: 5px 0;
+            }
+        }
+
+        /* Touch feedback for interactive elements */
+        @media (hover: none) and (pointer: coarse) {
+            /* This targets touch devices only */
+            .btn:active,
+            .nav-link:active,
+            .sortable:active {
+                opacity: 0.7;
+                transform: scale(0.98);
+            }
+
+            /* Larger tap targets on touch devices */
+            .btn {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            .nav-tabs .nav-link {
+                min-height: 44px;
+            }
+
+            /* Prevent accidental double-tap zoom on buttons */
+            .btn,
+            .nav-link,
+            .form-control,
+            .form-select {
+                touch-action: manipulation;
+            }
+        }
     </style>
 </head>
 <body>
@@ -405,8 +649,8 @@
                     </button>
                 </div>
                 <span class="text-white-50 d-none d-md-inline" id="navbar-subtitle">Knowledge Graph Explorer</span>
-                <button class="theme-toggle" id="theme-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">
-                    <i class="bi bi-sun-fill" id="theme-icon"></i>
+                <button class="theme-toggle" id="theme-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
+                    <i class="bi bi-sun-fill" id="theme-icon" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
@@ -504,10 +748,10 @@
                             <div id="graph-stats" class="mt-2"></div>
                         </div>
                         <div class="col-md-4 text-end">
-                            <button class="btn btn-sm btn-outline-primary" onclick="loadGraph()">
+                            <button class="btn btn-sm btn-outline-primary" onclick="loadGraph()" aria-label="Refresh graph data">
                                 <i class="bi bi-arrow-clockwise"></i> Refresh
                             </button>
-                            <select class="form-select form-select-sm d-inline-block w-auto" id="graph-max-nodes" onchange="loadGraph()">
+                            <select class="form-select form-select-sm d-inline-block w-auto" id="graph-max-nodes" onchange="loadGraph()" aria-label="Select maximum number of nodes to display">
                                 <option value="50" selected>50 nodes</option>
                                 <option value="100">100 nodes</option>
                                 <option value="200">200 nodes</option>
@@ -517,8 +761,8 @@
                     </div>
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <label class="form-label mb-1 small">Layout Algorithm:</label>
-                            <select class="form-select form-select-sm" id="graph-layout-selector" onchange="changeGraphLayout(this.value)">
+                            <label class="form-label mb-1 small" for="graph-layout-selector">Layout Algorithm:</label>
+                            <select class="form-select form-select-sm" id="graph-layout-selector" onchange="changeGraphLayout(this.value)" aria-label="Select graph layout algorithm">
                                 <option value="fcose" selected>Force-Directed (Fast)</option>
                                 <option value="cose">Force-Directed (Classic)</option>
                                 <option value="circle">Circular</option>
@@ -531,26 +775,26 @@
                             <!-- Clear status indicator - shows what user is viewing -->
                             <div id="graph-status-container">
                                 <!-- When viewing FULL graph (default state) -->
-                                <div id="graph-status-full" style="display:block;">
+                                <div id="graph-status-full" style="display:block;" role="status" aria-live="polite">
                                     <div class="d-flex align-items-center">
                                         <span class="text-muted small">
                                             <i class="bi bi-diagram-3"></i> <span id="graph-status-full-text">Showing all memories</span>
                                         </span>
-                                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="loadGraph()" title="Refresh current view">
+                                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="loadGraph()" aria-label="Refresh current graph view">
                                             <i class="bi bi-arrow-clockwise"></i> Refresh
                                         </button>
                                     </div>
                                 </div>
 
                                 <!-- When viewing FILTERED by cluster (show BIG clear button) -->
-                                <div id="graph-status-filtered" style="display:none;">
+                                <div id="graph-status-filtered" style="display:none;" role="status" aria-live="polite">
                                     <div class="alert alert-info py-2 px-3 mb-0 d-flex align-items-center justify-content-between">
                                         <span>
                                             <i class="bi bi-funnel-fill"></i>
                                             <strong id="graph-filter-description">Viewing Cluster X</strong>
                                             <span class="small text-muted ms-2" id="graph-filter-count">(X memories)</span>
                                         </span>
-                                        <button class="btn btn-primary btn-sm ms-3" onclick="clearGraphFilters()">
+                                        <button class="btn btn-primary btn-sm ms-3" onclick="clearGraphFilters()" aria-label="Clear filter and show all memories">
                                             <i class="bi bi-grid-3x3"></i> Show All Memories
                                         </button>
                                     </div>
@@ -559,7 +803,15 @@
                         </div>
                     </div>
                 </div>
-                <div id="graph-container" style="width:100%; height:600px; border:1px solid #dee2e6; border-radius:8px; background:#f8f9fa;"></div>
+                <div id="graph-container"
+                     role="application"
+                     aria-label="Interactive knowledge graph - use Tab to navigate nodes, Enter to view details, Arrow keys to move between adjacent nodes, Escape to clear filters"
+                     aria-describedby="graph-stats"
+                     style="width:100%; height:600px; border:1px solid #dee2e6; border-radius:8px; background:#f8f9fa;">
+                </div>
+
+                <!-- Skip link for keyboard users -->
+                <a href="#memories-pane" class="visually-hidden-focusable">Skip to Memories list</a>
             </div>
 
             <!-- Memories List -->
@@ -906,7 +1158,13 @@
 
     <!-- Modular JS (v2.5 — split from monolith app.js) -->
     <script src="static/js/core.js"></script>
-    <script src="static/js/graph-cytoscape.js"></script>
+
+    <!-- Graph Visualization Scripts (v2.6.5 - Modular) -->
+    <script src="static/js/graph-core.js"></script>
+    <script src="static/js/graph-filters.js"></script>
+    <script src="static/js/graph-ui.js"></script>
+    <script src="static/js/graph-interactions.js"></script>
+
     <script src="static/js/memories.js"></script>
     <script src="static/js/search.js"></script>
     <script src="static/js/modal.js"></script>

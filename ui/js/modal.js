@@ -14,6 +14,11 @@ function openMemoryDetail(mem) {
         return;
     }
 
+    // Store last focused element (for keyboard nav return)
+    if (!window.lastFocusedElement) {
+        window.lastFocusedElement = document.activeElement;
+    }
+
     var content = mem.content || mem.summary || '(no content)';
     var tags = mem.tags || '';
     var importance = mem.importance || 5;
@@ -57,7 +62,105 @@ function openMemoryDetail(mem) {
 
     body.appendChild(dl);
 
-    var modal = new bootstrap.Modal(document.getElementById('memoryDetailModal'));
+    // Graph action buttons (v2.6.5)
+    if (mem.cluster_id || mem.id) {
+        body.appendChild(document.createElement('hr'));
+
+        var actionsDiv = document.createElement('div');
+        actionsDiv.className = 'memory-detail-graph-actions';
+        actionsDiv.style.cssText = 'display:flex; gap:10px; flex-wrap:wrap;';
+
+        // Button 1: View Full Memory (navigate to Memories tab)
+        var viewBtn = document.createElement('button');
+        viewBtn.className = 'btn btn-primary btn-sm';
+        var viewIcon = document.createElement('i');
+        viewIcon.className = 'bi bi-journal-text';
+        viewBtn.appendChild(viewIcon);
+        viewBtn.appendChild(document.createTextNode(' View Full Memory'));
+        viewBtn.onclick = function() {
+            modal.hide();
+            if (typeof navigateToMemoryTab === 'function') {
+                navigateToMemoryTab(mem.id);
+            } else {
+                // Fallback: just switch tab
+                const memoriesTab = document.querySelector('a[href="#memories"]');
+                if (memoriesTab) memoriesTab.click();
+            }
+        };
+        actionsDiv.appendChild(viewBtn);
+
+        // Button 2: Expand Neighbors (show connected nodes in graph)
+        var expandBtn = document.createElement('button');
+        expandBtn.className = 'btn btn-outline-secondary btn-sm';
+        var expandIcon = document.createElement('i');
+        expandIcon.className = 'bi bi-diagram-3';
+        expandBtn.appendChild(expandIcon);
+        expandBtn.appendChild(document.createTextNode(' Expand Neighbors'));
+        expandBtn.onclick = function() {
+            modal.hide();
+            // Switch to Graph tab
+            const graphTab = document.querySelector('a[href="#graph"]');
+            if (graphTab) graphTab.click();
+            // Expand neighbors after a delay
+            setTimeout(function() {
+                if (typeof expandNeighbors === 'function') {
+                    expandNeighbors(mem.id);
+                }
+            }, 500);
+        };
+        actionsDiv.appendChild(expandBtn);
+
+        // Button 3: Filter to Cluster (show only this cluster in graph)
+        if (mem.cluster_id) {
+            var filterBtn = document.createElement('button');
+            filterBtn.className = 'btn btn-outline-info btn-sm';
+            var filterIcon = document.createElement('i');
+            filterIcon.className = 'bi bi-funnel';
+            filterBtn.appendChild(filterIcon);
+            filterBtn.appendChild(document.createTextNode(' Filter to Cluster ' + mem.cluster_id));
+            filterBtn.onclick = function() {
+                modal.hide();
+                // Switch to Graph tab
+                const graphTab = document.querySelector('a[href="#graph"]');
+                if (graphTab) graphTab.click();
+                // Apply cluster filter after a delay
+                setTimeout(function() {
+                    if (typeof filterState !== 'undefined' && typeof filterByCluster === 'function' && typeof renderGraph === 'function') {
+                        filterState.cluster_id = mem.cluster_id;
+                        const filtered = filterByCluster(originalGraphData, mem.cluster_id);
+                        renderGraph(filtered);
+                        // Update URL
+                        const url = new URL(window.location);
+                        url.searchParams.set('cluster_id', mem.cluster_id);
+                        window.history.replaceState({}, '', url);
+                    }
+                }, 500);
+            };
+            actionsDiv.appendChild(filterBtn);
+        }
+
+        body.appendChild(actionsDiv);
+    }
+
+    var modalEl = document.getElementById('memoryDetailModal');
+    var modal = new bootstrap.Modal(modalEl);
+
+    // Focus first interactive element when modal opens
+    modalEl.addEventListener('shown.bs.modal', function() {
+        const firstButton = modalEl.querySelector('button, a[href]');
+        if (firstButton) {
+            firstButton.focus();
+        }
+    }, { once: true });
+
+    // Return focus when modal closes
+    modalEl.addEventListener('hidden.bs.modal', function() {
+        if (window.lastFocusedElement && typeof window.lastFocusedElement.focus === 'function') {
+            window.lastFocusedElement.focus();
+            window.lastFocusedElement = null;
+        }
+    }, { once: true });
+
     modal.show();
 }
 
