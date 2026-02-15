@@ -20,6 +20,11 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-y: scroll;  /* Always show scrollbar to prevent layout shift */
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         [data-bs-theme="light"] body,
@@ -70,12 +75,29 @@
             margin: 0;
         }
 
+        .tab-content {
+            min-height: 700px;
+            overflow: visible;
+        }
+
+        .tab-pane {
+            overflow: visible;
+        }
+
         #graph-container {
             background: var(--bs-body-bg);
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            min-height: 600px;
+            height: 600px !important;
+            max-height: 600px;
+            width: 100% !important;
             position: relative;
+            overflow: hidden;
+        }
+
+        #graph-container canvas {
+            max-width: 100% !important;
+            max-height: 100% !important;
         }
 
         .node {
@@ -475,24 +497,69 @@
             <!-- Graph Visualization -->
             <div class="tab-pane fade show active" id="graph-pane">
                 <div class="card p-3 mb-3">
-                    <div class="row align-items-center">
+                    <div class="row align-items-center mb-2">
                         <div class="col-md-8">
-                            <h5 class="mb-0">Force-Directed Knowledge Graph</h5>
-                            <small class="text-muted">Nodes = Memories | Links = Semantic Similarity</small>
+                            <h5 class="mb-0">Interactive Knowledge Graph</h5>
+                            <small class="text-muted">Zoom, pan, click nodes to explore • Powered by Cytoscape.js</small>
+                            <div id="graph-stats" class="mt-2"></div>
                         </div>
                         <div class="col-md-4 text-end">
                             <button class="btn btn-sm btn-outline-primary" onclick="loadGraph()">
                                 <i class="bi bi-arrow-clockwise"></i> Refresh
                             </button>
                             <select class="form-select form-select-sm d-inline-block w-auto" id="graph-max-nodes" onchange="loadGraph()">
-                                <option value="50">50 nodes</option>
-                                <option value="100" selected>100 nodes</option>
+                                <option value="50" selected>50 nodes</option>
+                                <option value="100">100 nodes</option>
                                 <option value="200">200 nodes</option>
+                                <option value="500">500 nodes</option>
                             </select>
                         </div>
                     </div>
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <label class="form-label mb-1 small">Layout Algorithm:</label>
+                            <select class="form-select form-select-sm" id="graph-layout-selector" onchange="changeGraphLayout(this.value)">
+                                <option value="fcose" selected>Force-Directed (Fast)</option>
+                                <option value="cose">Force-Directed (Classic)</option>
+                                <option value="circle">Circular</option>
+                                <option value="grid">Grid</option>
+                                <option value="breadthfirst">Hierarchical</option>
+                                <option value="concentric">Concentric (by Importance)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <!-- Clear status indicator - shows what user is viewing -->
+                            <div id="graph-status-container">
+                                <!-- When viewing FULL graph (default state) -->
+                                <div id="graph-status-full" style="display:block;">
+                                    <div class="d-flex align-items-center">
+                                        <span class="text-muted small">
+                                            <i class="bi bi-diagram-3"></i> <span id="graph-status-full-text">Showing all memories</span>
+                                        </span>
+                                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="loadGraph()" title="Refresh current view">
+                                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- When viewing FILTERED by cluster (show BIG clear button) -->
+                                <div id="graph-status-filtered" style="display:none;">
+                                    <div class="alert alert-info py-2 px-3 mb-0 d-flex align-items-center justify-content-between">
+                                        <span>
+                                            <i class="bi bi-funnel-fill"></i>
+                                            <strong id="graph-filter-description">Viewing Cluster X</strong>
+                                            <span class="small text-muted ms-2" id="graph-filter-count">(X memories)</span>
+                                        </span>
+                                        <button class="btn btn-primary btn-sm ms-3" onclick="clearGraphFilters()">
+                                            <i class="bi bi-grid-3x3"></i> Show All Memories
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div id="graph-container"></div>
+                <div id="graph-container" style="width:100%; height:600px; border:1px solid #dee2e6; border-radius:8px; background:#f8f9fa;"></div>
             </div>
 
             <!-- Memories List -->
@@ -826,12 +893,20 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- D3.js -->
+    <!-- D3.js (kept for backward compatibility) -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- Cytoscape.js + Extensions (v2.6.5 — interactive graph) -->
+    <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+    <script src="https://unpkg.com/layout-base@2.0.1/layout-base.js"></script>
+    <script src="https://unpkg.com/cose-base@2.2.0/cose-base.js"></script>
+    <script src="https://unpkg.com/cytoscape-fcose@2.2.0/cytoscape-fcose.js"></script>
+    <link href="https://unpkg.com/cytoscape-navigator@1.3.3/cytoscape.js-navigator.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/cytoscape-navigator@1.3.3/cytoscape-navigator.js"></script>
 
     <!-- Modular JS (v2.5 — split from monolith app.js) -->
     <script src="static/js/core.js"></script>
-    <script src="static/js/graph.js"></script>
+    <script src="static/js/graph-cytoscape.js"></script>
     <script src="static/js/memories.js"></script>
     <script src="static/js/search.js"></script>
     <script src="static/js/modal.js"></script>
