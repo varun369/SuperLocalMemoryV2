@@ -1,0 +1,88 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/landing/Header.astro';
+import Footer from '../components/landing/Footer.astro';
+import { FadeIn } from '../components/ui/Motion';
+import { DemoGallery } from '../components/gallery/DemoGallery';
+import { Youtube } from 'lucide-react';
+
+---
+
+<BaseLayout title="Demo Gallery - SuperLocalMemory V2" description="Watch SuperLocalMemory in action. 100% local AI memory management.">
+  <Header />
+  
+  <main class="pt-24 pb-24 min-h-screen bg-[var(--color-bg-main)]">
+    
+    <!-- Hero / Main Demo -->
+    <section class="container-custom mb-24 text-center">
+      <FadeIn client:load>
+        <span class="text-[var(--color-primary)] font-mono text-sm tracking-wider uppercase mb-4 block">Live Demo</span>
+        <h1 class="text-5xl md:text-6xl font-bold mb-8">
+          See It In <span class="text-gradient">Action</span>
+        </h1>
+      </FadeIn>
+
+      <!-- YouTube Embed Container -->
+      <FadeIn client:load delay={0.2} className="max-w-4xl mx-auto">
+        <div class="relative aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(56,189,248,0.15)] bg-black">
+          <iframe 
+            width="100%" 
+            height="100%" 
+            src={`https://www.youtube.com/embed/XBqZekKqQuY?rel=0&modestbranding=1`} 
+            title="SuperLocalMemory Demo" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen
+            class="absolute inset-0"
+          ></iframe>
+        </div>
+        <p class="mt-4 text-[var(--color-text-muted)] text-sm font-mono">
+            <Youtube className="w-4 h-4 inline mr-1 text-red-500" /> 
+            Official Walkthrough
+        </p>
+      </FadeIn>
+    </section>
+
+    <!-- Download & Run Section -->
+    <section class="container-custom mb-24 text-center">
+        <FadeIn client:visible delay={0.3}>
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-8 max-w-3xl mx-auto backdrop-blur-sm">
+                <h2 class="text-2xl font-bold text-white mb-6">Get Started Instantly</h2>
+                
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <!-- Universal Run Command -->
+                    <div class="text-left">
+                        <p class="text-[var(--color-text-muted)] text-sm mb-3 font-medium uppercase tracking-wide">Universal Run Command</p>
+                        <div class="bg-black/50 border border-white/10 rounded-lg p-4 font-mono text-sm text-[var(--color-primary)] flex items-center justify-between group cursor-pointer hover:border-[var(--color-primary)]/50 transition-colors" title="Click to copy">
+                            <code>npx superlocalmemory start</code>
+                            <span class="opacity-0 group-hover:opacity-100 text-xs text-[var(--color-text-muted)]">Copy</span>
+                        </div>
+                        <p class="text-xs text-[var(--color-text-muted)] mt-2">Requires Node.js 18+</p>
+                    </div>
+
+                    <!-- Direct Download -->
+                    <div class="text-left md:border-l border-white/10 md:pl-8">
+                        <p class="text-[var(--color-text-muted)] text-sm mb-3 font-medium uppercase tracking-wide">Desktop App</p>
+                        <a href="https://github.com/varun369/SuperLocalMemoryV2/releases/latest" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-full px-6 py-3 rounded-xl bg-[var(--color-primary)] text-white font-bold hover:bg-[var(--color-primary-hover)] transition-all hover:scale-[1.02] shadow-lg shadow-[var(--color-primary)]/20">
+                            Download for macOS
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </a>
+                        <p class="text-xs text-[var(--color-text-muted)] mt-2">v2.7.4 • Apple Silicon & Intel</p>
+                    </div>
+                </div>
+            </div>
+        </FadeIn>
+    </section>
+
+    <!-- Interactive Video Gallery -->
+    <section class="container-custom py-12 border-t border-white/5">
+        <h2 class="text-3xl font-bold mb-12">Feature Tours</h2>
+        
+        <DemoGallery client:visible />
+
+    </section>
+
+  </main>
+
+  <Footer />
+</BaseLayout>

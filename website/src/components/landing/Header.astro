@@ -1,0 +1,41 @@
+---
+import { GithubIcon } from 'lucide-react';
+---
+
+<header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" id="main-header">
+  <div class="absolute inset-0 bg-[var(--color-bg-main)]/80 backdrop-blur-md border-b border-white/5"></div>
+  
+  <div class="container-custom relative h-20 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="/" class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(56,189,248,0.3)]">
+        <img src="/assets/logo-mark.png" alt="SuperLocalMemory Logo" class="w-full h-full object-cover">
+      </div>
+      SuperLocalMemory
+    </a>
+
+    <!-- Navigation -->
+    <nav class="hidden lg:flex items-center gap-6">
+
+      <a href="/features" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Features</a>
+      <a href="/learning" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Learning</a>
+      <a href="/architecture" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Architecture</a>
+                <a href="/comparison" class="text-sm font-medium text-[var(--color-text-muted)] hover:text-white transition-colors">vs Alternatives</a>
+                <a href="/demo" class="text-sm font-medium text-[var(--color-text-muted)] hover:text-white transition-colors">Demo</a>
+                <a href="/blog" class="text-sm font-medium text-[var(--color-text-muted)] hover:text-white transition-colors">Blog</a>
+      <a href="/docs" class="text-sm font-medium text-[var(--color-text-muted)] hover:text-white transition-colors">Docs</a>
+      <a href="https://github.com/varun369/SuperLocalMemoryV2/wiki" target="_blank" rel="noopener noreferrer" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Wiki</a>
+      
+      <div class="h-4 w-px bg-white/10 mx-2"></div>
+      
+      <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition-colors">
+        <GithubIcon className="w-5 h-5" />
+      </a>
+    </nav>
+
+    <!-- Mobile Menu Button (Placeholder for simplicity) -->
+    <button class="lg:hidden text-gray-400 hover:text-white" id="mobile-menu-toggle" aria-label="Toggle navigation menu">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+    </button>
+  </div>
+</header>

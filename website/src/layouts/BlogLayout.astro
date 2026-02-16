@@ -1,6 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import Comments from '../components/blog/Comments.astro';
+import { FadeIn } from '../components/ui/Motion';
 
 interface Props {
   title: string;
@@ -21,8 +22,14 @@ const formattedUpdatedDate = updatedDate?.toLocaleDateString('en-US', { year: 'n
 ---
 
 <BaseLayout title={`${title} | SuperLocalMemory V2 Blog`} description={description}>
+  <!-- Background Elements -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute -top-[20%] -right-[10%] w-[800px] h-[800px] rounded-full bg-[var(--color-primary)]/5 blur-[120px]"></div>
+    <div class="absolute top-[40%] -left-[10%] w-[600px] h-[600px] rounded-full bg-blue-500/5 blur-[100px]"></div>
+  </div>
+
   <!-- Reading Progress Bar -->
-  <div id="reading-progress" class="reading-progress-bar"></div>
+  <div id="reading-progress" class="fixed top-0 left-0 h-1 bg-gradient-to-r from-[var(--color-primary)] to-purple-500 z-[100] w-0 transition-all duration-100 ease-out"></div>
 
   <Fragment slot="head">
     <meta property="og:type" content="article" />
@@ -57,34 +64,75 @@ const formattedUpdatedDate = updatedDate?.toLocaleDateString('en-US', { year: 'n
     })} />
   </Fragment>
 
-  <article class="container blog-post">
-    <header class="blog-header">
-      <div class="blog-meta">
-        <span class="badge badge-accent">{category}</span>
-        <time datetime={pubDate.toISOString()}>{formattedDate}</time>
-        {updatedDate && <span class="blog-updated">(Updated: {formattedUpdatedDate})</span>}
-      </div>
-      <h1>{title}</h1>
-      <p class="blog-description">{description}</p>
-      <div class="blog-author">
-        By <strong>{author}</strong>
-      </div>
-      {tags.length > 0 && (
-        <div class="blog-tags">
-          {tags.map(tag => <span class="badge">{tag}</span>)}
+  <article class="relative pt-32 pb-24">
+    <div class="container-custom max-w-4xl">
+      <!-- Header -->
+      <header class="text-center mb-16">
+        <FadeIn client:visible>
+            <div class="flex items-center justify-center gap-3 mb-6">
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20 uppercase tracking-wide">
+                    {category}
+                </span>
+                <span class="text-sm text-[var(--color-text-muted)] border-l border-white/10 pl-3">
+                    {formattedDate}
+                </span>
+            </div>
+
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-6 tracking-tight text-balance">
+                {title}
+            </h1>
+
+            <p class="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto mb-8 leading-relaxed text-balance">
+                {description}
+            </p>
+
+            <div class="flex items-center justify-center gap-4">
+                <div class="flex items-center gap-3 bg-white/5 pr-4 pl-1 py-1 rounded-full border border-white/10">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-purple-600 flex items-center justify-center text-xs font-bold text-white">
+                        {author.charAt(0)}
+                    </div>
+                    <span class="text-sm font-medium text-white">{author}</span>
+                </div>
+            </div>
+        </FadeIn>
+      </header>
+
+      <!-- Content -->
+      <FadeIn client:visible delay={0.2}>
+          <div class="prose prose-lg prose-invert max-w-none mx-auto
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-white
+            prose-p:text-[var(--color-text-muted)] prose-p:leading-relaxed
+            prose-a:text-[var(--color-primary)] prose-a:no-underline hover:prose-a:underline
+            prose-strong:text-white prose-code:text-white prose-code:bg-white/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+            prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-pre:rounded-xl
+            prose-img:rounded-2xl prose-img:border prose-img:border-white/10 prose-img:shadow-2xl
+            prose-li:text-[var(--color-text-muted)]
+            prose-blockquote:border-l-[var(--color-primary)] prose-blockquote:bg-white/5 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:not-italic
+            prose-hr:border-white/10
+          ">
+            <slot />
+          </div>
+      </FadeIn>
+
+      <!-- Footer Tags & Comments -->
+      <footer class="mt-16 pt-16 border-t border-white/10">
+        <div class="flex flex-wrap gap-2 mb-12 justify-center">
+            {tags.map(tag => (
+                <span class="px-3 py-1 rounded-lg text-sm bg-white/5 border border-white/10 text-[var(--color-text-muted)]">
+                    #{tag}
+                </span>
+            ))}
         </div>
-      )}
-    </header>
 
-    <div class="blog-content">
-      <slot />
+        <Comments />
+
+        <div class="text-center mt-12">
+            <a href="/blog" class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium transition-all hover:-translate-y-0.5">
+                ← Back to Blog
+            </a>
+        </div>
+      </footer>
     </div>
-
-    <Comments />
-
-    <footer class="blog-footer">
-      <a href="/blog" class="btn btn-secondary">Back to Blog</a>
-    </footer>
   </article>
 
   <!-- Reading Progress Bar Script -->
@@ -103,365 +151,3 @@ const formattedUpdatedDate = updatedDate?.toLocaleDateString('en-US', { year: 'n
   </script>
 </BaseLayout>
 
-<style>
-  .blog-post {
-    max-width: 800px;
-    padding-top: 2rem;
-    padding-bottom: 4rem;
-  }
-
-  .blog-header {
-    margin-bottom: 3rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .blog-meta {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
-  }
-
-  .blog-updated {
-    color: var(--color-text-secondary);
-    font-style: italic;
-  }
-
-  .blog-header h1 {
-    font-size: 2.25rem;
-    line-height: 1.2;
-    margin-bottom: 1rem;
-  }
-
-  .blog-description {
-    font-size: 1.125rem;
-    color: var(--color-text-secondary);
-    margin-bottom: 1rem;
-  }
-
-  .blog-author {
-    color: var(--color-text-secondary);
-    font-size: 0.875rem;
-    margin-bottom: 1rem;
-  }
-
-  .blog-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .blog-content {
-    line-height: 1.8;
-  }
-
-  .blog-content :global(h2) {
-    margin-top: 2.5rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .blog-content :global(h3) {
-    margin-top: 2rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .blog-content :global(p) {
-    margin-bottom: 1.25rem;
-    color: var(--color-text);
-  }
-
-  .blog-content :global(ul),
-  .blog-content :global(ol) {
-    margin-bottom: 1.25rem;
-    color: var(--color-text);
-  }
-
-  .blog-content :global(li) {
-    margin-bottom: 0.5rem;
-  }
-
-  .blog-content :global(blockquote) {
-    margin: 1.5rem 0;
-    padding: 1rem 1.5rem;
-    background: var(--color-bg-secondary);
-    border-left: 4px solid var(--color-accent);
-    border-radius: 0 var(--border-radius) var(--border-radius) 0;
-  }
-
-  .blog-content :global(pre) {
-    margin: 1.5rem 0;
-  }
-
-  .blog-content :global(img) {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--border-radius);
-    margin: 1.5rem 0;
-  }
-
-  .blog-content :global(a) {
-    color: var(--color-accent);
-  }
-
-  .blog-footer {
-    margin-top: 4rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--color-border);
-  }
-
-  /* Reading Progress Bar */
-  .reading-progress-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 3px;
-    width: 0%;
-    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-hover));
-    z-index: 9999;
-    transition: width 0.1s linear;
-    border-radius: 0 2px 2px 0;
-  }
-
-  /* ========================================
-     Global MDX Utility Classes
-     These allow MDX content to use callouts, steps,
-     and other rich patterns via plain HTML classes
-     without needing Astro component imports.
-     ======================================== */
-
-  /* --- Callout Classes --- */
-  .blog-content :global(.callout) {
-    margin: 1.5rem 0;
-    padding: 1rem 1.25rem;
-    border-left: 4px solid var(--color-border);
-    border-radius: 0 var(--border-radius) var(--border-radius) 0;
-    border: 1px solid var(--color-border);
-    border-left-width: 4px;
-    font-size: 0.95rem;
-    line-height: 1.7;
-  }
-
-  .blog-content :global(.callout-title) {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin-bottom: 0.5rem;
-  }
-
-  .blog-content :global(.callout p:last-child) {
-    margin-bottom: 0;
-  }
-
-  .blog-content :global(.callout-info) {
-    border-left-color: #58a6ff;
-    background: rgba(88, 166, 255, 0.08);
-  }
-
-  .blog-content :global(.callout-info .callout-title) {
-    color: #58a6ff;
-  }
-
-  .blog-content :global(.callout-tip) {
-    border-left-color: #3fb950;
-    background: rgba(63, 185, 80, 0.08);
-  }
-
-  .blog-content :global(.callout-tip .callout-title) {
-    color: #3fb950;
-  }
-
-  .blog-content :global(.callout-warning) {
-    border-left-color: #d29922;
-    background: rgba(210, 153, 34, 0.08);
-  }
-
-  .blog-content :global(.callout-warning .callout-title) {
-    color: #d29922;
-  }
-
-  .blog-content :global(.callout-danger) {
-    border-left-color: #f85149;
-    background: rgba(248, 81, 73, 0.08);
-  }
-
-  .blog-content :global(.callout-danger .callout-title) {
-    color: #f85149;
-  }
-
-  /* --- Step List Classes --- */
-  .blog-content :global(.step-list) {
-    margin: 1.5rem 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .blog-content :global(.step-item) {
-    display: flex;
-    gap: 1.25rem;
-    position: relative;
-    padding-bottom: 1.5rem;
-    margin-bottom: 0;
-  }
-
-  .blog-content :global(.step-item:last-child) {
-    padding-bottom: 0;
-  }
-
-  .blog-content :global(.step-item:last-child .step-number::after) {
-    display: none;
-  }
-
-  .blog-content :global(.step-number) {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    border-radius: 50%;
-    background: var(--color-accent);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.9rem;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
-    box-shadow: 0 0 0 4px var(--color-bg), 0 0 0 5px var(--color-accent);
-  }
-
-  /* Vertical connecting line between steps */
-  .blog-content :global(.step-number::after) {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 2px;
-    height: calc(100% + 1rem);
-    background: linear-gradient(to bottom, var(--color-accent), var(--color-border));
-    margin-top: 0.5rem;
-    border-radius: 1px;
-    z-index: 0;
-  }
-
-  .blog-content :global(.step-item-content) {
-    flex: 1;
-    padding-top: 0.35rem;
-    min-width: 0;
-  }
-
-  .blog-content :global(.step-item-content h4),
-  .blog-content :global(.step-item-content h3) {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--color-text);
-    margin-bottom: 0.5rem;
-    margin-top: 0;
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  .blog-content :global(.step-item-content p:last-child) {
-    margin-bottom: 0;
-  }
-
-  /* --- Comparison Table Enhancement Classes --- */
-  .blog-content :global(.comparison-table) {
-    margin: 1.5rem 0;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    border: 1px solid var(--color-border);
-  }
-
-  .blog-content :global(.comparison-table table) {
-    margin-bottom: 0;
-    border: none;
-    border-radius: 0;
-  }
-
-  .blog-content :global(.comparison-table th) {
-    background: var(--color-accent);
-    color: white;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-bottom: 2px solid rgba(124, 58, 237, 0.5);
-  }
-
-  .blog-content :global(.comparison-table tr:hover td) {
-    background: var(--color-bg-tertiary);
-  }
-
-  .blog-content :global(.comparison-table td:first-child) {
-    font-weight: 500;
-  }
-
-  .blog-content :global(.check) {
-    color: #3fb950;
-    font-weight: 700;
-    font-size: 1.1rem;
-  }
-
-  .blog-content :global(.cross) {
-    color: #f85149;
-    font-weight: 700;
-    font-size: 1.1rem;
-  }
-
-  /* --- TOC Placeholder Styling --- */
-  .blog-content :global(.toc),
-  .blog-content :global([id="table-of-contents"] + ul),
-  .blog-content :global([id="table-of-contents"] + ol) {
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    padding: 1.25rem 1.5rem 1.25rem 1.5rem;
-    margin-bottom: 2rem;
-    font-size: 0.925rem;
-  }
-
-  .blog-content :global(.toc a),
-  .blog-content :global([id="table-of-contents"] + ul a),
-  .blog-content :global([id="table-of-contents"] + ol a) {
-    color: var(--color-link);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-
-  .blog-content :global(.toc a:hover),
-  .blog-content :global([id="table-of-contents"] + ul a:hover),
-  .blog-content :global([id="table-of-contents"] + ol a:hover) {
-    color: var(--color-accent);
-  }
-
-  .blog-content :global(.toc li),
-  .blog-content :global([id="table-of-contents"] + ul li),
-  .blog-content :global([id="table-of-contents"] + ol li) {
-    margin-bottom: 0.35rem;
-    color: var(--color-text);
-  }
-
-  .blog-content :global([id="table-of-contents"]) {
-    font-size: 1.1rem;
-    color: var(--color-text-secondary);
-    border-bottom: none;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0;
-  }
-
-  @media (max-width: 768px) {
-    .blog-header h1 {
-      font-size: 1.75rem;
-    }
-  }
-</style>

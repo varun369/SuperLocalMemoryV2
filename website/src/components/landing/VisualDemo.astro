@@ -1,0 +1,91 @@
+---
+import { FadeIn } from '../ui/Motion';
+---
+
+<section class="py-24 relative bg-[var(--color-bg-secondary)] border-y border-white/5">
+    <div class="absolute inset-0 z-0 pointer-events-none">
+        <!-- Optional: Add particles or grid background here if needed -->
+    </div>
+    
+    <div class="container-custom relative z-10">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+            
+            <!-- Left: Description -->
+            <FadeIn client:visible direction="right">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6">
+                    Full Context. <br/>
+                    <span class="text-gradient">Zero Latency.</span>
+                </h2>
+                <div class="space-y-6 text-[var(--color-text-muted)] text-lg">
+                    <p>
+                        Most memory systems are slow "wrappers" around APIs. SuperLocalMemory is a 
+                        <span class="text-white font-medium">native system service</span>.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-3">
+                            <div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 text-xs">✓</div>
+                            <span>Instant vector similarity search</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 text-xs">✓</div>
+                            <span>Graph-based entity extraction</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 text-xs">✓</div>
+                            <span>Adaptive re-ranking based on usage</span>
+                        </li>
+                    </ul>
+                </div>
+            </FadeIn>
+
+            <!-- Right: Interactive Terminal -->
+            <FadeIn client:visible direction="left">
+                <div class="relative rounded-xl bg-[#0d1117] border border-white/10 shadow-2xl overflow-hidden font-mono text-sm leading-relaxed min-h-[400px]">
+                    <!-- Window Controls -->
+                    <div class="flex items-center gap-2 px-4 py-3 bg-[#161b22] border-b border-white/5">
+                        <div class="flex gap-1.5">
+                            <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                        </div>
+                        <div class="ml-auto text-xs text-gray-500">bash</div>
+                    </div>
+
+                    <!-- Terminal Content -->
+                    <div class="p-6 text-gray-300 space-y-2">
+                        <div class="flex gap-2">
+                            <span class="text-green-400">user@machine</span>
+                            <span class="text-blue-400">~</span>
+                            <span>$ supermemory add "Deploy the V2 API to production using the new key"</span>
+                        </div>
+                        <div class="text-gray-500 italic pb-2">Processing...</div>
+
+                        <div class="pl-4 border-l-2 border-blue-500/30 text-blue-300">
+                            [MEMORY STORED] ID: 8f92a1<br/>
+                            Tags: #deployment, #api, #v2, #production<br/>
+                            Entities: V2 API, Production Key
+                        </div>
+
+                         <div class="flex gap-2 pt-4">
+                            <span class="text-green-400">user@machine</span>
+                            <span class="text-blue-400">~</span>
+                            <span>$ supermemory recall "What API key for prod?"</span>
+                        </div>
+                        
+                        <div class="pl-4 border-l-2 border-purple-500/30 text-purple-200">
+                             <span class="text-xs text-gray-500 uppercase tracking-widest">Context Found (0.94)</span><br/>
+                             "Use the new key stored in .env.prod for V2 deployment"<br/>
+                             <span class="text-gray-500 text-xs">Source: 2 mins ago</span>
+                        </div>
+
+                        <div class="flex gap-2 pt-2 animate-pulse">
+                            <span class="text-green-400">user@machine</span>
+                            <span class="text-blue-400">~</span>
+                            <span class="w-2 h-5 bg-gray-500 block"></span>
+                        </div>
+                    </div>
+                </div>
+            </FadeIn>
+        </div>
+    </div>
+</section>

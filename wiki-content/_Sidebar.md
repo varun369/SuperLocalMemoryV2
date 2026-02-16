@@ -1,4 +1,4 @@
-## <img src="https://superlocalmemory.com/assets/branding/icon-32.png" alt="" width="28" style="vertical-align: middle;"/> SuperLocalMemory V2
+## <img src="https://superlocalmemory.com/assets/logo-mark.png" alt="" width="28" style="vertical-align: middle;"/> SuperLocalMemory V2
 
 **[[Home]]**
 
@@ -13,7 +13,7 @@
 ---
 
 ### 🏗️ Core Concepts
-- [Interactive Architecture Diagram](https://superlocalmemory.com/architecture.html)
+- [Interactive Architecture Diagram](https://superlocalmemory.com/architecture)
 - [[Universal-Architecture]]
 - [[Architecture-V2.5]]
 - [[Learning-System]]

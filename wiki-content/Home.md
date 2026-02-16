@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://superlocalmemory.com/assets/branding/icon-192.png" alt="SuperLocalMemory V2" width="96"/>
+  <img src="https://superlocalmemory.com/assets/logo-mark.png" alt="SuperLocalMemory V2" width="96"/>
 </p>
 
 # SuperLocalMemory V2
@@ -25,7 +25,7 @@
 
 ---
 
-## NEW: v2.7.0 — Your AI Learns You
+## NEW: v2.7.4 — Your AI Learns You
 
 > SuperLocalMemory now **learns your patterns** and personalizes recall — all 100% locally. Adaptive ML ranking, workflow detection, and GDPR-compliant behavioral learning.
 >

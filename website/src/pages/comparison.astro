@@ -1,515 +1,150 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/landing/Header.astro';
+import Footer from '../components/landing/Footer.astro';
+import { FadeIn } from '../components/ui/Motion';
+import { Check, X, Shield, Zap, DollarSign, Server, Lock } from 'lucide-react';
+
+const title = "SuperLocalMemory vs Alternatives - The Privacy Advantage";
+const description = "Compare SuperLocalMemory V2 against Pinecone, Mem0, and ChatGPT Memory. See why local-first is the future.";
+
+const features = [
+  { name: "Privacy", super: "Air-Gapped (100% Local)", others: "Cloud / Public API" },
+  { name: "Cost", super: "Free (Open Source)", others: "$$/mo + Usage Fees" },
+  { name: "Latency", super: "<10ms (Local Bus)", others: "200ms+ (Network)" },
+  { name: "Data Ownership", super: "You Own Everything", others: "They Train on It" },
+  { name: "Offline Capable", super: "Yes, Native", others: "No, Requires Internet" },
+  { name: "Context limit", super: "Hardware Dependent", others: "Tier Dependent" },
+  { name: "Model Agnostic", super: "Yes (Any Local/Cloud LLM)", others: "Vendor Locked" }
+];
+
+const competitors = [
+    {
+        name: "Pinecone / Weaviate",
+        type: "Vector DBs",
+        desc: "Great for enterprise scale, but overkill for personal use. Requires setup, hosting costs, and sends vectors to the cloud.",
+        cons: ["Expensive at scale", "Cloud-hosted", "Complex Setup"]
+    },
+    {
+        name: "Mem0 Platform",
+        type: "Managed Memory",
+        desc: "Excellent API but centralized. Your memories live on their servers. Good for apps, bad for personal privacy.",
+        cons: ["Data Privacy Risk", "API Costs", "dependency"]
+    },
+    {
+        name: "ChatGPT Memory",
+        type: "Built-in Feature",
+        desc: "Convenient but locked to OpenAI. You can't use these memories with Claude, local Llama, or your IDE.",
+        cons: ["Vendor Lock-in", "Opaque Storage", "Limited Control"]
+    }
+];
 ---
 
-<BaseLayout
-  title="Comparison - SuperLocalMemory V2 vs Mem0, Zep, Personal.AI"
-  description="Detailed comparison of SuperLocalMemory V2 with Mem0, Zep, Personal.AI, Khoj, and Letta. See why SuperLocalMemory is the best free, local-first alternative."
->
-  <section style="padding: 4rem 0;">
-    <div class="container">
-      <h1 style="margin-bottom: 1rem;">vs Alternatives</h1>
-      <p style="font-size: 1.125rem; color: var(--color-text-secondary); margin-bottom: 3rem;">
-        Detailed comparison with Mem0, Zep, Personal.AI, and other memory systems.
-      </p>
-
-      <!-- Executive Summary -->
-      <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 2rem; margin-bottom: 3rem;">
-        <h2 style="margin-bottom: 1.5rem;">Executive Summary</h2>
-        <div style="overflow-x: auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>Solution</th>
-                <th>Best For</th>
-                <th>Pricing</th>
-                <th>Privacy</th>
-                <th>Setup</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="background: var(--color-bg-tertiary);">
-                <td><strong>SuperLocalMemory V2</strong></td>
-                <td>Developers who want full control</td>
-                <td><span class="badge badge-success">$0 forever</span></td>
-                <td><span class="badge badge-success">100% local</span></td>
-                <td><span class="badge badge-success">5 min</span></td>
-              </tr>
-              <tr>
-                <td><strong>Mem0</strong></td>
-                <td>Teams needing managed service</td>
-                <td>$99-999/mo</td>
-                <td>Cloud-only</td>
-                <td>10 min</td>
-              </tr>
-              <tr>
-                <td><strong>Zep</strong></td>
-                <td>Enterprise with budget</td>
-                <td>$50-500/mo</td>
-                <td>Cloud-only</td>
-                <td>15 min</td>
-              </tr>
-              <tr>
-                <td><strong>Personal.AI</strong></td>
-                <td>Non-technical users</td>
-                <td>$33/mo</td>
-                <td>Cloud-only</td>
-                <td>5 min</td>
-              </tr>
-              <tr>
-                <td><strong>Khoj</strong></td>
-                <td>Self-hosters</td>
-                <td>Self-hosted</td>
-                <td>Partial</td>
-                <td>30-60 min</td>
-              </tr>
-              <tr>
-                <td><strong>Letta/MemGPT</strong></td>
-                <td>Researchers</td>
-                <td>Self-hosted</td>
-                <td>Local</td>
-                <td>60+ min</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Feature Comparison -->
-      <h2 style="margin-bottom: 1.5rem;">Feature Comparison</h2>
-      <div style="overflow-x: auto; margin-bottom: 3rem;">
-        <table>
-          <thead>
-            <tr>
-              <th>Feature</th>
-              <th>SuperLocalMemory V2</th>
-              <th>Mem0</th>
-              <th>Zep</th>
-              <th>Personal.AI</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Price</strong></td>
-              <td><span class="badge badge-success">$0 forever</span></td>
-              <td>Usage-based</td>
-              <td>$50/mo</td>
-              <td>$33/mo</td>
-            </tr>
-            <tr>
-              <td><strong>Local-First</strong></td>
-              <td><span class="badge badge-success">✅ 100%</span></td>
-              <td>❌ Cloud</td>
-              <td>❌ Cloud</td>
-              <td>❌ Cloud</td>
-            </tr>
-            <tr>
-              <td><strong>IDE Support</strong></td>
-              <td><span class="badge badge-success">✅ 17+ IDEs</span></td>
-              <td>Limited</td>
-              <td>1-2</td>
-              <td>None</td>
-            </tr>
-            <tr>
-              <td><strong>MCP Integration</strong></td>
-              <td><span class="badge badge-success">✅ Native</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>❌</td>
-            </tr>
-            <tr>
-              <td><strong>Universal Skills</strong></td>
-              <td><span class="badge badge-success">✅ 7 skills</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>❌</td>
-            </tr>
-            <tr>
-              <td><strong>Pattern Learning</strong></td>
-              <td><span class="badge badge-success">✅ Full</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>Partial</td>
-            </tr>
-            <tr>
-              <td><strong>Knowledge Graphs</strong></td>
-              <td><span class="badge badge-success">✅ Hierarchical Leiden</span></td>
-              <td>✅ Basic</td>
-              <td>✅ Neo4j</td>
-              <td>❌</td>
-            </tr>
-            <tr>
-              <td><strong>Community Summaries</strong></td>
-              <td><span class="badge badge-success">✅ TF-IDF</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>❌</td>
-            </tr>
-            <tr>
-              <td><strong>Auto-Backup</strong></td>
-              <td><span class="badge badge-success">✅ Built-in</span></td>
-              <td>Cloud only</td>
-              <td>Cloud only</td>
-              <td>❌</td>
-            </tr>
-            <tr>
-              <td><strong>Multi-Profile</strong></td>
-              <td><span class="badge badge-success">✅ Unlimited</span></td>
-              <td>Per-user only</td>
-              <td>Per-user only</td>
-              <td>❌</td>
-            </tr>
-            <tr>
-              <td><strong>Compression</strong></td>
-              <td><span class="badge badge-success">✅ 3-tier</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>❌</td>
-            </tr>
-            <tr style="background: rgba(245, 158, 11, 0.08);">
-              <td><strong>Adaptive ML Ranking</strong> <span style="background: #f59e0b; color: #000; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem; font-weight: 700; vertical-align: middle;">v2.7</span></td>
-              <td><span class="badge badge-success">✅ LightGBM LambdaRank</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>❌</td>
-            </tr>
-            <tr style="background: rgba(245, 158, 11, 0.08);">
-              <td><strong>Local Behavioral Learning</strong> <span style="background: #f59e0b; color: #000; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem; font-weight: 700; vertical-align: middle;">v2.7</span></td>
-              <td><span class="badge badge-success">✅ 3-layer local ML</span></td>
-              <td>❌</td>
-              <td>⚠️ Cloud-only</td>
-              <td>❌</td>
-            </tr>
-            <tr style="background: rgba(245, 158, 11, 0.08);">
-              <td><strong>GDPR by Design</strong> <span style="background: #f59e0b; color: #000; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem; font-weight: 700; vertical-align: middle;">v2.7</span></td>
-              <td><span class="badge badge-success">✅ Separate learning.db</span></td>
-              <td>⚠️ Requires config</td>
-              <td>⚠️ Requires config</td>
-              <td>❌</td>
-            </tr>
-            <tr style="background: rgba(245, 158, 11, 0.08);">
-              <td><strong>Zero Telemetry</strong> <span style="background: #f59e0b; color: #000; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem; font-weight: 700; vertical-align: middle;">v2.7</span></td>
-              <td><span class="badge badge-success">✅ Guaranteed</span></td>
-              <td>❌ Analytics</td>
-              <td>❌ Analytics</td>
-              <td>⚠️ Optional</td>
-            </tr>
-            <tr>
-              <td><strong>Zero Setup</strong></td>
-              <td><span class="badge badge-success">✅ 5 min</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>❌</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- IDE Integration -->
-      <h2 style="margin-bottom: 1.5rem;">IDE Integration</h2>
-      <div style="overflow-x: auto; margin-bottom: 3rem;">
-        <table>
-          <thead>
-            <tr>
-              <th>IDE/Tool</th>
-              <th>SuperLocalMemory V2</th>
-              <th>Mem0</th>
-              <th>Zep</th>
-              <th>Khoj</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Cursor</strong></td>
-              <td><span class="badge badge-success">✅ MCP Native</span></td>
-              <td>⚠️ API only</td>
-              <td>❌</td>
-              <td>❌</td>
-            </tr>
-            <tr>
-              <td><strong>Windsurf</strong></td>
-              <td><span class="badge badge-success">✅ MCP Native</span></td>
-              <td>⚠️ API only</td>
-              <td>❌</td>
-              <td>❌</td>
-            </tr>
-            <tr>
-              <td><strong>Claude Desktop</strong></td>
-              <td><span class="badge badge-success">✅ MCP Native</span></td>
-              <td>⚠️ API only</td>
-              <td>❌</td>
-              <td>❌</td>
-            </tr>
-            <tr>
-              <td><strong>VS Code</strong></td>
-              <td><span class="badge badge-success">✅ MCP + Skills</span></td>
-              <td>⚠️ Extension</td>
-              <td>❌</td>
-              <td>✅ Extension</td>
-            </tr>
-            <tr>
-              <td><strong>ChatGPT</strong></td>
-              <td><span class="badge badge-success">✅ MCP Connector</span> <br/><small>search() + fetch() per OpenAI spec</small></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>❌</td>
-            </tr>
-            <tr>
-              <td><strong>Aider CLI</strong></td>
-              <td><span class="badge badge-success">✅ Smart Wrapper</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>❌</td>
-            </tr>
-            <tr>
-              <td><strong>Universal CLI</strong></td>
-              <td><span class="badge badge-success">✅ Full</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>⚠️ Limited</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Privacy & Security -->
-      <h2 style="margin-bottom: 1.5rem;">Privacy & Security</h2>
-      <div style="overflow-x: auto; margin-bottom: 3rem;">
-        <table>
-          <thead>
-            <tr>
-              <th>Feature</th>
-              <th>SuperLocalMemory V2</th>
-              <th>Mem0</th>
-              <th>Zep</th>
-              <th>Khoj</th>
-              <th>Letta</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>100% Local</strong></td>
-              <td><span class="badge badge-success">✅</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>⚠️ Partial</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td><strong>No External API</strong></td>
-              <td><span class="badge badge-success">✅</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>⚠️ Optional</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td><strong>No Telemetry</strong></td>
-              <td><span class="badge badge-success">✅</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>✅</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td><strong>Self-Hosted</strong></td>
-              <td><span class="badge badge-success">✅</span></td>
-              <td>⚠️ Enterprise only</td>
-              <td>⚠️ Enterprise only</td>
-              <td>✅</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td><strong>GDPR Compliant</strong></td>
-              <td><span class="badge badge-success">✅ Inherent</span></td>
-              <td>⚠️ Requires config</td>
-              <td>⚠️ Requires config</td>
-              <td>✅</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td><strong>HIPAA Ready</strong></td>
-              <td><span class="badge badge-success">✅</span></td>
-              <td>⚠️ Enterprise only</td>
-              <td>⚠️ Enterprise only</td>
-              <td>⚠️ DIY</td>
-              <td>⚠️ DIY</td>
-            </tr>
-            <tr>
-              <td><strong>Air-Gap Capable</strong></td>
-              <td><span class="badge badge-success">✅</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>⚠️ Partial</td>
-              <td>✅</td>
-            </tr>
-            <tr style="background: rgba(245, 158, 11, 0.08);">
-              <td><strong>Local ML Learning</strong> <span style="background: #f59e0b; color: #000; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem; font-weight: 700; vertical-align: middle;">v2.7</span></td>
-              <td><span class="badge badge-success">✅</span></td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>❌</td>
-              <td>❌</td>
-            </tr>
-            <tr style="background: rgba(245, 158, 11, 0.08);">
-              <td><strong>Erasable Learning Data</strong> <span style="background: #f59e0b; color: #000; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem; font-weight: 700; vertical-align: middle;">v2.7</span></td>
-              <td><span class="badge badge-success">✅ One command</span></td>
-              <td>❌ Cloud retention</td>
-              <td>❌ Cloud retention</td>
-              <td>⚠️ DIY</td>
-              <td>⚠️ DIY</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Performance -->
-      <h2 style="margin-bottom: 1.5rem;">Performance Benchmarks</h2>
-      <div style="overflow-x: auto; margin-bottom: 3rem;">
-        <table>
-          <thead>
-            <tr>
-              <th>Metric</th>
-              <th>SuperLocalMemory V2</th>
-              <th>Mem0</th>
-              <th>Zep</th>
-              <th>Khoj</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Search Latency</strong></td>
-              <td><span class="badge badge-success">10.6ms median (100 memories)</span></td>
-              <td>200-500ms</td>
-              <td>100-300ms</td>
-              <td>500-1000ms</td>
-            </tr>
-            <tr>
-              <td><strong>Save Latency</strong></td>
-              <td><span class="badge badge-success">&lt; 10ms</span></td>
-              <td>100-200ms</td>
-              <td>100-200ms</td>
-              <td>200-400ms</td>
-            </tr>
-            <tr>
-              <td><strong>Offline Capable</strong></td>
-              <td><span class="badge badge-success">✅ Yes</span></td>
-              <td>❌ No</td>
-              <td>❌ No</td>
-              <td>⚠️ Partial</td>
-            </tr>
-            <tr>
-              <td><strong>Scalability</strong></td>
-              <td>5,000+ memories (local)</td>
-              <td>Unlimited (cloud)</td>
-              <td>Unlimited (cloud)</td>
-              <td>10,000+</td>
-            </tr>
-            <tr>
-              <td><strong>RAM Usage</strong></td>
-              <td><span class="badge badge-success">&lt; 50MB</span></td>
-              <td>N/A (cloud)</td>
-              <td>N/A (cloud)</td>
-              <td>~200MB</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pricing -->
-      <h2 style="margin-bottom: 1.5rem;">5-Year Cost Comparison</h2>
-      <div class="grid grid-2" style="margin-bottom: 3rem;">
-        <div class="card" style="border: 2px solid var(--color-success);">
-          <h3 style="color: var(--color-success); margin-bottom: 1rem;">SuperLocalMemory V2</h3>
-          <div style="font-size: 2.5rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-success);">$0</div>
-          <p style="margin-bottom: 1rem;">Forever. No hidden costs.</p>
-          <ul>
-            <li>Unlimited memories</li>
-            <li>Unlimited profiles</li>
-            <li>All features included</li>
-            <li>No quotas or limits</li>
-            <li>No credit card required</li>
-          </ul>
-        </div>
-
-        <div>
-          <div class="card" style="margin-bottom: 1rem;">
-            <h4 style="margin-bottom: 0.5rem;">Mem0</h4>
-            <div style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">$5,940 - $59,940</div>
-            <p style="font-size: 0.875rem; margin: 0;">$99-999/mo × 60 months</p>
-          </div>
-
-          <div class="card" style="margin-bottom: 1rem;">
-            <h4 style="margin-bottom: 0.5rem;">Zep</h4>
-            <div style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">$3,000 - $30,000</div>
-            <p style="font-size: 0.875rem; margin: 0;">$50-500/mo × 60 months</p>
-          </div>
-
-          <div class="card">
-            <h4 style="margin-bottom: 0.5rem;">Personal.AI</h4>
-            <div style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">$1,980</div>
-            <p style="font-size: 0.875rem; margin: 0;">$33/mo × 60 months</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- GDPR & Privacy (v2.7) -->
-      <div style="background: var(--color-bg-secondary); border: 1px solid #f59e0b; border-radius: var(--border-radius); padding: 2rem; margin-bottom: 3rem; position: relative;">
-        <div style="position: absolute; top: -12px; left: 1.5rem; background: #f59e0b; color: #000; padding: 0.2rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700;">v2.7</div>
-        <h2 style="margin-bottom: 1rem; margin-top: 0.25rem;">🔒 Your Data, Your Rules</h2>
-        <p style="margin-bottom: 1.5rem; font-size: 1.0625rem;">With v2.7's adaptive learning, SuperLocalMemory now learns your patterns and preferences. Unlike cloud alternatives, that behavioral data <strong>never leaves your machine</strong>.</p>
-        <div class="grid grid-2" style="gap: 1rem;">
-          <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px;">
-            <h4 style="font-size: 0.9375rem; margin-bottom: 0.5rem; color: var(--color-success);">Your behavioral learning data is yours.</h4>
-            <p style="font-size: 0.875rem; margin: 0;">One command to delete it all: <code>rm ~/.claude-memory/learning.db</code>. Your memories stay intact. No cloud admin ticket. No retention policy fine print.</p>
-          </div>
-          <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: 8px;">
-            <h4 style="font-size: 0.9375rem; margin-bottom: 0.5rem; color: var(--color-success);">Your patterns never leave your machine.</h4>
-            <p style="font-size: 0.875rem; margin: 0;">Unlike cloud alternatives that analyze your behavior on their servers, all ML training in SuperLocalMemory runs locally. Zero telemetry. Zero cloud calls. Zero exceptions.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Why Choose SuperLocalMemory -->
-      <div style="background: var(--color-bg-secondary); border: 2px solid var(--color-accent); border-radius: var(--border-radius); padding: 2rem; margin-bottom: 3rem;">
-        <h2 style="margin-bottom: 1.5rem;">Why Choose SuperLocalMemory V2?</h2>
-        <div class="grid grid-2" style="gap: 1.5rem;">
-          <div>
-            <h3 style="color: var(--color-accent); margin-bottom: 1rem;">✅ You Should Choose It If:</h3>
-            <ul>
-              <li>You value <strong>privacy and data ownership</strong></li>
-              <li>You want <strong>zero ongoing costs</strong></li>
-              <li>You need <strong>universal IDE support</strong> (Cursor, Windsurf, Claude, VS Code, etc.)</li>
-              <li>You prefer <strong>local-first architecture</strong></li>
-              <li>You want <strong>adaptive learning</strong> that personalizes search results locally</li>
-              <li>You need <strong>GDPR/HIPAA compliance</strong></li>
-              <li>You work in <strong>air-gapped environments</strong></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 style="color: var(--color-text-secondary); margin-bottom: 1rem;">❌ Consider Alternatives If:</h3>
-            <ul>
-              <li>You need <strong>unlimited cloud storage</strong> (10,000+ memories)</li>
-              <li>You want a <strong>managed service</strong> with no setup</li>
-              <li>You need <strong>team collaboration</strong> features</li>
-              <li>You require <strong>enterprise SLA guarantees</strong></li>
-              <li>You prefer <strong>commercial support</strong> contracts</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- CTA -->
-      <div style="text-align: center; padding: 2rem; background: linear-gradient(135deg, var(--color-accent) 0%, #ec4899 100%); border-radius: var(--border-radius);">
-        <h2 style="color: white; margin-bottom: 1rem;">Ready to Switch?</h2>
-        <p style="color: white; margin-bottom: 1.5rem; opacity: 0.9;">
-          Install SuperLocalMemory V2 in 5 minutes. Free forever, 100% local, works everywhere.
+<BaseLayout title={title} description={description}>
+  <Header />
+  
+  <main class="pt-24 pb-24 min-h-screen bg-[var(--color-bg-main)]">
+    
+    <!-- Hero -->
+    <section class="container-custom mb-20 text-center">
+      <FadeIn client:load>
+        <span class="text-[var(--color-primary)] font-mono text-sm tracking-wider uppercase mb-4 block">Competitive Analysis</span>
+        <h1 class="text-5xl md:text-6xl font-bold mb-6">
+          Why Go <span class="text-gradient">Local?</span>
+        </h1>
+        <p class="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto">
+          Control your data, eliminate monthly fees, and reduce latency to zero. The advantages of local memory are structural, not just features.
         </p>
-        <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener" class="btn" style="background: white; color: var(--color-accent);">
-          ⭐ Star on GitHub & Get Started
-        </a>
-      </div>
-    </div>
-  </section>
+      </FadeIn>
+    </section>
+
+    <!-- Comparison Table -->
+    <section class="container-custom mb-24">
+      <FadeIn client:visible delay={0.2} className="relative">
+        <div class="absolute inset-0 bg-gradient-to-b from-[var(--color-primary)]/5 to-transparent rounded-3xl blur-3xl"></div>
+        <div class="glass-panel rounded-3xl overflow-hidden border border-white/10 relative z-10">
+            
+            <!-- Header Grid -->
+            <div class="grid grid-cols-3 p-6 md:p-8 border-b border-white/10 bg-white/5">
+                <div class="col-span-1 text-[var(--color-text-muted)] font-mono text-sm uppercase tracking-wider flex items-end">Feature</div>
+                <div class="col-span-1 text-center">
+                    <div class="inline-flex items-center gap-2 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-4 py-1 rounded-full border border-[var(--color-primary)]/20 mb-2">
+                        <Shield className="w-4 h-4" /> Recommended
+                    </div>
+                    <div class="text-xl font-bold text-white">SuperLocalMemory</div>
+                </div>
+                <div class="col-span-1 text-center opacity-60 flex items-end justify-center pb-1">
+                    <span class="text-lg font-medium text-white">SaaS Cloud APIs</span>
+                </div>
+            </div>
+
+            <!-- Rows -->
+            <div class="divide-y divide-white/5">
+                {features.map((item, i) => (
+                    <div class="grid grid-cols-3 p-6 md:p-8 hover:bg-white/5 transition-colors group">
+                        <div class="col-span-1 font-medium text-white flex items-center">{item.name}</div>
+                        
+                        <div class="col-span-1 text-center flex items-center justify-center gap-2">
+                            <span class="font-bold text-[var(--color-primary)] group-hover:text-white transition-colors">{item.super}</span>
+                            <Check className="w-4 h-4 text-green-400" />
+                        </div>
+                        
+                        <div class="col-span-1 text-center opacity-60 flex items-center justify-center gap-2 text-[var(--color-text-muted)]">
+                            <span>{item.others}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+        </div>
+      </FadeIn>
+    </section>
+
+    <!-- Competitors Grid -->
+    <section class="container-custom">
+        <h2 class="text-3xl font-bold mb-12 text-center">Alternatives Analysis</h2>
+        <div class="grid md:grid-cols-3 gap-8">
+            {competitors.map((comp, index) => (
+                <FadeIn client:visible delay={0.3 + (index * 0.1)}>
+                    <div class="h-full glass-panel p-8 rounded-2xl border border-white/10 hover:border-white/20 transition-colors flex flex-col">
+                        <div class="mb-4">
+                            <span class="text-xs font-mono text-[var(--color-text-muted)] bg-white/5 px-2 py-1 rounded border border-white/5">{comp.type}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4">{comp.name}</h3>
+                        <p class="text-[var(--color-text-muted)] text-sm mb-6 flex-grow">
+                            {comp.desc}
+                        </p>
+                        <ul class="space-y-2">
+                            {comp.cons.map(con => (
+                                <li class="text-sm text-red-300/80 flex items-center gap-2">
+                                    <X className="w-4 h-4 text-red-500" /> {con}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </FadeIn>
+            ))}
+        </div>
+    </section>
+
+    <!-- Bottom CTA -->
+    <section class="container-custom text-center py-24">
+        <FadeIn client:visible>
+            <div class="max-w-3xl mx-auto glass-panel p-12 rounded-3xl border border-[var(--color-primary)]/20 bg-gradient-to-b from-[var(--color-bg-secondary)] to-[var(--color-bg-main)]">
+                <Lock className="w-12 h-12 text-[var(--color-primary)] mx-auto mb-6" />
+                <h2 class="text-3xl font-bold mb-6">Your data is yours. Period.</h2>
+                <p class="text-[var(--color-text-muted)] mb-8 text-lg">
+                    SuperLocalMemory was built because we didn't want to send our private journals, specialized codebases, and medical data to a VC-backed API.
+                </p>
+                <div class="flex justify-center gap-4">
+                    <a href="/" class="glass-button">
+                        Start Local
+                    </a>
+                </div>
+            </div>
+        </FadeIn>
+    </section>
+
+  </main>
+  <Footer />
 </BaseLayout>

@@ -1,41 +1,81 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import BlogCard from '../../components/BlogCard.astro';
+import Header from '../../components/landing/Header.astro';
+import Footer from '../../components/landing/Footer.astro';
+import { FadeIn } from '../../components/ui/Motion';
 import { getCollection } from 'astro:content';
+import { Calendar, User, ArrowRight } from 'lucide-react';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const title = "Blog - SuperLocalMemory";
+const description = "Latest updates, tutorials, and research from the SuperLocalMemory team.";
 ---
 
-<BaseLayout
-  title="Blog | SuperLocalMemory V2"
-  description="Tutorials, guides, and comparisons for AI memory systems. Learn how to give Claude Code, Cursor, Windsurf, and 17+ AI tools persistent memory."
->
-  <section class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
-    <header style="margin-bottom: 3rem;">
-      <h1>Blog</h1>
-      <p style="font-size: 1.125rem; max-width: 600px;">
-        Tutorials, guides, and comparisons for AI memory systems. Learn how to give your AI tools persistent memory.
-      </p>
-    </header>
+<BaseLayout title={title} description={description}>
+  <Header />
+  
+  <main class="pt-24 pb-24 min-h-screen bg-[var(--color-bg-main)]">
+    <div class="container-custom">
+        
+        <FadeIn client:load>
+            <div class="text-center mb-16">
+                <span class="text-[var(--color-primary)] font-mono text-sm tracking-wider uppercase mb-4 block">Engineering Blog</span>
+                <h1 class="text-4xl md:text-5xl font-bold mb-6">Latest Updates</h1>
+                <p class="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto">
+                    Deep dives into local-first AI, memory architecture, and multi-agent systems.
+                </p>
+            </div>
+        </FadeIn>
 
-    {posts.length === 0 ? (
-      <div class="card" style="text-align: center; padding: 3rem;">
-        <p style="color: var(--color-text-secondary);">No posts yet. Check back soon.</p>
-      </div>
-    ) : (
-      <div class="grid grid-2">
-        {posts.map(post => (
-          <BlogCard
-            title={post.data.title}
-            description={post.data.description}
-            pubDate={post.data.pubDate}
-            tags={post.data.tags}
-            category={post.data.category}
-            slug={post.id}
-          />
-        ))}
-      </div>
-    )}
-  </section>
+        {posts.length === 0 ? (
+            <div class="text-center py-24 glass-panel rounded-2xl border border-white/5">
+                <p class="text-[var(--color-text-muted)] text-lg">No posts published yet. Check back soon!</p>
+            </div>
+        ) : (
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {posts.map((post, i) => (
+                    <FadeIn client:visible delay={i * 0.1}>
+                        <a href={`/blog/${post.id}`} class="group h-full flex flex-col glass-panel rounded-2xl border border-white/10 overflow-hidden hover:border-[var(--color-primary)]/50 transition-all hover:-translate-y-1">
+                            <div class="aspect-video bg-white/5 relative overflow-hidden">
+                                {post.data.image && (
+                                    <img src={post.data.image} alt={post.data.title} class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                )}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                                <div class="absolute bottom-4 left-4">
+                                    <span class="px-2 py-1 rounded bg-[var(--color-primary)] text-black text-xs font-bold uppercase tracking-wide">
+                                        {post.data.category || 'Update'}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="p-6 flex-grow flex flex-col">
+                                <div class="flex items-center gap-4 text-xs text-[var(--color-text-muted)] mb-4">
+                                    <span class="flex items-center gap-1"><Calendar className="w-3 h-3" /> {post.data.pubDate.toLocaleDateString()}</span>
+                                    {post.data.author && <span class="flex items-center gap-1"><User className="w-3 h-3" /> {post.data.author}</span>}
+                                </div>
+                                
+                                <h3 class="text-xl font-bold mb-3 group-hover:text-[var(--color-primary)] transition-colors">
+                                    {post.data.title}
+                                </h3>
+                                
+                                <p class="text-[var(--color-text-muted)] text-sm line-clamp-3 mb-6 flex-grow">
+                                    {post.data.description}
+                                </p>
+                                
+                                <div class="flex items-center text-[var(--color-primary)] font-medium text-sm group-hover:translate-x-1 transition-transform">
+                                    Read Article <ArrowRight className="w-4 h-4 ml-1" />
+                                </div>
+                            </div>
+                        </a>
+                    </FadeIn>
+                ))}
+            </div>
+        )}
+
+    </div>
+  </main>
+
+  <Footer />
 </BaseLayout>

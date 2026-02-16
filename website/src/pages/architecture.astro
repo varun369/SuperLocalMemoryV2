@@ -1,0 +1,253 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/landing/Header.astro';
+import Footer from '../components/landing/Footer.astro';
+import { FadeIn } from '../components/ui/Motion';
+import { Layers, Database, Server, Smartphone, Cpu, Lock, Code, Wifi, Activity, GitBranch, ShieldCheck, Brain } from 'lucide-react';
+
+const layers = [
+  { id: 9, name: "Visualization", desc: "Interactive Dashboard (v2.2.0)", icon: Activity },
+  { id: 8, name: "Hybrid Search", desc: "Semantic + FTS5 + Graph", icon: Database },
+  { id: 7, name: "Universal Access", desc: "MCP + Skills + CLI", icon: Smartphone },
+  { id: 6, name: "MCP Integration", desc: "12 Tools, 6 Resources", icon: Code },
+  { id: 5.5, name: "Adaptive Learning", desc: "Three-Layer Learning (v2.7)", icon: Brain },
+  { id: 5, name: "Skills Layer", desc: "Universal Slash Commands", icon: Layers },
+  { id: 4, name: "Pattern Learning", desc: "Bayesian Confidence Scoring", icon: GitBranch },
+  { id: 3, name: "Knowledge Graph", desc: "Recursive Leiden Clustering", icon: Database },
+  { id: 2, name: "Hierarchical Index", desc: "Tree Structure Navigation", icon: Layers },
+  { id: 1, name: "Raw Storage", desc: "SQLite + FTS5 + TF-IDF", icon: Database },
+];
+
+const v27Components = [
+    {
+        title: "Adaptive Ranker",
+        path: "src/learning/adaptive_ranker.py",
+        desc: "LightGBM LambdaRank re-ranker. Three phases: baseline, rule-based (20+ signals), ML model (200+ signals). Synthetic bootstrap from existing data for day-1 personalization.",
+        badge: "CORE",
+        wiki: "PATTERN-LEARNING"
+    },
+    {
+        title: "Cross-Project Aggregator",
+        path: "src/learning/cross_project_aggregator.py",
+        desc: "Layer 1: Detects transferable tech preferences across all projects. Knows you prefer pytest over unittest, FastAPI over Flask, TypeScript over JavaScript.",
+        wiki: "PATTERN-LEARNING"
+    },
+    {
+        title: "Project Context Manager",
+        path: "src/learning/project_context_manager.py",
+        desc: "Layer 2: 4-signal project detection (tags, file paths, profiles, graph clusters). Boosts project-relevant memories during recall.",
+        wiki: "PATTERN-LEARNING"
+    },
+    {
+        title: "Workflow Pattern Miner",
+        path: "src/learning/workflow_pattern_miner.py",
+        desc: "Layer 3: Sliding-window sequence mining with temporal patterns. Learns your flow: docs first, then architecture, then code, then tests.",
+        wiki: "PATTERN-LEARNING"
+    },
+    {
+        title: "Feedback Collector",
+        path: "src/learning/feedback_collector.py",
+        desc: "Multi-channel feedback: MCP memory_used tool, CLI slm useful command, dashboard clicks. Drives the learning loop without explicit ratings.",
+        wiki: "PATTERN-LEARNING"
+    },
+    {
+        title: "Learning Database",
+        path: "src/learning/learning_db.py",
+        desc: "Separate learning.db for all behavioral data. GDPR-friendly: slm learning reset instantly deletes all learned patterns while keeping memories intact.",
+        wiki: "PATTERN-LEARNING"
+    }
+];
+
+const v25Components = [
+    {
+        title: "Connection Manager",
+        path: "src/db_connection_manager.py",
+        desc: "SQLite WAL mode, connection pool, thread-safe write queue. Fixes 'database locked' errors under concurrent access from CLI + MCP + API.",
+        badge: "PREREQUISITE",
+        wiki: "ARCHITECTURE-V2.5"
+    },
+    {
+        title: "Event Bus",
+        path: "src/event_bus.py",
+        desc: "Broadcast memory operations via SSE, WebSocket, and Webhook. Powers real-time dashboard updates. Tiered retention: hot 48h, warm 14d, cold 30d.",
+        wiki: "ARCHITECTURE-V2.5"
+    },
+    {
+        title: "Subscription Manager",
+        path: "src/subscription_manager.py",
+        desc: "Durable and ephemeral subscriptions with filters by agent_id, operation_type, and tags. Survive restarts by default.",
+        wiki: "ARCHITECTURE-V2.5"
+    },
+    {
+        title: "Webhook Dispatcher",
+        path: "src/webhook_dispatcher.py",
+        desc: "HTTP POST to configured URLs on memory events. Integration bridge for external systems and automation pipelines.",
+        wiki: "UNIVERSAL-INTEGRATION"
+    },
+    {
+        title: "Agent Registry",
+        path: "src/agent_registry.py",
+        desc: "Track agent connections, protocols, and capabilities. Maintains the active state of all connected MCP clients.",
+        wiki: "MCP-MANUAL-SETUP"
+    },
+    {
+        title: "Provenance Tracker",
+        path: "src/provenance_tracker.py",
+        desc: "Track memory origin created by specific agents. Auditable history of which agent created or modified which memory.",
+        wiki: "ARCHITECTURE-V2.5"
+    },
+    {
+        title: "Trust Scorer",
+        path: "src/trust_scorer.py",
+        desc: "Silent Bayesian trust signal collection using agent interactions. Determines confidence levels for different memory sources.",
+        wiki: "ARCHITECTURE-V2.5"
+    }
+];
+---
+
+<BaseLayout title="Architecture - SuperLocalMemory V2" description="Deep dive into the 10-layer architecture and component internals of the system.">
+  <Header />
+  
+  <main class="pt-24 pb-24 min-h-screen bg-[var(--color-bg-main)]">
+    <!-- Hero Section -->
+    <section class="container-custom mb-20 text-center">
+      <FadeIn client:load>
+        <span class="text-[var(--color-primary)] font-mono text-sm tracking-wider uppercase mb-4 block">System Internals</span>
+        <h1 class="text-5xl md:text-6xl font-bold mb-6">
+          The <span class="text-gradient">System Architecture</span>
+        </h1>
+        <p class="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto">
+          A purely local, high-performance architecture designed for zero-latency retrieval and absolute data sovereignty.
+        </p>
+      </FadeIn>
+    </section>
+
+    <!-- Architecture Diagram -->
+    <section class="container-custom mb-32">
+      <div class="grid lg:grid-cols-2 gap-16 items-start">
+        
+        <!-- Left: Interactive Stack -->
+        <div class="relative space-y-4">
+          <div class="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-[var(--color-primary)] via-[var(--color-accent)] to-transparent opacity-30"></div>
+          
+          {layers.map((layer, index) => (
+            <FadeIn client:visible delay={index * 0.1} direction="left">
+              <div class="relative pl-16 group cursor-default">
+                <div class="absolute left-[30px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[var(--color-bg-main)] border border-[var(--color-primary)] group-hover:bg-[var(--color-primary)] transition-colors shadow-[0_0_10px_rgba(56,189,248,0.2)]"></div>
+                
+                <div class="glass-panel p-6 rounded-xl hover:border-[var(--color-primary)]/40 transition-all duration-300 group-hover:translate-x-2">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-mono text-[var(--color-primary)] opacity-70">LAYER {layer.id < 10 ? `0${layer.id}` : layer.id}</span>
+                    <layer.icon className="w-5 h-5 text-white opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <h3 class="text-xl font-bold text-white mb-1 group-hover:text-[var(--color-primary)] transition-colors">{layer.name}</h3>
+                  <p class="text-[var(--color-text-muted)] text-sm">{layer.desc}</p>
+                </div>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+
+        <!-- Right: Detail View (Visual) -->
+        <div class="lg:sticky lg:top-32 space-y-8">
+            <FadeIn client:visible delay={0.4}>
+                <div class="aspect-square rounded-full bg-gradient-to-tr from-[var(--color-primary)]/10 to-[var(--color-accent)]/10 flex items-center justify-center p-12 border border-white/5 relative overflow-hidden">
+                    <div class="absolute inset-0 animate-spin-slow opacity-30">
+                        <img src="/assets/knowledge_graph_visual_1771269746442.png" alt="Knowledge Graph" class="w-full h-full object-cover mix-blend-overlay" />
+                    </div>
+                    
+                    <div class="text-center relative z-10">
+                        <h4 class="text-2xl font-bold text-white mb-4">Data Flow</h4>
+                        <p class="text-[var(--color-text-muted)]">
+                            Data enters through the Agent Protocol (Layer 10), is processed by the Skills Layer (Layer 05), stored in Raw Storage (Layer 01), and then graph-processed (Layer 03) for relational context.
+                        </p>
+                    </div>
+                </div>
+            </FadeIn>
+
+            <FadeIn client:visible delay={0.6}>
+                <div class="glass-panel p-8 rounded-2xl border border-yellow-500/20">
+                    <h4 class="text-lg font-bold text-yellow-500 mb-2 flex items-center gap-2">
+                        <span class="w-5 h-5 flex items-center justify-center"><Lock /></span> Security Boundary
+                    </h4>
+                    <p class="text-[var(--color-text-muted)] text-sm">
+                        Everything below Layer 10 is completely air-gapped. No data egress is possible physically at the architecture level.
+                    </p>
+                </div>
+            </FadeIn>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- v2.7 Learning Components -->
+    <section class="container-custom mb-24">
+        <FadeIn client:visible>
+            <div class="flex items-center gap-4 mb-8">
+                <h2 class="text-3xl font-bold text-white">v2.7 Learning Components</h2>
+                <span class="px-3 py-1 bg-yellow-500/20 text-yellow-500 text-xs font-mono font-bold rounded border border-yellow-500/20">NEW</span>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {v27Components.map((comp, i) => (
+                    <div class="glass-panel p-6 rounded-xl border border-white/10 hover:bg-white/5 transition-colors group">
+                        <div class="flex justify-between items-start mb-3">
+                            {comp.badge && (
+                                <span class="px-2 py-0.5 rounded bg-[var(--color-primary)]/20 text-[var(--color-primary)] text-[10px] font-bold border border-[var(--color-primary)]/30 mb-2 inline-block">
+                                    {comp.badge}
+                                </span>
+                            )}
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1 group-hover:text-[var(--color-primary)] transition-colors">{comp.title}</h3>
+                        <div class="text-xs font-mono text-[var(--color-text-muted)] mb-3 bg-white/5 px-2 py-1 rounded w-fit border border-white/5">{comp.path}</div>
+                        <p class="text-sm text-[var(--color-text-muted)] leading-relaxed border-t border-white/5 pt-3 mt-1">
+                            {comp.desc}
+                        </p>
+                        {comp.wiki && (
+                            <a href={`https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/${comp.wiki}.md`} target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs font-bold text-[var(--color-primary)] mt-3 hover:underline">
+                                <Code className="w-3 h-3" /> View Docs
+                            </a>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </FadeIn>
+    </section>
+
+    <!-- v2.5 Components -->
+    <section class="container-custom mb-24">
+        <FadeIn client:visible>
+            <div class="flex items-center gap-4 mb-8">
+                <h2 class="text-3xl font-bold text-white">v2.5 Components</h2>
+                <span class="px-3 py-1 bg-green-500/20 text-green-500 text-xs font-mono font-bold rounded border border-green-500/20">SHIPPED</span>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {v25Components.map((comp, i) => (
+                    <div class="glass-panel p-6 rounded-xl border border-white/10 hover:bg-white/5 transition-colors group">
+                         <div class="flex justify-between items-start mb-3">
+                            {comp.badge && (
+                                <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-500 text-[10px] font-bold border border-red-500/30 mb-2 inline-block">
+                                    {comp.badge}
+                                </span>
+                            )}
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1 group-hover:text-[var(--color-primary)] transition-colors">{comp.title}</h3>
+                        <div class="text-xs font-mono text-[var(--color-text-muted)] mb-3 bg-white/5 px-2 py-1 rounded w-fit border border-white/5">{comp.path}</div>
+                        <p class="text-sm text-[var(--color-text-muted)] leading-relaxed border-t border-white/5 pt-3 mt-1">
+                            {comp.desc}
+                        </p>
+                         {comp.wiki && (
+                            <a href={`https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/${comp.wiki}.md`} target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs font-bold text-[var(--color-primary)] mt-3 hover:underline">
+                                <Code className="w-3 h-3" /> View Docs
+                            </a>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </FadeIn>
+    </section>
+
+  </main>
+
+  <Footer />
+</BaseLayout>
+

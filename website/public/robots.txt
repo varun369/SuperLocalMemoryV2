@@ -1,8 +1,4 @@
-# robots.txt for SuperLocalMemory V2
-# https://superlocalmemory.com/
-
 User-agent: *
 Allow: /
 
-# Sitemap
 Sitemap: https://superlocalmemory.com/sitemap-index.xml
