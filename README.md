@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://superlocalmemory.com/assets/branding/icon-512.png" alt="SuperLocalMemory V2" width="200"/>
+  <img src="https://superlocalmemory.com/assets/logo-mark.png" alt="SuperLocalMemory V2" width="200"/>
 </p>
 
 <h1 align="center">SuperLocalMemory V2</h1>
