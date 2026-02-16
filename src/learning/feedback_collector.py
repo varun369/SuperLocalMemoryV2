@@ -108,6 +108,17 @@ class FeedbackCollector:
         "mcp_used_low": 0.4,
         "cli_useful": 0.9,
         "dashboard_click": 0.8,
+        "dashboard_thumbs_up": 1.0,
+        "dashboard_thumbs_down": 0.0,
+        "dashboard_pin": 1.0,
+        "dashboard_dwell_positive": 0.7,
+        "dashboard_dwell_negative": 0.1,
+        "implicit_positive_timegap": 0.6,
+        "implicit_negative_requick": 0.1,
+        "implicit_positive_reaccess": 0.7,
+        "implicit_positive_post_update": 0.8,
+        "implicit_negative_post_delete": 0.0,
+        "implicit_positive_cross_tool": 0.8,
         "passive_decay": 0.0,
     }
 
@@ -289,6 +300,109 @@ class FeedbackCollector:
             query_keywords=keywords,
             memory_id=memory_id,
             signal_type="dashboard_click",
+            signal_value=signal_value,
+            channel="dashboard",
+            dwell_time=dwell_time,
+        )
+
+    # ======================================================================
+    # Channel 4: Implicit Signals (v2.7.4 — auto-collected, zero user effort)
+    # ======================================================================
+
+    def record_implicit_signal(
+        self,
+        memory_id: int,
+        query: str,
+        signal_type: str,
+        source_tool: Optional[str] = None,
+        rank_position: Optional[int] = None,
+    ) -> Optional[int]:
+        """
+        Record an implicit feedback signal inferred from user behavior.
+
+        Called by the signal inference engine in mcp_server.py when it
+        detects behavioral patterns (time gaps, re-queries, re-access, etc.).
+
+        Args:
+            memory_id:     ID of the memory.
+            query:         The recall query (hashed, not stored raw).
+            signal_type:   One of the implicit_* signal types.
+            source_tool:   Which tool originated the query.
+            rank_position: Where the memory appeared in results.
+
+        Returns:
+            Row ID of the feedback record, or None on error.
+        """
+        if not query or signal_type not in self.SIGNAL_VALUES:
+            logger.warning(
+                "record_implicit_signal: invalid query or signal_type=%s",
+                signal_type,
+            )
+            return None
+
+        signal_value = self.SIGNAL_VALUES[signal_type]
+        query_hash = self._hash_query(query)
+        keywords = self._extract_keywords(query)
+
+        return self._store_feedback(
+            query_hash=query_hash,
+            query_keywords=keywords,
+            memory_id=memory_id,
+            signal_type=signal_type,
+            signal_value=signal_value,
+            channel="implicit",
+            source_tool=source_tool,
+            rank_position=rank_position,
+        )
+
+    def record_dashboard_feedback(
+        self,
+        memory_id: int,
+        query: str,
+        feedback_type: str,
+        dwell_time: Optional[float] = None,
+    ) -> Optional[int]:
+        """
+        Record explicit dashboard feedback (thumbs up/down, pin, dwell).
+
+        Args:
+            memory_id:     ID of the memory.
+            query:         The search query active when feedback given.
+            feedback_type: One of 'thumbs_up', 'thumbs_down', 'pin',
+                           'dwell_positive', 'dwell_negative'.
+            dwell_time:    Seconds spent viewing (for dwell signals).
+
+        Returns:
+            Row ID of the feedback record, or None on error.
+        """
+        type_map = {
+            "thumbs_up": "dashboard_thumbs_up",
+            "thumbs_down": "dashboard_thumbs_down",
+            "pin": "dashboard_pin",
+            "dwell_positive": "dashboard_dwell_positive",
+            "dwell_negative": "dashboard_dwell_negative",
+        }
+
+        signal_type = type_map.get(feedback_type)
+        if not signal_type or signal_type not in self.SIGNAL_VALUES:
+            logger.warning(
+                "record_dashboard_feedback: invalid feedback_type=%s",
+                feedback_type,
+            )
+            return None
+
+        if not query:
+            query = f"__dashboard__:{memory_id}"
+
+        signal_value = self.SIGNAL_VALUES[signal_type]
+        query_hash = self._hash_query(query)
+        keywords = self._extract_keywords(query)
+
+        return self._store_feedback(
+            query_hash=query_hash,
+            query_keywords=keywords,
+            memory_id=memory_id,
+            signal_type=signal_type,
             signal_value=signal_value,
             channel="dashboard",
             dwell_time=dwell_time,

@@ -87,6 +87,19 @@ class LearningDB:
         self._write_lock = threading.Lock()
         self._ensure_directory()
         self._init_schema()
+
+    def _get_active_profile(self) -> str:
+        """Get the active profile name from profiles.json. Returns 'default' if unavailable."""
+        try:
+            import json
+            profiles_path = self.db_path.parent / "profiles.json"
+            if profiles_path.exists():
+                with open(profiles_path, 'r') as f:
+                    config = json.load(f)
+                return config.get('active_profile', 'default')
+        except Exception:
+            pass
+        return "default"
         logger.info("LearningDB initialized: %s", self.db_path)
 
     def _ensure_directory(self):
@@ -214,6 +227,25 @@ class LearningDB:
             # ------------------------------------------------------------------
             # Indexes for performance
             # ------------------------------------------------------------------
+            # v2.7.4: Add profile columns for per-profile learning
+            for table in ['ranking_feedback', 'transferable_patterns', 'workflow_patterns', 'source_quality']:
+                try:
+                    cursor.execute(f'ALTER TABLE {table} ADD COLUMN profile TEXT DEFAULT "default"')
+                except Exception:
+                    pass  # Column already exists
+
+            cursor.execute(
+                'CREATE INDEX IF NOT EXISTS idx_feedback_profile '
+                'ON ranking_feedback(profile)'
+            )
+            cursor.execute(
+                'CREATE INDEX IF NOT EXISTS idx_patterns_profile '
+                'ON transferable_patterns(profile)'
+            )
+            cursor.execute(
+                'CREATE INDEX IF NOT EXISTS idx_workflow_profile '
+                'ON workflow_patterns(profile)'
+            )
             cursor.execute(
                 'CREATE INDEX IF NOT EXISTS idx_feedback_query '
                 'ON ranking_feedback(query_hash)'
@@ -268,6 +300,7 @@ class LearningDB:
         rank_position: Optional[int] = None,
         source_tool: Optional[str] = None,
         dwell_time: Optional[float] = None,
+        profile: Optional[str] = None,
     ) -> int:
         """
         Store a ranking feedback signal.
@@ -282,10 +315,15 @@ class LearningDB:
             rank_position: Where it appeared in results (1-50)
             source_tool: Tool that originated the query (e.g., 'claude-desktop')
             dwell_time: Seconds spent viewing (dashboard only)
+            profile: Active profile name (v2.7.4 — per-profile learning)
 
         Returns:
             Row ID of the inserted feedback record.
         """
+        # v2.7.4: Detect active profile if not provided
+        if not profile:
+            profile = self._get_active_profile()
+
         with self._write_lock:
             conn = self._get_connection()
             try:
@@ -294,12 +332,12 @@ class LearningDB:
                     INSERT INTO ranking_feedback
                         (query_hash, memory_id, signal_type, signal_value,
                          channel, query_keywords, rank_position, source_tool,
-                         dwell_time)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         dwell_time, profile)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
                     query_hash, memory_id, signal_type, signal_value,
                     channel, query_keywords, rank_position, source_tool,
-                    dwell_time,
+                    dwell_time, profile,
                 ))
                 conn.commit()
                 row_id = cursor.lastrowid
@@ -315,24 +353,85 @@ class LearningDB:
             finally:
                 conn.close()
 
-    def get_feedback_count(self) -> int:
-        """Get total number of feedback signals."""
+    def get_feedback_count(self, profile_scoped: bool = False) -> int:
+        """Get total number of feedback signals.
+
+        Args:
+            profile_scoped: If True, count only signals for the active profile.
+        """
         conn = self._get_connection()
         try:
             cursor = conn.cursor()
-            cursor.execute('SELECT COUNT(*) FROM ranking_feedback')
+            if profile_scoped:
+                profile = self._get_active_profile()
+                cursor.execute(
+                    'SELECT COUNT(*) FROM ranking_feedback WHERE profile = ?',
+                    (profile,)
+                )
+            else:
+                cursor.execute('SELECT COUNT(*) FROM ranking_feedback')
             return cursor.fetchone()[0]
         finally:
             conn.close()
 
-    def get_unique_query_count(self) -> int:
+    def get_signal_stats_for_memories(self, memory_ids: Optional[List[int]] = None) -> Dict[str, Dict[str, float]]:
+        """
+        Get aggregate feedback signal stats per memory (v2.7.4).
+
+        Returns a dict mapping str(memory_id) to {count, avg_value}.
+        Used by FeatureExtractor for features [10] and [11].
+
+        Args:
+            memory_ids: If provided, only fetch stats for these IDs.
+                        If None, fetch stats for all memories with signals.
+
+        Returns:
+            {'42': {'count': 5, 'avg_value': 0.72}, ...}
+        """
+        conn = self._get_connection()
+        try:
+            cursor = conn.cursor()
+            if memory_ids:
+                placeholders = ','.join('?' for _ in memory_ids)
+                cursor.execute(
+                    f'SELECT memory_id, COUNT(*) as cnt, AVG(signal_value) as avg_val '
+                    f'FROM ranking_feedback WHERE memory_id IN ({placeholders}) '
+                    f'GROUP BY memory_id',
+                    tuple(memory_ids),
+                )
+            else:
+                cursor.execute(
+                    'SELECT memory_id, COUNT(*) as cnt, AVG(signal_value) as avg_val '
+                    'FROM ranking_feedback GROUP BY memory_id'
+                )
+            result = {}
+            for row in cursor.fetchall():
+                result[str(row['memory_id'])] = {
+                    'count': row['cnt'],
+                    'avg_value': round(float(row['avg_val']), 3),
+                }
+            return result
+        except Exception as e:
+            logger.error("Failed to get signal stats: %s", e)
+            return {}
+        finally:
+            conn.close()
+
+    def get_unique_query_count(self, profile_scoped: bool = False) -> int:
         """Get number of unique queries with feedback."""
         conn = self._get_connection()
         try:
             cursor = conn.cursor()
-            cursor.execute(
-                'SELECT COUNT(DISTINCT query_hash) FROM ranking_feedback'
-            )
+            if profile_scoped:
+                profile = self._get_active_profile()
+                cursor.execute(
+                    'SELECT COUNT(DISTINCT query_hash) FROM ranking_feedback WHERE profile = ?',
+                    (profile,)
+                )
+            else:
+                cursor.execute(
+                    'SELECT COUNT(DISTINCT query_hash) FROM ranking_feedback'
+                )
             return cursor.fetchone()[0]
         finally:
             conn.close()
@@ -434,23 +533,32 @@ class LearningDB:
         self,
         min_confidence: float = 0.0,
         pattern_type: Optional[str] = None,
+        profile_scoped: bool = False,
     ) -> List[Dict[str, Any]]:
-        """Get transferable patterns filtered by confidence and type."""
+        """Get transferable patterns filtered by confidence, type, and profile."""
         conn = self._get_connection()
         try:
             cursor = conn.cursor()
+            profile_filter = ""
+            params = [min_confidence]
+            if profile_scoped:
+                profile = self._get_active_profile()
+                profile_filter = " AND profile = ?"
+                params.append(profile)
             if pattern_type:
-                cursor.execute('''
-                    SELECT * FROM transferable_patterns
-                    WHERE confidence >= ? AND pattern_type = ?
-                    ORDER BY confidence DESC
-                ''', (min_confidence, pattern_type))
+                cursor.execute(
+                    'SELECT * FROM transferable_patterns '
+                    'WHERE confidence >= ? AND pattern_type = ?' + profile_filter +
+                    ' ORDER BY confidence DESC',
+                    tuple(params[:1]) + (pattern_type,) + tuple(params[1:])
+                )
             else:
-                cursor.execute('''
-                    SELECT * FROM transferable_patterns
-                    WHERE confidence >= ?
-                    ORDER BY confidence DESC
-                ''', (min_confidence,))
+                cursor.execute(
+                    'SELECT * FROM transferable_patterns '
+                    'WHERE confidence >= ?' + profile_filter +
+                    ' ORDER BY confidence DESC',
+                    tuple(params)
+                )
             return [dict(row) for row in cursor.fetchall()]
         finally:
             conn.close()
@@ -497,23 +605,32 @@ class LearningDB:
         self,
         pattern_type: Optional[str] = None,
         min_confidence: float = 0.0,
+        profile_scoped: bool = False,
     ) -> List[Dict[str, Any]]:
-        """Get workflow patterns filtered by type and confidence."""
+        """Get workflow patterns filtered by type, confidence, and profile."""
         conn = self._get_connection()
         try:
             cursor = conn.cursor()
+            profile_filter = ""
+            extra_params = []
+            if profile_scoped:
+                profile = self._get_active_profile()
+                profile_filter = " AND profile = ?"
+                extra_params.append(profile)
             if pattern_type:
-                cursor.execute('''
-                    SELECT * FROM workflow_patterns
-                    WHERE pattern_type = ? AND confidence >= ?
-                    ORDER BY confidence DESC
-                ''', (pattern_type, min_confidence))
+                cursor.execute(
+                    'SELECT * FROM workflow_patterns '
+                    'WHERE pattern_type = ? AND confidence >= ?' + profile_filter +
+                    ' ORDER BY confidence DESC',
+                    (pattern_type, min_confidence) + tuple(extra_params)
+                )
             else:
-                cursor.execute('''
-                    SELECT * FROM workflow_patterns
-                    WHERE confidence >= ?
-                    ORDER BY confidence DESC
-                ''', (min_confidence,))
+                cursor.execute(
+                    'SELECT * FROM workflow_patterns '
+                    'WHERE confidence >= ?' + profile_filter +
+                    ' ORDER BY confidence DESC',
+                    (min_confidence,) + tuple(extra_params)
+                )
             return [dict(row) for row in cursor.fetchall()]
         finally:
             conn.close()
@@ -579,12 +696,19 @@ class LearningDB:
             finally:
                 conn.close()
 
-    def get_source_scores(self) -> Dict[str, float]:
+    def get_source_scores(self, profile_scoped: bool = False) -> Dict[str, float]:
         """Get quality scores for all known sources."""
         conn = self._get_connection()
         try:
             cursor = conn.cursor()
-            cursor.execute('SELECT source_id, quality_score FROM source_quality')
+            if profile_scoped:
+                profile = self._get_active_profile()
+                cursor.execute(
+                    'SELECT source_id, quality_score FROM source_quality WHERE profile = ?',
+                    (profile,)
+                )
+            else:
+                cursor.execute('SELECT source_id, quality_score FROM source_quality')
             return {row['source_id']: row['quality_score'] for row in cursor.fetchall()}
         finally:
             conn.close()

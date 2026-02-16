@@ -25,14 +25,16 @@ Usage:
     python3 mcp_server.py --transport http --port 8001
 """
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP, Context
 from mcp.types import ToolAnnotations
 import sys
 import os
 import json
 import re
+import time
+import threading
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, List, Any
 
 # Add src directory to path (use existing code!)
 MEMORY_DIR = Path.home() / ".claude-memory"
@@ -250,8 +252,48 @@ def get_learning_components():
     }
 
 
-def _register_mcp_agent(agent_name: str = "mcp-client"):
-    """Register the calling MCP agent and record activity. Non-blocking."""
+def _get_client_name(ctx: Optional[Context] = None) -> str:
+    """Extract client name from MCP context, or return default.
+
+    Reads clientInfo.name from the MCP initialize handshake via
+    ctx.session.client_params. This identifies Perplexity, Codex,
+    Claude Desktop, etc. as distinct agents.
+    """
+    if ctx:
+        try:
+            # Primary: session.client_params.clientInfo.name (from initialize handshake)
+            session = getattr(ctx, 'session', None)
+            if session:
+                params = getattr(session, 'client_params', None)
+                if params:
+                    client_info = getattr(params, 'clientInfo', None)
+                    if client_info:
+                        name = getattr(client_info, 'name', None)
+                        if name:
+                            return str(name)
+        except Exception:
+            pass
+        try:
+            # Fallback: ctx.client_id (per-request, may be null)
+            client_id = ctx.client_id
+            if client_id:
+                return str(client_id)
+        except Exception:
+            pass
+    return "mcp-client"
+
+
+def _register_mcp_agent(agent_name: str = "mcp-client", ctx: Optional[Context] = None):
+    """Register the calling MCP agent and record activity. Non-blocking.
+
+    v2.7.4: Extracts real client name from MCP context when available,
+    so Perplexity, Codex, Claude Desktop show as distinct agents.
+    """
+    if ctx:
+        detected = _get_client_name(ctx)
+        if detected != "mcp-client":
+            agent_name = detected
+
     registry = get_agent_registry()
     if registry:
         try:
@@ -262,6 +304,264 @@ def _register_mcp_agent(agent_name: str = "mcp-client"):
             )
         except Exception:
             pass
+
+
+# ============================================================================
+# RECALL BUFFER & SIGNAL INFERENCE ENGINE (v2.7.4 — Silent Learning)
+# ============================================================================
+# Tracks recall operations and infers implicit feedback signals from user
+# behavior patterns. Zero user effort — all signals auto-collected.
+#
+# Signal Types:
+#   implicit_positive_timegap   — long pause (>5min) after recall = satisfied
+#   implicit_negative_requick   — quick re-query (<30s) = dissatisfied
+#   implicit_positive_reaccess  — same memory in consecutive recalls
+#   implicit_positive_cross_tool — same memory recalled by different agents
+#   implicit_positive_post_update — memory updated after being recalled
+#   implicit_negative_post_delete — memory deleted after being recalled
+#
+# Research: Hu et al. 2008 (implicit feedback), BPR Rendle 2009 (pairwise)
+# ============================================================================
+
+class _RecallBuffer:
+    """Thread-safe buffer tracking recent recall operations for signal inference.
+
+    Stores the last recall per agent_id so we can compare consecutive recalls
+    and infer whether the user found results useful.
+
+    Rate limiting: max 5 implicit signals per agent per minute to prevent gaming.
+    """
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        # {agent_id: {query, result_ids, timestamp, result_id_set}}
+        self._last_recall: Dict[str, Dict[str, Any]] = {}
+        # Global last recall (for cross-agent comparison)
+        self._global_last: Optional[Dict[str, Any]] = None
+        # Rate limiter: {agent_id: [timestamp, timestamp, ...]}
+        self._signal_timestamps: Dict[str, List[float]] = {}
+        # Set of memory_ids from the most recent recall (for post-action tracking)
+        self._recent_result_ids: set = set()
+        # Recall counter for passive decay auto-trigger
+        self._recall_count: int = 0
+        # Adaptive threshold: starts at 300s (5min), adjusts based on user patterns
+        self._positive_threshold: float = 300.0
+        self._inter_recall_times: List[float] = []
+
+    def record_recall(
+        self,
+        query: str,
+        result_ids: List[int],
+        agent_id: str = "mcp-client",
+    ) -> List[Dict[str, Any]]:
+        """Record a recall and infer signals from previous recall comparison.
+
+        Returns a list of inferred signal dicts: [{memory_id, signal_type, query}]
+        """
+        now = time.time()
+        signals: List[Dict[str, Any]] = []
+
+        with self._lock:
+            self._recall_count += 1
+            result_id_set = set(result_ids)
+            self._recent_result_ids = result_id_set
+
+            current = {
+                "query": query,
+                "result_ids": result_ids,
+                "result_id_set": result_id_set,
+                "timestamp": now,
+                "agent_id": agent_id,
+            }
+
+            # --- Compare with previous recall from SAME agent ---
+            prev = self._last_recall.get(agent_id)
+            if prev:
+                time_gap = now - prev["timestamp"]
+
+                # Track inter-recall times for adaptive threshold
+                self._inter_recall_times.append(time_gap)
+                if len(self._inter_recall_times) > 100:
+                    self._inter_recall_times = self._inter_recall_times[-100:]
+
+                # Update adaptive threshold (median of recent times, min 60s, max 1800s)
+                if len(self._inter_recall_times) >= 10:
+                    sorted_times = sorted(self._inter_recall_times)
+                    median = sorted_times[len(sorted_times) // 2]
+                    self._positive_threshold = max(60.0, min(median * 0.8, 1800.0))
+
+                # Signal: Quick re-query with different query = negative
+                if time_gap < 30.0 and query != prev["query"]:
+                    for mid in prev["result_ids"][:5]:  # Top 5 only
+                        signals.append({
+                            "memory_id": mid,
+                            "signal_type": "implicit_negative_requick",
+                            "query": prev["query"],
+                            "rank_position": prev["result_ids"].index(mid) + 1,
+                        })
+
+                # Signal: Long pause = positive for previous results
+                elif time_gap > self._positive_threshold:
+                    for mid in prev["result_ids"][:3]:  # Top 3 only
+                        signals.append({
+                            "memory_id": mid,
+                            "signal_type": "implicit_positive_timegap",
+                            "query": prev["query"],
+                            "rank_position": prev["result_ids"].index(mid) + 1,
+                        })
+
+                # Signal: Same memory re-accessed = positive
+                overlap = result_id_set & prev["result_id_set"]
+                for mid in overlap:
+                    signals.append({
+                        "memory_id": mid,
+                        "signal_type": "implicit_positive_reaccess",
+                        "query": query,
+                    })
+
+            # --- Compare with previous recall from DIFFERENT agent (cross-tool) ---
+            global_prev = self._global_last
+            if global_prev and global_prev["agent_id"] != agent_id:
+                cross_overlap = result_id_set & global_prev["result_id_set"]
+                for mid in cross_overlap:
+                    signals.append({
+                        "memory_id": mid,
+                        "signal_type": "implicit_positive_cross_tool",
+                        "query": query,
+                    })
+
+            # Update buffers
+            self._last_recall[agent_id] = current
+            self._global_last = current
+
+        return signals
+
+    def check_post_action(self, memory_id: int, action: str) -> Optional[Dict[str, Any]]:
+        """Check if a memory action (update/delete) follows a recent recall.
+
+        Returns signal dict if the memory was in recent results, else None.
+        """
+        with self._lock:
+            if memory_id not in self._recent_result_ids:
+                return None
+
+            if action == "update":
+                return {
+                    "memory_id": memory_id,
+                    "signal_type": "implicit_positive_post_update",
+                    "query": self._global_last["query"] if self._global_last else "",
+                }
+            elif action == "delete":
+                return {
+                    "memory_id": memory_id,
+                    "signal_type": "implicit_negative_post_delete",
+                    "query": self._global_last["query"] if self._global_last else "",
+                }
+        return None
+
+    def check_rate_limit(self, agent_id: str, max_per_minute: int = 5) -> bool:
+        """Return True if agent is within rate limit, False if exceeded."""
+        now = time.time()
+        with self._lock:
+            if agent_id not in self._signal_timestamps:
+                self._signal_timestamps[agent_id] = []
+
+            # Clean old timestamps (older than 60s)
+            self._signal_timestamps[agent_id] = [
+                ts for ts in self._signal_timestamps[agent_id]
+                if now - ts < 60.0
+            ]
+
+            if len(self._signal_timestamps[agent_id]) >= max_per_minute:
+                return False
+
+            self._signal_timestamps[agent_id].append(now)
+            return True
+
+    def get_recall_count(self) -> int:
+        """Get total recall count (for passive decay trigger)."""
+        with self._lock:
+            return self._recall_count
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get buffer statistics for diagnostics."""
+        with self._lock:
+            return {
+                "recall_count": self._recall_count,
+                "tracked_agents": len(self._last_recall),
+                "positive_threshold_s": round(self._positive_threshold, 1),
+                "recent_results_count": len(self._recent_result_ids),
+            }
+
+
+# Module-level singleton
+_recall_buffer = _RecallBuffer()
+
+
+def _emit_implicit_signals(signals: List[Dict[str, Any]], agent_id: str = "mcp-client") -> int:
+    """Emit inferred implicit signals to the feedback collector.
+
+    Rate-limited: max 5 signals per agent per minute.
+    All errors swallowed — signal collection must NEVER break operations.
+
+    Returns number of signals actually stored.
+    """
+    if not LEARNING_AVAILABLE or not signals:
+        return 0
+
+    stored = 0
+    try:
+        feedback = get_feedback_collector()
+        if not feedback:
+            return 0
+
+        for sig in signals:
+            if not _recall_buffer.check_rate_limit(agent_id):
+                break  # Rate limit exceeded for this agent
+            try:
+                feedback.record_implicit_signal(
+                    memory_id=sig["memory_id"],
+                    query=sig.get("query", ""),
+                    signal_type=sig["signal_type"],
+                    source_tool=agent_id,
+                    rank_position=sig.get("rank_position"),
+                )
+                stored += 1
+            except Exception:
+                pass  # Individual signal failure is fine
+    except Exception:
+        pass  # Never break the caller
+
+    return stored
+
+
+def _maybe_passive_decay() -> None:
+    """Auto-trigger passive decay every 10 recalls in a background thread."""
+    try:
+        if not LEARNING_AVAILABLE:
+            return
+        if _recall_buffer.get_recall_count() % 10 != 0:
+            return
+
+        feedback = get_feedback_collector()
+        if not feedback:
+            return
+
+        def _run_decay():
+            try:
+                count = feedback.compute_passive_decay(threshold=5)
+                if count > 0:
+                    import logging
+                    logging.getLogger("superlocalmemory.mcp").info(
+                        "Passive decay: %d signals emitted", count
+                    )
+            except Exception:
+                pass
+
+        thread = threading.Thread(target=_run_decay, daemon=True)
+        thread.start()
+    except Exception:
+        pass
 
 
 # ============================================================================
@@ -277,7 +577,8 @@ async def remember(
     content: str,
     tags: str = "",
     project: str = "",
-    importance: int = 5
+    importance: int = 5,
+    ctx: Context = None,
 ) -> dict:
     """
     Save content to SuperLocalMemory with intelligent indexing.
@@ -304,8 +605,8 @@ async def remember(
         remember("JWT auth with refresh tokens", tags="security,auth", importance=8)
     """
     try:
-        # Register MCP agent (v2.5 — agent tracking)
-        _register_mcp_agent()
+        # Register MCP agent (v2.5 — agent tracking, v2.7.4 — client detection)
+        _register_mcp_agent(ctx=ctx)
 
         # Trust enforcement (v2.6) — block untrusted agents from writing
         try:
@@ -372,12 +673,16 @@ async def remember(
 async def recall(
     query: str,
     limit: int = 10,
-    min_score: float = 0.3
+    min_score: float = 0.3,
+    ctx: Context = None,
 ) -> dict:
     """
     Search memories using semantic similarity and knowledge graph.
+    Results are personalized based on your usage patterns — the more you
+    use SuperLocalMemory, the better results get. All learning is local.
 
-    This calls the SAME backend as /superlocalmemoryv2:recall skill.
+    After using results, call memory_used(memory_id) for memories you
+    referenced to help improve future recall quality.
 
     Args:
         query: Search query (required)
@@ -405,6 +710,18 @@ async def recall(
         recall("FastAPI", limit=5, min_score=0.5)
     """
     try:
+        # Register MCP agent (v2.7.4 — client detection for agent tab)
+        _register_mcp_agent(ctx=ctx)
+
+        # Track recall in agent registry
+        registry = get_agent_registry()
+        if registry:
+            try:
+                agent_name = _get_client_name(ctx)
+                registry.record_recall(f"mcp:{agent_name}")
+            except Exception:
+                pass
+
         # Use existing MemoryStoreV2 class
         store = get_store()
 
@@ -444,6 +761,17 @@ async def recall(
                     tracker.record_activity('recall_performed', source='mcp')
             except Exception:
                 pass  # Tracking failure must never break recall
+
+        # v2.7.4: Implicit signal inference from recall patterns
+        try:
+            result_ids = [r.get('id') for r in results if r.get('id')]
+            signals = _recall_buffer.record_recall(query, result_ids)
+            if signals:
+                _emit_implicit_signals(signals)
+            # Auto-trigger passive decay every 10 recalls
+            _maybe_passive_decay()
+        except Exception:
+            pass  # Signal inference must NEVER break recall
 
         # Filter by minimum score
         filtered_results = [
@@ -708,7 +1036,7 @@ async def backup_status() -> dict:
 @mcp.tool(annotations=ToolAnnotations(
     readOnlyHint=False,
     destructiveHint=False,
-    openWorldHint=False,
+    openWorldHint=True,
 ))
 async def memory_used(
     memory_id: int,
@@ -716,15 +1044,18 @@ async def memory_used(
     usefulness: str = "high"
 ) -> dict:
     """
-    Signal that a recalled memory was useful. Call this when you reference
-    or apply a memory from recall results in your response.
+    Call this tool whenever you use information from a recalled memory in
+    your response. This is the most important feedback signal — it teaches
+    SuperLocalMemory which memories are truly useful and dramatically
+    improves future recall quality. All data stays 100% local.
 
-    This helps SuperLocalMemory learn which memories are most relevant
-    and improves future recall results.
+    Best practice: After using recall() results, call memory_used() for
+    each memory ID you referenced. This takes <1ms and helps the system
+    learn your preferences.
 
     Args:
-        memory_id: ID of the useful memory
-        query: The recall query that found it (optional)
+        memory_id: ID of the useful memory (from recall results)
+        query: The recall query that found it (optional but recommended)
         usefulness: How useful - "high", "medium", or "low" (default "high")
 
     Returns:
@@ -1227,7 +1558,7 @@ if __name__ == "__main__":
     # Print startup message to stderr (stdout is used for MCP protocol)
     print("=" * 60, file=sys.stderr)
     print("SuperLocalMemory V2 - MCP Server", file=sys.stderr)
-    print("Version: 2.7.0", file=sys.stderr)
+    print("Version: 2.7.4", file=sys.stderr)
     print("=" * 60, file=sys.stderr)
     print("Created by: Varun Pratap Bhardwaj (Solution Architect)", file=sys.stderr)
     print("Repository: https://github.com/varun369/SuperLocalMemoryV2", file=sys.stderr)

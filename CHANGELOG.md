@@ -16,6 +16,23 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.7.4] - 2026-02-16
+
+### Added
+- Per-profile learning — each profile has its own preferences and feedback
+- Thumbs up/down and pin feedback on memory cards
+- Learning data management in Settings (backup + reset)
+- "What We Learned" summary card in Learning tab
+
+### Improved
+- Smarter learning from your natural usage patterns
+- Recall results improve automatically over time
+- Privacy notice for all learning features
+- Learning and backup databases protected together
+- All dashboard tabs refresh on profile switch
+
+---
+
 ## [2.7.3] - 2026-02-16
 
 ### Improved

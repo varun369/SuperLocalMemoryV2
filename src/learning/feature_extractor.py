@@ -12,23 +12,25 @@ Attribution must be preserved in all copies or derivatives.
 """
 
 """
-FeatureExtractor — Extracts 10-dimensional feature vectors for candidate memories.
+FeatureExtractor — Extracts 12-dimensional feature vectors for candidate memories.
 
 Each memory retrieved during recall gets a feature vector that feeds into
 the AdaptiveRanker. In Phase 1 (rule-based), features drive boosting weights.
 In Phase 2 (ML), features become LightGBM input columns.
 
-Feature Vector (10 dimensions):
-    [0] bm25_score          — Existing retrieval score from search results
-    [1] tfidf_score         — TF-IDF cosine similarity from search results
-    [2] tech_match          — Does memory match user's tech preferences?
-    [3] project_match       — Is memory from the current project?
-    [4] workflow_fit        — Does memory fit current workflow phase?
-    [5] source_quality      — Quality score of the source that created this memory
-    [6] importance_norm     — Normalized importance (importance / 10.0)
-    [7] recency_score       — Exponential decay based on age (180-day half-life)
-    [8] access_frequency    — How often this memory was accessed (capped at 1.0)
-    [9] pattern_confidence  — Max Beta-Binomial confidence from learned patterns
+Feature Vector (12 dimensions):
+    [0]  bm25_score          — Existing retrieval score from search results
+    [1]  tfidf_score         — TF-IDF cosine similarity from search results
+    [2]  tech_match          — Does memory match user's tech preferences?
+    [3]  project_match       — Is memory from the current project?
+    [4]  workflow_fit        — Does memory fit current workflow phase?
+    [5]  source_quality      — Quality score of the source that created this memory
+    [6]  importance_norm     — Normalized importance (importance / 10.0)
+    [7]  recency_score       — Exponential decay based on age (180-day half-life)
+    [8]  access_frequency    — How often this memory was accessed (capped at 1.0)
+    [9]  pattern_confidence  — Max Beta-Binomial confidence from learned patterns
+    [10] signal_count        — Number of feedback signals for this memory (v2.7.4)
+    [11] avg_signal_value    — Average signal value for this memory (v2.7.4)
 
 Design Principles:
     - All features normalized to [0.0, 1.0] range for ML compatibility
@@ -36,6 +38,8 @@ Design Principles:
     - No external API calls — everything computed locally
     - Context (tech preferences, current project) set once per recall batch
     - Thread-safe: no shared mutable state after set_context()
+
+v2.7.4: Expanded from 10 to 12 features. Auto-retrain triggered on mismatch.
 """
 
 import logging
@@ -61,6 +65,8 @@ FEATURE_NAMES = [
     'recency_score',       # 7: Exponential decay based on age
     'access_frequency',    # 8: How often this memory was accessed (capped at 1.0)
     'pattern_confidence',  # 9: Max Beta-Binomial confidence from learned patterns
+    'signal_count',        # 10: Number of feedback signals for this memory (v2.7.4)
+    'avg_signal_value',    # 11: Average signal value for this memory (v2.7.4)
 ]
 
 NUM_FEATURES = len(FEATURE_NAMES)
@@ -102,7 +108,7 @@ _MAX_ACCESS_COUNT = 10
 
 class FeatureExtractor:
     """
-    Extracts 10-dimensional feature vectors for candidate memories.
+    Extracts 12-dimensional feature vectors for candidate memories.
 
     Usage:
         extractor = FeatureExtractor()
@@ -111,9 +117,10 @@ class FeatureExtractor:
             tech_preferences={'python': {'confidence': 0.9}, 'react': {'confidence': 0.7}},
             current_project='SuperLocalMemoryV2',
             workflow_phase='testing',
+            signal_stats={'42': {'count': 5, 'avg_value': 0.8}},
         )
         features = extractor.extract_batch(memories, query="search optimization")
-        # features is List[List[float]], shape (n_memories, 10)
+        # features is List[List[float]], shape (n_memories, 12)
     """
 
     FEATURE_NAMES = FEATURE_NAMES
@@ -129,6 +136,8 @@ class FeatureExtractor:
         self._workflow_keywords: List[str] = []
         # Pattern confidence cache: maps lowercased pattern value -> confidence
         self._pattern_cache: Dict[str, float] = {}
+        # Signal stats cache: maps str(memory_id) -> {count, avg_value} (v2.7.4)
+        self._signal_stats: Dict[str, Dict[str, float]] = {}
 
     def set_context(
         self,
@@ -137,6 +146,7 @@ class FeatureExtractor:
         current_project: Optional[str] = None,
         workflow_phase: Optional[str] = None,
         pattern_confidences: Optional[Dict[str, float]] = None,
+        signal_stats: Optional[Dict[str, Dict[str, float]]] = None,
     ):
         """
         Set context for feature extraction. Called once per recall query.
@@ -154,6 +164,8 @@ class FeatureExtractor:
             pattern_confidences: Map of lowercased pattern value -> confidence (0.0-1.0).
                                  From pattern_learner.PatternStore.get_patterns().
                                  Used for feature [9] pattern_confidence.
+            signal_stats: Map of str(memory_id) -> {count: int, avg_value: float}.
+                          From learning_db feedback aggregation. Used for features [10-11].
         """
         self._source_scores = source_scores or {}
         self._tech_preferences = tech_preferences or {}
@@ -177,9 +189,12 @@ class FeatureExtractor:
         # Cache pattern confidences for feature [9]
         self._pattern_cache = pattern_confidences or {}
 
+        # Cache signal stats for features [10-11] (v2.7.4)
+        self._signal_stats = signal_stats or {}
+
     def extract_features(self, memory: dict, query: str) -> List[float]:
         """
-        Extract 10-dimensional feature vector for a single memory.
+        Extract 12-dimensional feature vector for a single memory.
 
         Args:
             memory: Memory dict from search results. Expected keys:
@@ -188,7 +203,7 @@ class FeatureExtractor:
             query: The recall query string.
 
         Returns:
-            List of 10 floats in [0.0, 1.0] range, one per feature.
+            List of 12 floats in [0.0, 1.0] range, one per feature.
         """
         return [
             self._compute_bm25_score(memory),
@@ -201,6 +216,8 @@ class FeatureExtractor:
             self._compute_recency_score(memory),
             self._compute_access_frequency(memory),
             self._compute_pattern_confidence(memory),
+            self._compute_signal_count(memory),
+            self._compute_avg_signal_value(memory),
         ]
 
     def extract_batch(
@@ -216,7 +233,7 @@ class FeatureExtractor:
             query: The recall query string.
 
         Returns:
-            List of feature vectors (List[List[float]]), shape (n, 10).
+            List of feature vectors (List[List[float]]), shape (n, 12).
             Returns empty list if memories is empty.
         """
         if not memories:
@@ -458,6 +475,43 @@ class FeatureExtractor:
 
         return min(access_count / float(_MAX_ACCESS_COUNT), 1.0)
 
+
+    def _compute_signal_count(self, memory: dict) -> float:
+        """
+        Number of feedback signals for this memory, normalized to [0, 1].
+
+        Uses cached signal_stats from learning.db. Capped at 10 signals.
+        Memories with more feedback signals are more "known" to the system.
+
+        Returns:
+            min(count / 10.0, 1.0) — 0.0 if no signals, 1.0 if 10+ signals
+            0.0 if no signal stats available (v2.7.3 or earlier)
+        """
+        memory_id = str(memory.get('id', ''))
+        if not memory_id or not self._signal_stats:
+            return 0.0
+
+        stats = self._signal_stats.get(memory_id, {})
+        count = stats.get('count', 0)
+        return min(count / 10.0, 1.0)
+
+    def _compute_avg_signal_value(self, memory: dict) -> float:
+        """
+        Average signal value for this memory.
+
+        Uses cached signal_stats from learning.db. Gives the ranker a direct
+        view of whether this memory's feedback is positive (>0.5) or negative (<0.5).
+
+        Returns:
+            Average signal value (0.0-1.0), or 0.5 (neutral) if no data.
+        """
+        memory_id = str(memory.get('id', ''))
+        if not memory_id or not self._signal_stats:
+            return 0.5  # Neutral default
+
+        stats = self._signal_stats.get(memory_id, {})
+        avg = stats.get('avg_value', 0.5)
+        return max(0.0, min(float(avg), 1.0))
 
     def _compute_pattern_confidence(self, memory: dict) -> float:
         """

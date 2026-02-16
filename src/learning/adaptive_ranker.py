@@ -296,12 +296,24 @@ class AdaptiveRanker:
 
         context = context or {}
 
+        # Fetch signal stats for features [10-11] (v2.7.4)
+        signal_stats = {}
+        ldb = self._get_learning_db()
+        if ldb:
+            try:
+                memory_ids = [r.get('id') for r in results if r.get('id')]
+                if memory_ids:
+                    signal_stats = ldb.get_signal_stats_for_memories(memory_ids)
+            except Exception:
+                pass  # Signal stats failure is not critical
+
         # Set up feature extraction context (once per query)
         self._feature_extractor.set_context(
             source_scores=context.get('source_scores'),
             tech_preferences=context.get('tech_preferences'),
             current_project=context.get('current_project'),
             workflow_phase=context.get('workflow_phase'),
+            signal_stats=signal_stats,
         )
 
         # Determine phase and route
@@ -406,6 +418,20 @@ class AdaptiveRanker:
             if access_freq >= 0.5:
                 boost *= _RULE_BOOST['high_access']
 
+            # Feature [10]: signal_count (v2.7.4 — feedback volume)
+            if len(features) > 10:
+                signal_count = features[10]
+                if signal_count >= 0.3:  # 3+ signals
+                    boost *= 1.1  # Mild boost for well-known memories
+
+            # Feature [11]: avg_signal_value (v2.7.4 — feedback quality)
+            if len(features) > 11:
+                avg_signal = features[11]
+                if avg_signal >= 0.7:
+                    boost *= 1.15  # Boost memories with positive feedback
+                elif avg_signal < 0.3 and avg_signal > 0.0:
+                    boost *= 0.85  # Penalize memories with negative feedback
+
             # Apply boost to score
             result['score'] = base_score * boost
 
@@ -509,12 +535,55 @@ class AdaptiveRanker:
                 return None
 
             try:
-                self._model = lgb.Booster(model_file=str(MODEL_PATH))
+                model = lgb.Booster(model_file=str(MODEL_PATH))
+
+                # v2.7.4: Check for feature dimension mismatch (10→12 upgrade)
+                model_num_features = model.num_feature()
+                if model_num_features != NUM_FEATURES:
+                    logger.info(
+                        "Feature mismatch: model has %d features, expected %d. "
+                        "Triggering auto-retrain in background.",
+                        model_num_features, NUM_FEATURES,
+                    )
+                    # Delete old model and trigger re-bootstrap
+                    MODEL_PATH.unlink(missing_ok=True)
+                    self._trigger_retrain_background()
+                    return None
+
+                self._model = model
                 logger.info("Loaded ranking model from %s", MODEL_PATH)
                 return self._model
             except Exception as e:
                 logger.warning("Failed to load ranking model: %s", e)
                 return None
+
+    def _trigger_retrain_background(self):
+        """Trigger model re-bootstrap in a background thread (v2.7.4)."""
+        try:
+            import threading
+
+            def _retrain():
+                try:
+                    from .synthetic_bootstrap import SyntheticBootstrapper
+                    bootstrapper = SyntheticBootstrapper()
+                    if bootstrapper.should_bootstrap():
+                        result = bootstrapper.bootstrap_model()
+                        if result:
+                            logger.info(
+                                "Auto-retrain complete with %d-feature model",
+                                NUM_FEATURES,
+                            )
+                            # Reload the new model
+                            with self._lock:
+                                self._model = None
+                                self._model_load_attempted = False
+                except Exception as e:
+                    logger.warning("Auto-retrain failed: %s", e)
+
+            thread = threading.Thread(target=_retrain, daemon=True)
+            thread.start()
+        except Exception:
+            pass
 
     def reload_model(self):
         """

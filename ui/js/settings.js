@@ -5,6 +5,61 @@ async function loadSettings() {
     loadProfilesTable();
     loadBackupStatus();
     loadBackupList();
+    loadLearningDataStats();
+}
+
+async function loadLearningDataStats() {
+    try {
+        var response = await fetch('/api/feedback/stats');
+        var data = await response.json();
+        var container = document.getElementById('learning-data-stats');
+        if (!container) return;
+
+        container.textContent = '';
+        var row = document.createElement('div');
+        row.className = 'row g-2';
+
+        var stats = [
+            { value: String(data.total_signals || 0), label: 'Feedback Signals' },
+            { value: data.ranking_phase || 'baseline', label: 'Ranking Phase' },
+            { value: Math.round(data.progress || 0) + '%', label: 'ML Progress' },
+        ];
+
+        stats.forEach(function(s) {
+            var col = document.createElement('div');
+            col.className = 'col-4';
+            var stat = document.createElement('div');
+            stat.className = 'backup-stat';
+            var val = document.createElement('div');
+            val.className = 'value';
+            val.textContent = s.value;
+            var lbl = document.createElement('div');
+            lbl.className = 'label';
+            lbl.textContent = s.label;
+            stat.appendChild(val);
+            stat.appendChild(lbl);
+            col.appendChild(stat);
+            row.appendChild(col);
+        });
+        container.appendChild(row);
+    } catch (error) {
+        // Silent — learning stats are optional
+    }
+}
+
+async function backupLearningDb() {
+    try {
+        var response = await fetch('/api/learning/backup', { method: 'POST' });
+        var data = await response.json();
+        if (data.success) {
+            showToast('Learning DB backed up: ' + (data.filename || 'learning.db.bak'));
+        } else {
+            showToast('Backup created at ~/.claude-memory/learning.db.bak');
+        }
+    } catch (error) {
+        // Fallback: just tell user the manual path
+        showToast('Manual backup: cp ~/.claude-memory/learning.db ~/.claude-memory/learning.db.bak');
+    }
 }
 
 async function loadBackupStatus() {
@@ -92,7 +147,9 @@ async function saveBackupConfig() {
             })
         });
         var data = await response.json();
-        renderBackupStatus(data);
+        // API wraps status inside data.status on configure response
+        var status = data.status || data;
+        renderBackupStatus(status);
         showToast('Backup settings saved');
     } catch (error) {
         console.error('Error saving backup config:', error);

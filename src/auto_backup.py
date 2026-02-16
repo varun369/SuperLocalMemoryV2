@@ -175,6 +175,22 @@ class AutoBackup:
 
             logger.info(f"Backup created: {backup_name} ({size_mb:.1f} MB)")
 
+            # v2.7.4: Also backup learning.db if it exists
+            learning_db = self.db_path.parent / "learning.db"
+            if learning_db.exists():
+                try:
+                    learning_backup_name = f"learning-{timestamp}{label_suffix}.db"
+                    learning_backup_path = self.backup_dir / learning_backup_name
+                    l_source = sqlite3.connect(learning_db)
+                    l_backup = sqlite3.connect(learning_backup_path)
+                    l_source.backup(l_backup)
+                    l_backup.close()
+                    l_source.close()
+                    l_size = learning_backup_path.stat().st_size / (1024 * 1024)
+                    logger.info(f"Learning backup created: {learning_backup_name} ({l_size:.1f} MB)")
+                except Exception as le:
+                    logger.warning(f"Learning DB backup failed (non-critical): {le}")
+
             # Enforce retention policy
             self._enforce_retention()
 
@@ -191,24 +207,24 @@ class AutoBackup:
         """Remove old backups exceeding max_backups limit."""
         max_backups = self.config.get('max_backups', DEFAULT_MAX_BACKUPS)
 
-        # List all backup files sorted by modification time (oldest first)
-        backups = sorted(
-            self.backup_dir.glob('memory-*.db'),
-            key=lambda f: f.stat().st_mtime
-        )
+        # Enforce for both memory and learning backups (v2.7.4)
+        for pattern in ['memory-*.db', 'learning-*.db']:
+            backups = sorted(
+                self.backup_dir.glob(pattern),
+                key=lambda f: f.stat().st_mtime
+            )
 
-        # Remove oldest if exceeding limit
-        while len(backups) > max_backups:
-            oldest = backups.pop(0)
-            try:
-                oldest.unlink()
-                logger.info(f"Removed old backup: {oldest.name}")
-            except OSError as e:
-                logger.error(f"Failed to remove old backup {oldest.name}: {e}")
+            while len(backups) > max_backups:
+                oldest = backups.pop(0)
+                try:
+                    oldest.unlink()
+                    logger.info(f"Removed old backup: {oldest.name}")
+                except OSError as e:
+                    logger.error(f"Failed to remove old backup {oldest.name}: {e}")
 
     def list_backups(self) -> List[Dict]:
         """
-        List all available backups.
+        List all available backups (memory.db + learning.db).
 
         Returns:
             List of backup info dictionaries
@@ -218,20 +234,26 @@ class AutoBackup:
         if not self.backup_dir.exists():
             return backups
 
-        for backup_file in sorted(
-            self.backup_dir.glob('memory-*.db'),
-            key=lambda f: f.stat().st_mtime,
-            reverse=True
-        ):
-            stat = backup_file.stat()
-            backups.append({
-                'filename': backup_file.name,
-                'path': str(backup_file),
-                'size_mb': round(stat.st_size / (1024 * 1024), 2),
-                'created': datetime.fromtimestamp(stat.st_mtime).isoformat(),
-                'age_hours': round((datetime.now() - datetime.fromtimestamp(stat.st_mtime)).total_seconds() / 3600, 1),
-            })
+        # v2.7.4: List both memory and learning backups
+        for pattern in ['memory-*.db', 'learning-*.db']:
+            for backup_file in sorted(
+                self.backup_dir.glob(pattern),
+                key=lambda f: f.stat().st_mtime,
+                reverse=True
+            ):
+                stat = backup_file.stat()
+                db_type = 'learning' if backup_file.name.startswith('learning-') else 'memory'
+                backups.append({
+                    'filename': backup_file.name,
+                    'path': str(backup_file),
+                    'size_mb': round(stat.st_size / (1024 * 1024), 2),
+                    'created': datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                    'age_hours': round((datetime.now() - datetime.fromtimestamp(stat.st_mtime)).total_seconds() / 3600, 1),
+                    'type': db_type,
+                })
 
+        # Sort all by creation time (newest first)
+        backups.sort(key=lambda b: b['created'], reverse=True)
         return backups
 
     def restore_backup(self, filename: str) -> bool:
@@ -254,14 +276,20 @@ class AutoBackup:
             # Create a safety backup of current state first
             self.create_backup(label='pre-restore')
 
+            # Determine target DB based on filename prefix
+            if filename.startswith('learning-'):
+                target_db = self.db_path.parent / "learning.db"
+            else:
+                target_db = self.db_path
+
             # Restore using SQLite backup API
             source_conn = sqlite3.connect(backup_path)
-            target_conn = sqlite3.connect(self.db_path)
+            target_conn = sqlite3.connect(target_db)
             source_conn.backup(target_conn)
             target_conn.close()
             source_conn.close()
 
-            logger.info(f"Restored from backup: {filename}")
+            logger.info(f"Restored from backup: {filename} → {target_db.name}")
             return True
 
         except Exception as e:
@@ -299,6 +327,10 @@ class AutoBackup:
         else:
             interval_display = f"{hours} hour(s)"
 
+        # v2.7.4: Separate counts for memory vs learning backups
+        memory_backups = [b for b in backups if b.get('type') == 'memory']
+        learning_backups = [b for b in backups if b.get('type') == 'learning']
+
         return {
             'enabled': self.config.get('enabled', True),
             'interval_hours': hours,
@@ -307,7 +339,8 @@ class AutoBackup:
             'last_backup': self.config.get('last_backup'),
             'last_backup_file': self.config.get('last_backup_file'),
             'next_backup': next_backup,
-            'backup_count': len(backups),
+            'backup_count': len(memory_backups),
+            'learning_backup_count': len(learning_backups),
             'total_size_mb': round(sum(b['size_mb'] for b in backups), 2),
             'backups': backups,
         }

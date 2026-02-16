@@ -742,6 +742,10 @@
             </li>
         </ul>
 
+        <!-- Privacy Notice & Feedback Progress (v2.7.4) -->
+        <div id="privacy-notice"></div>
+        <div id="feedback-progress" class="mb-3"></div>
+
         <div class="tab-content">
             <!-- Graph Visualization -->
             <div class="tab-pane fade show active" id="graph-pane">
@@ -953,6 +957,20 @@
                         <span>Baseline (0)</span>
                         <span>Rule-Based (20+)</span>
                         <span>ML Model (200+)</span>
+                    </div>
+                </div>
+
+                <!-- What We Learned (v2.7.4 — Summary Card) -->
+                <div class="card p-3 mb-3" id="what-we-learned-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0"><i class="bi bi-lightbulb"></i> What SuperLocalMemory Learned About You</h6>
+                        <span class="badge bg-success" id="learned-profile-badge">default</span>
+                    </div>
+                    <div id="what-we-learned-content">
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-hourglass-split" style="font-size: 1.5rem;"></i>
+                            <p class="mt-2 mb-0 small">Loading learned insights...</p>
+                        </div>
                     </div>
                 </div>
 
@@ -1239,6 +1257,25 @@
                         </div>
                     </div>
                 </div>
+                <!-- Learning Data Management (v2.7.4) -->
+                <div class="card p-3 mb-3">
+                    <h5 class="mb-3"><i class="bi bi-brain"></i> Learning Data</h5>
+                    <p class="text-muted small mb-3">
+                        SuperLocalMemory learns from your usage patterns to improve recall results.
+                        All learning data is stored locally in <code>~/.claude-memory/learning.db</code>.
+                    </p>
+                    <div id="learning-data-stats" class="mb-3"></div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-danger" onclick="resetLearningData()">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset Learning Data
+                        </button>
+                        <button class="btn btn-outline-info" onclick="backupLearningDb()">
+                            <i class="bi bi-download"></i> Backup Learning DB
+                        </button>
+                    </div>
+                    <small class="text-muted mt-2 d-block">Reset clears all learned preferences, feedback signals, and patterns. Your memories are preserved.</small>
+                </div>
+
                 <!-- Backup History -->
                 <div class="card p-3">
                     <h5 class="mb-3"><i class="bi bi-clock-history"></i> Backup History</h5>
@@ -1319,6 +1356,7 @@
     <script src="static/js/events.js"></script>
     <script src="static/js/agents.js"></script>
     <script src="static/js/learning.js"></script>
+    <script src="static/js/feedback.js"></script>
     <script src="static/js/init.js"></script>
 
     <footer>

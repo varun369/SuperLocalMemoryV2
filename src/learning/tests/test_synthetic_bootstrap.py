@@ -258,7 +258,7 @@ class TestGenerateSyntheticData:
             assert "label" in r
             assert "source" in r
             assert "features" in r
-            assert len(r["features"]) == 10  # 10-dimensional feature vector
+            assert len(r["features"]) == 12  # 12-dimensional feature vector (v2.7.4)
 
     def test_labels_in_range(self, bootstrapper_with_data):
         records = bootstrapper_with_data.generate_synthetic_training_data()

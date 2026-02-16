@@ -142,6 +142,7 @@ Finds: Exact mentions of "PostgreSQL 15"
 - Graph distance
 - Recency (newer = slight boost)
 - Importance level
+- Your usage patterns (results improve automatically over time)
 
 ## Advanced Usage
 

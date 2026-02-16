@@ -24,10 +24,127 @@ function renderLearningStatus(data) {
     renderFeedbackCount(data.stats);
     renderEngagementHealth(data.engagement);
     renderProgressBar(data.stats ? data.stats.feedback_count : 0);
+    renderWhatWeLearned(data);
     renderTechPreferences(data.tech_preferences || []);
     renderWorkflowPatterns(data.workflow_patterns || []);
     renderSourceQuality(data.source_scores || {});
     renderPrivacyStats(data.stats);
+}
+
+function renderWhatWeLearned(data) {
+    var container = document.getElementById('what-we-learned-content');
+    var profileBadge = document.getElementById('learned-profile-badge');
+    if (!container) return;
+    container.textContent = '';
+
+    // Show active profile
+    if (profileBadge && data.stats && data.stats.active_profile) {
+        profileBadge.textContent = data.stats.active_profile;
+    }
+
+    var insights = [];
+
+    // Collect tech preference insights
+    var techPrefs = data.tech_preferences || [];
+    var highConfTech = techPrefs.filter(function(p) { return p.confidence >= 0.6; });
+    if (highConfTech.length > 0) {
+        var techNames = highConfTech.map(function(p) { return p.value; }).slice(0, 5);
+        insights.push({
+            icon: 'bi-cpu',
+            color: 'text-primary',
+            text: 'You prefer: ' + techNames.join(', '),
+            detail: highConfTech.length + ' tech preferences learned',
+        });
+    }
+
+    // Collect workflow insights
+    var workflows = data.workflow_patterns || [];
+    var sequences = workflows.filter(function(w) { return w.type === 'sequence'; });
+    var temporal = workflows.filter(function(w) { return w.type === 'temporal'; });
+    if (sequences.length > 0) {
+        insights.push({
+            icon: 'bi-diagram-3',
+            color: 'text-info',
+            text: sequences.length + ' workflow sequence' + (sequences.length > 1 ? 's' : '') + ' detected',
+            detail: 'Common patterns in how you work',
+        });
+    }
+    if (temporal.length > 0) {
+        insights.push({
+            icon: 'bi-clock',
+            color: 'text-warning',
+            text: temporal.length + ' time-based pattern' + (temporal.length > 1 ? 's' : '') + ' found',
+            detail: 'When you tend to work on what',
+        });
+    }
+
+    // Source quality insights
+    var sources = data.source_scores || {};
+    var sourceCount = Object.keys(sources).length;
+    if (sourceCount > 0) {
+        var bestSource = Object.entries(sources).sort(function(a, b) { return b[1] - a[1]; })[0];
+        insights.push({
+            icon: 'bi-trophy',
+            color: 'text-success',
+            text: 'Best source: ' + bestSource[0] + ' (' + Math.round(bestSource[1] * 100) + '% quality)',
+            detail: sourceCount + ' sources tracked',
+        });
+    }
+
+    // Feedback volume insight
+    var feedbackCount = (data.stats && data.stats.feedback_count) || 0;
+    if (feedbackCount > 0) {
+        var phase = data.ranking_phase || 'baseline';
+        var phaseLabel = {baseline: 'collecting data', rule_based: 'learning your preferences', ml_model: 'fully personalized'}[phase] || phase;
+        insights.push({
+            icon: 'bi-graph-up',
+            color: 'text-success',
+            text: feedbackCount + ' feedback signals collected',
+            detail: 'Currently ' + phaseLabel,
+        });
+    }
+
+    // Render insights
+    if (insights.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'text-center text-muted py-3';
+        var emptyIcon = document.createElement('i');
+        emptyIcon.className = 'bi bi-lightbulb';
+        emptyIcon.style.fontSize = '2rem';
+        empty.appendChild(emptyIcon);
+        var emptyText = document.createElement('p');
+        emptyText.className = 'mt-2 mb-0 small';
+        emptyText.textContent = 'Start using recall and giving feedback. SuperLocalMemory will learn your preferences automatically.';
+        empty.appendChild(emptyText);
+        container.appendChild(empty);
+        return;
+    }
+
+    for (var i = 0; i < insights.length; i++) {
+        var insight = insights[i];
+        var row = document.createElement('div');
+        row.className = 'd-flex align-items-start mb-2 p-2 rounded';
+        row.style.backgroundColor = 'var(--bs-body-bg)';
+
+        var icon = document.createElement('i');
+        icon.className = 'bi ' + insight.icon + ' ' + insight.color + ' me-3';
+        icon.style.fontSize = '1.3rem';
+        icon.style.marginTop = '2px';
+
+        var textDiv = document.createElement('div');
+        var mainText = document.createElement('div');
+        mainText.className = 'fw-semibold';
+        mainText.textContent = insight.text;
+        var detailText = document.createElement('small');
+        detailText.className = 'text-muted';
+        detailText.textContent = insight.detail;
+        textDiv.appendChild(mainText);
+        textDiv.appendChild(detailText);
+
+        row.appendChild(icon);
+        row.appendChild(textDiv);
+        container.appendChild(row);
+    }
 }
 
 function renderPhase(data) {

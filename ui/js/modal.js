@@ -142,8 +142,25 @@ function openMemoryDetail(mem) {
         body.appendChild(actionsDiv);
     }
 
+    // v2.7.4: Add feedback buttons to modal body
+    if (typeof createFeedbackButtons === 'function' && mem && mem.id) {
+        var feedbackDiv = document.createElement('div');
+        feedbackDiv.className = 'mt-3 pt-2 border-top';
+        var feedbackLabel = document.createElement('small');
+        feedbackLabel.className = 'text-muted d-block mb-1';
+        feedbackLabel.textContent = 'Was this memory useful?';
+        feedbackDiv.appendChild(feedbackLabel);
+        feedbackDiv.appendChild(createFeedbackButtons(mem.id));
+        body.appendChild(feedbackDiv);
+    }
+
     var modalEl = document.getElementById('memoryDetailModal');
     var modal = new bootstrap.Modal(modalEl);
+
+    // v2.7.4: Start dwell time tracking
+    if (typeof startDwellTracking === 'function' && mem && mem.id) {
+        startDwellTracking(mem.id);
+    }
 
     // Focus first interactive element when modal opens
     modalEl.addEventListener('shown.bs.modal', function() {
@@ -153,8 +170,12 @@ function openMemoryDetail(mem) {
         }
     }, { once: true });
 
-    // Return focus when modal closes
+    // Return focus when modal closes + stop dwell tracking
     modalEl.addEventListener('hidden.bs.modal', function() {
+        // v2.7.4: Stop dwell time tracking
+        if (typeof stopDwellTracking === 'function') {
+            stopDwellTracking();
+        }
         if (window.lastFocusedElement && typeof window.lastFocusedElement.focus === 'function') {
             window.lastFocusedElement.focus();
             window.lastFocusedElement = null;

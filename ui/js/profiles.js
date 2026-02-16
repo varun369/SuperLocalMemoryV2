@@ -190,6 +190,14 @@ async function switchProfile(profileName) {
             loadStats();
             loadGraph();
             loadProfilesTable();
+            // v2.7.4: Reload ALL tabs for new profile
+            if (typeof loadLearning === 'function') loadLearning();
+            if (typeof refreshFeedbackStats === 'function') refreshFeedbackStats();
+            if (typeof loadLearningDataStats === 'function') loadLearningDataStats();
+            if (typeof loadAgents === 'function') loadAgents();
+            if (typeof loadMemories === 'function') loadMemories();
+            if (typeof loadTimeline === 'function') loadTimeline();
+            if (typeof loadEvents === 'function') loadEvents();
             var activeTab = document.querySelector('#mainTabs .nav-link.active');
             if (activeTab) activeTab.click();
         } else {
