@@ -12,22 +12,23 @@ Attribution must be preserved in all copies or derivatives.
 """
 
 """
-FeatureExtractor — Extracts 9-dimensional feature vectors for candidate memories.
+FeatureExtractor — Extracts 10-dimensional feature vectors for candidate memories.
 
 Each memory retrieved during recall gets a feature vector that feeds into
 the AdaptiveRanker. In Phase 1 (rule-based), features drive boosting weights.
 In Phase 2 (ML), features become LightGBM input columns.
 
-Feature Vector (9 dimensions):
-    [0] bm25_score       — Existing retrieval score from search results
-    [1] tfidf_score      — TF-IDF cosine similarity from search results
-    [2] tech_match       — Does memory match user's tech preferences?
-    [3] project_match    — Is memory from the current project?
-    [4] workflow_fit     — Does memory fit current workflow phase?
-    [5] source_quality   — Quality score of the source that created this memory
-    [6] importance_norm  — Normalized importance (importance / 10.0)
-    [7] recency_score    — Exponential decay based on age (180-day half-life)
-    [8] access_frequency — How often this memory was accessed (capped at 1.0)
+Feature Vector (10 dimensions):
+    [0] bm25_score          — Existing retrieval score from search results
+    [1] tfidf_score         — TF-IDF cosine similarity from search results
+    [2] tech_match          — Does memory match user's tech preferences?
+    [3] project_match       — Is memory from the current project?
+    [4] workflow_fit        — Does memory fit current workflow phase?
+    [5] source_quality      — Quality score of the source that created this memory
+    [6] importance_norm     — Normalized importance (importance / 10.0)
+    [7] recency_score       — Exponential decay based on age (180-day half-life)
+    [8] access_frequency    — How often this memory was accessed (capped at 1.0)
+    [9] pattern_confidence  — Max Beta-Binomial confidence from learned patterns
 
 Design Principles:
     - All features normalized to [0.0, 1.0] range for ML compatibility
@@ -59,6 +60,7 @@ FEATURE_NAMES = [
     'importance_norm',     # 6: Normalized importance (importance / 10.0)
     'recency_score',       # 7: Exponential decay based on age
     'access_frequency',    # 8: How often this memory was accessed (capped at 1.0)
+    'pattern_confidence',  # 9: Max Beta-Binomial confidence from learned patterns
 ]
 
 NUM_FEATURES = len(FEATURE_NAMES)
@@ -100,7 +102,7 @@ _MAX_ACCESS_COUNT = 10
 
 class FeatureExtractor:
     """
-    Extracts 9-dimensional feature vectors for candidate memories.
+    Extracts 10-dimensional feature vectors for candidate memories.
 
     Usage:
         extractor = FeatureExtractor()
@@ -111,7 +113,7 @@ class FeatureExtractor:
             workflow_phase='testing',
         )
         features = extractor.extract_batch(memories, query="search optimization")
-        # features is List[List[float]], shape (n_memories, 9)
+        # features is List[List[float]], shape (n_memories, 10)
     """
 
     FEATURE_NAMES = FEATURE_NAMES
@@ -125,6 +127,8 @@ class FeatureExtractor:
         self._current_project_lower: Optional[str] = None
         self._workflow_phase: Optional[str] = None
         self._workflow_keywords: List[str] = []
+        # Pattern confidence cache: maps lowercased pattern value -> confidence
+        self._pattern_cache: Dict[str, float] = {}
 
     def set_context(
         self,
@@ -132,6 +136,7 @@ class FeatureExtractor:
         tech_preferences: Optional[Dict[str, dict]] = None,
         current_project: Optional[str] = None,
         workflow_phase: Optional[str] = None,
+        pattern_confidences: Optional[Dict[str, float]] = None,
     ):
         """
         Set context for feature extraction. Called once per recall query.
@@ -146,6 +151,9 @@ class FeatureExtractor:
                               From cross_project_aggregator or pattern_learner.
             current_project: Name of the currently active project (if detected).
             workflow_phase: Current workflow phase (planning, coding, testing, etc).
+            pattern_confidences: Map of lowercased pattern value -> confidence (0.0-1.0).
+                                 From pattern_learner.PatternStore.get_patterns().
+                                 Used for feature [9] pattern_confidence.
         """
         self._source_scores = source_scores or {}
         self._tech_preferences = tech_preferences or {}
@@ -166,9 +174,12 @@ class FeatureExtractor:
             if workflow_phase else []
         )
 
+        # Cache pattern confidences for feature [9]
+        self._pattern_cache = pattern_confidences or {}
+
     def extract_features(self, memory: dict, query: str) -> List[float]:
         """
-        Extract 9-dimensional feature vector for a single memory.
+        Extract 10-dimensional feature vector for a single memory.
 
         Args:
             memory: Memory dict from search results. Expected keys:
@@ -177,7 +188,7 @@ class FeatureExtractor:
             query: The recall query string.
 
         Returns:
-            List of 9 floats in [0.0, 1.0] range, one per feature.
+            List of 10 floats in [0.0, 1.0] range, one per feature.
         """
         return [
             self._compute_bm25_score(memory),
@@ -189,6 +200,7 @@ class FeatureExtractor:
             self._compute_importance_norm(memory),
             self._compute_recency_score(memory),
             self._compute_access_frequency(memory),
+            self._compute_pattern_confidence(memory),
         ]
 
     def extract_batch(
@@ -204,7 +216,7 @@ class FeatureExtractor:
             query: The recall query string.
 
         Returns:
-            List of feature vectors (List[List[float]]), shape (n, 9).
+            List of feature vectors (List[List[float]]), shape (n, 10).
             Returns empty list if memories is empty.
         """
         if not memories:
@@ -445,6 +457,55 @@ class FeatureExtractor:
             access_count = 0
 
         return min(access_count / float(_MAX_ACCESS_COUNT), 1.0)
+
+
+    def _compute_pattern_confidence(self, memory: dict) -> float:
+        """
+        Compute max Beta-Binomial confidence from learned patterns matching this memory.
+
+        Looks up the cached pattern_confidences (set via set_context) and checks
+        if any pattern value appears in the memory's content or tags. Returns the
+        maximum confidence among all matching patterns.
+
+        Returns:
+            Max confidence (0.0-1.0) from matching patterns
+            0.5 if no patterns loaded (neutral — unknown)
+            0.0 if patterns loaded but none match
+        """
+        if not self._pattern_cache:
+            return 0.5  # No patterns available — neutral
+
+        content = memory.get('content', '')
+        if not content:
+            return 0.0
+
+        content_lower = content.lower()
+
+        # Also check tags
+        tags_str = ''
+        tags = memory.get('tags', [])
+        if isinstance(tags, list):
+            tags_str = ' '.join(t.lower() for t in tags)
+        elif isinstance(tags, str):
+            tags_str = tags.lower()
+
+        searchable = content_lower + ' ' + tags_str
+
+        max_confidence = 0.0
+        for pattern_value, confidence in self._pattern_cache.items():
+            # Pattern values are already lowercased in the cache
+            pattern_lower = pattern_value.lower() if pattern_value else ''
+            if not pattern_lower:
+                continue
+            # Word-boundary check for short patterns to avoid false positives
+            if len(pattern_lower) <= 3:
+                if re.search(r'\b' + re.escape(pattern_lower) + r'\b', searchable):
+                    max_confidence = max(max_confidence, confidence)
+            else:
+                if pattern_lower in searchable:
+                    max_confidence = max(max_confidence, confidence)
+
+        return max(0.0, min(max_confidence, 1.0))
 
 
 # ============================================================================

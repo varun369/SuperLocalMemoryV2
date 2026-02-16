@@ -78,9 +78,9 @@ async function loadAgents() {
             tr.appendChild(tdProto);
 
             var tdTrust = document.createElement('td');
-            var trustScore = agent.trust_score != null ? agent.trust_score : 1.0;
-            tdTrust.className = trustScore < 0.7 ? 'text-danger fw-bold'
-                : trustScore < 0.9 ? 'text-warning fw-bold' : 'text-success fw-bold';
+            var trustScore = agent.trust_score != null ? agent.trust_score : 0.667;
+            tdTrust.className = trustScore < 0.3 ? 'text-danger fw-bold'
+                : trustScore < 0.5 ? 'text-warning fw-bold' : 'text-success fw-bold';
             tdTrust.textContent = trustScore.toFixed(2);
             tr.appendChild(tdTrust);
 
@@ -133,7 +133,7 @@ async function loadTrustOverview() {
 
         var cardData = [
             { value: (stats.total_signals || 0).toLocaleString(), label: 'Total Signals Collected', cls: '' },
-            { value: (stats.avg_trust_score || 1.0).toFixed(3), label: 'Average Trust Score', cls: '' },
+            { value: (stats.avg_trust_score || 0.667).toFixed(3), label: 'Average Trust Score', cls: '' },
             { value: stats.enforcement || 'disabled', label: 'Enforcement Status', cls: 'text-info' }
         ];
 

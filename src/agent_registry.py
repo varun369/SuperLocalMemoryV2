@@ -98,7 +98,7 @@ class AgentRegistry:
                         last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         memories_written INTEGER DEFAULT 0,
                         memories_recalled INTEGER DEFAULT 0,
-                        trust_score REAL DEFAULT 1.0,
+                        trust_score REAL DEFAULT 0.667,
                         metadata TEXT DEFAULT '{}'
                     )
                 ''')
@@ -126,7 +126,7 @@ class AgentRegistry:
                     last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     memories_written INTEGER DEFAULT 0,
                     memories_recalled INTEGER DEFAULT 0,
-                    trust_score REAL DEFAULT 1.0,
+                    trust_score REAL DEFAULT 0.667,
                     metadata TEXT DEFAULT '{}'
                 )
             ''')
@@ -150,7 +150,7 @@ class AgentRegistry:
         Register or update an agent in the registry.
 
         If the agent already exists, updates last_seen and metadata.
-        If new, creates the entry with trust_score=1.0.
+        If new, creates the entry with trust_score=0.667 (Beta(2,1) prior).
 
         Args:
             agent_id: Unique identifier (e.g., "mcp:claude-desktop")

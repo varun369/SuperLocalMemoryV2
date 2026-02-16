@@ -72,6 +72,70 @@ try:
 except ImportError:
     LEARNING_AVAILABLE = False
 
+# ============================================================================
+# Synthetic Bootstrap Auto-Trigger (v2.7 — P1-12)
+# Runs ONCE on first recall if: memory count > 50, no model, LightGBM available.
+# Spawns in background thread — never blocks recall. All errors swallowed.
+# ============================================================================
+
+_bootstrap_checked = False
+
+
+def _maybe_bootstrap():
+    """Check if synthetic bootstrap is needed and run it in a background thread.
+
+    Called once from the first recall invocation. Sets _bootstrap_checked = True
+    immediately to prevent re-entry. The actual bootstrap runs in a daemon thread
+    so it never blocks the recall response.
+
+    Conditions for bootstrap:
+        1. LEARNING_AVAILABLE and ML_RANKING_AVAILABLE flags are True
+        2. SyntheticBootstrapper.should_bootstrap() returns True (checks:
+           - LightGBM + NumPy installed
+           - No existing model file at ~/.claude-memory/models/ranker.txt
+           - Memory count > 50)
+
+    CRITICAL: This function wraps everything in try/except. Bootstrap failure
+    must NEVER break recall. It is purely an optimization — first-time ML
+    model creation so users don't have to wait 200+ recalls for personalization.
+    """
+    global _bootstrap_checked
+    _bootstrap_checked = True  # Set immediately to prevent re-entry
+
+    try:
+        if not LEARNING_AVAILABLE:
+            return
+        if not ML_RANKING_AVAILABLE:
+            return
+
+        from learning.synthetic_bootstrap import SyntheticBootstrapper
+        bootstrapper = SyntheticBootstrapper(memory_db_path=DB_PATH)
+
+        if not bootstrapper.should_bootstrap():
+            return
+
+        # Run bootstrap in background thread — never block recall
+        import threading
+
+        def _run_bootstrap():
+            try:
+                result = bootstrapper.bootstrap_model()
+                if result:
+                    import logging
+                    logging.getLogger("superlocalmemory.mcp").info(
+                        "Synthetic bootstrap complete: %d samples",
+                        result.get('training_samples', 0)
+                    )
+            except Exception:
+                pass  # Bootstrap failure is never critical
+
+        thread = threading.Thread(target=_run_bootstrap, daemon=True)
+        thread.start()
+
+    except Exception:
+        pass  # Any failure in bootstrap setup is swallowed silently
+
+
 def _sanitize_error(error: Exception) -> str:
     """Strip internal paths and structure from error messages."""
     msg = str(error)
@@ -355,6 +419,10 @@ async def recall(
                 results = store.search(query, limit=limit)
         else:
             results = store.search(query, limit=limit)
+
+        # v2.7: Auto-trigger synthetic bootstrap on first recall (P1-12)
+        if not _bootstrap_checked:
+            _maybe_bootstrap()
 
         # v2.7: Learning-based re-ranking (optional, graceful fallback)
         if LEARNING_AVAILABLE:
@@ -867,6 +935,15 @@ async def search(query: str) -> dict:
     try:
         store = get_store()
         raw_results = store.search(query, limit=20)
+
+        # v2.7: Learning-based re-ranking (optional, graceful fallback)
+        if LEARNING_AVAILABLE:
+            try:
+                ranker = get_adaptive_ranker()
+                if ranker:
+                    raw_results = ranker.rerank(raw_results, query)
+            except Exception:
+                pass  # Re-ranking failure must never break search
 
         results = []
         for r in raw_results:

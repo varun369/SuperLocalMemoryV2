@@ -16,6 +16,18 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.7.3] - 2026-02-16
+
+### Improved
+- Enhanced trust scoring accuracy
+- Improved search result relevance across all access methods
+- Better error handling for optional components
+
+### Fixed
+- Corrected outdated performance references in documentation
+
+---
+
 ## [2.7.1] - 2026-02-16
 
 ### Added
@@ -270,7 +282,7 @@ SuperLocalMemory V2 represents a complete architectural rewrite with intelligent
 - **Profile Management** - Multi-profile support with isolated databases
 
 ### Performance
-- 3.3x faster search (45ms vs 150ms in V1)
+- Improved search performance over V1 (see Performance Benchmarks)
 - 60-96% storage reduction with compression
 
 ### Research Foundation

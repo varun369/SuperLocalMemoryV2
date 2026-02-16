@@ -8,6 +8,9 @@ var originalGraphData = { nodes: [], links: [] }; // Unfiltered data (for reset)
 var currentLayout = 'fcose'; // Default layout
 var filterState = { cluster_id: null, entity: null }; // Current filters
 var isInitialLoad = true; // Track if this is the first graph load
+var focusedNodeIndex = 0; // Keyboard navigation: currently focused node
+var keyboardNavigationEnabled = false; // Track if keyboard nav is active
+var lastFocusedElement = null; // Store last focused element for modal return
 
 // Cluster colors (match Clusters tab)
 const CLUSTER_COLORS = [
@@ -293,7 +296,11 @@ function renderGraph(data) {
             maxZoom: 3,
             wheelSensitivity: 0.05,  // Reduced from 0.2 - less sensitive zoom
             autoungrabify: false,
-            autounselectify: false
+            autounselectify: false,
+            // Mobile touch support
+            touchTapThreshold: 8,  // Pixels of movement allowed for tap (vs drag)
+            desktopTapThreshold: 4,  // Desktop click threshold
+            pixelRatio: 'auto'  // Retina/HiDPI support
         });
         console.log('[renderGraph] Cytoscape initialized successfully, nodes:', cy.nodes().length);
     } catch (error) {
@@ -319,6 +326,9 @@ function renderGraph(data) {
     // Update UI
     updateFilterBadge();
     updateGraphStats(data);
+
+    // Announce graph load to screen readers
+    updateScreenReaderStatus(`Graph loaded with ${data.nodes.length} memories and ${data.links.length} connections`);
 
     // Check if we should restore saved layout or run fresh layout
     const hasSavedLayout = localStorage.getItem('slm_graph_layout');
@@ -494,6 +504,15 @@ function getCytoscapeStyles() {
             }
         },
         {
+            selector: 'node.keyboard-focused',
+            style: {
+                'border-width': 5,
+                'border-color': '#0066ff',
+                'border-style': 'solid',
+                'box-shadow': '0 0 15px #0066ff'
+            }
+        },
+        {
             selector: 'edge',
             style: {
                 'width': function(ele) {
@@ -582,6 +601,9 @@ function addCytoscapeInteractions() {
             saveLayoutPositions();
         }, 1000);
     });
+
+    // Add keyboard navigation
+    setupKeyboardNavigation();
 }
 
 // Tooltip (XSS-safe: uses textContent and createElement)
@@ -930,6 +952,213 @@ function setupGraphEventListeners() {
     }
 
     console.log('[Init] Graph event listeners setup complete');
+}
+
+// Keyboard navigation for graph
+function setupKeyboardNavigation() {
+    if (!cy) return;
+
+    const container = document.getElementById('graph-container');
+    if (!container) return;
+
+    // Make container focusable
+    container.setAttribute('tabindex', '0');
+
+    // Focus handler - enable keyboard nav when container is focused
+    container.addEventListener('focus', function() {
+        keyboardNavigationEnabled = true;
+        if (cy.nodes().length > 0) {
+            focusNodeAtIndex(0);
+        }
+    });
+
+    container.addEventListener('blur', function() {
+        keyboardNavigationEnabled = false;
+        cy.nodes().removeClass('keyboard-focused');
+    });
+
+    // Keyboard event handler
+    container.addEventListener('keydown', function(e) {
+        if (!keyboardNavigationEnabled || !cy) return;
+
+        const nodes = cy.nodes();
+        if (nodes.length === 0) return;
+
+        const currentNode = nodes[focusedNodeIndex];
+
+        switch(e.key) {
+            case 'Tab':
+                e.preventDefault();
+                if (e.shiftKey) {
+                    // Shift+Tab: previous node
+                    focusedNodeIndex = (focusedNodeIndex - 1 + nodes.length) % nodes.length;
+                } else {
+                    // Tab: next node
+                    focusedNodeIndex = (focusedNodeIndex + 1) % nodes.length;
+                }
+                focusNodeAtIndex(focusedNodeIndex);
+                announceNode(nodes[focusedNodeIndex]);
+                break;
+
+            case 'Enter':
+            case ' ':
+                e.preventDefault();
+                if (currentNode) {
+                    lastFocusedElement = container;
+                    openMemoryModal(currentNode);
+                }
+                break;
+
+            case 'ArrowRight':
+                e.preventDefault();
+                moveToAdjacentNode('right', currentNode);
+                break;
+
+            case 'ArrowLeft':
+                e.preventDefault();
+                moveToAdjacentNode('left', currentNode);
+                break;
+
+            case 'ArrowDown':
+                e.preventDefault();
+                moveToAdjacentNode('down', currentNode);
+                break;
+
+            case 'ArrowUp':
+                e.preventDefault();
+                moveToAdjacentNode('up', currentNode);
+                break;
+
+            case 'Escape':
+                e.preventDefault();
+                if (filterState.cluster_id || filterState.entity) {
+                    clearGraphFilters();
+                    updateScreenReaderStatus('Filters cleared, showing all memories');
+                } else {
+                    container.blur();
+                    keyboardNavigationEnabled = false;
+                }
+                break;
+
+            case 'Home':
+                e.preventDefault();
+                focusedNodeIndex = 0;
+                focusNodeAtIndex(0);
+                announceNode(nodes[0]);
+                break;
+
+            case 'End':
+                e.preventDefault();
+                focusedNodeIndex = nodes.length - 1;
+                focusNodeAtIndex(focusedNodeIndex);
+                announceNode(nodes[focusedNodeIndex]);
+                break;
+        }
+    });
+}
+
+// Focus a node at specific index
+function focusNodeAtIndex(index) {
+    if (!cy) return;
+
+    const nodes = cy.nodes();
+    if (index < 0 || index >= nodes.length) return;
+
+    // Remove focus from all nodes
+    cy.nodes().removeClass('keyboard-focused');
+
+    // Add focus to target node
+    const node = nodes[index];
+    node.addClass('keyboard-focused');
+
+    // Center node in viewport with smooth animation
+    cy.animate({
+        center: { eles: node },
+        zoom: Math.max(cy.zoom(), 1.0),
+        duration: 300,
+        easing: 'ease-in-out'
+    });
+}
+
+// Move focus to adjacent node based on direction
+function moveToAdjacentNode(direction, currentNode) {
+    if (!currentNode) return;
+
+    const nodes = cy.nodes();
+    const currentPos = currentNode.position();
+    let bestNode = null;
+    let bestScore = Infinity;
+
+    // Find adjacent nodes based on direction
+    nodes.forEach((node, index) => {
+        if (node.id() === currentNode.id()) return;
+
+        const pos = node.position();
+        const dx = pos.x - currentPos.x;
+        const dy = pos.y - currentPos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        let isCorrectDirection = false;
+        let directionScore = 0;
+
+        switch(direction) {
+            case 'right':
+                isCorrectDirection = dx > 0;
+                directionScore = dx;
+                break;
+            case 'left':
+                isCorrectDirection = dx < 0;
+                directionScore = -dx;
+                break;
+            case 'down':
+                isCorrectDirection = dy > 0;
+                directionScore = dy;
+                break;
+            case 'up':
+                isCorrectDirection = dy < 0;
+                directionScore = -dy;
+                break;
+        }
+
+        // Combine distance with direction preference
+        if (isCorrectDirection) {
+            const score = distance - (directionScore * 0.5);
+            if (score < bestScore) {
+                bestScore = score;
+                bestNode = node;
+                focusedNodeIndex = index;
+            }
+        }
+    });
+
+    if (bestNode) {
+        focusNodeAtIndex(focusedNodeIndex);
+        announceNode(bestNode);
+    }
+}
+
+// Announce node to screen reader
+function announceNode(node) {
+    if (!node) return;
+
+    const data = node.data();
+    const message = `Memory ${data.id}: ${data.label}, Cluster ${data.cluster_id}, Importance ${data.importance} out of 10`;
+    updateScreenReaderStatus(message);
+}
+
+// Update screen reader status
+function updateScreenReaderStatus(message) {
+    let statusRegion = document.getElementById('graph-sr-status');
+    if (!statusRegion) {
+        statusRegion = document.createElement('div');
+        statusRegion.id = 'graph-sr-status';
+        statusRegion.setAttribute('role', 'status');
+        statusRegion.setAttribute('aria-live', 'polite');
+        statusRegion.setAttribute('aria-atomic', 'true');
+        statusRegion.style.cssText = 'position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden;';
+        document.body.appendChild(statusRegion);
+    }
+    statusRegion.textContent = message;
 }
 
 if (document.readyState === 'loading') {

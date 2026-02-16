@@ -381,7 +381,7 @@ SuperLocalMemory V2 uses a hierarchical, additive architecture where each layer 
    - Cold storage archival
 
 **Performance:**
-- Full-text search: ~45ms (avg)
+- Full-text search: Sub-11ms median for typical databases (see wiki Performance Benchmarks for measured data)
 - Insert: <10ms
 - Tag search: ~30ms
 
@@ -737,7 +737,7 @@ Vue: 10% confidence → Low priority, exploratory
 | Operation | Complexity | Typical Time |
 |-----------|-----------|--------------|
 | Add memory | O(1) | <10ms |
-| Search (FTS5) | O(log n) | ~45ms |
+| Search (FTS5) | O(log n) | ~11ms median (100 memories) |
 | Graph build | O(n²) worst, O(n log n) avg | ~2s (100 memories) |
 | Pattern update | O(n) | <2s (100 memories) |
 | Find related | O(1) | <10ms |
@@ -794,12 +794,12 @@ Vue: 10% confidence → Low priority, exploratory
 
 ### Current Limits (Tested)
 
-| Memories | Build Time | Search Time | Database Size |
-|----------|-----------|-------------|---------------|
-| 20 | <0.03s | ~30ms | ~30KB |
-| 100 | ~2s | ~45ms | ~150KB |
-| 500 | ~15s | ~60ms | ~700KB |
-| 1000 | ~45s | ~100ms | ~1.5MB |
+| Memories | Build Time | Search Time (median) | Database Size |
+|----------|-----------|----------------------|---------------|
+| 100 | 0.28s | 10.6ms | ~150KB |
+| 500 | ~5s | 65.2ms | ~700KB |
+| 1,000 | 10.6s | 124.3ms | 1.50 MB |
+| 5,000 | 277s | 1,172ms | ~6.8 MB |
 
 ### Scaling Strategies
 

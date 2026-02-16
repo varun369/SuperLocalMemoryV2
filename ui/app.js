@@ -1445,9 +1445,9 @@ async function loadAgents() {
 
             // Trust score
             var tdTrust = document.createElement('td');
-            var trustScore = agent.trust_score != null ? agent.trust_score : 1.0;
-            tdTrust.className = trustScore < 0.7 ? 'text-danger fw-bold'
-                : trustScore < 0.9 ? 'text-warning fw-bold' : 'text-success fw-bold';
+            var trustScore = agent.trust_score != null ? agent.trust_score : 0.667;
+            tdTrust.className = trustScore < 0.3 ? 'text-danger fw-bold'
+                : trustScore < 0.5 ? 'text-warning fw-bold' : 'text-success fw-bold';
             tdTrust.textContent = trustScore.toFixed(2);
             tr.appendChild(tdTrust);
 
@@ -1524,7 +1524,7 @@ async function loadTrustOverview() {
         card2.className = 'border rounded p-3 text-center';
         var val2 = document.createElement('div');
         val2.className = 'fs-4 fw-bold';
-        val2.textContent = (stats.avg_trust_score || 1.0).toFixed(3);
+        val2.textContent = (stats.avg_trust_score || 0.667).toFixed(3);
         card2.appendChild(val2);
         var lbl2 = document.createElement('small');
         lbl2.className = 'text-muted';

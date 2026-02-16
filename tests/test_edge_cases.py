@@ -473,7 +473,7 @@ class TestNullFields:
             "tags": None,
         }
         features = extractor.extract_features(memory, "test")
-        assert len(features) == 9
+        assert len(features) == 10
         # All features should be in [0, 1] range
         for i, f in enumerate(features):
             assert 0.0 <= f <= 1.0, (
@@ -605,7 +605,7 @@ class TestCorruptJsonTags:
             "tags": "{invalid json[",  # corrupt
         }
         features = extractor.extract_features(memory, "python")
-        assert len(features) == 9
+        assert len(features) == 10
         # Should not crash, all features should be valid floats
         for f in features:
             assert isinstance(f, float)

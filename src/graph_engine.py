@@ -297,12 +297,11 @@ class ClusterBuilder:
         Returns:
             Number of clusters created
         """
-        # Import igraph modules here to avoid conflicts
-        try:
-            import igraph as ig
-            import leidenalg
-        except ImportError:
-            raise ImportError("python-igraph and leidenalg required. Install: pip install python-igraph leidenalg")
+        if not IGRAPH_AVAILABLE:
+            logger.warning("igraph/leidenalg not installed. Graph clustering disabled. Install with: pip3 install python-igraph leidenalg")
+            return 0
+        import igraph as ig
+        import leidenalg
 
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -457,11 +456,11 @@ class ClusterBuilder:
         Returns:
             Dictionary with hierarchical clustering statistics
         """
-        try:
-            import igraph as ig
-            import leidenalg
-        except ImportError:
-            raise ImportError("python-igraph and leidenalg required. Install: pip install python-igraph leidenalg")
+        if not IGRAPH_AVAILABLE:
+            logger.warning("igraph/leidenalg not installed. Hierarchical clustering disabled. Install with: pip3 install python-igraph leidenalg")
+            return {'subclusters_created': 0, 'depth_reached': 0}
+        import igraph as ig
+        import leidenalg
 
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -512,6 +511,8 @@ class ClusterBuilder:
                                profile: str, min_size: int, max_depth: int,
                                current_depth: int) -> Tuple[int, int]:
         """Recursively sub-cluster a community using Leiden."""
+        if not IGRAPH_AVAILABLE:
+            return 0, current_depth - 1
         import igraph as ig
         import leidenalg
 
@@ -1038,6 +1039,9 @@ class GraphEngine:
                 'summaries_generated': summaries,
                 'time_seconds': round(elapsed, 2)
             }
+            if not IGRAPH_AVAILABLE:
+                stats['warning'] = 'igraph/leidenalg not installed — graph built without clustering. Install with: pip3 install python-igraph leidenalg'
+
 
             logger.info(f"Graph build complete: {stats}")
             return stats

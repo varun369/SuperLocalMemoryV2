@@ -245,7 +245,7 @@ Priority order:
 - Tier 2 (40 memories @ 10KB): 400KB
 - Tier 3 (30 memories @ 2KB): 60KB
 - **Total: 1.96MB (61% reduction)**
-- **Search time: 45ms** (only scan Tier 1+2)
+- **Search time: Sub-11ms median for typical databases** (only scan Tier 1+2, see wiki Performance Benchmarks)
 - **Memory load: 1.9MB** (Tier 3 loaded on-demand)
 
 ### Space Savings Scale

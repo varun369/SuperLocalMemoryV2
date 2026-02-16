@@ -418,6 +418,7 @@ weights = {'bm25': 0.4, 'semantic': 0.3, 'graph': 0.3}  # Default
 - Index time is one-time cost
 - Search time scales sub-linearly (inverted index efficiency)
 - Hybrid search includes fusion overhead (~10-15ms)
+- These are projected estimates for the optional BM25 engine. See wiki Performance Benchmarks for measured end-to-end search latency.
 
 ---
 
