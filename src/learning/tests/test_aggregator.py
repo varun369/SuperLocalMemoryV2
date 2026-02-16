@@ -245,15 +245,16 @@ class TestGetTechPreferences:
         assert "high" in prefs
         assert "low" not in prefs
 
-    def test_no_learning_db(self, memory_db):
+    def test_no_learning_db_auto_creates(self, memory_db):
+        """v2.7.2+: Aggregator auto-creates LearningDB. Should not crash."""
         from src.learning.cross_project_aggregator import CrossProjectAggregator
         aggregator = CrossProjectAggregator(
             memory_db_path=memory_db,
             learning_db=None,
         )
-        # Should not crash
+        # Should not crash — may return data from auto-created DB
         prefs = aggregator.get_tech_preferences()
-        assert prefs == {}
+        assert isinstance(prefs, dict)
 
 
 # ---------------------------------------------------------------------------

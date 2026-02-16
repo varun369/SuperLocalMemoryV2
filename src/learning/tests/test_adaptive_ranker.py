@@ -120,12 +120,13 @@ class TestGetPhase:
         if HAS_LIGHTGBM and HAS_NUMPY:
             assert phase == "rule_based"  # 10 < 50 unique queries
 
-    def test_no_learning_db_returns_baseline(self):
+    def test_no_learning_db_auto_creates(self):
+        """v2.7.2+: AdaptiveRanker auto-creates LearningDB. Phase depends on existing data."""
         from src.learning.adaptive_ranker import AdaptiveRanker
         ranker = AdaptiveRanker(learning_db=None)
-        # Force no lazy init
-        ranker._learning_db = None
-        assert ranker.get_phase() == "baseline"
+        phase = ranker.get_phase()
+        # Phase is valid (auto-created DB may have data from other tests)
+        assert phase in ("baseline", "rule_based", "ml_model")
 
 
 # ---------------------------------------------------------------------------

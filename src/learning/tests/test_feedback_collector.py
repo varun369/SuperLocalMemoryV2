@@ -87,9 +87,11 @@ class TestRecordMemoryUsed:
         assert rows[0]["source_tool"] == "claude-desktop"
         assert rows[0]["rank_position"] == 2
 
-    def test_no_db_returns_none(self, collector_no_db):
+    def test_no_db_auto_creates(self, collector_no_db):
+        """v2.7.2+: FeedbackCollector auto-creates LearningDB when None passed."""
         result = collector_no_db.record_memory_used(42, "test query")
-        assert result is None
+        # Auto-created DB means this succeeds (returns row ID)
+        assert result is not None
 
 
 # ---------------------------------------------------------------------------
@@ -283,9 +285,10 @@ class TestFeedbackSummary:
         assert summary["total_signals"] == 0
         assert summary["unique_queries"] == 0
 
-    def test_summary_no_db(self, collector_no_db):
+    def test_summary_no_db_auto_creates(self, collector_no_db):
+        """v2.7.2+: Auto-created DB returns valid summary, not error."""
         summary = collector_no_db.get_feedback_summary()
-        assert "error" in summary
+        assert "total_signals" in summary
 
     def test_summary_buffer_stats(self, collector):
         collector.record_recall_results("q1", [1, 2, 3])
