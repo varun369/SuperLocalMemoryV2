@@ -46,7 +46,7 @@ How much disk space your memories use.
 | 500 | 0.83 MB | 1.7 KB |
 | 1,000 | 1.50 MB | 1.5 KB |
 | 5,000 | 6.86 MB | 1.4 KB |
-| 10,000 | **13.6 MB** | **1.9 KB** |
+| 10,000 | **13.6 MB** | **1.4 KB** |
 
 **What this means:** 10,000 memories fit in 13.6 MB. Your entire AI memory history takes less space than a single high-res photo.
 
@@ -75,11 +75,11 @@ Bayesian trust scoring detects malicious agents attempting to corrupt your memor
 
 | Scenario | Benign Trust | Malicious Trust | Trust Gap |
 |----------|-------------|----------------|-----------|
-| Normal operation (10 agents) | **1.000** | N/A | — |
-| Single malicious agent (9 good + 1 bad) | **1.000** | **0.000** | **1.000** |
-| "Sleeper" agent (builds trust, then attacks) | 1.000 | **0.253** | **0.747** |
+| Normal operation (10 agents) | **0.945** | N/A | — |
+| Single malicious agent (9 good + 1 bad) | **0.946** | **0.048** | **0.898** |
+| "Sleeper" agent (builds trust, then attacks) | 0.902 | **0.249** | **0.653** |
 
-**What this means:** The trust system achieves perfect separation between honest and malicious agents (trust gap = 1.0). Even a sophisticated "sleeper" attack — where an agent behaves well to build trust, then turns hostile — is detected with a 74.7% trust drop. Zero false positives on benign agents.
+**What this means:** The trust system achieves strong separation between honest and malicious agents (trust gap = 0.90). Even a sophisticated "sleeper" attack — where an agent behaves well to build trust, then turns hostile — is detected with a 72% trust drop. Zero false positives on benign agents.
 
 ---
 

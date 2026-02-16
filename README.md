@@ -425,7 +425,7 @@ WAL mode + serialized write queue = zero "database is locked" errors, ever.
 
 ### Storage
 
-10,000 memories = **13.6 MB** on disk (~1.9 KB per memory). Your entire AI memory history takes less space than a photo.
+10,000 memories = **13.6 MB** on disk (~1.4 KB per memory). Your entire AI memory history takes less space than a photo.
 
 ### Graph Construction
 
