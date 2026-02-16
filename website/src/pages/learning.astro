@@ -1,0 +1,97 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/landing/Header.astro';
+import Footer from '../components/landing/Footer.astro';
+import { FadeIn } from '../components/ui/Motion';
+import { ArrowRight, Search, BarChart, Database } from 'lucide-react';
+---
+
+<BaseLayout title="Learning Engine - SuperLocalMemory V2" description="Understand how SuperLocalMemory adapts to your workflow without sending data to the cloud.">
+  <Header />
+  
+  <main class="pt-24 pb-24 min-h-screen bg-[var(--color-bg-main)]">
+    <!-- Hero Section -->
+    <section class="container-custom mb-24 grid lg:grid-cols-2 gap-12 items-center">
+      <FadeIn client:load>
+        <span class="text-[var(--color-primary)] font-mono text-sm tracking-wider uppercase mb-4 block">Adaptive Intelligence</span>
+        <h1 class="text-5xl md:text-6xl font-bold mb-6">
+          How Your AI <br/>
+          <span class="text-gradient">Learns You</span>
+        </h1>
+        <p class="text-xl text-[var(--color-text-muted)] leading-relaxed">
+          SuperLocalMemory v2.7 introduces a three-layer learning system that refines retrieval based on your usage patterns.
+          <span class="text-white font-medium block mt-4">No training. No fine-tuning. Just memory.</span>
+        </p>
+      </FadeIn>
+      
+      <FadeIn client:load delay={0.2} className="relative aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+        <img src="/assets/learning_data_stream_1771269732878.png" alt="Learning Process" class="w-full h-full object-cover opacity-80" />
+        <div class="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-main)] to-transparent"></div>
+      </FadeIn>
+    </section>
+
+    <!-- The 3 Pillars -->
+    <section class="container-custom mb-32">
+        <div class="grid md:grid-cols-3 gap-8">
+            <FadeIn client:visible delay={0.1} className="glass-panel p-8 rounded-2xl border-t-2 border-blue-500">
+                <Search className="w-10 h-10 text-blue-400 mb-6" />
+                <h3 class="text-2xl font-bold text-white mb-4">1. Semantic Search</h3>
+                <p class="text-[var(--color-text-muted)]">
+                    We use a high-dimensional vector store to find memories conceptually related to your query, even if keywords don't match.
+                </p>
+            </FadeIn>
+
+            <FadeIn client:visible delay={0.2} className="glass-panel p-8 rounded-2xl border-t-2 border-purple-500">
+                <Database className="w-10 h-10 text-purple-400 mb-6" />
+                <h3 class="text-2xl font-bold text-white mb-4">2. Graph Association</h3>
+                <p class="text-[var(--color-text-muted)]">
+                    Entities (Files, Functions, People) are extracted and linked. If you ask about "Auth", we also pull "Login.tsx" because they are linked in the graph.
+                </p>
+            </FadeIn>
+
+            <FadeIn client:visible delay={0.3} className="glass-panel p-8 rounded-2xl border-t-2 border-green-500">
+                <BarChart className="w-10 h-10 text-green-400 mb-6" />
+                <h3 class="text-2xl font-bold text-white mb-4">3. Adaptive Re-Ranking</h3>
+                <p class="text-[var(--color-text-muted)]">
+                    Memories you "use" (copy/paste) get boosted. Memories you ignore fade away. The system optimizes itself for <i>your</i> workflow.
+                </p>
+            </FadeIn>
+        </div>
+    </section>
+
+    <!-- Flow Diagram -->
+    <section class="container-custom py-12 border-t border-white/5">
+        <h2 class="text-3xl font-bold text-center mb-16">The Retrieval Pipeline</h2>
+        
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10 w-48">
+                <div class="font-mono text-sm text-gray-400 mb-2">INPUT</div>
+                <div class="font-bold text-white">User Query</div>
+            </div>
+            
+            <ArrowRight className="w-6 h-6 text-gray-600 rotate-90 md:rotate-0" />
+            
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10 w-48 shadow-[0_0_15px_rgba(59,130,246,0.2)] border-blue-500/30">
+                <div class="font-mono text-sm text-blue-400 mb-2">LAYER 1</div>
+                <div class="font-bold text-white">Candidate Retrieval</div>
+            </div>
+
+            <ArrowRight className="w-6 h-6 text-gray-600 rotate-90 md:rotate-0" />
+
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10 w-48 shadow-[0_0_15px_rgba(168,85,247,0.2)] border-purple-500/30">
+                <div class="font-mono text-sm text-purple-400 mb-2">LAYER 2</div>
+                <div class="font-bold text-white">Re-Ranker</div>
+            </div>
+
+            <ArrowRight className="w-6 h-6 text-gray-600 rotate-90 md:rotate-0" />
+
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10 w-48">
+                <div class="font-mono text-sm text-green-400 mb-2">OUTPUT</div>
+                <div class="font-bold text-white">Context Window</div>
+            </div>
+        </div>
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
