@@ -17,7 +17,7 @@ set -e  # Exit on any error
 # CONFIGURATION
 # ============================================================================
 
-VERSION="2.7.0"
+VERSION="2.7.4"
 APP_NAME="SuperLocalMemory"
 DMG_NAME="SuperLocalMemory-v${VERSION}-macos"
 BUILD_DIR="build/dmg"
