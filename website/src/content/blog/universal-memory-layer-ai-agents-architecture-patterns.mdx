@@ -7,7 +7,7 @@ author: "Varun Pratap Bhardwaj"
 tags: ["ai-agents", "agent-memory", "state-management", "vector-search", "hybrid-search"]
 category: "education"
 image: "/assets/blog/universal-memory-layer-ai-agents-architecture-patterns-hero.png"
-draft: true
+draft: false
 slug: "universal-memory-layer-ai-agents-architecture-patterns"
 ---
 
@@ -277,31 +277,40 @@ def build_memory_context(
 
     # Semantic memories first — they are the most compressed and informative
     if sections["semantic"]:
-        facts = "\n".join(f"- {m.content} (confidence: {m.trust_score:.1f})"
+        facts = "
+".join(f"- {m.content} (confidence: {m.trust_score:.1f})"
                          for m in sections["semantic"])
-        parts.append(f"## Known Facts\n{facts}")
+        parts.append(f"## Known Facts
+{facts}")
 
     # Then episodic — recent events for temporal context
     if sections["episodic"]:
-        episodes = "\n".join(
+        episodes = "
+".join(
             f"- [{m.created_at.strftime('%Y-%m-%d %H:%M')}] {m.content[:200]}"
             for m in sorted(sections["episodic"], key=lambda x: x.created_at, reverse=True)
         )
-        parts.append(f"## Recent Events\n{episodes}")
+        parts.append(f"## Recent Events
+{episodes}")
 
     # Procedural last — only include if relevant
     if sections["procedural"]:
-        procedures = "\n".join(f"- {m.content}" for m in sections["procedural"])
-        parts.append(f"## Known Procedures\n{procedures}")
+        procedures = "
+".join(f"- {m.content}" for m in sections["procedural"])
+        parts.append(f"## Known Procedures
+{procedures}")
 
-    context = "\n\n".join(parts)
+    context = "
+
+".join(parts)
 
     # Rough token estimate: 1 token ≈ 4 characters for English text
     estimated_tokens = len(context) // 4
     if estimated_tokens > max_tokens:
         # Truncate from the bottom (procedural, then episodic, then semantic)
         target_chars = max_tokens * 4
-        context = context[:target_chars] + "\n[Memory truncated due to context limits]"
+        context = context[:target_chars] + "
+[Memory truncated due to context limits]"
 
     return context
 ```
