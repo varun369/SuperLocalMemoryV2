@@ -84,6 +84,15 @@ const ogImage = new URL(image, 'https://superlocalmemory.com').toString();
     <!-- Analytics — Plausible (privacy-respecting, no cookies) -->
     <script defer data-domain="superlocalmemory.com" src="https://plausible.io/js/script.js"></script>
 
+    <!-- Analytics — Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-W3TQ40PT49"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-W3TQ40PT49');
+    </script>
+
     <script>
       import Lenis from 'lenis';
 
