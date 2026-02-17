@@ -1,0 +1,95 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/landing/Header.astro';
+import Footer from '../components/landing/Footer.astro';
+import { FadeIn } from '../components/ui/Motion';
+import { Check, Heart } from 'lucide-react';
+
+const title = "Pricing — Free & Open Source | SuperLocalMemory";
+const description = "SuperLocalMemory is free forever. No subscriptions, no API costs, no cloud fees. 100% local, 100% yours.";
+---
+
+<BaseLayout title={title} description={description} schemaType="WebPage" keywords="SuperLocalMemory pricing, free AI memory, Mem0 alternative free, open source AI memory">
+  <Header />
+
+  <main class="pt-32 pb-24 min-h-screen bg-[var(--color-bg-main)]">
+    <div class="container-custom max-w-4xl">
+
+      <FadeIn client:load>
+        <div class="text-center mb-16">
+          <span class="text-[var(--color-primary)] font-mono text-sm tracking-wider uppercase mb-4 block">Pricing</span>
+          <h1 class="text-4xl md:text-5xl font-bold mb-6">Free. Forever. No Catches.</h1>
+          <p class="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto">
+            SuperLocalMemory runs entirely on your machine. No cloud, no API keys, no subscription — just install and use.
+          </p>
+        </div>
+      </FadeIn>
+
+      <FadeIn client:visible delay={0.1}>
+        <div class="max-w-lg mx-auto mb-16">
+          <div class="rounded-2xl border-2 border-[var(--color-primary)]/50 bg-white/5 p-8 relative">
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-[var(--color-primary)] text-black text-xs font-bold rounded-full uppercase tracking-wide">
+              Only Plan
+            </div>
+
+            <div class="text-center mb-8 pt-2">
+              <div class="text-5xl font-black text-white mb-2">$0</div>
+              <div class="text-[var(--color-text-muted)]">per month, forever</div>
+            </div>
+
+            <ul class="space-y-3 mb-8">
+              {[
+                "Unlimited memories",
+                "Knowledge graphs with community detection",
+                "Hybrid search (TF-IDF + semantic + graph)",
+                "Pattern learning and adaptive recall",
+                "Works with 17+ AI tools via MCP",
+                "Single SQLite file — fully portable",
+                "Zero API keys required",
+                "Zero cloud dependency",
+                "Full CLI + MCP + Skills access",
+                "All future updates included",
+              ].map(feature => (
+                <li class="flex items-start gap-3 text-sm">
+                  <Check className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
+                  <span class="text-[var(--color-text-muted)]">{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <a href="/docs" class="block w-full text-center px-6 py-3 rounded-xl bg-[var(--color-primary)] text-black font-semibold hover:opacity-90 transition-opacity">
+              Install Now — It's Free
+            </a>
+          </div>
+        </div>
+      </FadeIn>
+
+      <FadeIn client:visible delay={0.2}>
+        <div class="text-center">
+          <h2 class="text-2xl font-bold text-white mb-4">Why is it free?</h2>
+          <p class="text-[var(--color-text-muted)] max-w-xl mx-auto mb-8">
+            SuperLocalMemory runs entirely on your hardware. There are no servers to pay for, no APIs to meter, and no cloud infrastructure costs. Your data stays on your machine — that's the architecture that makes free possible.
+          </p>
+
+          <div class="grid sm:grid-cols-3 gap-6">
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10">
+              <div class="text-2xl font-bold text-white mb-1">$0/mo</div>
+              <div class="text-sm text-[var(--color-text-muted)]">SuperLocalMemory</div>
+            </div>
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10">
+              <div class="text-2xl font-bold text-white/50 mb-1">$249/mo</div>
+              <div class="text-sm text-[var(--color-text-muted)]">Mem0 Pro</div>
+            </div>
+            <div class="p-6 rounded-xl bg-white/5 border border-white/10">
+              <div class="text-2xl font-bold text-white/50 mb-1">Credit-based</div>
+              <div class="text-sm text-[var(--color-text-muted)]">Zep</div>
+            </div>
+          </div>
+        </div>
+      </FadeIn>
+
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>

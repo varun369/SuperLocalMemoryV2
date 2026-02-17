@@ -9,11 +9,11 @@ import { Calendar, User, ArrowRight } from 'lucide-react';
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
-const title = "Blog - SuperLocalMemory";
-const description = "Latest updates, tutorials, and research from the SuperLocalMemory team.";
+const title = "AI Memory Architecture Blog | SuperLocalMemory";
+const description = "Deep dives into AI memory systems, MCP server architecture, local-first patterns, and multi-agent memory. Education-first tutorials for developers.";
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} schemaType="CollectionPage" keywords="AI memory, MCP server, local-first AI, Claude memory, Cursor memory, AI agent memory, persistent memory">
   <Header />
   
   <main class="pt-24 pb-24 min-h-screen bg-[var(--color-bg-main)]">
@@ -22,7 +22,7 @@ const description = "Latest updates, tutorials, and research from the SuperLocal
         <FadeIn client:load>
             <div class="text-center mb-16">
                 <span class="text-[var(--color-primary)] font-mono text-sm tracking-wider uppercase mb-4 block">Engineering Blog</span>
-                <h1 class="text-4xl md:text-5xl font-bold mb-6">Latest Updates</h1>
+                <h1 class="text-4xl md:text-5xl font-bold mb-6">AI Memory Architecture Blog</h1>
                 <p class="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto">
                     Deep dives into local-first AI, memory architecture, and multi-agent systems.
                 </p>

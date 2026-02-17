@@ -5,12 +5,18 @@ interface Props {
   title: string;
   description?: string;
   image?: string;
+  ogType?: string;
+  keywords?: string;
+  schemaType?: string;
 }
 
 const {
   title,
   description = "SuperLocalMemory V2 - The only free, local-first AI memory system. Your AI finally remembers you.",
-  image = "/assets/social-preview.png"
+  image = "/assets/social-preview.png",
+  ogType = "website",
+  keywords,
+  schemaType = "WebSite",
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, 'https://superlocalmemory.com');
@@ -30,20 +36,25 @@ const ogImage = new URL(image, 'https://superlocalmemory.com').toString();
     <meta name="description" content={description} />
     <meta name="author" content="Varun Pratap Bhardwaj" />
     <meta name="theme-color" content="#030712" />
+    <meta name="robots" content="index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1" />
+    {keywords && <meta name="keywords" content={keywords} />}
     <link rel="canonical" href={canonicalURL} />
     <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content="SuperLocalMemory" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@vaaborontonn" />
     <meta name="twitter:url" content={canonicalURL} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
@@ -52,9 +63,9 @@ const ogImage = new URL(image, 'https://superlocalmemory.com').toString();
     <!-- Structured Data -->
     <script type="application/ld+json" set:html={JSON.stringify({
       "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "SuperLocalMemory",
-      "url": "https://superlocalmemory.com",
+      "@type": schemaType,
+      "name": schemaType === "WebSite" ? "SuperLocalMemory" : title,
+      "url": schemaType === "WebSite" ? "https://superlocalmemory.com" : canonicalURL.toString(),
       "description": description,
       "author": {
         "@type": "Person",
@@ -69,6 +80,9 @@ const ogImage = new URL(image, 'https://superlocalmemory.com').toString();
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <!-- Analytics — Plausible (privacy-respecting, no cookies) -->
+    <script defer data-domain="superlocalmemory.com" src="https://plausible.io/js/script.js"></script>
 
     <script>
       import Lenis from 'lenis';

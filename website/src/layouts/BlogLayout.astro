@@ -21,7 +21,7 @@ const formattedDate = pubDate.toLocaleDateString('en-US', { year: 'numeric', mon
 const formattedUpdatedDate = updatedDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 ---
 
-<BaseLayout title={`${title} | SuperLocalMemory V2 Blog`} description={description}>
+<BaseLayout title={`${title} | SuperLocalMemory`} description={description} ogType="article" keywords={keywords || tags.join(', ')} schemaType="Article">
   <!-- Background Elements -->
   <div class="fixed inset-0 pointer-events-none overflow-hidden">
     <div class="absolute -top-[20%] -right-[10%] w-[800px] h-[800px] rounded-full bg-[var(--color-primary)]/5 blur-[120px]"></div>
@@ -32,12 +32,10 @@ const formattedUpdatedDate = updatedDate?.toLocaleDateString('en-US', { year: 'n
   <div id="reading-progress" class="fixed top-0 left-0 h-1 bg-gradient-to-r from-[var(--color-primary)] to-purple-500 z-[100] w-0 transition-all duration-100 ease-out"></div>
 
   <Fragment slot="head">
-    <meta property="og:type" content="article" />
     <meta property="article:published_time" content={pubDate.toISOString()} />
     {updatedDate && <meta property="article:modified_time" content={updatedDate.toISOString()} />}
     <meta property="article:author" content={author} />
     {tags.map(tag => <meta property="article:tag" content={tag} />)}
-    {keywords && <meta name="keywords" content={keywords} />}
     {image && <meta property="og:image" content={new URL(image, Astro.site)} />}
     <script type="application/ld+json" set:html={JSON.stringify({
       "@context": "https://schema.org",

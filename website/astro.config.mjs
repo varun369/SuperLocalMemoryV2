@@ -9,6 +9,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   site: 'https://superlocalmemory.com',
   base: '/',
+  trailingSlash: 'never',
 
   integrations: [mdx(), sitemap({
     customPages: [

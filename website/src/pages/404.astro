@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/landing/Header.astro';
+import Footer from '../components/landing/Footer.astro';
+
+const title = "Page Not Found | SuperLocalMemory";
+const description = "The page you're looking for doesn't exist. Explore SuperLocalMemory — the free, local-first AI memory system.";
+---
+
+<BaseLayout title={title} description={description} schemaType="WebPage">
+  <Header />
+
+  <main class="pt-32 pb-24 min-h-screen bg-[var(--color-bg-main)]">
+    <div class="container-custom max-w-2xl text-center">
+
+      <div class="text-8xl font-black text-white/10 mb-6">404</div>
+
+      <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">Page Not Found</h1>
+
+      <p class="text-lg text-[var(--color-text-muted)] mb-12">
+        This page doesn't exist or may have moved. Here are some places to explore instead.
+      </p>
+
+      <div class="grid sm:grid-cols-2 gap-4 mb-12">
+        <a href="/" class="p-6 rounded-xl bg-white/5 border border-white/10 hover:border-[var(--color-primary)]/50 transition-all hover:-translate-y-0.5 text-left">
+          <div class="text-lg font-semibold text-white mb-1">Home</div>
+          <div class="text-sm text-[var(--color-text-muted)]">Learn about SuperLocalMemory</div>
+        </a>
+        <a href="/docs" class="p-6 rounded-xl bg-white/5 border border-white/10 hover:border-[var(--color-primary)]/50 transition-all hover:-translate-y-0.5 text-left">
+          <div class="text-lg font-semibold text-white mb-1">Documentation</div>
+          <div class="text-sm text-[var(--color-text-muted)]">Installation and setup guides</div>
+        </a>
+        <a href="/blog" class="p-6 rounded-xl bg-white/5 border border-white/10 hover:border-[var(--color-primary)]/50 transition-all hover:-translate-y-0.5 text-left">
+          <div class="text-lg font-semibold text-white mb-1">Blog</div>
+          <div class="text-sm text-[var(--color-text-muted)]">AI memory architecture articles</div>
+        </a>
+        <a href="/features" class="p-6 rounded-xl bg-white/5 border border-white/10 hover:border-[var(--color-primary)]/50 transition-all hover:-translate-y-0.5 text-left">
+          <div class="text-lg font-semibold text-white mb-1">Features</div>
+          <div class="text-sm text-[var(--color-text-muted)]">What SuperLocalMemory can do</div>
+        </a>
+      </div>
+
+      <a href="/" class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[var(--color-primary)] text-black font-semibold hover:opacity-90 transition-opacity">
+        Back to Home
+      </a>
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>
