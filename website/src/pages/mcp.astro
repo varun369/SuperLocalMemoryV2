@@ -1,0 +1,225 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/landing/Header.astro';
+import Footer from '../components/landing/Footer.astro';
+import { FadeIn } from '../components/ui/Motion';
+
+const title = "MCP Integration - SuperLocalMemory V2";
+const description = "One protocol, every AI tool. SuperLocalMemory connects to 17+ IDEs via Model Context Protocol — Claude, Cursor, ChatGPT, VS Code, and more.";
+
+const autoConfigured = [
+  { name: "Claude Desktop", status: "auto" },
+  { name: "Claude Code", status: "auto" },
+  { name: "Cursor", status: "auto" },
+  { name: "Windsurf", status: "auto" },
+  { name: "Continue.dev", status: "auto" },
+  { name: "OpenAI Codex CLI", status: "auto" },
+  { name: "VS Code / Copilot", status: "auto" },
+  { name: "Gemini CLI", status: "auto" },
+  { name: "Zed Editor", status: "auto" },
+  { name: "OpenCode", status: "auto" },
+  { name: "Perplexity", status: "auto" },
+];
+
+const manualSetup = [
+  { name: "ChatGPT", note: "HTTP transport" },
+  { name: "JetBrains IDEs", note: "GUI setup" },
+  { name: "Cody", note: "Extension config" },
+];
+
+const mcpTools = [
+  { name: "remember", desc: "Save memories with tags and project context" },
+  { name: "recall", desc: "Semantic search across all memories" },
+  { name: "search", desc: "OpenAI MCP spec search (ChatGPT compatible)" },
+  { name: "fetch", desc: "Retrieve a specific memory by ID" },
+  { name: "list_recent", desc: "Get recent memories with metadata" },
+  { name: "get_status", desc: "System health and statistics" },
+  { name: "build_graph", desc: "Build knowledge graph from memories" },
+  { name: "switch_profile", desc: "Switch between user profiles" },
+  { name: "backup_status", desc: "Auto-backup health check" },
+  { name: "memory_used", desc: "Implicit feedback for adaptive learning" },
+  { name: "get_learned_patterns", desc: "View what the system learned about you" },
+  { name: "correct_pattern", desc: "Override a learned preference" },
+];
+
+const mcpResources = [
+  { uri: "memory://recent/{limit}", desc: "Recent memories stream" },
+  { uri: "memory://stats", desc: "System statistics" },
+  { uri: "memory://graph/clusters", desc: "Knowledge graph clusters" },
+  { uri: "memory://patterns/identity", desc: "Your coding identity" },
+  { uri: "memory://learning/status", desc: "Learning system state" },
+  { uri: "memory://engagement", desc: "Engagement metrics" },
+];
+
+const pipelineSteps = [
+  { label: "YOUR IDE", sub: "Any MCP Client", color: "text-gray-400" },
+  { label: "MCP PROTOCOL", sub: "stdio / HTTP", color: "text-[var(--color-primary)]" },
+  { label: "SUPERLOCALM­EMORY", sub: "12 Tools · 6 Resources", color: "text-purple-400" },
+  { label: "LOCAL STORAGE", sub: "SQLite + FTS5", color: "text-green-400" },
+];
+---
+
+<BaseLayout title={title} description={description}>
+  <Header />
+
+  <main class="pt-24 pb-24 min-h-screen bg-[var(--color-bg-main)]">
+
+    <!-- Hero -->
+    <section class="container-custom mb-20 text-center">
+      <FadeIn client:load>
+        <span class="text-[var(--color-primary)] font-mono text-sm tracking-wider uppercase mb-4 block">Model Context Protocol</span>
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
+          One Protocol. <span class="text-gradient">Every AI Tool.</span>
+        </h1>
+        <p class="text-lg sm:text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto mb-8">
+          SuperLocalMemory speaks MCP natively. Install once, connect everywhere — your memories follow you across every IDE and AI assistant.
+        </p>
+        <div class="flex flex-wrap justify-center gap-3">
+          <a href="#quickstart" class="glass-button bg-[var(--color-primary)]/10 border-[var(--color-primary)]/20 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/20 px-6 py-3">
+            Get Started
+          </a>
+          <a href="https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/MCP-MANUAL-SETUP.md" target="_blank" rel="noopener" class="glass-button px-6 py-3">
+            Setup Guide
+          </a>
+        </div>
+      </FadeIn>
+    </section>
+
+    <!-- Supported Tools -->
+    <section class="container-custom mb-24">
+      <FadeIn client:visible>
+        <h2 class="text-3xl font-bold mb-4 text-center">Works With Your Stack</h2>
+        <p class="text-[var(--color-text-muted)] text-center mb-12 max-w-xl mx-auto">Auto-configured on install. No manual JSON editing for most tools.</p>
+      </FadeIn>
+
+      <!-- Auto-configured -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        {autoConfigured.map((tool, i) => (
+          <FadeIn client:visible delay={i * 0.05}>
+            <div class="glass-panel p-4 sm:p-5 rounded-xl border border-white/10 hover:border-green-500/30 transition-colors text-center group">
+              <div class="text-sm sm:text-base font-semibold text-white group-hover:text-green-400 transition-colors mb-1">{tool.name}</div>
+              <span class="text-[10px] font-mono text-green-400 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20">AUTO</span>
+            </div>
+          </FadeIn>
+        ))}
+      </div>
+
+      <!-- Manual Setup -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 max-w-2xl mx-auto">
+        {manualSetup.map((tool, i) => (
+          <FadeIn client:visible delay={0.6 + i * 0.05}>
+            <div class="glass-panel p-4 sm:p-5 rounded-xl border border-white/10 hover:border-yellow-500/30 transition-colors text-center group">
+              <div class="text-sm sm:text-base font-semibold text-white group-hover:text-yellow-400 transition-colors mb-1">{tool.name}</div>
+              <span class="text-[10px] font-mono text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">{tool.note.toUpperCase()}</span>
+            </div>
+          </FadeIn>
+        ))}
+      </div>
+
+      <FadeIn client:visible delay={0.8}>
+        <p class="text-center text-[var(--color-text-muted)] text-sm mt-6">
+          + any custom MCP client via Python SDK or HTTP transport
+        </p>
+      </FadeIn>
+    </section>
+
+    <!-- How It Works — Pipeline -->
+    <section class="container-custom mb-24">
+      <FadeIn client:visible>
+        <h2 class="text-3xl font-bold text-center mb-12">How It Works</h2>
+      </FadeIn>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-4">
+        {pipelineSteps.map((step, i) => (
+          <FadeIn client:visible delay={i * 0.15}>
+            <div class="glass-panel p-5 sm:p-6 rounded-xl border border-white/10 w-full md:w-44 text-center">
+              <div class={`font-mono text-xs ${step.color} mb-2 tracking-wider`}>{step.label}</div>
+              <div class="text-sm text-[var(--color-text-muted)]">{step.sub}</div>
+            </div>
+            {i < pipelineSteps.length - 1 && (
+              <div class="text-gray-600 text-xl my-1 md:my-0 rotate-90 md:rotate-0">→</div>
+            )}
+          </FadeIn>
+        ))}
+      </div>
+      <FadeIn client:visible delay={0.7}>
+        <p class="text-center text-green-400 font-mono text-sm mt-8 bg-green-500/5 border border-green-500/20 rounded-lg py-3 px-4 max-w-md mx-auto">
+          100% local — zero data ever leaves your machine
+        </p>
+      </FadeIn>
+    </section>
+
+    <!-- MCP Tools -->
+    <section class="container-custom mb-24">
+      <FadeIn client:visible>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-8">
+          <h2 class="text-3xl font-bold text-white">12 MCP Tools</h2>
+          <span class="px-3 py-1 bg-[var(--color-primary)]/20 text-[var(--color-primary)] text-xs font-mono font-bold rounded border border-[var(--color-primary)]/20">AVAILABLE NOW</span>
+        </div>
+      </FadeIn>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {mcpTools.map((tool, i) => (
+          <FadeIn client:visible delay={i * 0.05}>
+            <div class="glass-panel p-5 rounded-xl border border-white/10 hover:border-[var(--color-primary)]/30 hover:bg-white/5 transition-all group">
+              <code class="text-[var(--color-primary)] font-mono text-sm font-bold group-hover:text-white transition-colors">{tool.name}()</code>
+              <p class="text-[var(--color-text-muted)] text-sm mt-2">{tool.desc}</p>
+            </div>
+          </FadeIn>
+        ))}
+      </div>
+    </section>
+
+    <!-- MCP Resources -->
+    <section class="container-custom mb-24">
+      <FadeIn client:visible>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-8">
+          <h2 class="text-3xl font-bold text-white">6 MCP Resources</h2>
+          <span class="px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-mono font-bold rounded border border-purple-500/20">LIVE DATA</span>
+        </div>
+      </FadeIn>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {mcpResources.map((res, i) => (
+          <FadeIn client:visible delay={i * 0.08}>
+            <div class="glass-panel p-5 rounded-xl border border-white/10 hover:border-purple-500/30 hover:bg-white/5 transition-all group">
+              <code class="text-purple-400 font-mono text-xs sm:text-sm font-bold break-all">{res.uri}</code>
+              <p class="text-[var(--color-text-muted)] text-sm mt-2">{res.desc}</p>
+            </div>
+          </FadeIn>
+        ))}
+      </div>
+
+      <FadeIn client:visible delay={0.5}>
+        <p class="text-[var(--color-text-muted)] text-sm mt-6 text-center">
+          + 2 MCP Prompts: <code class="text-[var(--color-primary)]">coding_identity_prompt</code> and <code class="text-[var(--color-primary)]">project_context_prompt</code>
+        </p>
+      </FadeIn>
+    </section>
+
+    <!-- Install CTA -->
+    <section class="container-custom mb-24 text-center">
+      <FadeIn client:visible>
+        <div class="glass-panel p-8 sm:p-12 rounded-3xl border border-[var(--color-primary)]/20 bg-gradient-to-b from-[var(--color-bg-secondary)] to-[var(--color-bg-main)] max-w-3xl mx-auto">
+          <h2 class="text-2xl sm:text-3xl font-bold mb-4">One Command. Done.</h2>
+          <p class="text-[var(--color-text-muted)] mb-8">
+            Auto-detects and configures all supported IDEs. Requires Node.js 18+.
+          </p>
+          <div class="bg-black/50 border border-white/10 rounded-lg p-4 font-mono text-sm sm:text-base text-green-400 max-w-lg mx-auto mb-6">
+            $ npm install -g superlocalmemory
+          </div>
+          <div class="flex flex-wrap justify-center gap-4">
+            <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener noreferrer"
+               class="px-6 sm:px-8 py-3 sm:py-4 rounded-full bg-white text-black font-bold hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                Get Started for Free
+            </a>
+            <a href="https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/MCP-MANUAL-SETUP.md" target="_blank" rel="noopener"
+               class="px-6 sm:px-8 py-3 sm:py-4 rounded-full border border-white/20 hover:bg-white/5 transition-colors">
+                Full Setup Guide
+            </a>
+          </div>
+        </div>
+      </FadeIn>
+    </section>
+
+  </main>
+
+  <Footer />
+</BaseLayout>
