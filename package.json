@@ -35,6 +35,7 @@
     "url": "https://github.com/varun369/SuperLocalMemoryV2.git"
   },
   "homepage": "https://superlocalmemory.com",
+  "mcpName": "io.github.varun369/superlocalmemory",
   "bugs": {
     "url": "https://github.com/varun369/SuperLocalMemoryV2/issues"
   },
