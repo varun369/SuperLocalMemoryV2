@@ -65,7 +65,7 @@ const competitors = [
         <div class="glass-panel rounded-3xl overflow-hidden border border-white/10 relative z-10">
             
             <!-- Header Grid -->
-            <div class="grid grid-cols-3 p-6 md:p-8 border-b border-white/10 bg-white/5">
+            <div class="grid grid-cols-1 md:grid-cols-3 p-6 md:p-8 border-b border-white/10 bg-white/5">
                 <div class="col-span-1 text-[var(--color-text-muted)] font-mono text-sm uppercase tracking-wider flex items-end">Feature</div>
                 <div class="col-span-1 text-center">
                     <div class="inline-flex items-center gap-2 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-4 py-1 rounded-full border border-[var(--color-primary)]/20 mb-2">
@@ -81,7 +81,7 @@ const competitors = [
             <!-- Rows -->
             <div class="divide-y divide-white/5">
                 {features.map((item, i) => (
-                    <div class="grid grid-cols-3 p-6 md:p-8 hover:bg-white/5 transition-colors group">
+                    <div class="grid grid-cols-1 md:grid-cols-3 p-6 md:p-8 hover:bg-white/5 transition-colors group">
                         <div class="col-span-1 font-medium text-white flex items-center">{item.name}</div>
                         
                         <div class="col-span-1 text-center flex items-center justify-center gap-2">
