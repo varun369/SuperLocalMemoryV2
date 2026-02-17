@@ -46,26 +46,27 @@ export const DemoGallery: React.FC = () => {
                             <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[var(--color-primary)] transition-colors">{video.title}</h3>
                             <p className="text-[var(--color-text-muted)] text-sm mb-4">{video.description}</p>
 
-                            <div className="relative aspect-video rounded-xl overflow-hidden border border-white/10 group-hover:border-[var(--color-primary)]/50 transition-colors shadow-lg bg-black/50">
+                            <div className="relative aspect-video rounded-xl overflow-hidden border border-white/10 group-hover:border-[var(--color-primary)]/50 transition-colors shadow-lg bg-gradient-to-br from-slate-800 to-slate-900">
                                 {video.type === 'video' ? (
                                     <>
-                                        {/* Use video tag as thumbnail, muted, paused at start */}
                                         <video
-                                            src={video.src}
-                                            className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
+                                            src={`${video.src}#t=15`}
+                                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                                             muted
                                             playsInline
-                                            onMouseOver={e => e.currentTarget.play()}
-                                            onMouseOut={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                            preload="metadata"
                                         />
                                         <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:scale-110 transition-transform text-white">
-                                                <Play className="w-8 h-8 fill-current ml-1" />
+                                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:scale-110 active:scale-95 transition-transform text-white">
+                                                <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-current ml-1" />
                                             </div>
+                                        </div>
+                                        <div className="absolute bottom-3 left-3 px-2 py-1 bg-black/60 backdrop-blur-sm rounded text-xs text-white/80 font-mono">
+                                            ▶ Tap to play
                                         </div>
                                     </>
                                 ) : (
-                                    <img src={video.src} alt={video.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                    <img src={video.src} alt={video.title} className="w-full h-full object-cover" loading="lazy" />
                                 )}
                             </div>
                         </div>

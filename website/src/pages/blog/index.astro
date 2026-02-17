@@ -38,12 +38,15 @@ const description = "Latest updates, tutorials, and research from the SuperLocal
                 {posts.map((post, i) => (
                     <FadeIn client:visible delay={i * 0.1}>
                         <a href={`/blog/${post.id}`} class="group h-full flex flex-col glass-panel rounded-2xl border border-white/10 overflow-hidden hover:border-[var(--color-primary)]/50 transition-all hover:-translate-y-1">
-                            <div class="aspect-video bg-white/5 relative overflow-hidden">
-                                {post.data.image && (
-                                    <img src={post.data.image} alt={post.data.title} class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                            <div class="relative overflow-hidden">
+                                {post.data.image ? (
+                                    <div class="aspect-video">
+                                        <img src={post.data.image} alt={post.data.title} class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                    </div>
+                                ) : (
+                                    <div class="h-3 bg-gradient-to-r from-[var(--color-primary)]/40 via-purple-500/40 to-[var(--color-accent)]/40"></div>
                                 )}
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                <div class="absolute bottom-4 left-4">
+                                <div class="absolute bottom-3 left-3">
                                     <span class="px-2 py-1 rounded bg-[var(--color-primary)] text-black text-xs font-bold uppercase tracking-wide">
                                         {post.data.category || 'Update'}
                                     </span>
