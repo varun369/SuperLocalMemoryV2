@@ -10,10 +10,11 @@ const blog = defineCollection({
     updatedDate: z.coerce.date().optional(),
     author: z.string().default('Varun Pratap Bhardwaj'),
     tags: z.array(z.string()).default([]),
-    category: z.enum(['tutorials', 'comparisons', 'guides', 'updates']).default('tutorials'),
+    category: z.enum(['tutorials', 'comparisons', 'guides', 'updates', 'education']).default('tutorials'),
     image: z.string().optional(),
     draft: z.boolean().default(false),
     keywords: z.string().optional(),
+    slug: z.string().optional(),
   }),
 });
 
