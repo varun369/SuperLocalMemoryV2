@@ -40,8 +40,13 @@ const description = "Latest updates, tutorials, and research from the SuperLocal
                         <a href={`/blog/${post.id}`} class="group h-full flex flex-col glass-panel rounded-2xl border border-white/10 overflow-hidden hover:border-[var(--color-primary)]/50 transition-all hover:-translate-y-1">
                             <div class="relative overflow-hidden">
                                 {post.data.image ? (
-                                    <div class="aspect-video">
-                                        <img src={post.data.image} alt={post.data.title} class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                    <div class="aspect-video blog-image-container">
+                                        <img
+                                            src={post.data.image}
+                                            alt={post.data.title}
+                                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            onerror="this.parentElement.outerHTML='<div class=\'h-3 bg-gradient-to-r from-sky-400/40 via-purple-500/40 to-indigo-400/40\'></div>'"
+                                        />
                                     </div>
                                 ) : (
                                     <div class="h-3 bg-gradient-to-r from-[var(--color-primary)]/40 via-purple-500/40 to-[var(--color-accent)]/40"></div>
