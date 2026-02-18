@@ -44,7 +44,7 @@ We are committed to providing a welcoming and inclusive experience for everyone,
 
 Project maintainers are responsible for clarifying standards and will take appropriate corrective action in response to unacceptable behavior.
 
-Report violations to: [project-email@example.com]
+Report violations to: [admin@superlocalmemory.com]
 
 ---
 
