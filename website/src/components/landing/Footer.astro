@@ -4,19 +4,19 @@ const currentYear = new Date().getFullYear();
 
 <footer class="bg-[var(--color-bg-main)] border-t border-white/5 py-12 md:py-20">
   <div class="container-custom">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-12 mb-12">
       <!-- Brand -->
-      <div class="col-span-1 md:col-span-2 space-y-4">
+      <div class="col-span-2 space-y-4">
         <a href="/" class="text-xl font-bold tracking-tight text-white block">
           SuperLocalMemory
         </a>
         <p class="text-[var(--color-text-muted)] max-w-sm">
-          The open-source, local-first memory layer for your AI. 
+          The open-source, local-first memory layer for your AI.
           Built for privacy, designed for developers.
         </p>
       </div>
 
-      <!-- Links 1 -->
+      <!-- Product -->
       <div class="space-y-4">
         <h4 class="text-white font-semibold">Product</h4>
         <ul class="space-y-2 text-[var(--color-text-muted)]">
@@ -27,7 +27,17 @@ const currentYear = new Date().getFullYear();
         </ul>
       </div>
 
-      <!-- Links 2 -->
+      <!-- Integrations -->
+      <div class="space-y-4">
+        <h4 class="text-white font-semibold">Integrations</h4>
+        <ul class="space-y-2 text-[var(--color-text-muted)]">
+          <li><a href="/integrations/claude-code" class="hover:text-[var(--color-primary)] transition-colors">Claude Code</a></li>
+          <li><a href="/integrations/cursor" class="hover:text-[var(--color-primary)] transition-colors">Cursor</a></li>
+          <li><a href="/integrations/chatgpt" class="hover:text-[var(--color-primary)] transition-colors">ChatGPT Desktop</a></li>
+        </ul>
+      </div>
+
+      <!-- Resources -->
       <div class="space-y-4">
         <h4 class="text-white font-semibold">Resources</h4>
         <ul class="space-y-2 text-[var(--color-text-muted)]">
