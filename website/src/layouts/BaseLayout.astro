@@ -76,10 +76,15 @@ const ogImage = new URL(image, 'https://superlocalmemory.com').toString();
 
     <slot name="head" />
 
-    <!-- Fonts -->
+    <!-- LCP image: preload hero background so browser fetches it early -->
+    <link rel="preload" as="image" href="/assets/hero_neural_mesh_bg_1771269692417.png" />
+
+    <!-- Fonts: non-blocking load (media trick — browser swaps when loaded) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" /></noscript>
 
     <!-- Analytics — Plausible (privacy-respecting, no cookies) -->
     <script defer data-domain="superlocalmemory.com" src="https://plausible.io/js/script.js"></script>
@@ -93,24 +98,7 @@ const ogImage = new URL(image, 'https://superlocalmemory.com').toString();
       gtag('config', 'G-BJMB478WWM');
     </script>
 
-    <script>
-      import Lenis from 'lenis';
-
-      const lenis = new Lenis({
-        duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        orientation: 'vertical',
-        gestureOrientation: 'vertical',
-        smoothWheel: true,
-      });
-
-      function raf(time: any) {
-        lenis.raf(time);
-        requestAnimationFrame(raf);
-      }
-
-      requestAnimationFrame(raf);
-    </script>
+    <!-- Smooth scroll handled natively via CSS scroll-behavior: smooth in global.css -->
   </head>
   <body class="bg-[var(--color-bg-main)] text-white selection:bg-cyan-500/30">
     <slot />

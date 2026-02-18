@@ -107,6 +107,31 @@
   }
 }
 
+/* CSS animations to replace framer-motion on above-fold content */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.css-fade-up    { animation: fadeInUp    0.8s cubic-bezier(0.25, 0.25, 0, 1) both; }
+.css-fade-left  { animation: fadeInLeft  0.8s cubic-bezier(0.25, 0.25, 0, 1) both; }
+.css-fade-right { animation: fadeInRight 0.8s cubic-bezier(0.25, 0.25, 0, 1) both; }
+
+.css-delay-200 { animation-delay: 0.2s; }
+.css-delay-400 { animation-delay: 0.4s; }
+.css-delay-600 { animation-delay: 0.6s; }
+.css-delay-800 { animation-delay: 0.8s; }
+
 @layer utilities {
   .perspective-1000 {
     perspective: 1000px;
