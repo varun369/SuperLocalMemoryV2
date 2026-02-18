@@ -90,18 +90,19 @@ const ogImage = new URL(image, 'https://superlocalmemory.com').toString();
     <!-- Analytics — Plausible (privacy-respecting, no cookies) -->
     <script defer data-domain="superlocalmemory.com" src="https://plausible.io/js/script.js"></script>
 
-    <!-- Analytics — Google Analytics 4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BJMB478WWM"></script>
-    <script is:inline>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-BJMB478WWM');
-    </script>
-
     <!-- Smooth scroll handled natively via CSS scroll-behavior: smooth in global.css -->
   </head>
   <body class="bg-[var(--color-bg-main)] text-white selection:bg-cyan-500/30">
     <slot />
+    <!-- Analytics — Google Analytics 4 (deferred to after paint) -->
+    <script defer src="https://www.googletagmanager.com/gtag/js?id=G-BJMB478WWM"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.addEventListener('load', function() {
+        gtag('js', new Date());
+        gtag('config', 'G-BJMB478WWM');
+      });
+    </script>
   </body>
 </html>

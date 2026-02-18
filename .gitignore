@@ -64,6 +64,13 @@ venv/
 env/
 ENV/
 
+# ==== SECRETS & TOKENS (Never commit) ====
+.mcpregistry_github_token
+.mcpregistry_registry_token
+*_token
+*_secret
+*.token
+
 # ==== OS FILES ====
 .DS_Store
 .DS_Store?

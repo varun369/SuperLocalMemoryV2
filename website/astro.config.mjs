@@ -15,16 +15,25 @@ export default defineConfig({
     customPages: [
       'https://superlocalmemory.com/architecture',
       'https://superlocalmemory.com/learning',
+      'https://superlocalmemory.com/integrations/claude-code',
+      'https://superlocalmemory.com/integrations/cursor',
+      'https://superlocalmemory.com/integrations/chatgpt',
     ],
     serialize(item) {
-      item.lastmod = new Date('2026-02-16');
+      item.lastmod = new Date('2026-02-18');
       if (item.url === 'https://superlocalmemory.com/') {
         item.priority = 1.0;
         item.changefreq = 'weekly';
+      } else if (item.url.includes('/integrations/')) {
+        item.priority = 0.9;
+        item.changefreq = 'monthly';
       } else if (item.url.includes('architecture')) {
         item.priority = 0.9;
         item.changefreq = 'monthly';
       } else if (item.url.includes('learning')) {
+        item.priority = 0.9;
+        item.changefreq = 'monthly';
+      } else if (item.url.includes('comparison') || item.url.includes('pricing')) {
         item.priority = 0.9;
         item.changefreq = 'monthly';
       } else {
@@ -40,6 +49,11 @@ export default defineConfig({
       theme: 'github-dark',
       wrap: true
     }
+  },
+
+  build: {
+    // Inline all CSS into <style> tags — eliminates render-blocking CSS network requests
+    inlineStylesheets: 'always',
   },
 
   vite: {
