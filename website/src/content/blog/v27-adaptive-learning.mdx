@@ -1,12 +1,12 @@
 ---
-title: "SuperLocalMemory v2.7: Your AI Learns You — Adaptive Learning with Local ML"
-description: "SuperLocalMemory v2.7 introduces adaptive learning with LightGBM ML ranking — all 100% local. Your behavioral data never leaves your machine."
+title: "SuperLocalMemory v2.7: Your AI Learns You — Adaptive Learning That Runs Locally"
+description: "SuperLocalMemory v2.7 introduces adaptive learning with local ML ranking — all 100% local. Your behavioral data never leaves your machine."
 pubDate: 2026-02-16
 author: "Varun Pratap Bhardwaj"
 tags: ["release", "learning", "privacy", "ml", "gdpr"]
 category: "updates"
 draft: false
-keywords: "SuperLocalMemory v2.7, adaptive learning AI memory, local ML ranking, LightGBM memory, GDPR AI memory, privacy-first AI, personalized AI memory"
+keywords: "SuperLocalMemory v2.7, adaptive learning AI memory, local ML ranking, GDPR AI memory, privacy-first AI, personalized AI memory"
 ---
 
 import Callout from '../../components/blog/Callout.astro';
@@ -26,11 +26,11 @@ SuperLocalMemory v2.7 solves this with adaptive learning. The system now observe
 <Callout type="info" title="What is new in v2.7">
 
 - Three-layer local learning architecture that builds a behavioral model of your workflows
-- LightGBM-powered adaptive re-ranking that improves search relevance over time
-- Separate `learning.db` database for behavioral data, fully isolated from your memories
-- Three new MCP tools: `memory_used`, `get_learned_patterns`, `correct_pattern`
+- ML-powered adaptive re-ranking that improves search relevance over time
+- Dedicated local database for behavioral data, fully isolated from your memories
+- New MCP tools for feedback, pattern inspection, and correction
 - New CLI commands for inspecting and managing learned patterns
-- Synthetic bootstrap that delivers ML-quality results from day one -- no cold-start problem
+- Day-1 personalization -- no cold-start problem, results improve from the moment you upgrade
 - Full GDPR compliance with one-command data export and deletion
 
 </Callout>
@@ -47,7 +47,7 @@ These preferences are transferable. Start a new project and your technology affi
 
 ### Layer 2: Project Context Detection
 
-The second layer understands project boundaries. It uses four signals -- active directory, recent memory tags, time-of-day patterns, and explicit profile selection -- to determine which project you are working on right now.
+The second layer understands project boundaries. It uses multiple signals -- active directory, recent memory tags, time-of-day patterns, and explicit profile selection -- to determine which project you are working on right now.
 
 This matters because a memory about "API authentication" means something different when you are working on a Node.js backend versus a Python data pipeline. Project context lets the ranker prioritize memories from the relevant project without you having to specify it every time.
 
@@ -57,11 +57,11 @@ The third layer discovers sequential patterns in how you work. If you consistent
 
 Over time, it can anticipate what you will need next based on what you just did. This is not prediction in the speculative sense -- it is pattern recognition grounded in your actual recorded behavior.
 
-### Adaptive Re-Ranking with LightGBM
+### Adaptive Re-Ranking
 
-Sitting on top of all three layers is an adaptive re-ranker powered by LightGBM. It takes the raw search results from SuperLocalMemory's existing FTS5 + TF-IDF engine and re-orders them based on everything the learning layers know about you.
+Sitting on top of all three layers is an adaptive re-ranker. It takes the raw search results from SuperLocalMemory's existing search engine and re-orders them based on everything the learning layers know about you.
 
-The ranker starts with a rule-based system on day one, using synthetic training data bootstrapped from your existing memories. As real behavioral signals accumulate, it transitions smoothly to a full ML model. You never experience a cold-start degradation -- results are personalized from the moment you upgrade.
+The ranker starts with a rule-based system on day one. Using your existing memories, it creates personalized ranking from the moment you upgrade -- no cold-start degradation. As real behavioral signals accumulate over days and weeks of use, the system progressively improves. You never need to configure anything -- it learns in the background.
 
 <Callout type="tip" title="The transition is automatic">
 
@@ -73,27 +73,23 @@ You do not need to configure the learning system or train it manually. Install v
 
 Every byte of behavioral data stays on your machine. This is not a policy decision -- it is an architectural guarantee.
 
-**Separate database.** All learning data lives in `learning.db`, a dedicated SQLite database completely isolated from your memory store (`memory.db`). Your memories and your behavioral patterns are never co-mingled.
+**Separate database.** All learning data lives in a dedicated local database, completely isolated from your memory store. Your memories and your behavioral patterns are never co-mingled.
 
 **Zero telemetry.** No usage data, no analytics pings, no crash reports, no phone-home of any kind. The learning system has no network code. It cannot send data anywhere because it has no capability to do so.
 
-**GDPR-ready by design.** Export all your behavioral data with a single command. Delete it with another. The separate database makes this trivial -- drop `learning.db` and your behavioral footprint is gone. Your memories remain untouched.
+**GDPR-ready by design.** Export all your behavioral data with a single command. Delete it with another. The separate database makes this trivial -- reset your learning data and your behavioral footprint is gone. Your memories remain untouched.
 
-**No cloud dependencies.** The LightGBM model trains locally on your machine. There is no external inference API. The model file lives next to your database, versioned and portable.
+**No cloud dependencies.** The ML model trains locally on your machine. There is no external inference API. The model file lives next to your database, versioned and portable.
 
 Compare this with cloud-based alternatives where your behavioral data -- what you search for, what you use, how you work -- flows through third-party servers. With SuperLocalMemory, that data never leaves your file system.
 
-## Research-Backed Architecture
+## Novel Contribution
 
-The v2.7 learning architecture is grounded in published research, adapted for the constraints of a fully local system.
+To our knowledge, SuperLocalMemory v2.7 is the first system to implement fully local, zero-communication, adaptive re-ranking for personal AI memory. The architecture draws from published research in information retrieval, privacy-preserving feedback mechanisms, and sequence mining -- adapted for the unique constraints of a system that can never communicate with any external server.
 
-The adaptive re-ranking pipeline draws from eKNOW 2025 work on BM25-to-re-ranker pipelines and ADPMF research on privacy-preserving feedback mechanisms (IPM 2024). The cold-start bootstrap uses techniques from FCS LREC 2024, ensuring ML-quality results before any real behavioral data exists. Workflow pattern mining builds on TSW-PrefixSpan sequence mining (IEEE 2020). The Bayesian confidence scoring extends the MACLA framework (arXiv:2512.18950).
+<Callout type="info" title="A first in the field">
 
-Eight research papers informed the design. The result is an architecture that achieves personalized ranking without any of the cloud infrastructure that existing literature assumes is required.
-
-<Callout type="info" title="A novel contribution">
-
-To our knowledge, SuperLocalMemory v2.7 is the first system to implement fully local, zero-communication, adaptive re-ranking for personal AI memory. Prior work in this space universally assumes cloud-based infrastructure for model training and inference.
+Prior work in adaptive memory ranking universally assumes cloud-based infrastructure for model training and inference. SuperLocalMemory proves this is unnecessary -- effective personalization is achievable entirely on-device.
 
 </Callout>
 
@@ -142,9 +138,9 @@ superlocalmemory --version
 slm learning status
 ```
 
-The learning system activates automatically on first use after upgrade. It creates `learning.db` alongside your existing `memory.db` and begins collecting signals immediately. No configuration required.
+The learning system activates automatically on first use after upgrade. It creates a dedicated database alongside your existing data and begins collecting signals immediately. No configuration required.
 
-Two optional dependencies (`lightgbm` and `scipy`) are installed automatically if you use the npm package. If you installed from source, run:
+Optional ML dependencies are installed automatically if you use the npm package. If you installed from source, run:
 
 ```bash
 pip install -r requirements-learning.txt
@@ -162,7 +158,7 @@ v2.7 is fully backward compatible. Your existing memories, knowledge graph, patt
 
 ## What is Next
 
-v2.8 is already in planning. The focus shifts from individual learning to multi-agent collaboration -- enabling multiple AI agents to share context through a single memory layer using the A2A (Agent-to-Agent) protocol. Think of it as giving your entire AI toolkit a shared brain.
+The next release focuses on multi-agent collaboration -- enabling multiple AI agents to share context through a single memory layer. Think of it as giving your entire AI toolkit a shared brain.
 
 More details will be published as the design solidifies. For now, v2.7 makes your personal AI memory meaningfully smarter. Install it, use it for a week, and notice the difference in search relevance.
 

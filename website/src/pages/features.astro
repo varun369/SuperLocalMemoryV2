@@ -12,21 +12,21 @@ const coreFeatures = [
     {
         icon: Brain,
         title: "Adaptive Learning (v2.7)",
-        desc: "Learns your preferences and workflows locally using LightGBM. Surfaces the right memories for the right project context.",
+        desc: "Learns your preferences and workflows locally using machine learning. Surfaces the right memories for the right project context.",
         badge: "NEW",
         wiki: "PATTERN-LEARNING"
     },
     {
         icon: Radio,
-        title: "A2A Protocol (v2.8)",
+        title: "A2A Protocol",
         desc: "Agent-to-Agent collaboration. Let Cursor, Claude, and your terminal agents communicate and sync state.",
-        badge: "PREVIEW",
+        badge: "COMING SOON",
         wiki: "ARCHITECTURE-V2.5"
     },
     {
         icon: Shield,
         title: "Privacy First",
-        desc: "GDPR compliant by design. Your behavioral data is isolated in learning.db and never leaves your machine.",
+        desc: "GDPR compliant by design. Your behavioral data is isolated in a dedicated local database and never leaves your machine.",
         wiki: "ARCHITECTURE"
     },
     {
@@ -155,7 +155,7 @@ const architectureLayers = [
                             </div>
                             <div class="p-4 bg-white/5 rounded-lg border-l-4 border-purple-500">
                                 <div class="text-xs text-[var(--color-text-muted)] mb-1">Layer 3: Workflow</div>
-                                <div class="font-bold">Sequence Mining (PrefixSpan)</div>
+                                <div class="font-bold">Workflow Sequence Mining</div>
                             </div>
                         </div>
                     </div>
@@ -167,7 +167,7 @@ const architectureLayers = [
                     </p>
                     <ul class="space-y-3 mb-8">
                         <li class="flex items-center gap-2"><Check className="w-5 h-5 text-green-400" /> 3-Layer Local ML Model</li>
-                        <li class="flex items-center gap-2"><Check className="w-5 h-5 text-green-400" /> LightGBM LambdaRank Re-ranking</li>
+                        <li class="flex items-center gap-2"><Check className="w-5 h-5 text-green-400" /> ML-Powered Adaptive Ranking</li>
                         <li class="flex items-center gap-2"><Check className="w-5 h-5 text-green-400" /> Zero Telemetry (Training is Local)</li>
                     </ul>
                 </div>
