@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/landing/Header.astro';
 import Footer from '../components/landing/Footer.astro';
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema.astro';
 import { FadeIn } from '../components/ui/Motion';
 import { Shield, HardDrive, Lock, Eye, Server, FileCheck } from 'lucide-react';
 
@@ -14,6 +15,11 @@ const description = "SuperLocalMemory is private by design. All data stays on yo
 
   <main class="pt-32 pb-24 min-h-screen bg-[var(--color-bg-main)]">
     <div class="container-custom max-w-4xl">
+
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://superlocalmemory.com' },
+        { name: 'Security', url: 'https://superlocalmemory.com/security' }
+      ]} />
 
       <FadeIn client:load>
         <div class="text-center mb-16">

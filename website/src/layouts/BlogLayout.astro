@@ -1,7 +1,10 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import Comments from '../components/blog/Comments.astro';
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema.astro';
 import { FadeIn } from '../components/ui/Motion';
+import { getCollection } from 'astro:content';
+import { ArrowRight, Calendar } from 'lucide-react';
 
 interface Props {
   title: string;
@@ -19,6 +22,22 @@ const { title, description, pubDate, updatedDate, author, tags, category, image,
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const formattedDate = pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 const formattedUpdatedDate = updatedDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+// Fetch related posts: prefer same category, then same tags, exclude current post
+const currentSlug = Astro.url.pathname.replace('/blog/', '').replace(/\/$/, '');
+const allPosts = (await getCollection('blog', ({ data }) => !data.draft))
+  .filter(p => p.id !== currentSlug)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Score posts by relevance: same category = 3 points, each shared tag = 1 point
+const scoredPosts = allPosts.map(post => {
+  let score = 0;
+  if (post.data.category === category) score += 3;
+  score += post.data.tags.filter(t => tags.includes(t)).length;
+  return { post, score };
+});
+scoredPosts.sort((a, b) => b.score - a.score);
+const relatedPosts = scoredPosts.slice(0, 3).map(s => s.post);
 ---
 
 <BaseLayout title={`${title} | SuperLocalMemory`} description={description} ogType="article" keywords={keywords || tags.join(', ')} schemaType="Article">
@@ -61,6 +80,12 @@ const formattedUpdatedDate = updatedDate?.toLocaleDateString('en-US', { year: 'n
       }
     })} />
   </Fragment>
+
+  <BreadcrumbSchema items={[
+    { name: 'Home', url: 'https://superlocalmemory.com' },
+    { name: 'Blog', url: 'https://superlocalmemory.com/blog' },
+    { name: title, url: canonicalURL.toString() }
+  ]} />
 
   <article class="relative pt-32 pb-24">
     <div class="container-custom max-w-4xl">
@@ -123,6 +148,43 @@ const formattedUpdatedDate = updatedDate?.toLocaleDateString('en-US', { year: 'n
         </div>
 
         <Comments />
+
+        <!-- Related Posts -->
+        {relatedPosts.length > 0 && (
+          <div class="mt-16 pt-12 border-t border-white/10">
+            <h2 class="text-2xl font-bold text-white mb-8 text-center">Related Articles</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+              {relatedPosts.map(rp => (
+                <a href={`/blog/${rp.id}`} class="group rounded-xl bg-white/5 border border-white/10 overflow-hidden hover:border-[var(--color-primary)]/30 transition-all hover:-translate-y-1">
+                  {rp.data.image ? (
+                    <div class="aspect-video overflow-hidden">
+                      <img
+                        src={rp.data.image}
+                        alt={rp.data.title}
+                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        onerror="this.parentElement.outerHTML='<div class=\'h-2 bg-gradient-to-r from-sky-400/40 via-purple-500/40 to-indigo-400/40\'></div>'"
+                      />
+                    </div>
+                  ) : (
+                    <div class="h-2 bg-gradient-to-r from-[var(--color-primary)]/40 via-purple-500/40 to-[var(--color-accent)]/40"></div>
+                  )}
+                  <div class="p-5">
+                    <div class="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mb-3">
+                      <Calendar className="w-3 h-3" />
+                      <span>{rp.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                    </div>
+                    <h3 class="text-base font-semibold text-white mb-2 group-hover:text-[var(--color-primary)] transition-colors line-clamp-2">
+                      {rp.data.title}
+                    </h3>
+                    <p class="text-sm text-[var(--color-text-muted)] line-clamp-2">
+                      {rp.data.description}
+                    </p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div class="text-center mt-12">
             <a href="/blog" class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium transition-all hover:-translate-y-0.5">

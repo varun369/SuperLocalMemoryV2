@@ -1,0 +1,355 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/landing/Header.astro';
+import Footer from '../../components/landing/Footer.astro';
+import BreadcrumbSchema from '../../components/seo/BreadcrumbSchema.astro';
+import FAQSchema from '../../components/seo/FAQSchema.astro';
+import { FadeIn } from '../../components/ui/Motion';
+import { Brain, Zap, Shield, Clock, ArrowRight, Check, Globe, Lock, HardDrive, Layers } from 'lucide-react';
+
+const title = "SuperLocalMemory for ChatGPT Desktop — Local Memory Layer";
+const description = "Add local, persistent memory to ChatGPT Desktop. A private alternative to ChatGPT's built-in memory. Your conversations stay on your machine.";
+const keywords = "ChatGPT memory alternative, ChatGPT Desktop memory, ChatGPT local memory, ChatGPT MCP, ChatGPT persistent memory, ChatGPT Desktop MCP server, private ChatGPT memory";
+
+const faqs = [
+  {
+    question: "How is SuperLocalMemory different from ChatGPT's built-in memory?",
+    answer: "ChatGPT's built-in memory stores data on OpenAI's servers. SuperLocalMemory stores everything locally on your machine. Your memories are private, portable, and work across multiple AI tools — not just ChatGPT."
+  },
+  {
+    question: "Does ChatGPT Desktop support MCP servers?",
+    answer: "Yes. ChatGPT Desktop has MCP support, which allows SuperLocalMemory to connect as a local memory server. ChatGPT can read and write memories through the MCP protocol."
+  },
+  {
+    question: "Can I use the same memories in Claude Code and Cursor?",
+    answer: "Yes. SuperLocalMemory uses a shared local SQLite database. Any MCP-compatible tool can access the same memories — ChatGPT Desktop, Claude Code, Cursor, Windsurf, VS Code, and 17+ other tools."
+  },
+  {
+    question: "Is this a replacement for ChatGPT's built-in memory?",
+    answer: "It can be used alongside or as an alternative. SuperLocalMemory gives you local, private, portable memory that you fully control. ChatGPT's built-in memory is convenient but cloud-hosted and locked to OpenAI."
+  },
+  {
+    question: "Is SuperLocalMemory free?",
+    answer: "Yes, completely free and open source under the MIT license. No subscriptions, no API costs, no usage limits. It runs entirely on your hardware."
+  }
+];
+
+const features = [
+  {
+    icon: Lock,
+    title: "Private Alternative",
+    desc: "Unlike ChatGPT's cloud-hosted memory, SuperLocalMemory keeps all data on your machine. A true local-first alternative for privacy-conscious users."
+  },
+  {
+    icon: Globe,
+    title: "Cross-Platform Memory",
+    desc: "Memories from ChatGPT Desktop carry over to Claude Code, Cursor, and 15+ other AI tools. No more fragmented context."
+  },
+  {
+    icon: HardDrive,
+    title: "You Own Your Data",
+    desc: "Single SQLite file, fully portable. Back it up, move it between machines, or delete it entirely. No cloud residue."
+  },
+  {
+    icon: Layers,
+    title: "Knowledge Graphs",
+    desc: "Builds semantic relationships between concepts, topics, and conversations. ChatGPT understands connections between your ideas."
+  },
+  {
+    icon: Zap,
+    title: "Instant Retrieval",
+    desc: "Sub-10ms memory recall from local storage. No network round-trips, no API rate limits, no cloud latency."
+  },
+  {
+    icon: Brain,
+    title: "Adaptive Learning",
+    desc: "Learns your patterns over time. The more you use it, the better it gets at surfacing relevant context for your conversations."
+  }
+];
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  keywords={keywords}
+  schemaType="SoftwareApplication"
+>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "SuperLocalMemory for ChatGPT Desktop",
+      "description": description,
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "macOS, Linux, Windows",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "softwareVersion": "2.7.5",
+      "author": {
+        "@type": "Person",
+        "name": "Varun Pratap Bhardwaj"
+      }
+    })} />
+  </Fragment>
+
+  <Header />
+  <FAQSchema faqs={faqs} />
+
+  <main class="pt-32 pb-24 min-h-screen bg-[var(--color-bg-main)]">
+    <div class="container-custom max-w-5xl">
+
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://superlocalmemory.com' },
+        { name: 'Integrations', url: 'https://superlocalmemory.com/integrations/claude-code' },
+        { name: 'ChatGPT Desktop', url: 'https://superlocalmemory.com/integrations/chatgpt' }
+      ]} />
+
+      <!-- Hero -->
+      <FadeIn client:load>
+        <div class="text-center mb-20">
+          <span class="text-[var(--color-primary)] font-mono text-sm tracking-wider uppercase mb-4 block">Integration</span>
+          <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+            ChatGPT Desktop <span class="text-gradient">Local Memory</span>
+          </h1>
+          <p class="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto mb-8">
+            A private, local-first memory alternative for ChatGPT Desktop. Your conversations and context stay on your machine.
+          </p>
+          <div class="flex flex-wrap justify-center gap-4">
+            <a href="#quickstart" class="px-8 py-4 rounded-full bg-[var(--color-primary)] text-black font-bold hover:scale-105 transition-transform shadow-[0_0_20px_rgba(56,189,248,0.3)]">
+              Quick Start Guide
+            </a>
+            <a href="/docs" class="px-8 py-4 rounded-full border border-white/20 hover:bg-white/5 transition-colors">
+              Full Documentation
+            </a>
+          </div>
+        </div>
+      </FadeIn>
+
+      <!-- The Problem -->
+      <FadeIn client:visible delay={0.1}>
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-8 md:p-12 mb-16">
+          <h2 class="text-2xl md:text-3xl font-bold text-white mb-6">ChatGPT Remembers — But Not Privately</h2>
+          <div class="space-y-4 text-[var(--color-text-muted)] text-lg leading-relaxed">
+            <p>
+              ChatGPT has built-in memory, but it stores everything on OpenAI's servers. Your personal preferences, project details, and conversation patterns live in their cloud infrastructure.
+            </p>
+            <p>
+              For developers and professionals working with sensitive information — proprietary code, client details, business strategy — <strong class="text-white">cloud-hosted memory is a privacy risk.</strong>
+            </p>
+            <p>
+              And ChatGPT's memory is locked to OpenAI. Switch to Claude, Cursor, or any other tool, and <strong class="text-white">that context does not come with you.</strong>
+            </p>
+            <p class="text-[var(--color-primary)] font-semibold">
+              SuperLocalMemory gives ChatGPT Desktop the same persistent memory — but 100% local, private, and portable to any AI tool.
+            </p>
+          </div>
+        </div>
+      </FadeIn>
+
+      <!-- Comparison: Built-in vs SLM -->
+      <FadeIn client:visible delay={0.12}>
+        <div class="mb-16">
+          <h2 class="text-2xl md:text-3xl font-bold text-white mb-8 text-center">ChatGPT Memory vs SuperLocalMemory</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead>
+                <tr class="border-b border-white/10">
+                  <th class="py-3 pr-4 text-[var(--color-text-muted)] font-medium">Feature</th>
+                  <th class="py-3 px-4 text-[var(--color-primary)] font-semibold">SuperLocalMemory</th>
+                  <th class="py-3 px-4 text-[var(--color-text-muted)] font-medium">ChatGPT Memory</th>
+                </tr>
+              </thead>
+              <tbody class="text-[var(--color-text-muted)]">
+                {([
+                  ["Data location", "Your machine only", "OpenAI servers"],
+                  ["Cross-tool support", "17+ AI tools", "ChatGPT only"],
+                  ["Offline access", "Yes, fully offline", "Requires internet"],
+                  ["Data portability", "Single SQLite file", "Locked to OpenAI"],
+                  ["Privacy", "Zero cloud exposure", "Stored in their cloud"],
+                  ["Knowledge graphs", "Yes, with community detection", "No"],
+                  ["Cost", "Free forever", "Included with ChatGPT Plus"],
+                ] as const).map(([feature, slm, chatgpt]) => (
+                  <tr class="border-b border-white/5">
+                    <td class="py-3 pr-4 font-medium text-white">{feature}</td>
+                    <td class="py-3 px-4 text-[var(--color-primary)]">{slm}</td>
+                    <td class="py-3 px-4">{chatgpt}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </FadeIn>
+
+      <!-- Quick Start -->
+      <div id="quickstart">
+        <FadeIn client:visible delay={0.15}>
+          <div class="mb-16">
+            <h2 class="text-2xl md:text-3xl font-bold text-white mb-8 text-center">Set Up ChatGPT Desktop Memory in 3 Steps</h2>
+
+            <div class="space-y-6">
+              <!-- Step 1 -->
+              <div class="rounded-xl bg-white/5 border border-white/10 p-6">
+                <div class="flex items-start gap-4">
+                  <div class="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 flex items-center justify-center shrink-0">
+                    <span class="text-[var(--color-primary)] font-bold text-sm">1</span>
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-white mb-3">Install SuperLocalMemory</h3>
+                    <div class="bg-black/50 rounded-lg border border-white/10 p-4 font-mono text-sm">
+                      <span class="text-[var(--color-text-muted)]">$</span> <span class="text-[var(--color-primary)]">npx</span> superlocalmemory@latest init
+                    </div>
+                    <p class="text-sm text-[var(--color-text-muted)] mt-3">Creates the local SQLite database and default configuration. No API keys required.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 2 -->
+              <div class="rounded-xl bg-white/5 border border-white/10 p-6">
+                <div class="flex items-start gap-4">
+                  <div class="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 flex items-center justify-center shrink-0">
+                    <span class="text-[var(--color-primary)] font-bold text-sm">2</span>
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-white mb-3">Configure MCP in ChatGPT Desktop</h3>
+                    <p class="text-sm text-[var(--color-text-muted)] mb-3">Add SuperLocalMemory as an MCP server in your ChatGPT Desktop configuration:</p>
+                    <div class="bg-black/50 rounded-lg border border-white/10 p-4 font-mono text-sm overflow-x-auto">
+                      <pre class="text-[var(--color-text-muted)]"><code>{`{
+  "mcpServers": {
+    "superlocalmemory": {
+      "command": "npx",
+      "args": ["-y", "superlocalmemory@latest"],
+      "env": {}
+    }
+  }
+}`}</code></pre>
+                    </div>
+                    <p class="text-sm text-[var(--color-text-muted)] mt-3">Open ChatGPT Desktop settings and navigate to the MCP server configuration section.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 3 -->
+              <div class="rounded-xl bg-white/5 border border-white/10 p-6">
+                <div class="flex items-start gap-4">
+                  <div class="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 flex items-center justify-center shrink-0">
+                    <span class="text-[var(--color-primary)] font-bold text-sm">3</span>
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-white mb-3">Chat With Memory</h3>
+                    <p class="text-sm text-[var(--color-text-muted)] mb-3">ChatGPT Desktop can now store and recall memories locally. Use it naturally in conversation:</p>
+                    <div class="bg-black/50 rounded-lg border border-white/10 p-4 font-mono text-sm space-y-2">
+                      <div><span class="text-[var(--color-text-muted)]"># ChatGPT can store memories via MCP</span></div>
+                      <div><span class="text-green-400">slm remember</span> <span class="text-[var(--color-text-muted)]">"I prefer concise responses with code examples"</span></div>
+                      <div class="mt-2"><span class="text-[var(--color-text-muted)]"># Recall context in any session</span></div>
+                      <div><span class="text-green-400">slm recall</span> <span class="text-[var(--color-text-muted)]">"my preferences"</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </FadeIn>
+      </div>
+
+      <!-- Features Grid -->
+      <FadeIn client:visible delay={0.2}>
+        <div class="mb-16">
+          <h2 class="text-2xl md:text-3xl font-bold text-white mb-8 text-center">What Local Memory Gets You</h2>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((item, i) => (
+              <div class="p-6 rounded-xl bg-white/5 border border-white/10 hover:border-[var(--color-primary)]/30 transition-colors">
+                <item.icon className="w-8 h-8 text-[var(--color-primary)] mb-4" />
+                <h3 class="text-lg font-semibold text-white mb-2">{item.title}</h3>
+                <p class="text-sm text-[var(--color-text-muted)] leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </FadeIn>
+
+      <!-- Use Cases -->
+      <FadeIn client:visible delay={0.25}>
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-8 md:p-12 mb-16">
+          <h2 class="text-2xl md:text-3xl font-bold text-white mb-8">Who Needs Local ChatGPT Memory?</h2>
+          <div class="grid md:grid-cols-2 gap-6">
+            {[
+              { title: "Developers", desc: "Keep project context, code patterns, and architectural decisions private and persistent across coding sessions." },
+              { title: "Consultants & Freelancers", desc: "Maintain client-specific context without risking data exposure. Each client's information stays on your machine." },
+              { title: "Researchers", desc: "Build a knowledge base from your conversations. Literature notes, methodology preferences, and analysis patterns accumulate over time." },
+              { title: "Privacy-Conscious Professionals", desc: "For anyone who needs AI memory but cannot send personal or professional context to a cloud service." }
+            ].map(item => (
+              <div class="flex items-start gap-3">
+                <Check className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-1" />
+                <div>
+                  <h3 class="font-semibold text-white mb-1">{item.title}</h3>
+                  <p class="text-sm text-[var(--color-text-muted)]">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </FadeIn>
+
+      <!-- FAQ Section -->
+      <FadeIn client:visible delay={0.3}>
+        <div class="mb-16">
+          <h2 class="text-2xl md:text-3xl font-bold text-white mb-8 text-center">Frequently Asked Questions</h2>
+          <div class="space-y-4">
+            {faqs.map(faq => (
+              <details class="group rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-white/5 transition-colors">
+                  <h3 class="font-semibold text-white pr-4">{faq.question}</h3>
+                  <span class="text-[var(--color-primary)] shrink-0 transition-transform group-open:rotate-45 text-xl">+</span>
+                </summary>
+                <div class="px-6 pb-6 text-[var(--color-text-muted)] leading-relaxed">
+                  {faq.answer}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </FadeIn>
+
+      <!-- Cross-links -->
+      <FadeIn client:visible delay={0.35}>
+        <div class="text-center mb-16">
+          <h2 class="text-2xl font-bold text-white mb-6">Works With Your Entire AI Toolkit</h2>
+          <div class="flex flex-wrap justify-center gap-4">
+            <a href="/integrations/claude-code" class="px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-[var(--color-primary)]/30 transition-colors text-white font-medium inline-flex items-center gap-2">
+              Claude Code <ArrowRight className="w-4 h-4" />
+            </a>
+            <a href="/integrations/cursor" class="px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-[var(--color-primary)]/30 transition-colors text-white font-medium inline-flex items-center gap-2">
+              Cursor <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </FadeIn>
+
+      <!-- Bottom CTA -->
+      <FadeIn client:visible delay={0.4}>
+        <div class="text-center glass-panel p-12 rounded-3xl border border-[var(--color-primary)]/20 bg-gradient-to-b from-[var(--color-bg-secondary)] to-[var(--color-bg-main)]">
+          <h2 class="text-3xl font-bold mb-4">Take Control of Your AI Memory</h2>
+          <p class="text-[var(--color-text-muted)] mb-8 text-lg max-w-xl mx-auto">
+            Free, local, private. A ChatGPT memory alternative that you fully own and control.
+          </p>
+          <div class="flex flex-wrap justify-center gap-4">
+            <a href="https://www.npmjs.com/package/superlocalmemory" target="_blank" rel="noopener noreferrer"
+               class="px-8 py-4 rounded-full bg-[var(--color-primary)] text-black font-bold hover:scale-105 transition-transform shadow-[0_0_20px_rgba(56,189,248,0.3)]">
+              npm install superlocalmemory
+            </a>
+            <a href="/pricing" class="px-8 py-4 rounded-full border border-white/20 hover:bg-white/5 transition-colors">
+              See Pricing (It's Free)
+            </a>
+          </div>
+        </div>
+      </FadeIn>
+
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>

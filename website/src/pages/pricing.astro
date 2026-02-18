@@ -2,18 +2,41 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/landing/Header.astro';
 import Footer from '../components/landing/Footer.astro';
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema.astro';
+import FAQSchema from '../components/seo/FAQSchema.astro';
 import { FadeIn } from '../components/ui/Motion';
 import { Check, Heart } from 'lucide-react';
 
 const title = "Pricing — Free & Open Source | SuperLocalMemory";
-const description = "SuperLocalMemory is free forever. No subscriptions, no API costs, no cloud fees. 100% local, 100% yours.";
+const description = "SuperLocalMemory is free forever. No subscriptions, no API costs, no cloud fees. 100% local, 100% yours. A free Mem0 alternative.";
+
+const pricingFaqs = [
+  {
+    question: "Is SuperLocalMemory really free?",
+    answer: "Yes, completely free and open source under the MIT license. No hidden costs, no freemium tiers, no usage limits. It runs on your hardware, so there are no servers or API infrastructure to pay for."
+  },
+  {
+    question: "How much does Mem0 cost compared to SuperLocalMemory?",
+    answer: "Mem0 charges $19-249/month for their cloud-hosted AI memory. Zep uses credit-based pricing. SuperLocalMemory is $0/month forever because it runs entirely on your local machine."
+  },
+  {
+    question: "Will SuperLocalMemory ever become paid?",
+    answer: "The core product will remain free and open source. The local-first architecture means there are no cloud costs to pass on to users."
+  }
+];
 ---
 
-<BaseLayout title={title} description={description} schemaType="WebPage" keywords="SuperLocalMemory pricing, free AI memory, Mem0 alternative free, open source AI memory">
+<BaseLayout title={title} description={description} schemaType="WebPage" keywords="SuperLocalMemory pricing, free AI memory, Mem0 alternative free, open source AI memory, local AI memory free">
   <Header />
+  <FAQSchema faqs={pricingFaqs} />
 
   <main class="pt-32 pb-24 min-h-screen bg-[var(--color-bg-main)]">
     <div class="container-custom max-w-4xl">
+
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://superlocalmemory.com' },
+        { name: 'Pricing', url: 'https://superlocalmemory.com/pricing' }
+      ]} />
 
       <FadeIn client:load>
         <div class="text-center mb-16">

@@ -2,11 +2,37 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/landing/Header.astro';
 import Footer from '../components/landing/Footer.astro';
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema.astro';
+import FAQSchema from '../components/seo/FAQSchema.astro';
 import { FadeIn } from '../components/ui/Motion';
 import { Check, X, Shield, Zap, DollarSign, Server, Lock } from 'lucide-react';
 
-const title = "SuperLocalMemory vs Alternatives - The Privacy Advantage";
-const description = "Compare SuperLocalMemory V2 against Pinecone, Mem0, and ChatGPT Memory. See why local-first is the future.";
+const title = "SuperLocalMemory vs Mem0, Zep & Alternatives — Free Local AI Memory";
+const description = "Compare SuperLocalMemory V2 against Mem0, Zep, Pinecone, and ChatGPT Memory. The free, open-source, local-first Mem0 alternative. See why local AI memory wins.";
+const keywords = "Mem0 alternative, free AI memory, local AI memory, Mem0 vs SuperLocalMemory, Zep alternative, AI memory comparison, open source AI memory, private AI memory, Mem0 alternative free";
+
+const comparisonFaqs = [
+  {
+    question: "Is SuperLocalMemory a free alternative to Mem0?",
+    answer: "Yes. SuperLocalMemory provides similar AI memory capabilities to Mem0 but is completely free, open source (MIT license), and runs 100% locally. Unlike Mem0's $19-249/mo cloud-based plans, SuperLocalMemory has no subscriptions, no API costs, and no cloud dependency."
+  },
+  {
+    question: "How does SuperLocalMemory compare to Mem0 for privacy?",
+    answer: "SuperLocalMemory stores all data in a local SQLite file on your machine. Zero data leaves your device. Mem0 stores your memories on their cloud servers. For developers working with proprietary code or sensitive information, local storage is fundamentally more private."
+  },
+  {
+    question: "Can I migrate from Mem0 to SuperLocalMemory?",
+    answer: "Yes. SuperLocalMemory uses the MCP protocol and works with 17+ AI tools. You can start storing new memories locally immediately. The setup takes under 5 minutes with a single npx command."
+  },
+  {
+    question: "Does SuperLocalMemory work offline?",
+    answer: "Yes. Since all data and models run locally (SQLite database + embedded ONNX models), SuperLocalMemory works without any internet connection. Mem0 and Zep require constant internet access."
+  },
+  {
+    question: "Why is SuperLocalMemory free when Mem0 charges $249/month?",
+    answer: "SuperLocalMemory runs entirely on your hardware. There are no cloud servers, no API infrastructure, and no ongoing costs to maintain. The local-first architecture eliminates the need for subscription pricing."
+  }
+];
 
 const features = [
   { name: "Privacy", super: "Air-Gapped (100% Local)", others: "Cloud / Public API" },
@@ -40,20 +66,28 @@ const competitors = [
 ];
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} keywords={keywords} schemaType="WebPage">
   <Header />
+  <FAQSchema faqs={comparisonFaqs} />
   
   <main class="pt-24 pb-24 min-h-screen bg-[var(--color-bg-main)]">
-    
+
+    <div class="container-custom">
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://superlocalmemory.com' },
+        { name: 'Comparison', url: 'https://superlocalmemory.com/comparison' }
+      ]} />
+    </div>
+
     <!-- Hero -->
     <section class="container-custom mb-20 text-center">
       <FadeIn client:load>
         <span class="text-[var(--color-primary)] font-mono text-sm tracking-wider uppercase mb-4 block">Competitive Analysis</span>
         <h1 class="text-5xl md:text-6xl font-bold mb-6">
-          Why Go <span class="text-gradient">Local?</span>
+          The Free <span class="text-gradient">Mem0 Alternative</span>
         </h1>
         <p class="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto">
-          Control your data, eliminate monthly fees, and reduce latency to zero. The advantages of local memory are structural, not just features.
+          Looking for a free, local AI memory solution? SuperLocalMemory gives you everything Mem0 and Zep offer — without the cloud, without the subscription, without the privacy trade-offs.
         </p>
       </FadeIn>
     </section>
@@ -127,6 +161,26 @@ const competitors = [
         </div>
     </section>
 
+    <!-- FAQ Section -->
+    <section class="container-custom py-16">
+      <FadeIn client:visible>
+        <h2 class="text-3xl font-bold mb-12 text-center">Frequently Asked Questions</h2>
+        <div class="max-w-3xl mx-auto space-y-4">
+          {comparisonFaqs.map(faq => (
+            <details class="group rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+              <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-white/5 transition-colors">
+                <h3 class="font-semibold text-white pr-4">{faq.question}</h3>
+                <span class="text-[var(--color-primary)] shrink-0 transition-transform group-open:rotate-45 text-xl">+</span>
+              </summary>
+              <div class="px-6 pb-6 text-[var(--color-text-muted)] leading-relaxed">
+                {faq.answer}
+              </div>
+            </details>
+          ))}
+        </div>
+      </FadeIn>
+    </section>
+
     <!-- Bottom CTA -->
     <section class="container-custom text-center py-24">
         <FadeIn client:visible>
@@ -136,9 +190,12 @@ const competitors = [
                 <p class="text-[var(--color-text-muted)] mb-8 text-lg">
                     SuperLocalMemory was built because we didn't want to send our private journals, specialized codebases, and medical data to a VC-backed API.
                 </p>
-                <div class="flex justify-center gap-4">
+                <div class="flex flex-wrap justify-center gap-4">
                     <a href="/" class="glass-button">
-                        Start Local
+                        Start Local — It's Free
+                    </a>
+                    <a href="/pricing" class="px-6 py-3 rounded-full border border-white/20 hover:bg-white/5 transition-colors">
+                        See Pricing
                     </a>
                 </div>
             </div>
