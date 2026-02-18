@@ -1,0 +1,155 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/landing/Header.astro';
+import Footer from '../components/landing/Footer.astro';
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema.astro';
+import { FadeIn } from '../components/ui/Motion';
+import { Mail, Github, Linkedin, Youtube, MessageSquare, FileText, Globe, Package } from 'lucide-react';
+
+const title = "Contact | SuperLocalMemory";
+const description = "Get in touch with the SuperLocalMemory team. Report issues, ask questions, contribute, or connect on social media.";
+---
+
+<BaseLayout title={title} description={description} schemaType="WebPage" keywords="contact SuperLocalMemory, AI memory support, SuperLocalMemory developer">
+  <Header />
+
+  <main class="pt-32 pb-24 min-h-screen bg-[var(--color-bg-main)]">
+    <div class="container-custom max-w-4xl">
+
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://superlocalmemory.com' },
+        { name: 'Contact', url: 'https://superlocalmemory.com/contact' }
+      ]} />
+
+      <FadeIn client:load>
+        <div class="text-center mb-16">
+          <span class="text-[var(--color-primary)] font-mono text-sm tracking-wider uppercase mb-4 block">Contact</span>
+          <h1 class="text-4xl md:text-5xl font-bold mb-6">Get in Touch</h1>
+          <p class="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto">
+            Have a question, found a bug, or want to contribute? Reach out through any of these channels.
+          </p>
+        </div>
+      </FadeIn>
+
+      <!-- Creator Section -->
+      <FadeIn client:visible delay={0.1}>
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-8 mb-10">
+          <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+            <div class="w-24 h-24 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-purple-500 flex items-center justify-center text-3xl font-bold text-white shrink-0">
+              VP
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-white mb-2">Varun Pratap Bhardwaj</h2>
+              <p class="text-[var(--color-primary)] font-mono text-sm mb-3">Creator &amp; Maintainer</p>
+              <p class="text-[var(--color-text-muted)] leading-relaxed">
+                Senior Solution Architect with 15 years in enterprise IT. Building SuperLocalMemory to give every developer
+                a private, local-first AI memory system that works across all their tools. Open source, free forever.
+              </p>
+            </div>
+          </div>
+        </div>
+      </FadeIn>
+
+      <!-- Contact Channels -->
+      <div class="grid md:grid-cols-2 gap-6 mb-16">
+        {[
+          {
+            icon: Mail,
+            title: "Email",
+            desc: "For partnerships, enterprise inquiries, or general questions.",
+            link: "mailto:varun.pratap.bhardwaj@gmail.com",
+            label: "varun.pratap.bhardwaj@gmail.com"
+          },
+          {
+            icon: Github,
+            title: "GitHub",
+            desc: "Report bugs, request features, or contribute code. Issues and PRs welcome.",
+            link: "https://github.com/varun369/SuperLocalMemoryV2",
+            label: "varun369/SuperLocalMemoryV2"
+          },
+          {
+            icon: Linkedin,
+            title: "LinkedIn",
+            desc: "Connect professionally. Follow for updates on AI memory systems and developer tools.",
+            link: "https://www.linkedin.com/in/varun-pratap-bhardwaj-7ab63742/",
+            label: "Varun Pratap Bhardwaj"
+          },
+          {
+            icon: Youtube,
+            title: "YouTube",
+            desc: "Tutorials, demos, and deep dives on AI developer tools and memory architectures.",
+            link: "https://www.youtube.com/@NebulaNexusMedia",
+            label: "@NebulaNexusMedia"
+          },
+          {
+            icon: MessageSquare,
+            title: "GitHub Issues",
+            desc: "The fastest way to report a bug or request a feature. We respond to every issue.",
+            link: "https://github.com/varun369/SuperLocalMemoryV2/issues",
+            label: "Open an Issue"
+          },
+          {
+            icon: FileText,
+            title: "arXiv Paper",
+            desc: "Read the research behind SuperLocalMemory's architecture and design decisions.",
+            link: "https://arxiv.org/search/?query=SuperLocalMemory",
+            label: "Read the Paper"
+          }
+        ].map((item, i) => (
+          <FadeIn client:visible delay={i * 0.05}>
+            <a href={item.link} target={item.link.startsWith('mailto') ? '_self' : '_blank'} rel="noopener noreferrer" class="block p-6 rounded-xl bg-white/5 border border-white/10 hover:border-[var(--color-primary)]/50 transition-all duration-300 h-full group">
+              <item.icon className="w-8 h-8 text-[var(--color-primary)] mb-4 group-hover:scale-110 transition-transform" />
+              <h3 class="text-lg font-semibold text-white mb-2">{item.title}</h3>
+              <p class="text-sm text-[var(--color-text-muted)] leading-relaxed mb-3">{item.desc}</p>
+              <span class="text-sm text-[var(--color-primary)] font-mono">{item.label}</span>
+            </a>
+          </FadeIn>
+        ))}
+      </div>
+
+      <!-- Quick Links -->
+      <FadeIn client:visible delay={0.3}>
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-8 mb-16">
+          <h2 class="text-2xl font-bold text-white mb-6">Quick Links</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { icon: Package, label: "npm Package", url: "https://www.npmjs.com/package/superlocalmemory", detail: "npm install -g superlocalmemory" },
+              { icon: Globe, label: "MCP Registry", url: "https://registry.modelcontextprotocol.io/servers/io.github.varun369/superlocalmemory", detail: "io.github.varun369/superlocalmemory" },
+              { icon: Github, label: "GitHub Profile", url: "https://github.com/varun369", detail: "@varun369" },
+              { icon: Globe, label: "Website", url: "https://superlocalmemory.com", detail: "superlocalmemory.com" },
+            ].map((item) => (
+              <a href={item.url} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
+                <item.icon className="w-5 h-5 text-[var(--color-primary)] shrink-0" />
+                <div>
+                  <span class="text-white text-sm font-medium block">{item.label}</span>
+                  <span class="text-xs text-[var(--color-text-muted)] font-mono">{item.detail}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </FadeIn>
+
+      <!-- CTA -->
+      <FadeIn client:visible delay={0.4}>
+        <div class="text-center">
+          <h2 class="text-2xl font-bold text-white mb-4">Want to Contribute?</h2>
+          <p class="text-[var(--color-text-muted)] mb-8 max-w-lg mx-auto">
+            SuperLocalMemory is open source and community-driven. Whether it's code, documentation, bug reports, or feature ideas — every contribution matters.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="https://github.com/varun369/SuperLocalMemoryV2" target="_blank" rel="noopener noreferrer" class="px-8 py-3 bg-[var(--color-primary)] text-white rounded-lg font-semibold hover:bg-[var(--color-primary)]/90 transition-colors">
+              Star on GitHub
+            </a>
+            <a href="https://github.com/varun369/SuperLocalMemoryV2/issues" target="_blank" rel="noopener noreferrer" class="px-8 py-3 bg-white/10 text-white rounded-lg font-semibold hover:bg-white/20 transition-colors">
+              Report an Issue
+            </a>
+          </div>
+        </div>
+      </FadeIn>
+
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>
