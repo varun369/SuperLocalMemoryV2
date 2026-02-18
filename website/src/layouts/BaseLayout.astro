@@ -76,8 +76,9 @@ const ogImage = new URL(image, 'https://superlocalmemory.com').toString();
 
     <slot name="head" />
 
-    <!-- LCP image: preload hero background so browser fetches it early -->
-    <link rel="preload" as="image" href="/assets/hero_neural_mesh_bg_1771269692417.png" />
+    <!-- LCP elements: preload logo (LCP element) and hero background -->
+    <link rel="preload" as="image" href="/assets/logo-mark.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="/assets/hero_neural_mesh_bg_1771269692417.webp" />
 
     <!-- Fonts: non-blocking load (media trick — browser swaps when loaded) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
