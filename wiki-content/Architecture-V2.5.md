@@ -142,16 +142,13 @@ Claude writes memory → saved to SQLite → Event Bus fires
 
 ## Trust Scoring (Silent Collection — v2.5)
 
-All agents start at trust 1.0. Signals adjust the score with a Bayesian decay factor that stabilizes over time.
+All agents start at trust 1.0. Signals adjust the score with a Bayesian decay factor that stabilizes over time. Trust is deliberately asymmetric — negative signals carry larger magnitude, making trust harder to gain than to lose.
 
-| Signal | Delta | When |
-|--------|-------|------|
-| `high_importance_write` | +0.015 | Memory with importance >= 7 |
-| `memory_recalled_by_others` | +0.02 | Another agent finds this memory useful |
-| `quick_delete` | -0.03 | Memory deleted within 1 hour |
-| `high_volume_burst` | -0.02 | >20 writes in 5 minutes |
+**Positive signals:** High-importance writes, memories recalled by other agents, consistent behavior patterns.
 
-**v2.5:** Silent collection only. **v2.6:** Trust-weighted recall ranking. **v3.0:** Active enforcement.
+**Negative signals:** Quick deletes (memory deleted shortly after creation), high-volume write bursts, contradictory content.
+
+**v2.5:** Silent collection only. **v2.6:** Trust-weighted recall ranking + enforcement mode.
 
 ---
 

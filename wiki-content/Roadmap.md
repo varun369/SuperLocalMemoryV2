@@ -126,7 +126,7 @@ Three-layer local-only learning architecture with adaptive LightGBM re-ranking.
 - ✅ **Cross-Project Aggregator** — Transferable tech preferences across profiles
 - ✅ **Project Context Manager** — Multi-signal project detection
 - ✅ **Workflow Pattern Miner** — Sliding-window sequence + temporal patterns
-- ✅ **Adaptive Ranker** — LightGBM LambdaRank re-ranker with synthetic bootstrap
+- ✅ **Adaptive Ranker** — ML-powered personalized re-ranking with cold-start handling
 - ✅ **Source Quality Scorer** — Per-source learning (which tools produce useful memories)
 - ✅ **Feedback Collector** — Multi-channel: MCP memory_used + CLI slm useful + dashboard clicks
 - ✅ **3 new MCP tools** — memory_used, get_learned_patterns, correct_pattern

@@ -502,32 +502,27 @@ Every component of the v2.7 learning system is grounded in peer-reviewed researc
 
 ### Core Architecture
 
-| Component | Research Paper | How We Use It |
-|-----------|---------------|---------------|
-| **Two-stage retrieve-then-rerank** | ColBERT-Based User Profiles (eKNOW 2025) | BM25/FTS5/TF-IDF retrieves candidates; LightGBM re-ranks with personalized features |
-| **LightGBM LambdaRank** | LambdaMART (Burges, 2010); MO-LightGBM (SIGIR 2025) | Pairwise learning-to-rank with gradient boosting. Local inference in <10ms |
-| **Three-phase cold-start** | Few-Shot Learning for Cold-Start (LREC 2024) | Baseline → rule-based → ML, adapting as feedback data accumulates |
-| **Temporal confidence decay** | MACLA (arXiv:2512.18950) | Bayesian Beta-Binomial confidence with exponential temporal decay |
-| **Sequence pattern mining** | TSW-PrefixSpan (IEEE 2020) | Time-weighted sliding-window n-gram detection for workflow patterns |
-| **Synthetic bootstrap** | Semi-supervised L2R with pseudo-labels (WWW 2015); GPL (NAACL 2022) | Generates training data from existing memory patterns for day-1 ML model |
+The v2.7 learning system is built on established research in information retrieval, personalization, and privacy-preserving ML:
+
+| Component | Approach |
+|-----------|----------|
+| **Retrieve-then-rerank** | Two-stage pipeline: full-text search retrieves candidates, then a personalized re-ranker reorders results |
+| **ML re-ranking** | Gradient boosted decision trees for local, CPU-only inference with minimal latency |
+| **Cold-start handling** | Progressive phases that adapt as feedback data accumulates — no degradation on day one |
+| **Confidence scoring** | Bayesian confidence with temporal decay for pattern learning |
+| **Workflow mining** | Sliding-window sequence detection for workflow pattern recognition |
 
 ### Privacy Architecture
 
-| Concern | Research Basis | Our Approach |
-|---------|---------------|--------------|
-| **Privacy-preserving feedback** | ADPMF — Adaptive Differentially Private Matrix Factorization (IPM, 2024) | We go further: zero communication by design. No differential privacy noise needed because data never leaves the device |
-| **Data minimization** | GDPR Article 5(1)(c) | Query hashes (SHA256[:16]) stored instead of raw queries. No memory content in learning.db |
-| **Behavioral data isolation** | SQLCipher (Zetetic) — 256-bit AES for SQLite | Separate learning.db file. Optional encryption via SQLCipher with <15% overhead |
+| Concern | Our Approach |
+|---------|--------------|
+| **Privacy-preserving feedback** | Zero communication by design. No differential privacy noise needed because data never leaves the device |
+| **Data minimization** | Query hashes stored instead of raw queries. No memory content in learning database |
+| **Behavioral data isolation** | Separate database file. Optional encryption support |
 
 ### Key Differentiator
 
-Most personalized retrieval systems in the literature require cloud infrastructure, GPU compute, or neural models. SuperLocalMemory's v2.7 learning system achieves personalization using only:
-
-- **Gradient boosting** (LightGBM) — CPU-only, <10ms inference, 30MB install
-- **Statistical features** — TF-IDF, frequency analysis, Beta-Binomial scoring
-- **Local SQLite** — All data in two files on your machine
-
-No prior work in the academic literature combines local-only gradient boosting re-ranking with multi-channel implicit feedback for personal memory retrieval. This appears to be a novel contribution.
+SuperLocalMemory's learning system achieves personalized re-ranking using only local compute — no cloud, no GPU, no LLM inference required. All behavioral data stays on your machine in standard SQLite files.
 
 ---
 

@@ -121,9 +121,9 @@ pip install -r ~/.claude-memory/requirements-learning.txt
 
 | Phase | Dependencies Required | What You Get |
 |-------|----------------------|-------------|
-| Phase 1: Baseline | None | Synthetic bootstrap from existing memory patterns |
+| Phase 1: Baseline | None | Initial ranking from existing memory patterns |
 | Phase 2: Rule-Based | None | Tech preference boosting, project context, workflow patterns |
-| Phase 3: ML Ranking | `lightgbm` + `scipy` | Full LightGBM LambdaRank model |
+| Phase 3: ML Ranking | `lightgbm` + `scipy` | Full ML-powered personalized re-ranking |
 
 Without `lightgbm` and `scipy`, the system caps at Phase 2 (rule-based boosting). This still provides personalized re-ranking — just without the ML model. There is **no degradation** of any feature that existed before v2.7.
 
