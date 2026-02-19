@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://superlocalmemory.com/sitemap-index.xml
