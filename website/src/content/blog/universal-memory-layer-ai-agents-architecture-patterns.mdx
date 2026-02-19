@@ -1,169 +1,469 @@
 
 ---
 title: "Building a Universal Memory Layer for AI Agents: Architecture Patterns for Scalable State Management"
-description: "Learn how to architect a memory layer for AI agents, covering episodic vs. semantic stores, hybrid retrieval, and multi-agent interoperability."
-pubDate: 2026-02-17
+description: "Learn to architect a memory layer for AI agents with episodic and semantic stores, hybrid retrieval, and inter-agent trust scoring."
+pubDate: 2026-02-19
 author: "Varun Pratap Bhardwaj"
-tags: ["ai-agents", "agent-memory", "state-management", "vector-search", "hybrid-search"]
+tags: ["ai-agents", "agent-memory", "vector-search", "hybrid-search"]
 category: "education"
+image: "/assets/blog/universal-memory-layer-ai-agents-architecture-patterns-hero.png"
 draft: false
+slug: "universal-memory-layer-ai-agents-architecture-patterns"
 ---
 
 import Callout from '../../components/blog/Callout.astro';
 import StepList from '../../components/blog/StepList.astro';
 import ComparisonTable from '../../components/blog/ComparisonTable.astro';
 
-Every time an AI agent completes a task, it forgets everything. The conversation context vanishes. The user preferences it inferred are gone. The multi-step reasoning chain it constructed dissolves. If you have built anything with LLM-based agents, you have hit this wall: agents are stateless by default, and making them stateful is an unsolved architecture problem for most teams.
+AI agents that cannot remember are AI agents that cannot improve. Every time your agent starts a new session, it loses the context it accumulated in the last one. It forgets user preferences, prior decisions, the results of tool calls, and the reasoning chains that led to good outcomes. If you are building agents that interact with users or collaborate with other agents across sessions, you need a memory layer — a structured, queryable persistence system that stores what the agent has learned and makes it retrievable at inference time.
 
-This is not the same challenge as caching database queries or managing user sessions. Agent memory requires storing heterogeneous data (facts, episodes, preferences, tool outputs), retrieving it with semantic understanding, and sharing it across agents that may run on different models or frameworks. The patterns you need come from cognitive science as much as from distributed systems.
+This is not a trivial caching problem. Agent memory requires careful design decisions around what to store (raw episodes vs. distilled knowledge), how to retrieve it (vector similarity vs. keyword matching vs. graph traversal), and how to share it safely between agents that may not fully trust each other.
 
 <Callout type="info" title="What You Will Learn">
 
-- The difference between episodic, semantic, and procedural memory in the context of AI agents
-- How to design a write/read pipeline from agent actions through to context window injection
-- Concrete retrieval strategies: combining keyword search with semantic search for high-accuracy recall
-- Architecture tradeoffs between local-first and cloud-based memory stores
-- How to make memory interoperable across multi-agent systems (OpenAI, Claude, Gemini, open-source)
-- When traditional caching or database patterns break down for agent state
+- The difference between episodic and semantic memory stores for AI agents, and when to use each
+- How to implement hybrid retrieval combining vector search, BM25 full-text search, and graph-based lookups
+- A trust scoring model for inter-agent memory sharing
+- Concrete Python code for building each component
+- Trade-offs and failure modes you will encounter in production
 
 </Callout>
 
-## Conceptual Foundation: Why Agent Memory Is Different
+## Conceptual Foundation: How Agents Think About Memory
 
-Traditional application state management assumes structured data with known schemas. You store a user record, query it by ID, maybe cache it in Redis. The data model is fixed at design time.
+Cognitive science distinguishes between several types of human memory. Two categories translate directly to agent architectures: **episodic memory** and **semantic memory**.
 
-Agent memory breaks these assumptions in three ways. First, the data is unstructured and heterogeneous — a memory might be a conversation snippet, a JSON tool result, an inferred user preference, or a reasoning trace. Second, retrieval must be semantic — you cannot query agent memory purely by key; you need to find memories that are *relevant* to the current context, even if they share no lexical overlap. Third, the consumer of this memory is a language model with a finite context window, so you must rank and compress memories before injection.
+**Episodic memory** stores specific events in sequence. "The user asked me to summarize the Q3 report on Tuesday. I called the document retrieval tool, received a 12-page PDF, and returned a 300-word summary that the user rated as helpful." Each record is timestamped, tied to a session, and preserves the full context of what happened.
 
-Cognitive science provides a useful taxonomy that maps well to engineering requirements. Human memory is broadly divided into three systems, and agent memory benefits from the same decomposition.
+**Semantic memory** stores distilled facts and relationships. "The user prefers concise summaries under 500 words. The Q3 report is stored in the finance SharePoint folder. Summaries should use bullet points." These are generalizations extracted from episodes — they lose temporal specificity but gain reusability.
 
-**Episodic memory** stores specific events and experiences with temporal context. For an agent, this means conversation turns, tool invocations, and their results — the "what happened" log. Episodic memory is append-only and timestamped.
+Most production agent systems need both. Episodic memory gives you auditability and the ability to replay decisions. Semantic memory gives you fast, general-purpose knowledge retrieval without scanning through thousands of past events.
 
-**Semantic memory** stores general knowledge and facts extracted from experiences. When an agent learns that "the user prefers Python over JavaScript" across multiple conversations, that is a semantic memory. It is distilled, deduplicated, and updated over time.
+```mermaid
+graph TD
+    subgraph Agent Runtime
+        A[Agent Core] -->|writes| EP[Episodic Store]
+        A -->|writes| SM[Semantic Store]
+        A -->|reads| HR[Hybrid Retriever]
+    end
 
-**Procedural memory** stores learned behaviors and patterns — how to accomplish recurring tasks. In agent systems, this might be stored as successful tool-call sequences, prompt templates that worked well, or workflow graphs.
+    subgraph Memory Layer
+        EP[(Episodic Store<br/>Timestamped events<br/>Session-scoped)]
+        SM[(Semantic Store<br/>Facts & relationships<br/>Distilled knowledge)]
+        GS[(Graph Store<br/>Entity relationships<br/>Knowledge graph)]
+    end
 
-<Callout type="warning" title="Do Not Conflate Agent Memory with RAG">
+    subgraph Retrieval Engine
+        HR --> VS[Vector Search]
+        HR --> FTS[BM25 Full-Text]
+        HR --> GQ[Graph Query]
+        VS --> RR[Reciprocal Rank Fusion]
+        FTS --> RR
+        GQ --> RR
+        RR --> A
+    end
 
-Retrieval-Augmented Generation (RAG) retrieves from a static knowledge base. Agent memory retrieves from a *dynamic, agent-generated* store that grows with every interaction. The write path matters as much as the read path. If your architecture only handles reads from a pre-indexed corpus, you do not have agent memory — you have document search.
+    subgraph Trust Layer
+        TS[Trust Scoring Module]
+        A2[Agent B] -->|shared memory request| TS
+        TS -->|filtered results| A2
+        EP --> TS
+        SM --> TS
+    end
+```
+
+As Nowaczyk argues in [Architectures for Building Agentic AI](https://arxiv.org/abs/2512.09458v1), reliability in agentic systems emerges from "principled componentisation" — separating the memory subsystem from the planner, executor, and tool router with disciplined interfaces. The memory layer is one such component, and it deserves its own architecture.
+
+## How It Works: Designing the Memory Schema
+
+Before writing any retrieval code, you need to decide what a memory record looks like. Here is a schema that supports both episodic and semantic records in a single store:
+
+```python
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Optional
+from enum import Enum
+
+class MemoryType(Enum):
+    EPISODIC = "episodic"
+    SEMANTIC = "semantic"
+
+@dataclass
+class MemoryRecord:
+    id: str
+    agent_id: str                          # which agent created this
+    memory_type: MemoryType
+    content: str                           # the actual memory text
+    embedding: Optional[list[float]] = None  # vector embedding for similarity search
+    metadata: dict = field(default_factory=dict)  # flexible key-value pairs
+    session_id: Optional[str] = None       # episodic memories are session-scoped
+    trust_score: float = 1.0               # 0.0 to 1.0 — how much to trust this record
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    access_count: int = 0                  # track retrieval frequency for decay
+    source_agent_ids: list[str] = field(default_factory=list)  # provenance chain
+```
+
+A few design choices worth noting. The `trust_score` field allows downstream consumers to weight memories differently based on their origin. The `source_agent_ids` list tracks provenance — if Agent A wrote a memory that Agent B distilled into a semantic fact, both IDs are recorded. The `access_count` enables memory decay: records that are never retrieved can be archived or deleted.
+
+<Callout type="warning" title="Do Not Store Raw Embeddings in Your Primary Database">
+
+Storing high-dimensional float vectors (768 or 1536 dimensions) alongside your relational data will bloat your primary database and slow down non-vector queries. Use a dedicated vector store (pgvector, Qdrant, Weaviate, Milvus) and link records by ID. Your relational store holds metadata and content; your vector store holds embeddings and supports approximate nearest neighbor (ANN) search.
 
 </Callout>
 
-## How It Works: The Memory Write/Read Pipeline
+## Practical Implementation: Building the Retrieval Engine
 
-The core architecture has two pipelines: a write path that processes agent outputs into structured memory stores, and a read path that retrieves and ranks relevant memories for context injection.
+The most common mistake in agent memory systems is relying solely on vector similarity search. Vector search excels at finding semantically related content, but it struggles with exact keyword matches, entity names, and structured filters. A hybrid approach combines multiple retrieval strategies and fuses their results.
 
-### The Write Path
+### Step 1: Set Up the Stores
 
-When an agent completes an action — a conversation turn, a tool call, a reasoning step — the raw event enters an **episodic buffer**. This buffer is a short-term holding area, analogous to working memory. A memory processor then performs three operations:
+<StepList number={1} title="Initialize the Vector Store and Full-Text Index">
 
-1. **Store the raw episode** with metadata (timestamp, agent ID, session ID, tool used, token count).
-2. **Extract semantic facts** using an LLM or rule-based extractor. For example, from the conversation "I moved to Berlin last year," extract the fact that the user's location is Berlin.
-3. **Detect procedural patterns** by comparing the current action sequence against stored workflows. If a multi-step tool-call pattern recurs, store it as a reusable procedure.
+We will use `qdrant-client` for vector search and a simple BM25 implementation via `rank_bm25` for full-text retrieval. In production, you might use Elasticsearch or Typesense for BM25, but this keeps things self-contained.
 
-The key design principle: the write path must be **non-blocking** and **fault-tolerant**. Semantic extraction is best-effort — if it fails, the raw episode is still stored. Never let the memory processor block agent execution.
+```bash
+pip install qdrant-client rank-bm25 sentence-transformers numpy
+```
 
-### The Read Path
+```python
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams, PointStruct
+from sentence_transformers import SentenceTransformer
+import uuid
 
-When an agent needs context for a new task, the hybrid retriever queries all three stores simultaneously. This is where naive approaches fail.
+# Initialize embedding model
+embedder = SentenceTransformer("all-MiniLM-L6-v2")  # 384-dim, fast, good baseline
+VECTOR_DIM = 384
 
-A pure semantic search finds conceptually similar memories but misses exact keyword matches. A pure keyword search finds lexical matches but misses paraphrased or conceptually related memories. **You need both.**
+# Initialize Qdrant (in-memory for development)
+qdrant = QdrantClient(":memory:")
+qdrant.create_collection(
+    collection_name="agent_memory",
+    vectors_config=VectorParams(size=VECTOR_DIM, distance=Distance.COSINE),
+)
+```
 
-The most effective approach is **hybrid retrieval**: run both search methods in parallel, then combine their results using rank fusion. Each method produces an ordered list of results. The fusion algorithm merges these lists, giving credit to memories that rank highly in either method. This elegantly handles the different score scales — you only use ordinal ranks, not raw scores.
+</StepList>
 
-The result is retrieval that catches both exact matches ("PostgreSQL configuration") and conceptual matches ("database setup guide") in a single query.
+<StepList number={2} title="Write Memories to Both Stores">
 
-<Callout type="tip" title="Why Hybrid Beats Pure Semantic">
+Every time the agent stores a memory, it writes to both the vector store (for semantic retrieval) and a BM25 index (for keyword retrieval).
 
-In practice, hybrid retrieval consistently outperforms pure vector search by 15-30% on recall metrics for agent memory workloads. The keyword component catches exact entity names, code identifiers, and technical terms that embedding models often conflate with related but distinct concepts.
+```python
+from rank_bm25 import BM25Okapi
+from datetime import datetime
 
-</Callout>
+# In-memory BM25 corpus (in production, use a search engine)
+bm25_corpus = []       # list of tokenized documents
+bm25_metadata = []     # parallel list of memory IDs
+bm25_index = None       # will be rebuilt on each insert (naive; batch in production)
 
-## Context Window Injection
+def store_memory(record: MemoryRecord) -> str:
+    """Store a memory record in both vector and full-text indices."""
+    # Generate embedding
+    record.embedding = embedder.encode(record.content).tolist()
+    record.id = record.id or str(uuid.uuid4())
 
-The final step is formatting retrieved memories for the LLM. This is where you must be ruthless about token budgets.
+    # Write to Qdrant
+    qdrant.upsert(
+        collection_name="agent_memory",
+        points=[
+            PointStruct(
+                id=record.id,
+                vector=record.embedding,
+                payload={
+                    "content": record.content,
+                    "agent_id": record.agent_id,
+                    "memory_type": record.memory_type.value,
+                    "trust_score": record.trust_score,
+                    "session_id": record.session_id,
+                    "created_at": record.created_at.isoformat(),
+                },
+            )
+        ],
+    )
 
-The ordering matters: **semantic facts first** (dense, high-value), then **episodic events** (temporal context), then **procedural knowledge** (workflow patterns). If you need to truncate to fit the context window, you lose the least critical memories last.
+    # Update BM25 index
+    global bm25_index
+    tokens = record.content.lower().split()
+    bm25_corpus.append(tokens)
+    bm25_metadata.append(record.id)
+    bm25_index = BM25Okapi(bm25_corpus)
 
-A practical approach:
-- Reserve a fixed token budget for memory (e.g., 2000 tokens out of a 128K window)
-- Format semantic memories as bullet-point facts with confidence scores
-- Format episodic memories as timestamped summaries, most recent first
-- Include procedural memories only when the current task matches a known workflow
-- If the formatted output exceeds the budget, truncate from the bottom up
+    return record.id
+```
 
-## Multi-Agent Interoperability and Trust Scoring
+</StepList>
 
-When multiple agents share a memory store, you face a new challenge: not all memories are equally trustworthy. Agent A might extract a fact incorrectly. Agent B, running on a different model, might interpret the same conversation differently. Without trust signals, your memory store accumulates noise.
+<StepList number={3} title="Implement Hybrid Retrieval with Reciprocal Rank Fusion">
 
-A practical trust scoring model considers three factors:
+Reciprocal Rank Fusion (RRF) is a simple, effective method for merging ranked lists from different retrieval systems. For each document appearing at rank `r` in a results list, its RRF score is `1 / (k + r)` where `k` is a smoothing constant (typically 60). You sum RRF scores across all lists.
 
-1. **Source reliability** — Track per-agent accuracy over time. Agents that consistently produce verified facts earn higher trust scores. New or untested agents start with a neutral score.
+```python
+def hybrid_search(query: str, top_k: int = 5, rrf_k: int = 60) -> list[dict]:
+    """
+    Perform hybrid search combining vector similarity and BM25 keyword matching.
+    Returns fused results ranked by Reciprocal Rank Fusion score.
+    """
+    # Vector search
+    query_embedding = embedder.encode(query).tolist()
+    vector_results = qdrant.search(
+        collection_name="agent_memory",
+        query_vector=query_embedding,
+        limit=top_k * 2,  # over-fetch for fusion
+    )
+    
+    # BM25 search
+    bm25_results = []
+    if bm25_index is not None:
+        query_tokens = query.lower().split()
+        bm25_scores = bm25_index.get_scores(query_tokens)
+        # Get top indices sorted by score descending
+        ranked_indices = sorted(
+            range(len(bm25_scores)),
+            key=lambda i: bm25_scores[i],
+            reverse=True,
+        )[: top_k * 2]
+        bm25_results = [bm25_metadata[i] for i in ranked_indices if bm25_scores[i] > 0]
+    
+    # Reciprocal Rank Fusion
+    rrf_scores = {}
+    
+    for rank, hit in enumerate(vector_results):
+        doc_id = hit.id
+        rrf_scores[doc_id] = rrf_scores.get(doc_id, 0) + 1.0 / (rrf_k + rank + 1)
+    
+    for rank, doc_id in enumerate(bm25_results):
+        rrf_scores[doc_id] = rrf_scores.get(doc_id, 0) + 1.0 / (rrf_k + rank + 1)
+    
+    # Sort by fused score
+    ranked_ids = sorted(rrf_scores, key=rrf_scores.get, reverse=True)[:top_k]
+    
+    # Fetch full records from Qdrant
+    results = []
+    for doc_id in ranked_ids:
+        points = qdrant.retrieve(collection_name="agent_memory", ids=[doc_id])
+        if points:
+            p = points[0]
+            results.append({
+                "id": p.id,
+                "content": p.payload["content"],
+                "rrf_score": rrf_scores[doc_id],
+                "trust_score": p.payload["trust_score"],
+                "memory_type": p.payload["memory_type"],
+            })
+    
+    return results
+```
 
-2. **Corroboration** — How many independent agents or sources support this memory? A fact confirmed by three different agents across separate sessions is more trustworthy than a single extraction.
+</StepList>
 
-3. **Recency** — Older, uncorroborated facts naturally decay in trust. An exponential decay function with a configurable half-life works well. Recent memories start strong; if they are not corroborated or accessed, they gradually lose influence.
+Let us test this with a concrete example:
 
-The weighted combination of these factors produces a trust score for each memory. This lets agents that consistently produce accurate memories gain influence over the shared store, while poorly calibrated agents see their contributions naturally downweighted.
+```python
+# Store some memories
+store_memory(MemoryRecord(
+    id="m1",
+    agent_id="agent-alpha",
+    memory_type=MemoryType.EPISODIC,
+    content="User requested a summary of the Q3 financial report. Used document_retrieval tool. User rated output 4/5.",
+    session_id="session-001",
+))
 
-<Callout type="info" title="Interoperability Across Model Providers">
+store_memory(MemoryRecord(
+    id="m2",
+    agent_id="agent-alpha",
+    memory_type=MemoryType.SEMANTIC,
+    content="User prefers summaries under 500 words with bullet points. Finance documents are in SharePoint.",
+))
 
-For memory to work across OpenAI, Anthropic, Google, and open-source models, the memory layer must be model-agnostic. This means storing memories as plain text with metadata — not as model-specific embeddings. Re-embed at read time using whatever model the reading agent prefers, or maintain multiple embedding indexes.
+store_memory(MemoryRecord(
+    id="m3",
+    agent_id="agent-beta",
+    memory_type=MemoryType.SEMANTIC,
+    content="The Q3 report showed revenue growth of 12% year-over-year. Operating margin declined to 18%.",
+    trust_score=0.8,  # lower trust — came from a different agent
+))
 
-</Callout>
+# Query
+results = hybrid_search("Q3 financial report summary preferences")
+for r in results:
+    print(f"[{r['memory_type']}] (trust={r['trust_score']}, rrf={r['rrf_score']:.4f}) {r['content'][:80]}...")
+```
 
-## Real-World Considerations: Tradeoffs and Failure Modes
+Expected output (ordering may vary slightly):
+
+```
+[semantic] (trust=1.0, rrf=0.0325) User prefers summaries under 500 words with bullet points. Finance documents...
+[episodic] (trust=1.0, rrf=0.0323) User requested a summary of the Q3 financial report. Used document_retrieval...
+[semantic] (trust=0.8, rrf=0.0161) The Q3 report showed revenue growth of 12% year-over-year. Operating margin d...
+```
 
 <ComparisonTable>
 
-| Dimension | Local-First Memory | Cloud-Based Memory |
-|---|---|---|
-| Latency | Sub-millisecond reads from local storage | 10-100ms network round-trip per query |
-| Privacy | Data never leaves the device | Requires encryption, access controls, compliance |
-| Multi-device sync | Requires conflict resolution (CRDTs or similar) | Centralized, no conflicts |
-| Storage limits | Bounded by local disk | Effectively unbounded |
-| Multi-agent sharing | Harder — need sync protocol | Natural — shared data plane |
-| Offline capability | Full functionality | Degraded or none |
+| Retrieval Method | Strengths | Weaknesses | Best For |
+|-----------------|-----------|------------|----------|
+| Vector Search (ANN) | Finds semantically similar content even with different wording | Misses exact keyword matches; requires embedding model | Open-ended queries, concept matching |
+| BM25 Full-Text | Precise keyword and entity matching; no ML model needed | Cannot handle synonyms or paraphrases | Named entities, IDs, exact terms |
+| Graph Query | Traverses relationships between entities; finds multi-hop connections | Requires a maintained knowledge graph; schema overhead | Entity relationships, reasoning chains |
+| Hybrid (RRF) | Combines strengths of all methods; robust across query types | Added complexity; tuning the fusion weights | Production systems needing reliability |
 
 </ComparisonTable>
 
-**When local-first wins:** Privacy-sensitive applications, single-user desktop agents, edge deployments, or any scenario where latency matters more than cross-device availability.
+## Inter-Agent Memory Sharing with Trust Scoring
 
-**When cloud wins:** Multi-agent systems where agents run on different machines, team collaboration scenarios, or when you need centralized governance and audit logs.
+When multiple agents share a memory layer, you face a trust problem. Agent A might store a fact that Agent B relies on for a critical decision. But what if Agent A was hallucinating, or working from outdated data?
 
-**Failure modes to watch for:**
+Trust scoring addresses this by assigning a confidence weight to each memory based on its provenance, age, and verification status. Here is a practical model:
 
-- **Memory bloat.** Without a consolidation strategy, episodic memory grows linearly with every interaction. You need a background process that merges old episodes into semantic summaries and prunes raw events. Think of it like log rotation.
-- **Embedding drift.** If you update your embedding model, old vectors become incompatible with new ones. Either re-embed your entire store (expensive) or maintain a model version tag on each embedding and re-embed at query time for mismatched versions.
-- **Hallucinated extractions.** The LLM-based semantic extraction step will sometimes produce incorrect facts. Trust scoring and corroboration mechanisms help, but you should also expose a way for users to correct or delete memories.
+```python
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 
-<Callout type="danger" title="Do Not Store Secrets in Agent Memory">
+@dataclass
+class TrustPolicy:
+    """Defines how an agent evaluates trust in shared memories."""
+    trusted_agents: dict[str, float]      # agent_id -> base trust (0.0 to 1.0)
+    max_age_days: int = 30                # memories older than this get decayed
+    age_decay_rate: float = 0.02          # trust loss per day past max_age
+    min_trust_threshold: float = 0.3      # memories below this are filtered out
+    verification_bonus: float = 0.15      # bonus if memory was verified by another agent
 
-Agent memory stores are designed for broad retrieval — they are the opposite of access-controlled secret stores. Never allow agents to write API keys, passwords, PII, or other sensitive data into the memory layer without explicit redaction. Add a pre-write filter that detects and strips sensitive patterns before persistence.
+def compute_trust(
+    record: MemoryRecord,
+    policy: TrustPolicy,
+    current_time: datetime = None,
+) -> float:
+    """
+    Compute effective trust score for a memory record given a consuming agent's policy.
+    """
+    current_time = current_time or datetime.utcnow()
+
+    # Base trust from the originating agent
+    base_trust = policy.trusted_agents.get(record.agent_id, 0.5)  # default: moderate trust
+
+    # Age decay
+    age_days = (current_time - record.created_at).days
+    age_penalty = max(0, age_days - policy.max_age_days) * policy.age_decay_rate
+    
+    # Verification bonus: if multiple agents contributed, memory is more trustworthy
+    verification = policy.verification_bonus if len(record.source_agent_ids) > 1 else 0.0
+
+    # Original record trust (set by the writing agent)
+    origin_trust = record.trust_score
+
+    # Composite score
+    effective_trust = (base_trust * 0.4 + origin_trust * 0.4 + verification * 0.2) - age_penalty
+    return max(0.0, min(1.0, effective_trust))  # clamp to [0, 1]
+
+
+def filtered_search(
+    query: str,
+    policy: TrustPolicy,
+    top_k: int = 5,
+) -> list[dict]:
+    """Search memories and filter by trust policy."""
+    raw_results = hybrid_search(query, top_k=top_k * 3)  # over-fetch before filtering
+    
+    scored = []
+    for r in raw_results:
+        # Reconstruct a minimal record for trust computation
+        record = MemoryRecord(
+            id=r["id"],
+            agent_id=r.get("agent_id", "unknown"),
+            memory_type=MemoryType(r["memory_type"]),
+            content=r["content"],
+            trust_score=r["trust_score"],
+            created_at=datetime.fromisoformat(r.get("created_at", datetime.utcnow().isoformat())),
+            source_agent_ids=r.get("source_agent_ids", []),
+        )
+        trust = compute_trust(record, policy)
+        if trust >= policy.min_trust_threshold:
+            r["effective_trust"] = trust
+            scored.append(r)
+    
+    # Re-rank by effective trust * retrieval relevance
+    scored.sort(key=lambda x: x["effective_trust"] * x["rrf_score"], reverse=True)
+    return scored[:top_k]
+```
+
+<Callout type="info" title="Why Multiply Trust by Relevance?">
+
+A highly trusted but irrelevant memory is useless. A highly relevant but untrusted memory is dangerous. Multiplying the trust score by the retrieval relevance score ensures that both dimensions must be reasonably high for a memory to surface. This is a simple weighted product — in production, you might learn these weights from user feedback or agent outcome data.
 
 </Callout>
 
 ## Seeing This in Practice
 
-The architecture described above — episodic and semantic stores, hybrid retrieval, trust scoring across agents, local-first storage with knowledge graph relationships — is implemented in [SuperLocalMemory](https://github.com/varun369/SuperLocalMemoryV2). It handles multi-agent trust scoring and shared memory across different AI tools using a local-first architecture that keeps all data on your machine.
+The architecture described above — episodic and semantic stores, hybrid retrieval with RRF, and trust-scored inter-agent sharing — is implemented in [SuperLocalMemory](https://github.com/SuperLocalMemory/superlocalmemorymvp). The project provides a working reference for multi-agent memory with trust scoring and shared state across AI tools like OpenAI, Claude, and Gemini.
 
-You can explore the implementation through:
-- The [Architecture Documentation](https://github.com/varun369/SuperLocalMemoryV2/wiki/Universal-Architecture)
-- The [Knowledge Graph Guide](https://github.com/varun369/SuperLocalMemoryV2/wiki/Knowledge-Graph-Guide)
-- The [interactive dashboard](/demo) for visualizing memory relationships
+You can inspect how the trust scoring module gates memory access between agents and how the hybrid retriever fuses BM25 and vector results. The codebase uses the same pattern of separating episodic and semantic stores with a unified query interface.
 
-## Further Reading
+```bash
+# Clone and explore the reference implementation
+git clone https://github.com/SuperLocalMemory/superlocalmemorymvp.git
+cd superlocalmemorymvp
+# Review the memory layer architecture in /src/memory/
+```
 
-- [Architectures for Building Agentic AI](https://arxiv.org/abs/2512.09458v1) by Nowaczyk (2025). Argues that reliability in agentic systems is an architectural property.
-- [Safe, Untrusted, "Proof-Carrying" AI Agents](https://arxiv.org/abs/2510.09567v1) by Tagliabue and Greco (2025). Discusses trust and governance in agentic data workflows.
-- [Foundations of GenIR](https://arxiv.org/abs/2501.02842v1) by Ai, Zhan, and Liu (2025). Covers how generative AI models reshape information retrieval.
+This is useful as a starting point if you want to see how the patterns from this post translate into a running system with actual multi-agent coordination.
+
+## Real-World Considerations
+
+### Memory Decay and Garbage Collection
+
+Unbounded memory growth will degrade retrieval quality. As your store grows, vector search returns more marginally-relevant results, and BM25 produces noisier rankings. Implement a decay strategy.
+
+One practical approach: run a nightly job that reduces the trust score of memories by a small amount (say 0.01 per day). When a memory drops below a threshold (say 0.1), archive it to cold storage. Memories that are accessed frequently get their decay reset. This mimics how human memory consolidation works — frequently recalled memories strengthen, unused ones fade.
+
+### Embedding Model Drift
+
+If you change your embedding model (say, from `all-MiniLM-L6-v2` to `text-embedding-3-small`), every stored vector becomes incompatible with new query vectors. You need to re-embed your entire corpus. Plan for this from day one by keeping the raw text in your store and treating embeddings as a derived, rebuildable index.
+
+<Callout type="danger" title="Never Rely Solely on Embeddings for Storage">
+
+If your vector store fails or your embedding model changes, you must be able to reconstruct the index from source text. Always store the original content string alongside (or instead of) the embedding vector. Treat the vector index as a cache, not a source of truth.
+
+</Callout>
+
+### When Not to Use This Pattern
+
+Not every agent needs a universal memory layer. If your agent is stateless by design (a simple RAG pipeline that answers questions from a fixed document set), adding a memory layer introduces complexity without clear benefit. The memory layer pattern is justified when:
+
+- Agents operate across multiple sessions and need continuity
+- Multiple agents collaborate and need shared context
+- Users expect personalization that improves over time
+- You need auditability of agent decisions (episodic replay)
+
+If none of these apply, a simpler approach — such as passing conversation history in the prompt context window — may be sufficient.
+
+### Latency Budget
+
+Every memory retrieval adds latency to your agent's response. Vector search on Qdrant or pgvector typically runs in 5-50ms for collections under 1M vectors. BM25 on Elasticsearch is similarly fast. But if you are doing hybrid retrieval with fusion plus trust scoring plus re-ranking, you can easily add 100-200ms to each agent turn. Profile your retrieval pipeline and set a latency budget. Consider caching frequent queries.
+
+<Callout type="warning" title="Watch Out for Feedback Loops">
+
+If an agent reads its own memories and uses them to generate new memories that reinforce the same patterns, you can get runaway feedback loops. An agent that once stored "user dislikes verbose answers" might generate increasingly terse responses, each time storing a new memory confirming that short answers are good — even if the user's preferences have changed. Build in mechanisms for memory correction: allow users or supervisors to flag or delete memories.
+
+</Callout>
+
+## Further Reading and Sources
+
+- [Architectures for Building Agentic AI](https://arxiv.org/abs/2512.09458v1) by Nowaczyk (2025) — Argues that reliability in agentic systems is an architectural property, with memory as a first-class component alongside planners and verifiers.
+- [Safe, Untrusted, "Proof-Carrying" AI Agents](https://arxiv.org/abs/2510.09567v1) by Tagliabue and Greco (2025) — Discusses trust and governance in agentic workflows, relevant to the trust scoring model described here.
+- [Foundations of GenIR](https://arxiv.org/abs/2501.02842v1) by Ai, Zhan, and Liu (2025) — Covers how generative AI models interact with information access systems, providing context for retrieval-augmented agent architectures.
+- [Reciprocal Rank Fusion paper](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) by Cormack, Clarke, and Butt (2009) — The original RRF paper, a simple and effective method for fusing ranked lists.
+- [Qdrant documentation](https://qdrant.tech/documentation/) — Reference for the vector search engine used in this post's examples.
+- [rank-bm25 Python library](https://github.com/dorianbrown/rank_bm25) — The BM25 implementation used in the code examples.
+- [Semantica](https://news.ycombinator.com/item?id=46452014) — An open-source semantic layer and GraphRAG framework relevant to the graph-based retrieval component.
 
 <Callout type="tip" title="Key Takeaways">
 
-- Agent memory is not caching. It requires unstructured storage, semantic retrieval, and dynamic writes — a fundamentally different architecture from traditional state management.
-- Decompose memory into **episodic** (events), **semantic** (facts), and **procedural** (workflows). Each store has different write patterns, retention policies, and retrieval characteristics.
-- Use **hybrid retrieval** (combining keyword search with semantic search via rank fusion) to avoid the blind spots of either approach alone.
-- For multi-agent systems, implement **trust scoring** based on source reliability, corroboration, and recency. Without it, shared memory stores accumulate noise.
-- Choose **local-first** for privacy and latency; choose **cloud-based** for multi-agent coordination and unlimited storage.
-- Always budget for **memory consolidation** (merging episodes into semantic summaries) and **embedding migration** (handling model version changes).
+- **Separate episodic from semantic memory.** Episodic records preserve full context and timeline. Semantic records distill reusable knowledge. You need both for agents that learn across sessions.
+- **Use hybrid retrieval, not just vector search.** Combining BM25 keyword matching with vector similarity via Reciprocal Rank Fusion produces more robust results than either method alone.
+- **Trust scoring is essential for multi-agent systems.** When agents share memory, each record needs a provenance chain and a trust weight. The consuming agent should filter results against its own trust policy.
+- **Treat embeddings as a derived index.** Always store raw text. Embedding models change, vector stores fail, and you need the ability to rebuild.
+- **Plan for memory decay.** Unbounded growth degrades retrieval quality. Implement age-based decay with access-count reinforcement to keep the memory store useful.
+- **Profile your latency budget.** Hybrid retrieval plus trust scoring can add 100-200ms per query. Cache frequent patterns and set hard latency limits.
 
 </Callout>
