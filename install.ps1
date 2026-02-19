@@ -308,6 +308,232 @@ if ($userPath -notlike "*$installBinDir*") {
     Write-Host "INFO: PATH already configured" -ForegroundColor Yellow
 }
 
+# ============================================================================
+# MCP Auto-Configuration — Detect and configure AI tools
+# ============================================================================
+Write-Host ""
+Write-Host "=================================================================="
+Write-Host "  Universal Integration - Auto-Detection                         "
+Write-Host "=================================================================="
+Write-Host ""
+Write-Host "Detecting installed AI tools..."
+Write-Host ""
+
+# Use Continue for MCP section so missing tools don't abort the installer
+$savedErrorAction = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+
+$DETECTED_TOOLS = @()
+
+# Helper: configure MCP for a given tool using its template
+function Configure-McpTool {
+    param(
+        [string]$ToolName,
+        [string]$TemplatePath,
+        [string]$ConfigPath
+    )
+
+    if (-not (Test-Path $TemplatePath)) {
+        Write-Host "  WARNING: Template not found for $ToolName — skipping" -ForegroundColor Yellow
+        return
+    }
+
+    # Create config directory if needed
+    $configDir = Split-Path -Parent $ConfigPath
+    if (-not (Test-Path $configDir)) {
+        New-Item -ItemType Directory -Path $configDir -Force | Out-Null
+    }
+
+    # Check if already configured
+    if ((Test-Path $ConfigPath) -and (Select-String -Path $ConfigPath -Pattern "superlocalmemory" -Quiet -ErrorAction SilentlyContinue)) {
+        Write-Host "  INFO: $ToolName already configured" -ForegroundColor Yellow
+        return
+    }
+
+    # Backup existing config with timestamp
+    if (Test-Path $ConfigPath) {
+        $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+        Copy-Item -Path $ConfigPath -Destination "$ConfigPath.backup.$timestamp" -Force
+        Write-Host "  OK Backed up existing $ToolName config" -ForegroundColor Green
+    }
+
+    # Read template, substitute install path, fix command for Windows (python not python3)
+    $configContent = (Get-Content $TemplatePath -Raw) -replace '\{\{INSTALL_DIR\}\}', ($INSTALL_DIR -replace '\\', '\\')
+    $configContent = $configContent -replace '"python3"', '"python"'
+    Set-Content -Path $ConfigPath -Value $configContent -Encoding UTF8 -Force
+
+    Write-Host "  OK $ToolName MCP configured" -ForegroundColor Green
+}
+
+# Copy MCP server to install directory (ensure it is present)
+$mcpServerSrc = Join-Path $REPO_DIR "mcp_server.py"
+if (Test-Path $mcpServerSrc) {
+    Copy-Item -Path $mcpServerSrc -Destination $INSTALL_DIR -Force
+}
+
+# --- 1. Claude Desktop ---
+$claudeAppData = Join-Path $env:APPDATA "Claude"
+if (Test-Path $claudeAppData) {
+    $DETECTED_TOOLS += "Claude Desktop"
+    $template = Join-Path $REPO_DIR "configs\claude-desktop-mcp.json"
+    $configDest = Join-Path $claudeAppData "claude_desktop_config.json"
+    Configure-McpTool -ToolName "Claude Desktop" -TemplatePath $template -ConfigPath $configDest
+}
+
+# --- 2. Cursor ---
+$cursorDir = Join-Path $env:USERPROFILE ".cursor"
+$cursorCmd = Get-Command cursor -ErrorAction SilentlyContinue
+if ((Test-Path $cursorDir) -or $cursorCmd) {
+    $DETECTED_TOOLS += "Cursor"
+    $template = Join-Path $REPO_DIR "configs\cursor-mcp.json"
+    $configDest = Join-Path $cursorDir "mcp_settings.json"
+    Configure-McpTool -ToolName "Cursor" -TemplatePath $template -ConfigPath $configDest
+}
+
+# --- 3. Windsurf ---
+$windsurfDir = Join-Path $env:USERPROFILE ".windsurf"
+$windsurfCmd = Get-Command windsurf -ErrorAction SilentlyContinue
+if ((Test-Path $windsurfDir) -or $windsurfCmd) {
+    $DETECTED_TOOLS += "Windsurf"
+    $template = Join-Path $REPO_DIR "configs\windsurf-mcp.json"
+    $configDest = Join-Path $windsurfDir "mcp_settings.json"
+    Configure-McpTool -ToolName "Windsurf" -TemplatePath $template -ConfigPath $configDest
+}
+
+# --- 4. VS Code / GitHub Copilot ---
+$vscodeCmd = Get-Command code -ErrorAction SilentlyContinue
+$vscodeInsidersCmd = Get-Command code-insiders -ErrorAction SilentlyContinue
+if ($vscodeCmd -or $vscodeInsidersCmd) {
+    $DETECTED_TOOLS += "VS Code/Copilot"
+    $template = Join-Path $REPO_DIR "configs\vscode-copilot-mcp.json"
+    $vscodeDir = Join-Path $env:USERPROFILE ".vscode"
+    $configDest = Join-Path $vscodeDir "mcp.json"
+    Configure-McpTool -ToolName "VS Code/Copilot" -TemplatePath $template -ConfigPath $configDest
+}
+
+# --- 5. Gemini CLI ---
+$geminiCmd = Get-Command gemini -ErrorAction SilentlyContinue
+$geminiSettings = Join-Path $env:USERPROFILE ".gemini\settings.json"
+if ($geminiCmd -or (Test-Path $geminiSettings)) {
+    $DETECTED_TOOLS += "Gemini CLI"
+    $template = Join-Path $REPO_DIR "configs\gemini-cli-mcp.json"
+    $geminiDir = Join-Path $env:USERPROFILE ".gemini"
+    $configDest = Join-Path $geminiDir "settings.json"
+    Configure-McpTool -ToolName "Gemini CLI" -TemplatePath $template -ConfigPath $configDest
+}
+
+# --- 6. Codex CLI ---
+$codexDir = Join-Path $env:USERPROFILE ".codex"
+$codexCmd = Get-Command codex -ErrorAction SilentlyContinue
+if ((Test-Path $codexDir) -or $codexCmd) {
+    $DETECTED_TOOLS += "Codex CLI"
+
+    $codexConfigured = $false
+
+    # Preferred: use native codex mcp add command
+    if ($codexCmd) {
+        try {
+            & codex mcp add superlocalmemory-v2 --env "PYTHONPATH=$INSTALL_DIR" -- python "$INSTALL_DIR\mcp_server.py" 2>$null
+            Write-Host "  OK Codex CLI MCP configured (via codex mcp add)" -ForegroundColor Green
+            $codexConfigured = $true
+        } catch {
+            # codex mcp add failed — fall through to TOML method
+        }
+    }
+
+    # Fallback: write TOML config directly
+    if (-not $codexConfigured) {
+        $codexConfig = Join-Path $codexDir "config.toml"
+        if (-not (Test-Path $codexDir)) {
+            New-Item -ItemType Directory -Path $codexDir -Force | Out-Null
+        }
+
+        if ((Test-Path $codexConfig) -and (Select-String -Path $codexConfig -Pattern "superlocalmemory-v2" -Quiet -ErrorAction SilentlyContinue)) {
+            Write-Host "  INFO: Codex CLI already configured" -ForegroundColor Yellow
+        } else {
+            # Backup existing config
+            if (Test-Path $codexConfig) {
+                $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+                Copy-Item -Path $codexConfig -Destination "$codexConfig.backup.$timestamp" -Force
+                Write-Host "  OK Backed up existing Codex CLI config" -ForegroundColor Green
+            }
+
+            # Append TOML block
+            $tomlBlock = @"
+
+[mcp_servers.superlocalmemory-v2]
+command = "python"
+args = ["$INSTALL_DIR\mcp_server.py"]
+
+[mcp_servers.superlocalmemory-v2.env]
+PYTHONPATH = "$INSTALL_DIR"
+"@
+            Add-Content -Path $codexConfig -Value $tomlBlock -Encoding UTF8
+            Write-Host "  OK Codex CLI MCP configured (TOML appended)" -ForegroundColor Green
+        }
+    }
+}
+
+# --- 7. Perplexity ---
+$perplexityDir = Join-Path $env:USERPROFILE ".perplexity"
+if (Test-Path $perplexityDir) {
+    $DETECTED_TOOLS += "Perplexity"
+    $template = Join-Path $REPO_DIR "configs\perplexity-mcp.json"
+    $configDest = Join-Path $perplexityDir "mcp.json"
+    Configure-McpTool -ToolName "Perplexity" -TemplatePath $template -ConfigPath $configDest
+}
+
+# --- 8. OpenCode ---
+$opencodeDir = Join-Path $env:USERPROFILE ".opencode"
+if (Test-Path $opencodeDir) {
+    $DETECTED_TOOLS += "OpenCode"
+    $template = Join-Path $REPO_DIR "configs\opencode-mcp.json"
+    $configDest = Join-Path $opencodeDir "mcp.json"
+    Configure-McpTool -ToolName "OpenCode" -TemplatePath $template -ConfigPath $configDest
+}
+
+# --- 9. Zed Editor ---
+$zedConfigDir = Join-Path $env:USERPROFILE ".config\zed"
+$zedCmd = Get-Command zed -ErrorAction SilentlyContinue
+if ((Test-Path $zedConfigDir) -or $zedCmd) {
+    $DETECTED_TOOLS += "Zed Editor"
+    $template = Join-Path $REPO_DIR "configs\zed-mcp.json"
+    $configDest = Join-Path $zedConfigDir "context_servers.json"
+    Configure-McpTool -ToolName "Zed Editor" -TemplatePath $template -ConfigPath $configDest
+}
+
+# Install MCP Python package if not present
+try {
+    & python -c "import mcp" 2>$null
+} catch {
+    Write-Host ""
+    Write-Host "Installing MCP SDK..."
+    try {
+        & python -m pip install mcp -q 2>$null
+        Write-Host "OK MCP SDK installed" -ForegroundColor Green
+    } catch {
+        Write-Host "INFO: MCP SDK install failed (manual install: python -m pip install mcp)" -ForegroundColor Yellow
+    }
+}
+
+# Summary of detected tools
+Write-Host ""
+if ($DETECTED_TOOLS.Count -gt 0) {
+    Write-Host "OK Detected and configured:" -ForegroundColor Green
+    foreach ($tool in $DETECTED_TOOLS) {
+        Write-Host "  * $tool"
+    }
+    Write-Host ""
+    Write-Host "These tools now have native access to SuperLocalMemory!"
+    Write-Host "Restart them to use the new MCP integration."
+} else {
+    Write-Host "INFO: No additional AI tools detected" -ForegroundColor Yellow
+    Write-Host "  MCP server is available if you install Claude Desktop, Cursor, etc."
+}
+
+# Restore original error action preference
+$ErrorActionPreference = $savedErrorAction
+
 # Summary
 Write-Host ""
 Write-Host "=================================================================="
