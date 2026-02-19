@@ -10,15 +10,34 @@ async function loadProfiles() {
         var profiles = data.profiles || [];
         var active = data.active_profile || 'default';
 
-        profiles.forEach(function(p) {
+        if (profiles.length === 0) {
+            // Fresh install fallback — show default profile
             var opt = document.createElement('option');
-            opt.value = p.name;
-            opt.textContent = p.name + (p.memory_count ? ' (' + p.memory_count + ')' : '');
-            if (p.name === active) opt.selected = true;
+            opt.value = 'default';
+            opt.textContent = 'default (0)';
+            opt.selected = true;
             select.appendChild(opt);
-        });
+        } else {
+            profiles.forEach(function(p) {
+                var opt = document.createElement('option');
+                opt.value = p.name;
+                opt.textContent = p.name + ' (' + (p.memory_count || 0) + ')';
+                if (p.name === active) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
     } catch (error) {
         console.error('Error loading profiles:', error);
+        // On error, ensure dropdown shows at least 'default'
+        var select = document.getElementById('profile-select');
+        if (select && select.options.length === 0) {
+            select.textContent = '';
+            var opt = document.createElement('option');
+            opt.value = 'default';
+            opt.textContent = 'default';
+            opt.selected = true;
+            select.appendChild(opt);
+        }
     }
 }
 
@@ -53,8 +72,11 @@ async function createProfile(nameOverride) {
         showToast('Profile "' + name + '" created');
         var input = document.getElementById('new-profile-name');
         if (input) input.value = '';
-        loadProfiles();
-        loadProfilesTable();
+        // Force reload with small delay to ensure backend has persisted
+        setTimeout(function() {
+            loadProfiles();
+            if (typeof loadProfilesTable === 'function') loadProfilesTable();
+        }, 300);
     } catch (error) {
         console.error('Error creating profile:', error);
         showToast('Error creating profile');

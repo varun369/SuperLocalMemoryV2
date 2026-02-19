@@ -182,14 +182,30 @@ async function loadStats() {
     try {
         var response = await fetch('/api/stats');
         var data = await response.json();
-        animateCounter('stat-memories', data.overview.total_memories);
-        animateCounter('stat-clusters', data.overview.total_clusters);
-        animateCounter('stat-nodes', data.overview.graph_nodes);
-        animateCounter('stat-edges', data.overview.graph_edges);
-        populateFilters(data.categories, data.projects);
+        var ov = data.overview || {};
+        animateCounter('stat-memories', ov.total_memories || 0);
+        animateCounter('stat-clusters', ov.total_clusters || 0);
+        animateCounter('stat-nodes', ov.graph_nodes || 0);
+        animateCounter('stat-edges', ov.graph_edges || 0);
+        populateFilters(data.categories || [], data.projects || []);
     } catch (error) {
         console.error('Error loading stats:', error);
+        // On error (fresh install, server starting), show 0 instead of "-"
+        animateCounter('stat-memories', 0);
+        animateCounter('stat-clusters', 0);
+        animateCounter('stat-nodes', 0);
+        animateCounter('stat-edges', 0);
     }
+}
+
+// Refresh entire dashboard — called by the refresh button in the header
+function refreshDashboard() {
+    loadProfiles();
+    loadStats();
+    if (typeof loadGraph === 'function') loadGraph();
+    if (typeof loadMemories === 'function') loadMemories();
+    if (typeof loadEventStats === 'function') loadEventStats();
+    if (typeof loadAgents === 'function') loadAgents();
 }
 
 function populateFilters(categories, projects) {
