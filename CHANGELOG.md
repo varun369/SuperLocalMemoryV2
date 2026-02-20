@@ -307,12 +307,6 @@ Built on GraphRAG (Microsoft), PageIndex (VectifyAI), MemoryBank (AAAI 2024), A-
 
 ---
 
-## Archive
-
-See [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md) for detailed release notes from v2.0.0 through v2.4.x.
-
----
-
 ## Versioning
 
 We use [Semantic Versioning](https://semver.org/):
