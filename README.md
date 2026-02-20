@@ -19,6 +19,12 @@
 </p>
 
 <p align="center">
+  <a href="https://zenodo.org/records/18709670"><img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.18709670-blue?style=for-the-badge&logo=doi&logoColor=white" alt="DOI"/></a>
+  <a href="https://zenodo.org/records/18709670"><img src="https://img.shields.io/badge/Zenodo-Research_Paper-1682D4?style=for-the-badge&logo=zenodo&logoColor=white" alt="Zenodo"/></a>
+  <a href="https://www.researchgate.net/publication/400976053"><img src="https://img.shields.io/badge/ResearchGate-Paper-00CCBB?style=for-the-badge&logo=researchgate&logoColor=white" alt="ResearchGate"/></a>
+</p>
+
+<p align="center">
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.8+"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License"/></a>
   <a href="#"><img src="https://img.shields.io/badge/local--first-100%25-brightgreen?style=flat-square" alt="100% Local"/></a>
@@ -41,6 +47,35 @@
   <a href="https://github.com/sponsors/varun369">💖 Sponsor</a> •
   <a href="ATTRIBUTION.md">📜 Attribution Required</a>
 </p>
+
+---
+
+## Research Paper
+
+**SuperLocalMemory: Privacy-Preserving Multi-Agent Memory with Bayesian Trust Defense Against Memory Poisoning**
+
+*Varun Pratap Bhardwaj, 2026*
+
+The paper presents SuperLocalMemory's architecture for defending against OWASP ASI06 memory poisoning through local-first design, Bayesian trust scoring, and adaptive learning-to-rank — all without cloud dependencies or LLM inference calls.
+
+| Platform | Link |
+|----------|------|
+| **Zenodo** (CERN) | [DOI: 10.5281/zenodo.18709670](https://zenodo.org/records/18709670) |
+| **ResearchGate** | [Publication Page](https://www.researchgate.net/publication/400976053) |
+| **arXiv** | Submission under review |
+
+If you use SuperLocalMemory in your research, please cite:
+
+```bibtex
+@misc{bhardwaj2026superlocalmemory,
+  title={SuperLocalMemory: Privacy-Preserving Multi-Agent Memory with Bayesian Trust Defense Against Memory Poisoning},
+  author={Bhardwaj, Varun Pratap},
+  year={2026},
+  doi={10.5281/zenodo.18709670},
+  url={https://zenodo.org/records/18709670},
+  note={Preprint}
+}
+```
 
 ---
 
