@@ -53,7 +53,7 @@
 >
 > **Upgrade:** `npm install -g superlocalmemory@latest`
 >
-> [[Architecture V2.5|Architecture-V2.5]] | [[Roadmap|Roadmap]] | [Full Changelog](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md)
+> [[Universal Architecture|Universal-Architecture]] | [[Roadmap|Roadmap]] | [Full Changelog](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md)
 
 ---
 
@@ -105,7 +105,7 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 ### Core Concepts
 | Guide | Description |
 |-------|-------------|
-| [[Architecture-V2.5]] | Universal architecture with MCP + A2A integration |
+| [[Universal-Architecture]] | Universal architecture with MCP + A2A integration |
 | [[MCP-Integration]] | Model Context Protocol support for 17+ IDEs |
 | [[Universal-Skills]] | 7 agent skills and slash-commands system |
 | [[Knowledge-Graph-Guide]] | Auto-discovery of relationships |

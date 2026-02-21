@@ -455,7 +455,7 @@ Includes:
 
 ## 🔗 Related Pages
 
-- [[Architecture-V2.5]] - Understand the universal architecture
+- [[Universal-Architecture]] - Understand the universal architecture
 - [[Universal-Skills]] - Learn about slash-command based access
 - [[Installation]] - Initial setup guide
 - [[Home]] - Back to wiki home

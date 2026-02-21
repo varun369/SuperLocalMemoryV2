@@ -14,14 +14,14 @@
 
 ### 🏗️ Core Concepts
 - [Interactive Architecture Diagram](https://superlocalmemory.com/architecture)
-- [[Architecture-V2.5]]
-- [[Architecture-V2.5]]
-- [[Pattern-Learning-Explained]]
+- [[Universal-Architecture]]
+- [[Learning-System]]
+- [[Advanced-Search]]
+- [[Real-Time-Event-System]]
 - [[Visualization-Dashboard]]
 - [[MCP-Integration]]
 - [[Universal-Skills]]
 - [[Knowledge-Graph-Guide]]
-- [[Pattern-Learning-Explained]]
 - [[Multi-Profile-Workflows]]
 
 ---

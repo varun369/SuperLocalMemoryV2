@@ -459,7 +459,7 @@ slm status
 2. [[MCP-Integration]] — Learn about IDE integration
 3. [[Universal-Skills]] — Master the 7 skills
 4. [[Quick-Start-Tutorial]] — Create your first memory
-5. [[Architecture-V2.5]] — Understand the 9-layer system
+5. [[Universal-Architecture]] — Understand the 9-layer system
 6. [[CLI-Cheatsheet]] — Essential commands
 
 ---

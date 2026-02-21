@@ -137,7 +137,7 @@ slm engagement              # Local engagement health metrics
 
 **Upgrade:** `npm install -g superlocalmemory@latest` — Learning dependencies install automatically.
 
-[Learning System Guide →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Pattern-Learning-Explained) | [Upgrade Guide →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Upgrading-to-v2.7) | [Full Changelog](CHANGELOG.md)
+[Learning System Guide →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Learning-System) | [Upgrade Guide →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Upgrading-to-v2.7) | [Full Changelog](CHANGELOG.md)
 
 ---
 
@@ -318,14 +318,14 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 
 ### Key Capabilities
 
-- **[Adaptive Learning System](https://github.com/varun369/SuperLocalMemoryV2/wiki/Pattern-Learning-Explained)** — Learns your tech preferences, workflow patterns, and project context. Personalizes recall ranking using local ML. Zero cloud dependency. *New in v2.7*
+- **[Adaptive Learning System](https://github.com/varun369/SuperLocalMemoryV2/wiki/Learning-System)** — Learns your tech preferences, workflow patterns, and project context. Personalizes recall ranking using local ML. Zero cloud dependency. *New in v2.7*
 - **[Knowledge Graphs](https://github.com/varun369/SuperLocalMemoryV2/wiki/Knowledge-Graph-Guide)** — Automatic relationship discovery. Interactive visualization with zoom, pan, click.
 - **[Pattern Learning](https://github.com/varun369/SuperLocalMemoryV2/wiki/Pattern-Learning-Explained)** — Learns your coding preferences and style automatically.
 - **[Multi-Profile Support](https://github.com/varun369/SuperLocalMemoryV2/wiki/Multi-Profile-Workflows)** — Isolated contexts for work, personal, clients. Zero context bleeding.
-- **[Hybrid Search](https://github.com/varun369/SuperLocalMemoryV2/wiki/Visualization-Dashboard)** — Semantic + FTS5 + Graph retrieval combined for maximum accuracy.
+- **[Hybrid Search](https://github.com/varun369/SuperLocalMemoryV2/wiki/Advanced-Search)** — Semantic + FTS5 + Graph retrieval combined for maximum accuracy.
 - **[Visualization Dashboard](https://github.com/varun369/SuperLocalMemoryV2/wiki/Visualization-Dashboard)** — Web UI for timeline, search, graph exploration, analytics.
 - **[Framework Integrations](docs/FRAMEWORK-INTEGRATIONS.md)** — Use with LangChain and LlamaIndex applications.
-- **[Real-Time Events](https://github.com/varun369/SuperLocalMemoryV2/wiki/Visualization-Dashboard)** — Live notifications via SSE/WebSocket/Webhooks when memories change.
+- **[Real-Time Events](https://github.com/varun369/SuperLocalMemoryV2/wiki/Real-Time-Event-System)** — Live notifications via SSE/WebSocket/Webhooks when memories change.
 
 ---
 

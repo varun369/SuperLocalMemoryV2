@@ -1091,7 +1091,7 @@ Export: Decision list
 
 ## 📚 Related Documentation
 
-- [[Architecture-V2.5]] - Learn about the architecture
+- [[Universal-Architecture]] - Learn about the architecture
 - [[Installation]] - Setup guide including dashboard dependencies
 - [[Quick-Start-Tutorial]] - Get started quickly
 - [[Knowledge-Graph-Guide]] - Understand clustering
