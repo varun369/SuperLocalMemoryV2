@@ -13,16 +13,13 @@
 SuperLocalMemory transforms from passive storage to active coordination layer.
 
 **New Features:**
-- ✅ **DbConnectionManager** — SQLite WAL mode, 5s busy timeout, serialized write queue, thread-local read pool. Eliminates "database is locked" errors
-- ✅ **Event Bus** — Real-time event broadcasting (SSE, WebSocket, Webhook). Tiered retention (hot/warm/cold). Cross-process delivery via DB polling
-- ✅ **Agent Registry** — Tracks which AI tools connect, what they write, protocol detection, write/recall counters
-- ✅ **Trust Scorer** — Bayesian trust signal collection (silent in v2.5). Positive signals: cross-agent recall, high importance. Negative: quick delete, burst writes
-- ✅ **Provenance Tracker** — Who created each memory, via which protocol, trust score, derivation lineage
+- ✅ **Concurrent Write Safety** — Eliminates "database is locked" errors across all concurrent tools
+- ✅ **Real-Time Events** — Live event broadcasting to dashboard and connected tools (SSE, WebSocket, Webhook)
+- ✅ **Agent Tracking** — Which AI tools connect, what they write, write/recall counters
+- ✅ **Trust Scoring** — Background behavioral monitoring (silent in v2.5, enforcement in v2.6)
+- ✅ **Provenance Tracking** — Who created each memory, via which protocol, derivation lineage
 - ✅ **Dashboard: Live Events tab** — Real-time event stream with color-coded types, filtering, stats
 - ✅ **Dashboard: Agents tab** — Connected agents table, trust overview, signal breakdown
-- ✅ **Modular codebase** — app.js split to 13 files, ui_server.py split to 9 route modules
-- ✅ **63 pytest tests** — Unit, concurrency, regression, security, edge cases, Docker/new-user
-- ✅ 4 new tables, 4 new columns on memories, 28 API endpoints, 7 new Python modules
 
 See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
 
@@ -33,10 +30,8 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 **Patch Release: Hierarchical Clustering & Documentation**
 
 **New Features:**
-- ✅ Hierarchical Leiden clustering — recursive community detection up to 3 levels deep
-- ✅ Community summaries — TF-IDF structured reports for every cluster (key topics, projects, hierarchy)
-- ✅ New CLI commands: `graph_engine.py hierarchical` and `graph_engine.py summaries`
-- ✅ Schema additions: `summary`, `parent_cluster_id`, `depth` columns on `graph_clusters`
+- ✅ Hierarchical cluster detection — recursive community detection up to 3 levels deep
+- ✅ Community summaries — structured reports for every cluster (key topics, projects, hierarchy)
 - ✅ Full documentation updates across README, wiki, and website
 
 See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
@@ -48,12 +43,11 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 **Major Release: Profile System & Intelligence**
 
 **New Features:**
-- ✅ Column-based memory profiles with UI management (create, switch, delete)
-- ✅ MACLA Beta-Binomial confidence scorer (arXiv:2512.18950)
+- ✅ Memory profiles with full UI management (create, switch, delete)
+- ✅ Advanced confidence scoring for pattern learning
 - ✅ Auto-backup system with configurable intervals and retention
 - ✅ Full profile isolation across all API endpoints (graph, clusters, patterns, timeline)
 - ✅ UI overhaul: Settings tab, column sorting, enhanced patterns view
-- ✅ Profile CRUD API endpoints
 
 See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
 
@@ -77,15 +71,9 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 - ✅ Universal CLI wrapper (`slm` command)
 - ✅ 6 production-ready skills (remember, recall, list, status, build-graph, switch-profile) — expanded to 7 in v2.7
 - ✅ Auto-detection during installation
-- ✅ 6-layer attribution protection system
 - ✅ Enhanced documentation (1,400+ lines)
 - ✅ MCP troubleshooting guide
 - ✅ Shell completions (bash/zsh)
-
-**Commits:** 18 commits
-**Lines Changed:** +3,375 lines, -320 lines (net: +3,055)
-**New Files:** 22 files
-**Backward Compatible:** ✅ 100%
 
 See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
 
@@ -96,23 +84,16 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 **Initial Release: Complete Rewrite**
 
 **Completed Features:**
-- ✅ 7-Layer Universal Architecture (Storage, Hierarchical Index, Knowledge Graph, Pattern Learning, Skills, MCP Integration, Universal Access)
-- ✅ TF-IDF entity extraction
-- ✅ Leiden clustering algorithm
+- ✅ Multi-layer universal architecture (storage, hierarchical index, knowledge graph, pattern learning, skills, MCP integration, universal access)
+- ✅ Hybrid search (full-text + semantic)
+- ✅ Knowledge graph with automatic topic clustering
 - ✅ Multi-dimensional pattern learning
 - ✅ Multi-profile support
 - ✅ Progressive compression (3-tier)
-- ✅ FTS5 full-text search
 - ✅ Security hardening (localhost-only, input validation)
 - ✅ SQLite database with ACID transactions
 
-**Research Foundation:**
-- GraphRAG (Microsoft Research, [arXiv:2404.16130](https://arxiv.org/abs/2404.16130))
-- PageIndex (VectifyAI, Mingtian Zhang et al., Sep 2025)
-- MemoryBank (Zhong et al., AAAI 2024, [arXiv:2305.10250](https://arxiv.org/abs/2305.10250))
-- MACLA (Forouzandeh et al., Dec 2025, [arXiv:2512.18950](https://arxiv.org/abs/2512.18950))
-- Hindsight (Latimer et al., Dec 2025, [arXiv:2512.12818](https://arxiv.org/abs/2512.12818))
-- A-RAG (Multi-level Retrieval, [arXiv:2602.03442](https://arxiv.org/abs/2602.03442))
+> For technical details, see our published research: https://zenodo.org/records/18709670
 
 ---
 
@@ -120,15 +101,15 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 
 **Major Release: "Your AI Learns You"**
 
-Three-layer local-only learning architecture with adaptive LightGBM re-ranking.
+Adaptive, local-only learning with personalized re-ranking.
 
 **New Features:**
-- ✅ **Cross-Project Aggregator** — Transferable tech preferences across profiles
-- ✅ **Project Context Manager** — Multi-signal project detection
-- ✅ **Workflow Pattern Miner** — Sliding-window sequence + temporal patterns
-- ✅ **Adaptive Ranker** — ML-powered personalized re-ranking with cold-start handling
-- ✅ **Source Quality Scorer** — Per-source learning (which tools produce useful memories)
-- ✅ **Feedback Collector** — Multi-channel: MCP memory_used + CLI slm useful + dashboard clicks
+- ✅ **Transferable preferences** — Tech choices carry across profiles and projects
+- ✅ **Project context awareness** — Multi-signal project detection
+- ✅ **Workflow pattern detection** — Sequential and temporal usage patterns
+- ✅ **Adaptive re-ranking** — Personalized results with cold-start handling
+- ✅ **Source quality learning** — Which tools produce the most useful memories
+- ✅ **Multi-channel feedback** — Learns from your usage across MCP, CLI, and dashboard
 - ✅ **3 new MCP tools** — memory_used, get_learned_patterns, correct_pattern
 - ✅ **2 new MCP resources** — memory://learning/status, memory://engagement
 - ✅ **1 new skill** — slm-show-patterns
@@ -143,9 +124,8 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 
 **Release: "Interactive Knowledge Graph"**
 
-- ✅ **Cytoscape.js graph engine** — Zoom, pan, click, hover, 6 layouts, cluster filtering
-- ✅ **Security hardening** — Trust enforcement, rate limiting, SSRF protection, profile isolation
-- ✅ **HNSW-accelerated graphs** — Faster knowledge graph construction at scale
+- ✅ **Interactive graph visualization** — Zoom, pan, click, hover, multiple layouts, cluster filtering
+- ✅ **Security hardening** — Trust enforcement, rate limiting, protection against injection, profile isolation
 
 See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
 
@@ -162,22 +142,13 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 #### 1. Incremental Graph Updates
 **Status:** 🔨 In Development
 
-**Current:** Full graph rebuild required (2-15 seconds)
-**Planned:** Incremental updates (50-100ms)
+**Current:** Full graph rebuild required
+**Planned:** Incremental updates in the background
 
 **Benefits:**
-- 50× faster graph updates
+- Much faster graph updates after each memory
 - Real-time graph maintenance
 - No need for manual `build-graph` after each memory
-
-**Implementation:**
-```python
-# Automatically update graph on save
-store.save_memory(content, auto_update_graph=True)
-
-# Only processes new/changed memories
-graph.update_incremental(memory_id=42)
-```
 
 #### 2. Auto-Compression
 **Status:** 📝 Planned
@@ -186,54 +157,16 @@ graph.update_incremental(memory_id=42)
 **Planned:** Automatic age-based compression
 
 **How it works:**
-```
-Tier 1 (0-30 days): Full content
-Tier 2 (31-90 days): Summarized (60% compression)
-Tier 3 (90+ days): Archived (96% compression)
+- Recent memories: Full content
+- Older memories: Summarized automatically
+- Oldest memories: Archived with high compression
 
-Automatic promotion based on:
-- Age
-- Access patterns (frequently accessed = keep in Tier 1)
-- Importance level
-```
-
-**Configuration:**
-```json
-{
-  "compression": {
-    "enabled": true,
-    "tier2_age_days": 30,
-    "tier3_age_days": 90,
-    "preserve_important": true
-  }
-}
-```
+Access patterns influence which tier memories stay in — frequently accessed memories stay fresh.
 
 #### 3. REST API Server
 **Status:** 📝 Planned
 
 **Purpose:** HTTP API for language-agnostic access
-
-**Endpoints:**
-```
-POST   /api/v1/memories
-GET    /api/v1/memories/:id
-GET    /api/v1/memories/search?q=query
-DELETE /api/v1/memories/:id
-POST   /api/v1/graph/build
-GET    /api/v1/patterns
-```
-
-**Example:**
-```bash
-# Save memory
-curl -X POST http://localhost:8765/api/v1/memories \
-  -H "Content-Type: application/json" \
-  -d '{"content": "FastAPI test", "tags": ["test"]}'
-
-# Search
-curl http://localhost:8765/api/v1/memories/search?q=FastAPI
-```
 
 **Still 100% local** (binds to localhost only)
 
@@ -245,51 +178,10 @@ curl http://localhost:8765/api/v1/memories/search?q=FastAPI
 - Isolated environment
 - Easy team sharing
 
-**Usage:**
-```bash
-# Pull image
-docker pull superlocalmemory/v2:latest
-
-# Run container
-docker run -d \
-  -v ~/.claude-memory:/data \
-  -p 8765:8765 \
-  superlocalmemory/v2:latest
-
-# Access via CLI or API
-slm status
-curl http://localhost:8765/api/v1/status
-```
-
 #### 5. Performance Dashboard
 **Status:** 📝 Planned
 
-**Metrics to track:**
-- Search latency (p50, p95, p99)
-- Memory save latency
-- Graph build time
-- Database size growth
-- Cache hit rate
-
-**CLI output:**
-```bash
-slm performance
-
-📊 Performance Metrics (last 24h)
-
-Search:
-  Avg: 42ms (↓ 5ms from yesterday)
-  P95: 78ms
-  P99: 120ms
-
-Memory Save:
-  Avg: 48ms
-  Total: 247 memories
-
-Graph:
-  Last build: 8.2s (1,247 memories)
-  Nodes: 892 | Edges: 2,134
-```
+Track search latency, save latency, graph build time, and database growth from the CLI.
 
 ---
 
@@ -299,330 +191,79 @@ Graph:
 
 **Planned Features:**
 
-#### 1. Optional OpenAI Embeddings
+#### 1. Optional Neural Embeddings
 **Status:** 📝 Planned
 
-**Current:** TF-IDF vectors (fast, free, good)
-**Planned:** Optional OpenAI embeddings (slower, paid, excellent)
+**Current:** Local vector search (fast, free, good)
+**Planned:** Optional enhanced embeddings (slower, paid, higher quality)
 
-**Configuration:**
-```json
-{
-  "embeddings": {
-    "provider": "openai",
-    "model": "text-embedding-3-small",
-    "api_key_env": "OPENAI_API_KEY",
-    "fallback": "tfidf"
-  }
-}
-```
-
-**Usage:**
-```bash
-# Enable OpenAI embeddings
-export OPENAI_API_KEY=sk-...
-slm remember "Test" --embeddings openai
-
-# Search uses better embeddings
-slm recall "query"  # Higher quality results
-```
-
-**Cost:** ~$0.02 per 1000 memories (OpenAI pricing)
-
-**Note:** Still 100% optional, TF-IDF remains default (free)
+**Note:** Existing local search remains the default (free). Enhanced embeddings are opt-in.
 
 #### 2. Local Web UI
-**Status:** 📝 Planned
+**Status:** 📝 Planned (already available as dashboard)
 
-**Features:**
-- Memory browser
-- Graph visualization
-- Pattern dashboard
-- Search interface
-- Profile management
+The existing dashboard already provides memory browsing, graph visualization, pattern dashboard, and profile management — all running locally.
 
-**Tech stack:**
-- Backend: Python + FastAPI
-- Frontend: React + D3.js
-- Deployment: Runs locally only (localhost:8765)
-
-**Preview:**
-```bash
-# Start web UI
-slm web-ui start
-
-# Open browser
-open http://localhost:8765
-
-# Features:
-# - Visual graph explorer
-# - Memory timeline
-# - Pattern dashboard
-# - Search with filters
-```
-
-**Still 100% local** (no external dependencies)
-
-#### 3. Multi-Language Entity Extraction
+#### 3. Multi-Language Support
 **Status:** 📝 Planned
 
 **Current:** Optimized for English
 **Planned:** Support for 20+ languages
 
-**Languages:**
-- Spanish, French, German
-- Chinese, Japanese, Korean
-- Russian, Arabic, Hindi
-- And more...
-
-**Implementation:**
-```python
-# Auto-detect language
-store.save_memory(content="Hola mundo", language="auto")
-
-# Explicit language
-store.save_memory(content="こんにちは", language="ja")
-```
-
-#### 4. Advanced Pattern Categories
+#### 4. Additional Pattern Categories
 **Status:** 📝 Planned
 
-**Current Categories:**
-- Frameworks
-- Languages
-- Architecture
-- Security
-- Coding style
-- Domain terminology
+Expand pattern detection to include testing strategies, error handling patterns, logging preferences, documentation style, deployment strategies, and more.
 
-**Planned Additional Categories:**
-- Testing strategies (unit vs integration)
-- Error handling patterns
-- Logging preferences
-- Documentation style
-- Code review priorities
-- Performance optimization patterns
-- Deployment strategies
-
-#### 5. Relationship Types
+#### 5. Typed Memory Relationships
 **Status:** 📝 Planned
 
 **Current:** Generic similarity edges
-**Planned:** Typed relationships
-
-**Relationship types:**
-- `SIMILAR_TO` - Content similarity
-- `REFERENCES` - Explicit reference
-- `CONTRADICTS` - Conflicting information
-- `SUPERSEDES` - Replaces old memory
-- `IMPLEMENTS` - Implementation of concept
-- `CAUSED_BY` - Bug caused by decision
-
-**Usage:**
-```python
-# Create typed edge
-graph.add_relationship(
-    from_memory=42,
-    to_memory=38,
-    rel_type="SUPERSEDES",
-    metadata={"reason": "Updated architecture"}
-)
-
-# Query by relationship type
-related = graph.get_related(42, rel_type="SUPERSEDES")
-```
+**Planned:** Typed relationships (similar to, references, contradicts, supersedes, implements, caused by)
 
 ---
 
-### v2.8 (Q3-Q4 2026) - A2A Protocol Integration
+### v2.8 (Q3-Q4 2026) - Multi-Agent Collaboration
 
-**Theme:** Multi-agent collaboration via Agent-to-Agent protocol
+**Theme:** Agent-to-Agent protocol support
 
-**Why A2A?** MCP (Model Context Protocol) connects AI tools to memory (agent-to-tool). A2A (Agent-to-Agent Protocol) enables AI agents to collaborate with each other through shared memory. Together, MCP + A2A make SuperLocalMemory the complete memory backbone for the multi-agent era.
-
-**A2A Protocol:** Launched by Google (April 2025), now under Linux Foundation. Version 0.3 (July 2025). 150+ organizations. Backed by Google, Microsoft, Cisco, Salesforce, UiPath, Cohere, ServiceNow.
+**Why?** MCP (Model Context Protocol) connects AI tools to memory (agent-to-tool). The Agent-to-Agent Protocol enables AI agents to collaborate with each other through shared memory. Together, MCP + A2A make SuperLocalMemory the complete memory backbone for the multi-agent era.
 
 **Planned Features:**
 
-#### 1. A2A Agent Server
-**Status:** 📝 Planned
-
-**Purpose:** SuperLocalMemory becomes an A2A-compliant agent that other agents can discover, authenticate with, and delegate memory tasks to.
-
-**Agent Card (Discovery):**
-```json
-{
-  "name": "SuperLocalMemory",
-  "description": "Local-first persistent memory for AI agents",
-  "version": "2.5.0",
-  "skills": [
-    {"name": "remember", "description": "Store a memory with tags and importance"},
-    {"name": "recall", "description": "Search memories using hybrid search"},
-    {"name": "list_recent", "description": "Get recent memories"},
-    {"name": "get_status", "description": "System health and statistics"}
-  ],
-  "capabilities": {
-    "streaming": true,
-    "pushNotifications": true,
-    "stateTransitionHistory": true
-  },
-  "preferredTransport": "jsonrpc",
-  "additionalInterfaces": ["grpc"]
-}
-```
-
-**Implementation:**
-- gRPC + JSON-RPC dual transport (A2A v0.3 spec)
-- Python SDK: `pip install a2a-sdk` (official SDK, v0.3.22+)
-- Runs alongside MCP server on separate port (default: 8766)
-- New file: `src/a2a_server.py`
+#### 1. A2A Agent Discovery
+SuperLocalMemory becomes discoverable by other A2A-compatible agents, which can delegate memory tasks to it.
 
 #### 2. Agent Authentication & Security
-**Status:** 📝 Planned
-
-**Purpose:** Control which agents can access your memory. Local-first security model.
-
-**Features:**
-- Signed security cards (A2A v0.3 spec)
-- Per-agent permission model (read-only, read-write, admin)
-- Local key store — no cloud auth
-- User explicitly authorizes each agent
-- Audit log of agent interactions
-
-**Configuration:**
-```json
-{
-  "authorized_agents": [
-    {"agent_id": "cursor-ai", "permissions": ["read", "write"]},
-    {"agent_id": "claude-desktop", "permissions": ["read", "write", "admin"]}
-  ]
-}
-```
+Control which agents can access your memory. Local-first security model with per-agent permissions.
 
 #### 3. Memory Task Management
-**Status:** 📝 Planned
+Stateful, async memory operations that other agents can track.
 
-**Purpose:** A2A tasks are stateful and async. Memory operations become trackable tasks.
-
-**Task Lifecycle:**
-```
-submitted → working → completed
-                   → failed
-                   → canceled
-```
-
-**Operations:**
-```
-POST  /a2a/task/remember     → Store memory (async, returns task ID)
-POST  /a2a/task/recall        → Search memory (streaming results)
-POST  /a2a/task/list_recent   → Get recent memories
-GET   /a2a/task/{id}/status   → Check task progress
-POST  /a2a/task/{id}/cancel   → Cancel running task
-```
-
-#### 4. Real-Time Memory Broadcasting (v2.5.1)
-**Status:** 📝 Planned (Phase 2)
-
-**Purpose:** When Agent A stores a memory, Agent B gets notified instantly.
-
-**Use Case:** Developer uses Cursor and Claude Desktop simultaneously. Cursor agent saves "switched to Tailwind CSS" → Claude Desktop agent instantly knows.
-
-**Implementation:**
-- A2A push notifications
-- WebSocket fallback for non-A2A clients
-- Configurable subscription filters (by tag, project, importance)
-
-#### 5. Multi-Agent Memory Sharing
-**Status:** 📝 Planned (Phase 2)
-
-**Purpose:** Multiple agents collaborate through shared memory context.
-
-**Scenarios:**
-```
-Cursor Agent:    "User prefers React hooks over class components"
-                  ↓ (A2A broadcast)
-Claude Desktop:  "Got it — will suggest hooks-based patterns"
-                  ↓ (A2A broadcast)
-Continue.dev:    "Updated code suggestions to use hooks"
-```
-
-**Research Foundation:**
-- A2A Protocol (Google/Linux Foundation, 2025, [a2a-protocol.org](https://a2a-protocol.org/))
-- Complementary to MCP (Anthropic, 2024) — MCP for tool access, A2A for agent collaboration
-
-**Files Affected:**
-```
-src/a2a_server.py          # NEW: A2A gRPC/JSON-RPC server
-src/a2a_auth.py            # NEW: Agent authentication
-bin/slm-a2a                # NEW: CLI wrapper for A2A server
-configs/a2a_config.json    # NEW: Default A2A configuration
-mcp_server.py              # Updated: Cross-reference A2A endpoints
-install.sh / install.ps1   # Updated: Optional A2A dependencies
-```
-
-**Dependencies (Optional — A2A features only):**
-```
-a2a-sdk>=0.3.22            # Official A2A Python SDK
-grpcio>=1.60.0             # gRPC transport
-protobuf>=4.25.0           # Protocol Buffers
-```
+#### 4. Real-Time Memory Broadcasting
+When Agent A stores a memory, Agent B gets notified instantly — enabling seamless multi-tool workflows.
 
 **Core principle:** A2A is opt-in. The system works perfectly with MCP-only. A2A adds multi-agent collaboration for users who need it.
 
 ---
 
-### v3.0.0 (Q4 2026) - NPM Distribution
+### v3.0.0 (Q4 2026) - Distribution & Ecosystem
 
-**Theme:** Professional packaging
+**Theme:** Professional packaging and ecosystem expansion
 
 **Planned Features:**
 
-#### 1. NPM Package
-**Status:** ✅ Available (v2.3.0)
-
-**Installation:**
-```bash
-npm install -g superlocalmemory
-```
-
-**Benefits:**
-- One-command install
-- Automatic updates via npm
-- Better cross-platform support
-- Professional packaging
-
-**Same features as V2** (identical functionality, just easier distribution)
-
-#### 2. Improved Windows Support
+#### 1. Native Windows Installer
 **Status:** 📝 Planned
 
 **Current:** Works on Windows but requires manual setup
-**Planned:** Native Windows installer
+**Planned:** Native Windows installer (MSI, PowerShell integration)
 
-**Features:**
-- MSI installer
-- Windows Service integration
-- PowerShell module
-- Windows Terminal integration
-
-#### 3. IDE Extensions
+#### 2. IDE Extensions
 **Status:** 📝 Planned
 
-**VS Code Extension:**
-- Memory search panel
-- Graph visualization
-- Pattern insights
-- Quick commands
-
-**JetBrains Plugin:**
-- IntelliJ IDEA
-- PyCharm
-- WebStorm
-
-**Features:**
-- Right-click → Remember selection
-- Hover → Show related memories
-- Search from command palette
+- **VS Code Extension:** Memory search panel, quick commands
+- **JetBrains Plugin:** IntelliJ IDEA, PyCharm, WebStorm
 
 ---
 
@@ -631,97 +272,21 @@ npm install -g superlocalmemory
 ### Collaborative Features
 
 #### Team Memory Sync
-**Concept:** Optional cloud sync for teams (still encrypted)
-
-**How it works:**
-```
-Team member A → Save memory → Encrypted → Cloud storage
-                                            ↓
-Team member B → Pull updates → Decrypted → Local database
-```
-
-**Privacy:**
-- End-to-end encryption
-- You control the keys
-- Optional (default: local-only)
-- Self-hosted option available
+Optional encrypted cloud sync for teams — end-to-end encrypted, user controls the keys, default remains local-only.
 
 #### Shared Profiles
-**Concept:** Git-like branching for memories
-
-```bash
-# Create team profile
-slm profile create team-backend --shared
-
-# Push to shared repository
-slm profile push team-backend
-
-# Pull updates from team
-slm profile pull team-backend
-
-# Merge conflict resolution
-slm profile merge team-backend
-```
+Git-like profile sharing for teams.
 
 ### AI Enhancements
 
 #### Memory Suggestions
-**Concept:** AI suggests what to remember
-
-```
-You: [Writing code]
-AI: "This looks like an important pattern. Remember it?"
-You: "Yes"
-AI: [Automatically saves with smart tags and importance]
-```
+AI suggests what to remember based on your current context.
 
 #### Smart Summarization
-**Concept:** AI-generated summaries for compression
-
-**Current:** Rule-based summarization
-**Future:** LLM-based intelligent summarization
-
-```python
-# Tier 2 compression
-original = "Long detailed memory about authentication implementation..."
-summary = llm.summarize(original, max_length=100, preserve_key_info=True)
-```
+AI-generated compression for older memories.
 
 #### Context-Aware Recall
-**Concept:** AI understands what you're working on
-
-```
-You: [Editing auth.py]
-AI: [Automatically recalls relevant auth memories]
-AI: "Reminder: JWT tokens expire after 24h (from 3 days ago)"
-```
-
-### Research Integrations
-
-#### Academic Paper Integration
-**Concept:** Link memories to research papers
-
-```bash
-slm remember "Implemented GraphRAG clustering" \
-  --paper "https://arxiv.org/abs/2024.12345" \
-  --tags research
-```
-
-#### Experiment Tracking
-**Concept:** ML experiment memory
-
-```python
-# Track experiment
-store.save_experiment(
-    name="bert-finetuning-v3",
-    metrics={"accuracy": 0.94, "loss": 0.12},
-    hyperparams={"lr": 0.001, "batch_size": 32},
-    notes="Best results with warmup steps"
-)
-
-# Compare experiments
-store.compare_experiments("bert-finetuning-v2", "bert-finetuning-v3")
-```
+Automatic recall of relevant memories based on what you're currently working on.
 
 ---
 
@@ -733,10 +298,9 @@ store.compare_experiments("bert-finetuning-v2", "bert-finetuning-v3")
 
 1. ✅ **Multi-IDE support** (Completed in v2.1.0)
 2. 🔨 **REST API** (In progress, v2.2.0)
-3. 📝 **A2A Protocol support** (Planned, v2.8) — Multi-agent collaboration
-4. 📝 **Web UI** (Planned, v2.3.0)
-5. 📝 **Docker container** (Planned, v2.2.0)
-6. 📝 **OpenAI embeddings** (Planned, v2.3.0)
+3. 📝 **Multi-agent collaboration** (Planned, v2.8)
+4. 📝 **Docker container** (Planned, v2.2.0)
+5. 📝 **Enhanced embeddings** (Planned, v2.3.0)
 
 ### How to Request Features
 
@@ -745,21 +309,6 @@ https://github.com/varun369/SuperLocalMemoryV2/issues
 
 **Start a discussion:**
 https://github.com/varun369/SuperLocalMemoryV2/discussions
-
-**Template:**
-```markdown
-**Feature name:** Incremental graph updates
-
-**Problem it solves:** Full graph rebuild is slow for large databases
-
-**Proposed solution:** Only update graph for new/changed memories
-
-**Use case:** Save time when adding memories to large database
-
-**Workaround:** Currently use `slm build-graph` manually
-
-**Priority:** High / Medium / Low
-```
 
 ---
 
@@ -784,7 +333,6 @@ https://github.com/varun369/SuperLocalMemoryV2/discussions
 **Hard issues:**
 - Implement incremental graph updates
 - Build REST API server
-- Create web UI
 - Multi-language support
 
 **See:** [CONTRIBUTING.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CONTRIBUTING.md)
@@ -803,7 +351,6 @@ https://github.com/varun369/SuperLocalMemoryV2/discussions
 **Needed:**
 - Test on different OS versions
 - Test with large databases (10K+ memories)
-- Performance benchmarking
 - Edge case testing
 
 #### 4. Community
@@ -818,34 +365,13 @@ https://github.com/varun369/SuperLocalMemoryV2/discussions
 
 ## Development Principles
 
-### Maintaining Core Values
-
 **As SuperLocalMemory grows, we commit to:**
 
-1. **100% Local-First**
-   - No required cloud dependencies
-   - Optional features stay optional
-   - Privacy is non-negotiable
-
-2. **Zero Cost Core**
-   - Core features always free
-   - No premium tiers for basic functionality
-   - Optional paid services (e.g., hosted sync) separate
-
-3. **Open Source**
-   - Source code always public
-   - MIT License maintained
-   - Community-driven development
-
-4. **Backward Compatibility**
-   - No breaking changes without major version bump
-   - Migration guides provided
-   - Old versions remain available
-
-5. **Performance First**
-   - Sub-100ms operations
-   - Scales to 10K+ memories
-   - Minimal resource usage
+1. **100% Local-First** — No required cloud dependencies, privacy is non-negotiable
+2. **Zero Cost Core** — Core features always free, no premium tiers for basic functionality
+3. **Open Source** — Source code always public, MIT License maintained
+4. **Backward Compatibility** — No breaking changes without major version bump
+5. **Performance First** — Fast operations, scales to 10K+ memories, minimal resource usage
 
 ---
 
@@ -876,10 +402,6 @@ https://github.com/varun369/SuperLocalMemoryV2/discussions
 **Questions about the roadmap?**
 
 Open a discussion: https://github.com/varun369/SuperLocalMemoryV2/discussions
-
-**Want to contribute?**
-
-See: [CONTRIBUTING.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CONTRIBUTING.md)
 
 ---
 

@@ -23,13 +23,15 @@
 
 | Feature | SuperLocalMemory V2 | Mem0 | Zep | Khoj | Letta | Personal.AI |
 |---------|---------------------|------|-----|------|-------|-------------|
-| **Semantic Search** | ✅ TF-IDF | ✅ Embeddings | ✅ Embeddings | ✅ Embeddings | ✅ | ✅ |
-| **Full-Text Search** | ✅ FTS5 | ❌ | ✅ | ✅ | ❌ | ❌ |
-| **Knowledge Graph** | ✅ Leiden clustering | ✅ Basic | ✅ Neo4j | ❌ | ❌ | ❌ |
-| **Pattern Learning** | ✅ MemoryBank/MACLA/Hindsight-inspired | ❌ | ❌ | ❌ | ❌ | ✅ Basic |
+| **Semantic Search** | ✅ Local | ✅ Cloud embeddings | ✅ Cloud embeddings | ✅ Cloud embeddings | ✅ | ✅ |
+| **Full-Text Search** | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ |
+| **Knowledge Graph** | ✅ | ✅ Basic | ✅ | ❌ | ❌ | ❌ |
+| **Pattern Learning** | ✅ Peer-reviewed approach (see paper) | ❌ | ❌ | ❌ | ❌ | ✅ Basic |
 | **Multi-Profile** | ✅ Unlimited | ⚠️ Per-user only | ⚠️ Per-user only | ✅ | ⚠️ Limited | ❌ |
-| **Hierarchical Memory** | ✅ PageIndex-inspired | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Hierarchical Memory** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Compression** | ✅ 3-tier | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+> For the research foundation behind SuperLocalMemory's architecture, see our published paper: https://zenodo.org/records/18709670
 
 ### Integration & Access
 
@@ -61,10 +63,11 @@
 
 | Metric | SuperLocalMemory V2 | Mem0 | Zep | Khoj | Letta |
 |--------|---------------------|------|-----|------|-------|
-| **Search Latency** | **45ms** | 200-500ms | 100-300ms | 500-1000ms | 200-400ms |
-| **Save Latency** | **50ms** | 100-200ms | 100-200ms | 200-400ms | 150-300ms |
+| **Search Latency** | Sub-100ms (typical use) | Cloud-dependent | Cloud-dependent | Cloud-dependent | Local |
 | **Offline Capable** | **✅ Yes** | ❌ No | ❌ No | ⚠️ Partial | ✅ Yes |
-| **Scalability** | 5K memories (local) | Unlimited (cloud) | Unlimited (cloud) | 10K+ | 5K+ |
+| **Scalability** | Up to 10K memories (local) | Unlimited (cloud) | Unlimited (cloud) | 10K+ | 5K+ |
+
+Performance measurements are based on peer-reviewed research. See our published paper: https://zenodo.org/records/18709670
 
 ---
 
@@ -137,19 +140,8 @@
 
 **Paid Tiers:**
 - **Starter:** $50/month ($600/year)
-  - 10,000 credits/month
-  - Basic features
-  - Email support
-
 - **Pro:** $200/month ($2,400/year)
-  - 50,000 credits/month
-  - All features
-  - Priority support
-
 - **Enterprise:** $500+/month ($6,000+/year)
-  - Custom credits
-  - Self-hosted option
-  - Dedicated support
 
 **Total 5-year cost:**
 - Starter: **$3,000**
@@ -165,13 +157,7 @@
 **Pricing:**
 - **Free:** ❌ No free tier
 - **Personal:** $33/month ($396/year)
-  - Limited features
-  - Cloud-only
-  - No API access
-
 - **Professional:** $99/month ($1,188/year)
-  - API access
-  - Advanced features
 
 **Total 5-year cost:**
 - Personal: **$1,980**
@@ -193,8 +179,6 @@
 - ~$10-20/month cloud costs (if using cloud embeddings)
 
 **Total 5-year cost:** **$600-1,200** (cloud costs)
-
-**SuperLocalMemory V2 saves:** $600-1,200 + easier setup
 
 ---
 
@@ -279,11 +263,6 @@
 - 100% private (client trust)
 - Offline capable (no internet required)
 
-**Alternatives:**
-- Mem0: $299+/month, still cloud-based (client concerns)
-- Zep: Complex multi-tenancy setup
-- Personal.AI: No multi-profile support
-
 ---
 
 ### Scenario 4: Enterprise with Compliance
@@ -300,12 +279,7 @@
 - 100% on-premise
 - Zero external data transfer
 - Air-gap capable
-- Full audit control (SQLite logs)
-
-**Alternatives:**
-- Mem0 Enterprise: $999+/month, still requires trusting third party
-- Zep Enterprise: $500+/month, self-hosted option available but expensive
-- Letta: Possible but requires significant setup
+- Full audit control
 
 ---
 
@@ -420,30 +394,6 @@ for mem in memories:
 
 ---
 
-### From Khoj to SuperLocalMemory V2
-
-**Step 1: Export from Khoj**
-```python
-# Khoj stores in org-mode or plaintext
-# Export entries to JSON
-
-import json
-
-# Read Khoj's data directory
-khoj_entries = []
-# ... parse Khoj entries
-
-with open('khoj_export.json', 'w') as f:
-    json.dump(khoj_entries, f)
-```
-
-**Step 2: Import to SuperLocalMemory V2**
-```python
-# Same as Mem0 import above
-```
-
----
-
 ## Feature Gaps & Workarounds
 
 ### What SuperLocalMemory V2 Lacks (vs Cloud Solutions)
@@ -452,9 +402,9 @@ with open('khoj_export.json', 'w') as f:
 
 **Cloud solutions:** Use OpenAI/Anthropic embeddings (expensive but high-quality)
 
-**SuperLocalMemory V2:** Uses TF-IDF (free, fast, good-enough for most cases)
+**SuperLocalMemory V2:** Uses local vector search (free, fast, good-enough for most cases)
 
-**Workaround:** Planned v2.3.0 - optional OpenAI embeddings integration
+**Workaround:** Planned v2.3.0 - optional enhanced embeddings integration
 
 #### 2. Real-Time Collaboration
 
@@ -471,14 +421,6 @@ with open('khoj_export.json', 'w') as f:
 **SuperLocalMemory V2:** Self-managed (but also zero ops for single user)
 
 **Workaround:** Docker container (planned v2.2.0)
-
-#### 4. Web Interface
-
-**Cloud solutions:** Web dashboard for memory management
-
-**SuperLocalMemory V2:** CLI + Python API only
-
-**Workaround:** Planned v2.3.0 - local web UI
 
 ---
 
@@ -503,7 +445,7 @@ with open('khoj_export.json', 'w') as f:
 
 ### Choose Zep if:
 
-✅ You need **Neo4j graph database**
+✅ You need **graph database** integration
 ✅ You want **enterprise support**
 ✅ You have **compliance requirements** (but can use cloud)
 ✅ You have **budget** ($50-500/month)
@@ -530,7 +472,6 @@ with open('khoj_export.json', 'w') as f:
 - [Why Local Matters](Why-Local-Matters) - Privacy benefits
 - [Roadmap](Roadmap) - Upcoming features
 - [CLI Cheatsheet](CLI-Cheatsheet) - Command reference
-- [Python API](Python-API) - Programmatic access
 
 ---
 

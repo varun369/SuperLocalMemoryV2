@@ -89,9 +89,9 @@ Your memory system evolves with you through three learning layers:
 
 | Layer | What It Learns | How |
 |-------|---------------|-----|
-| **Tech Preferences** | "You prefer FastAPI over Django" (83% confidence) | Cross-project frequency analysis with Bayesian scoring |
-| **Project Context** | Detects your active project from 4 signals | Path analysis, tags, profile, content clustering |
-| **Workflow Patterns** | "You typically: docs → architecture → code → test" | Time-weighted sliding-window sequence mining |
+| **Tech Preferences** | "You prefer FastAPI over Django" (83% confidence) | Automatic learning from your usage patterns |
+| **Project Context** | Detects your active project automatically | Path, tags, profile, and content analysis |
+| **Workflow Patterns** | "You typically: docs → architecture → code → test" | Sequence learning from your actual workflows |
 
 ### Three-Phase Adaptive Ranking
 
@@ -99,7 +99,7 @@ Recall results get smarter over time — automatically:
 
 1. **Phase 1 (Baseline):** Standard search — same as v2.6
 2. **Phase 2 (Rule-Based):** After ~20 feedback signals — boosts results matching your preferences
-3. **Phase 3 (ML Ranking):** After ~200 signals — LightGBM LambdaRank re-ranks with 9 personalized features
+3. **Phase 3 (ML Ranking):** After ~200 signals — local machine learning re-ranks based on your personalized profile
 
 ### Privacy by Design — GDPR Compliant
 
@@ -115,16 +115,7 @@ Recall results get smarter over time — automatically:
 
 ### Research-Backed Architecture
 
-Every component is grounded in peer-reviewed research, adapted for local-first operation:
-
-| Component | Research Basis |
-|-----------|---------------|
-| Two-stage retrieval pipeline | BM25 → re-ranker (eKNOW 2025) |
-| Adaptive cold-start ranking | Hierarchical meta-learning (LREC 2024) |
-| Time-weighted sequence mining | TSW-PrefixSpan (IEEE 2020) |
-| Bayesian confidence scoring | MACLA (arXiv:2512.18950) |
-| LightGBM LambdaRank | Pairwise ranking (Burges 2010, MO-LightGBM SIGIR 2025) |
-| Privacy-preserving feedback | Zero-communication design — stronger than differential privacy (ADPMF, IPM 2024) |
+Every component is grounded in peer-reviewed research, adapted for local-first operation. See the [published paper](https://zenodo.org/records/18709670) for full technical details and citations.
 
 ### New MCP Tools
 
@@ -267,22 +258,13 @@ python3 ~/.claude-memory/ui_server.py
 | Code preferences | "I prefer React..." every time | Pattern learning knows your style |
 | Multi-project | Context constantly bleeds | Separate profiles per project |
 
-### Built on 2026 Research
+### Built on Peer-Reviewed Research
 
-Not another simple key-value store. SuperLocalMemory implements **cutting-edge memory architecture** backed by peer-reviewed research:
+Not another simple key-value store. SuperLocalMemory implements **cutting-edge memory architecture** backed by peer-reviewed research — hierarchical organization, knowledge graph clustering, identity pattern learning, multi-level retrieval, adaptive re-ranking, workflow sequence mining, temporal confidence scoring, and cold-start mitigation.
 
-- **PageIndex** (Meta AI) → Hierarchical memory organization
-- **GraphRAG** (Microsoft) → Knowledge graph with auto-clustering
-- **xMemory** (Stanford) → Identity pattern learning
-- **A-RAG** → Multi-level retrieval with context awareness
-- **LambdaRank** (Burges 2010, MO-LightGBM SIGIR 2025) → Adaptive re-ranking *(v2.7)*
-- **TSW-PrefixSpan** (IEEE 2020) → Time-weighted workflow pattern mining *(v2.7)*
-- **MACLA** (arXiv:2512.18950) → Bayesian temporal confidence scoring *(v2.7)*
-- **FCS** (LREC 2024) → Hierarchical cold-start mitigation *(v2.7)*
+**The only open-source implementation combining all these approaches — entirely locally.**
 
-**The only open-source implementation combining all eight approaches — entirely locally.**
-
-[See research citations →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Research-Foundations)
+[Read the paper →](https://zenodo.org/records/18709670)
 
 ---
 
@@ -310,34 +292,33 @@ Not another simple key-value store. SuperLocalMemory implements **cutting-edge m
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 5½: ADAPTIVE LEARNING (v2.7 — NEW)                   │
 │  Three-layer learning: tech prefs + project context + flow  │
-│  LightGBM LambdaRank re-ranking (fully local, no cloud)    │
-│  Research: eKNOW 2025, MACLA, TSW-PrefixSpan, LREC 2024    │
+│  Local ML re-ranking — no cloud, no telemetry               │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 5: SKILLS LAYER                                      │
 │  7 universal slash-commands for AI assistants               │
 │  Compatible with Claude Code, Continue, Cody                │
 ├─────────────────────────────────────────────────────────────┤
-│  Layer 4: PATTERN LEARNING + MACLA                          │
-│  Bayesian confidence scoring (arXiv:2512.18950)             │
+│  Layer 4: PATTERN LEARNING                                  │
+│  Confidence-scored preference detection                     │
 │  "You prefer React over Vue" (73% confidence)               │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 3: KNOWLEDGE GRAPH + HIERARCHICAL CLUSTERING         │
-│  Recursive Leiden algorithm: "Python" → "FastAPI" → "Auth" │
-│  Community summaries with TF-IDF structured reports         │
+│  Auto-clustering: "Python" → "FastAPI" → "Auth"            │
+│  Community summaries with auto-generated labels             │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 2: HIERARCHICAL INDEX                                │
 │  Tree structure for fast navigation                         │
 │  O(log n) lookups instead of O(n) scans                     │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 1: RAW STORAGE                                       │
-│  SQLite + Full-text search + TF-IDF vectors                 │
+│  SQLite + Full-text search + vector search                  │
 │  Compression: 60-96% space savings                          │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Capabilities
 
-- **[Adaptive Learning System](https://github.com/varun369/SuperLocalMemoryV2/wiki/Learning-System)** — Learns your tech preferences, workflow patterns, and project context. Personalizes recall ranking using local ML (LightGBM). Zero cloud dependency. *New in v2.7*
+- **[Adaptive Learning System](https://github.com/varun369/SuperLocalMemoryV2/wiki/Learning-System)** — Learns your tech preferences, workflow patterns, and project context. Personalizes recall ranking using local ML. Zero cloud dependency. *New in v2.7*
 - **[Knowledge Graphs](https://github.com/varun369/SuperLocalMemoryV2/wiki/Knowledge-Graph)** — Automatic relationship discovery. Interactive visualization with zoom, pan, click.
 - **[Pattern Learning](https://github.com/varun369/SuperLocalMemoryV2/wiki/Pattern-Learning)** — Learns your coding preferences and style automatically.
 - **[Multi-Profile Support](https://github.com/varun369/SuperLocalMemoryV2/wiki/Using-Memory-Profiles)** — Isolated contexts for work, personal, clients. Zero context bleeding.
@@ -456,7 +437,7 @@ For typical personal use (under 500 memories), search results return faster than
 | 2 AI tools simultaneously | **220/sec** | 0 |
 | 5 AI tools simultaneously | **130/sec** | 0 |
 
-WAL mode + serialized write queue = zero "database is locked" errors, ever.
+Concurrent-safe architecture = zero "database is locked" errors, ever.
 
 ### Storage
 
@@ -469,7 +450,7 @@ WAL mode + serialized write queue = zero "database is locked" errors, ever.
 | 100 | 0.28s |
 | 1,000 | 10.6s |
 
-Leiden clustering discovers 6-7 natural topic communities automatically.
+Auto-clustering discovers 6-7 natural topic communities from your memories.
 
 [Full benchmark details →](https://github.com/varun369/SuperLocalMemoryV2/wiki/Performance-Benchmarks)
 
