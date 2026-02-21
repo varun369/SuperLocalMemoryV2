@@ -16,6 +16,13 @@ SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [2.7.6] - 2026-02-22
+
+### Improved
+- Documentation organization and navigation
+
+---
+
 ## [2.7.4] - 2026-02-16
 
 ### Added

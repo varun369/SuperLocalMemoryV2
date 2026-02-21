@@ -14,9 +14,9 @@
 
 ### 🏗️ Core Concepts
 - [Interactive Architecture Diagram](https://superlocalmemory.com/architecture)
-- [[Universal-Architecture]]
 - [[Architecture-V2.5]]
-- [[Learning-System]]
+- [[Architecture-V2.5]]
+- [[Pattern-Learning-Explained]]
 - [[Visualization-Dashboard]]
 - [[MCP-Integration]]
 - [[Universal-Skills]]

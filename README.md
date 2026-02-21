@@ -167,7 +167,7 @@ SuperLocalMemory is now **production-hardened** with security, performance, and 
 
 **Upgrade:** `npm install -g superlocalmemory@latest`
 
-[Interactive Architecture Diagram](https://superlocalmemory.com/architecture.html) | [Architecture Doc](docs/ARCHITECTURE-V2.5.md) | [Full Changelog](CHANGELOG.md)
+[Interactive Architecture Diagram](https://superlocalmemory.com/architecture.html) | [Architecture Doc](docs/ARCHITECTURE.md) | [Full Changelog](CHANGELOG.md)
 
 </details>
 
@@ -495,7 +495,7 @@ python ~/.claude-memory/ui_server.py                     # Launch web UI
 | [Visualization Dashboard](https://github.com/varun369/SuperLocalMemoryV2/wiki/Visualization-Dashboard) | Interactive web UI guide |
 | [Interactive Graph](https://github.com/varun369/SuperLocalMemoryV2/wiki/Using-Interactive-Graph) | Graph exploration guide (NEW v2.6.5) |
 | [Framework Integrations](docs/FRAMEWORK-INTEGRATIONS.md) | LangChain & LlamaIndex setup |
-| [Knowledge Graph](docs/GRAPH-ENGINE.md) | How clustering works |
+| [Knowledge Graph](https://github.com/varun369/SuperLocalMemoryV2/wiki/Knowledge-Graph-Guide) | How clustering works |
 | [Pattern Learning](docs/PATTERN-LEARNING.md) | Identity extraction |
 | [API Reference](docs/API-REFERENCE.md) | Python API documentation |
 

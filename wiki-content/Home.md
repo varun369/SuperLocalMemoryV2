@@ -105,7 +105,7 @@ SuperLocalMemory V2 is an **intelligent ai memory system** that makes AI assista
 ### Core Concepts
 | Guide | Description |
 |-------|-------------|
-| [[Universal-Architecture]] | 10-layer universal architecture with MCP + A2A integration |
+| [[Architecture-V2.5]] | Universal architecture with MCP + A2A integration |
 | [[MCP-Integration]] | Model Context Protocol support for 17+ IDEs |
 | [[Universal-Skills]] | 7 agent skills and slash-commands system |
 | [[Knowledge-Graph-Guide]] | Auto-discovery of relationships |

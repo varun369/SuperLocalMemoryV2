@@ -588,7 +588,7 @@ Or visit the [GitHub repository](https://github.com/varun369/SuperLocalMemoryV2/
 ## 🔗 Related Pages
 
 - [[MCP-Integration]] - Learn about MCP-based access
-- [[Universal-Architecture]] - Understand the 7-layer architecture
+- [[Architecture-V2.5]] - Understand the 7-layer architecture
 - [[Installation]] - Setup guide
 - [[CLI-Command-Reference]] - CLI commands reference
 - [[Home]] - Back to wiki home

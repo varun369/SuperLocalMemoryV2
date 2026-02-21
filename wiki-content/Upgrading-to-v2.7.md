@@ -351,7 +351,7 @@ No. v2.7 does not alter `memory.db` in any way. It creates a separate `learning.
 
 ### Will my search results change immediately?
 
-Slightly. Phase 1 (baseline) creates a synthetic model from your existing memory patterns, so there may be minor re-ranking differences from day one. The changes are designed to be improvements — surfacing more relevant results. If results seem worse, you can disable learning (see [[Learning-System#disabling-the-learning-system]]).
+Slightly. Phase 1 (baseline) creates a synthetic model from your existing memory patterns, so there may be minor re-ranking differences from day one. The changes are designed to be improvements — surfacing more relevant results. If results seem worse, you can disable learning (see [[Pattern-Learning-Explained#disabling-learning]]).
 
 ### Do I need to provide feedback for the system to work?
 
@@ -363,7 +363,7 @@ Yes. LightGBM is an open-source gradient boosting framework by Microsoft, widely
 
 ### How much disk space does the learning database use?
 
-Typically under 5 MB after a year of use. See the [[Learning-System#troubleshooting]] section for details.
+Typically under 5 MB after a year of use. See the [[Pattern-Learning-Explained#troubleshooting]] section for details.
 
 ### Can I use v2.7 without the learning features?
 
@@ -373,7 +373,7 @@ Yes. Set `"learning": { "enabled": false }` in `config.json`. Everything works e
 
 ## Related Pages
 
-- [[Learning-System]] - Complete guide to the learning system
+- [[Pattern-Learning-Explained]] - Complete guide to the learning system
 - [[Pattern-Learning-Explained]] - How v2.0 pattern detection works (enhanced by v2.7)
 - [[Installation]] - Fresh installation guide
 - [[CLI-Cheatsheet]] - Full command reference
