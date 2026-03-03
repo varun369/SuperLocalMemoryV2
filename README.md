@@ -557,7 +557,6 @@ SuperLocalMemory is part of **Qualixar**, a suite of open-source tools for build
 | Product | What It Does |
 |---------|-------------|
 | **SuperLocalMemory** | Local-first AI agent memory |
-| **AgentAssert** | Behavioral contracts for AI agents |
 | **SkillFortify** | Agent skill supply chain security |
 
 ---
