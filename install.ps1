@@ -169,8 +169,9 @@ if (Test-Path $setupValidatorPath) {
         # Fallback: create basic database
         & python -c @"
 import sqlite3
+import os
 from pathlib import Path
-db_path = Path.home() / '.claude-memory' / 'memory.db'
+db_path = Path(os.environ.get('SL_MEMORY_PATH', str(Path.home() / '.claude-memory'))) / 'memory.db'
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 cursor.execute('''CREATE TABLE IF NOT EXISTS memories (
@@ -228,8 +229,9 @@ Write-Host "Initializing advanced features..."
 # Add sample memories if database is empty (for first-time users)
 $memoryCount = & python -c @"
 import sqlite3
+import os
 from pathlib import Path
-db_path = Path.home() / '.claude-memory' / 'memory.db'
+db_path = Path(os.environ.get('SL_MEMORY_PATH', str(Path.home() / '.claude-memory'))) / 'memory.db'
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 cursor.execute('SELECT COUNT(*) FROM memories')
@@ -261,8 +263,9 @@ try {
     & python "$INSTALL_DIR\pattern_learner.py" update 2>$null | Out-Null
     $patternCount = & python -c @"
 import sqlite3
+import os
 from pathlib import Path
-db_path = Path.home() / '.claude-memory' / 'memory.db'
+db_path = Path(os.environ.get('SL_MEMORY_PATH', str(Path.home() / '.claude-memory'))) / 'memory.db'
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 cursor.execute('SELECT COUNT(*) FROM identity_patterns')

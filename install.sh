@@ -258,8 +258,7 @@ echo "✓ Directories created"
 if [ ! -f "${INSTALL_DIR}/audit.db" ]; then
     python3 -c "
 import sqlite3
-from pathlib import Path
-audit_path = Path.home() / '.claude-memory' / 'audit.db'
+audit_path = '${INSTALL_DIR}/audit.db'
 conn = sqlite3.connect(audit_path)
 cursor = conn.cursor()
 cursor.execute('''CREATE TABLE IF NOT EXISTS audit_events (
@@ -298,8 +297,7 @@ else
     # Fallback: create basic tables
     python3 -c "
 import sqlite3
-from pathlib import Path
-db_path = Path.home() / '.claude-memory' / 'memory.db'
+db_path = '${INSTALL_DIR}/memory.db'
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 cursor.execute('''CREATE TABLE IF NOT EXISTS memories (
@@ -486,8 +484,8 @@ else
 fi
 
 # Check if PATH already configured
-PATH_EXPORT="export PATH=\"\${HOME}/.claude-memory/bin:\${PATH}\""
-if grep -q ".claude-memory/bin" "${SHELL_CONFIG}" 2>/dev/null; then
+PATH_EXPORT="export PATH=\"${INSTALL_DIR}/bin:\${PATH}\""
+if grep -q "${INSTALL_DIR}/bin" "${SHELL_CONFIG}" 2>/dev/null; then
     echo "○ PATH already configured in ${SHELL_CONFIG}"
 else
     # Add PATH export to shell config
@@ -498,7 +496,7 @@ else
 fi
 
 # Add to current session PATH
-export PATH="${HOME}/.claude-memory/bin:${PATH}"
+export PATH="${INSTALL_DIR}/bin:${PATH}"
 echo "✓ Commands available in current session"
 
 # ============================================================================
