@@ -16,8 +16,8 @@ const path = require('path');
 const os = require('os');
 const fs = require('fs');
 
-// Installation directory
-const SLM_DIR = path.join(os.homedir(), '.claude-memory');
+// Installation directory (SL_MEMORY_PATH overrides default)
+const SLM_DIR = process.env.SL_MEMORY_PATH || path.join(os.homedir(), '.claude-memory');
 
 // Check if SuperLocalMemory is installed
 if (!fs.existsSync(SLM_DIR)) {

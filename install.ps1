@@ -15,7 +15,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$INSTALL_DIR = Join-Path $env:USERPROFILE ".claude-memory"
+$INSTALL_DIR = if ($env:SL_MEMORY_PATH) { $env:SL_MEMORY_PATH } else { Join-Path $env:USERPROFILE ".claude-memory" }
 $REPO_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # Auto-detect non-interactive environment
@@ -122,6 +122,35 @@ if (Test-Path $uiServerPath) {
     Write-Host "OK UI server copied" -ForegroundColor Green
 }
 
+# Copy security middleware (required by ui_server.py)
+$securityMiddlewarePath = Join-Path $REPO_DIR "security_middleware.py"
+if (Test-Path $securityMiddlewarePath) {
+    Copy-Item -Path $securityMiddlewarePath -Destination $INSTALL_DIR -Force
+    Write-Host "OK Security middleware copied" -ForegroundColor Green
+}
+
+# Copy routes (required by ui_server.py)
+$routesDir = Join-Path $REPO_DIR "routes"
+$installRoutesDir = Join-Path $INSTALL_DIR "routes"
+if (Test-Path $routesDir) {
+    if (-not (Test-Path $installRoutesDir)) {
+        New-Item -ItemType Directory -Path $installRoutesDir -Force | Out-Null
+    }
+    Copy-Item -Path (Join-Path $routesDir "*") -Destination $installRoutesDir -Recurse -Force
+    Write-Host "OK Routes copied" -ForegroundColor Green
+}
+
+# Copy UI assets (required by ui_server.py)
+$uiDir = Join-Path $REPO_DIR "ui"
+$installUiDir = Join-Path $INSTALL_DIR "ui"
+if (Test-Path $uiDir) {
+    if (-not (Test-Path $installUiDir)) {
+        New-Item -ItemType Directory -Path $installUiDir -Force | Out-Null
+    }
+    Copy-Item -Path (Join-Path $uiDir "*") -Destination $installUiDir -Recurse -Force
+    Write-Host "OK UI assets copied" -ForegroundColor Green
+}
+
 # Copy MCP server
 $mcpServerPath = Join-Path $REPO_DIR "mcp_server.py"
 if (Test-Path $mcpServerPath) {
@@ -169,8 +198,9 @@ if (Test-Path $setupValidatorPath) {
         # Fallback: create basic database
         & python -c @"
 import sqlite3
+import os
 from pathlib import Path
-db_path = Path.home() / '.claude-memory' / 'memory.db'
+db_path = Path(os.environ.get('SL_MEMORY_PATH') or str(Path.home() / '.claude-memory')) / 'memory.db'
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 cursor.execute('''CREATE TABLE IF NOT EXISTS memories (
@@ -228,8 +258,9 @@ Write-Host "Initializing advanced features..."
 # Add sample memories if database is empty (for first-time users)
 $memoryCount = & python -c @"
 import sqlite3
+import os
 from pathlib import Path
-db_path = Path.home() / '.claude-memory' / 'memory.db'
+db_path = Path(os.environ.get('SL_MEMORY_PATH') or str(Path.home() / '.claude-memory')) / 'memory.db'
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 cursor.execute('SELECT COUNT(*) FROM memories')
@@ -261,8 +292,9 @@ try {
     & python "$INSTALL_DIR\pattern_learner.py" update 2>$null | Out-Null
     $patternCount = & python -c @"
 import sqlite3
+import os
 from pathlib import Path
-db_path = Path.home() / '.claude-memory' / 'memory.db'
+db_path = Path(os.environ.get('SL_MEMORY_PATH') or str(Path.home() / '.claude-memory')) / 'memory.db'
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 cursor.execute('SELECT COUNT(*) FROM identity_patterns')

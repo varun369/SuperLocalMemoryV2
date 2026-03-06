@@ -8,7 +8,7 @@
 
 set -e
 
-INSTALL_DIR="${HOME}/.claude-memory"
+INSTALL_DIR="${SL_MEMORY_PATH:-${HOME}/.claude-memory}"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 
 # Parse command line arguments
@@ -214,6 +214,11 @@ if [ -f "${REPO_DIR}/ui_server.py" ]; then
     echo "✓ UI server copied"
 fi
 
+if [ -f "${REPO_DIR}/security_middleware.py" ]; then
+    cp "${REPO_DIR}/security_middleware.py" "${INSTALL_DIR}/"
+    echo "✓ Security middleware copied"
+fi
+
 if [ -d "${REPO_DIR}/ui" ]; then
     mkdir -p "${INSTALL_DIR}/ui/js"
     cp "${REPO_DIR}/ui/index.html" "${INSTALL_DIR}/ui/" 2>/dev/null || true
@@ -258,8 +263,7 @@ echo "✓ Directories created"
 if [ ! -f "${INSTALL_DIR}/audit.db" ]; then
     python3 -c "
 import sqlite3
-from pathlib import Path
-audit_path = Path.home() / '.claude-memory' / 'audit.db'
+audit_path = '${INSTALL_DIR}/audit.db'
 conn = sqlite3.connect(audit_path)
 cursor = conn.cursor()
 cursor.execute('''CREATE TABLE IF NOT EXISTS audit_events (
@@ -298,8 +302,7 @@ else
     # Fallback: create basic tables
     python3 -c "
 import sqlite3
-from pathlib import Path
-db_path = Path.home() / '.claude-memory' / 'memory.db'
+db_path = '${INSTALL_DIR}/memory.db'
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 cursor.execute('''CREATE TABLE IF NOT EXISTS memories (
@@ -399,8 +402,7 @@ echo "Initializing advanced features..."
 # Add sample memories if database is empty (for first-time users)
 MEMORY_COUNT=$(python3 -c "
 import sqlite3
-from pathlib import Path
-db_path = Path.home() / '.claude-memory' / 'memory.db'
+db_path = '${INSTALL_DIR}/memory.db'
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 cursor.execute('SELECT COUNT(*) FROM memories')
@@ -428,8 +430,7 @@ echo "○ Learning patterns..."
 if python3 "${INSTALL_DIR}/pattern_learner.py" update > /dev/null 2>&1; then
     PATTERN_COUNT=$(python3 -c "
 import sqlite3
-from pathlib import Path
-db_path = Path.home() / '.claude-memory' / 'memory.db'
+db_path = '${INSTALL_DIR}/memory.db'
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 cursor.execute('SELECT COUNT(*) FROM identity_patterns')
@@ -486,8 +487,8 @@ else
 fi
 
 # Check if PATH already configured
-PATH_EXPORT="export PATH=\"\${HOME}/.claude-memory/bin:\${PATH}\""
-if grep -q ".claude-memory/bin" "${SHELL_CONFIG}" 2>/dev/null; then
+PATH_EXPORT="export PATH=\"${INSTALL_DIR}/bin:\${PATH}\""
+if grep -Fq -- "${INSTALL_DIR}/bin" "${SHELL_CONFIG}" 2>/dev/null; then
     echo "○ PATH already configured in ${SHELL_CONFIG}"
 else
     # Add PATH export to shell config
@@ -498,7 +499,7 @@ else
 fi
 
 # Add to current session PATH
-export PATH="${HOME}/.claude-memory/bin:${PATH}"
+export PATH="${INSTALL_DIR}/bin:${PATH}"
 echo "✓ Commands available in current session"
 
 # ============================================================================
@@ -932,7 +933,7 @@ case "$INSTALL_CHOICE" in
         echo "  pip3 install -r ${REPO_DIR}/requirements-search.txt"
         echo ""
         echo "Start Web Dashboard:"
-        echo "  python3 ~/.claude-memory/ui_server.py"
+        echo "  python3 ${INSTALL_DIR}/ui_server.py"
         echo "  Then open: http://localhost:8000"
         ;;
 esac

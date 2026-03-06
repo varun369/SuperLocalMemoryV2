@@ -20,6 +20,9 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
+_script_dir = str(Path(__file__).parent.resolve())
+sys.path = [p for p in sys.path if p not in ("", _script_dir)]
+
 try:
     from fastapi import FastAPI
     from fastapi.staticfiles import StaticFiles
@@ -32,6 +35,8 @@ except ImportError:
         "FastAPI dependencies not installed. "
         "Install with: pip install 'fastapi[all]' uvicorn websockets"
     )
+
+sys.path.insert(0, _script_dir)
 
 from security_middleware import SecurityHeadersMiddleware
 
@@ -50,7 +55,7 @@ app = FastAPI(
     description="Real-Time Memory Dashboard with Event Bus, Agent Registry, and Trust Scoring",
     version="2.5.0",
     docs_url="/api/docs",
-    redoc_url="/api/redoc"
+    redoc_url="/api/redoc",
 )
 
 # Middleware (order matters: security headers should be outermost)
@@ -59,9 +64,9 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:8765",    # Dashboard
+        "http://localhost:8765",  # Dashboard
         "http://127.0.0.1:8765",
-        "http://localhost:8417",    # MCP
+        "http://localhost:8417",  # MCP
         "http://127.0.0.1:8417",
     ],
     allow_credentials=True,
@@ -84,10 +89,11 @@ try:
         allowed, remaining = limiter.is_allowed(client_ip)
         if not allowed:
             from fastapi.responses import JSONResponse
+
             return JSONResponse(
                 status_code=429,
                 content={"error": "Too many requests. Please slow down."},
-                headers={"Retry-After": str(limiter.window)}
+                headers={"Retry-After": str(limiter.window)},
             )
 
         response = await call_next(request)
@@ -107,9 +113,12 @@ try:
         headers = dict(request.headers)
         if not check_api_key(headers, is_write=is_write):
             from fastapi.responses import JSONResponse
+
             return JSONResponse(
                 status_code=401,
-                content={"error": "Invalid or missing API key. Set X-SLM-API-Key header."}
+                content={
+                    "error": "Invalid or missing API key. Set X-SLM-API-Key header."
+                },
             )
         response = await call_next(request)
         return response
@@ -136,6 +145,7 @@ from routes.ws import router as ws_router, manager as ws_manager
 # v2.7 Learning routes (graceful)
 try:
     from routes.learning import router as learning_router
+
     LEARNING_ROUTES = True
 except ImportError:
     LEARNING_ROUTES = False
@@ -154,18 +164,21 @@ if LEARNING_ROUTES:
 # v2.8 routes (graceful — don't fail if engines unavailable)
 try:
     from routes.lifecycle import router as lifecycle_router
+
     app.include_router(lifecycle_router)
 except ImportError:
     pass
 
 try:
     from routes.behavioral import router as behavioral_router
+
     app.include_router(behavioral_router)
 except ImportError:
     pass
 
 try:
     from routes.compliance import router as compliance_router
+
     app.include_router(compliance_router)
 except ImportError:
     pass
@@ -173,12 +186,14 @@ except ImportError:
 # Wire WebSocket manager into routes that need broadcast capability
 import routes.profiles as _profiles_mod
 import routes.data_io as _data_io_mod
+
 _profiles_mod.ws_manager = ws_manager
 _data_io_mod.ws_manager = ws_manager
 
 # ============================================================================
 # Basic Routes (root page + health check)
 # ============================================================================
+
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -206,13 +221,14 @@ async def health_check():
         "status": "healthy",
         "version": "2.5.0",
         "database": "connected" if DB_PATH.exists() else "missing",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
 
 
 # ============================================================================
 # Startup Events
 # ============================================================================
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -229,8 +245,12 @@ if __name__ == "__main__":
     import socket
 
     parser = argparse.ArgumentParser(description="SuperLocalMemory V2 - Web Dashboard")
-    parser.add_argument("--port", type=int, default=8765, help="Port to run on (default 8765)")
-    parser.add_argument("--profile", type=str, default=None, help="Memory profile to use")
+    parser.add_argument(
+        "--port", type=int, default=8765, help="Port to run on (default 8765)"
+    )
+    parser.add_argument(
+        "--profile", type=str, default=None, help="Memory profile to use"
+    )
     args = parser.parse_args()
 
     def find_available_port(preferred):
