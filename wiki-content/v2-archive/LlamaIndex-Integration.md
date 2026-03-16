@@ -111,7 +111,7 @@ store.set_messages("session-1", [
 
 ## Links
 
-- [GitHub Repository](https://github.com/varun369/SuperLocalMemoryV2)
+- [GitHub Repository](https://github.com/qualixar/superlocalmemory)
 - [Full Documentation](https://superlocalmemory.com/)
 - [LangChain Integration](LangChain-Integration)
-- [Example Script](https://github.com/varun369/SuperLocalMemoryV2/blob/main/examples/llamaindex_example.py)
+- [Example Script](https://github.com/qualixar/superlocalmemory/blob/main/examples/llamaindex_example.py)

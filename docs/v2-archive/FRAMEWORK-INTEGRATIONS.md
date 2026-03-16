@@ -287,8 +287,8 @@ superlocalmemoryv2-profile create work
 
 ## Learn More
 
-- **[LangChain Wiki Guide](https://github.com/varun369/SuperLocalMemoryV2/wiki/LangChain-Integration)** — Full integration tutorial
-- **[LlamaIndex Wiki Guide](https://github.com/varun369/SuperLocalMemoryV2/wiki/LlamaIndex-Integration)** — Complete setup guide
+- **[LangChain Wiki Guide](https://github.com/qualixar/superlocalmemory/wiki/LangChain-Integration)** — Full integration tutorial
+- **[LlamaIndex Wiki Guide](https://github.com/qualixar/superlocalmemory/wiki/LlamaIndex-Integration)** — Complete setup guide
 - **[API Reference](API-REFERENCE.md)** — Python API documentation
 - **[Profiles Guide](PROFILES-GUIDE.md)** — Multi-context management
 

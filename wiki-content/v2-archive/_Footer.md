@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>SuperLocalMemory v2.7.4</strong> — Your AI Learns You<br/>
-  <a href="https://github.com/varun369/SuperLocalMemoryV2">GitHub</a> •
+  <a href="https://github.com/qualixar/superlocalmemory">GitHub</a> •
   <a href="https://buymeacoffee.com/varunpratah">Support</a> •
   <a href="https://github.com/varun369">@varun369</a><br/>
   <em>100% local. 100% private. 100% free.</em><br/>

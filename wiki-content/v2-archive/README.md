@@ -70,7 +70,7 @@ See `DEPLOYMENT-CHECKLIST.md` for step-by-step deployment instructions.
 
 **Quick Deploy:**
 
-1. Go to https://github.com/varun369/SuperLocalMemoryV2/wiki
+1. Go to https://github.com/qualixar/superlocalmemory/wiki
 2. Update existing pages (Home, Installation, FAQ)
 3. Rename 4-Layer-Architecture → Universal-Architecture
 4. Create new pages (MCP-Integration, Universal-Skills)
@@ -113,7 +113,7 @@ These are documentation files for reference only:
 
 **Creator:** Varun Pratap Bhardwaj
 **GitHub:** https://github.com/varun369
-**Project:** https://github.com/varun369/SuperLocalMemoryV2
+**Project:** https://github.com/qualixar/superlocalmemory
 **License:** MIT
 
 ---

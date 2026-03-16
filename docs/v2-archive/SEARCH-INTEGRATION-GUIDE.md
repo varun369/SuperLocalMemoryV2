@@ -494,7 +494,7 @@ pip install scikit-learn numpy
 - [API Reference](API-REFERENCE.md)
 - [Main README](../README.md)
 
-**Issues:** [GitHub Issues](https://github.com/varun369/SuperLocalMemoryV2/issues)
+**Issues:** [GitHub Issues](https://github.com/qualixar/superlocalmemory/issues)
 
 ---
 

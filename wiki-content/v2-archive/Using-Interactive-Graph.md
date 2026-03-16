@@ -176,7 +176,7 @@ _(Planned for v2.6.6)_
 ## Feedback
 
 Found a bug? Have a feature request? Open an issue:
-https://github.com/varun369/SuperLocalMemoryV2/issues
+https://github.com/qualixar/superlocalmemory/issues
 
 ---
 

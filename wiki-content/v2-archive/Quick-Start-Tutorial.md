@@ -23,8 +23,8 @@ Before starting, ensure you have:
 
 ```bash
 # Clone repository
-git clone https://github.com/varun369/SuperLocalMemoryV2.git
-cd SuperLocalMemoryV2
+git clone https://github.com/qualixar/superlocalmemory.git
+cd superlocalmemory
 
 # Install
 ./install.sh
@@ -33,8 +33,8 @@ cd SuperLocalMemoryV2
 ### Windows (PowerShell)
 
 ```powershell
-git clone https://github.com/varun369/SuperLocalMemoryV2.git
-cd SuperLocalMemoryV2
+git clone https://github.com/qualixar/superlocalmemory.git
+cd superlocalmemory
 .\install.ps1
 ```
 
@@ -496,9 +496,9 @@ Congratulations! You've completed the quick start tutorial.
 
 ### Get Help
 
-- **Issues**: [GitHub Issues](https://github.com/varun369/SuperLocalMemoryV2/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/varun369/SuperLocalMemoryV2/discussions)
-- **Wiki**: [Complete Documentation](https://github.com/varun369/SuperLocalMemoryV2/wiki)
+- **Issues**: [GitHub Issues](https://github.com/qualixar/superlocalmemory/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/qualixar/superlocalmemory/discussions)
+- **Wiki**: [Complete Documentation](https://github.com/qualixar/superlocalmemory/wiki)
 
 ---
 
@@ -665,7 +665,7 @@ source ~/.bashrc
 ls -la ~/.claude-memory/memory.db
 
 # If missing, reinstall
-cd SuperLocalMemoryV2
+cd superlocalmemory
 ./install.sh
 ```
 
@@ -703,4 +703,4 @@ You've learned how to:
 **Created by Varun Pratap Bhardwaj**
 *Solution Architect • SuperLocalMemory*
 
-[GitHub](https://github.com/varun369/SuperLocalMemoryV2) • [Issues](https://github.com/varun369/SuperLocalMemoryV2/issues) • [Wiki](https://github.com/varun369/SuperLocalMemoryV2/wiki)
+[GitHub](https://github.com/qualixar/superlocalmemory) • [Issues](https://github.com/qualixar/superlocalmemory/issues) • [Wiki](https://github.com/qualixar/superlocalmemory/wiki)

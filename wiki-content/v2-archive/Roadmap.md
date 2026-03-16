@@ -21,7 +21,7 @@ SuperLocalMemory transforms from passive storage to active coordination layer.
 - ✅ **Dashboard: Live Events tab** — Real-time event stream with color-coded types, filtering, stats
 - ✅ **Dashboard: Agents tab** — Connected agents table, trust overview, signal breakdown
 
-See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
+See [CHANGELOG.md](https://github.com/qualixar/superlocalmemory/blob/main/CHANGELOG.md) for full details.
 
 ---
 
@@ -34,7 +34,7 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 - ✅ Community summaries — structured reports for every cluster (key topics, projects, hierarchy)
 - ✅ Full documentation updates across README, wiki, and website
 
-See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
+See [CHANGELOG.md](https://github.com/qualixar/superlocalmemory/blob/main/CHANGELOG.md) for full details.
 
 ---
 
@@ -49,7 +49,7 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 - ✅ Full profile isolation across all API endpoints (graph, clusters, patterns, timeline)
 - ✅ UI overhaul: Settings tab, column sorting, enhanced patterns view
 
-See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
+See [CHANGELOG.md](https://github.com/qualixar/superlocalmemory/blob/main/CHANGELOG.md) for full details.
 
 ---
 
@@ -57,7 +57,7 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 
 **Patch Releases: ChatGPT Connector, SessionStart Hook, Smart Truncation**
 
-See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for details.
+See [CHANGELOG.md](https://github.com/qualixar/superlocalmemory/blob/main/CHANGELOG.md) for details.
 
 ---
 
@@ -75,7 +75,7 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 - ✅ MCP troubleshooting guide
 - ✅ Shell completions (bash/zsh)
 
-See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
+See [CHANGELOG.md](https://github.com/qualixar/superlocalmemory/blob/main/CHANGELOG.md) for full details.
 
 ---
 
@@ -116,7 +116,7 @@ Adaptive, local-only learning with personalized re-ranking.
 
 **Totals:** 12 MCP tools, 6 resources, 2 prompts, 7 skills
 
-See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
+See [CHANGELOG.md](https://github.com/qualixar/superlocalmemory/blob/main/CHANGELOG.md) for full details.
 
 ---
 
@@ -127,7 +127,7 @@ See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHAN
 - ✅ **Interactive graph visualization** — Zoom, pan, click, hover, multiple layouts, cluster filtering
 - ✅ **Security hardening** — Trust enforcement, rate limiting, protection against injection, profile isolation
 
-See [CHANGELOG.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) for full details.
+See [CHANGELOG.md](https://github.com/qualixar/superlocalmemory/blob/main/CHANGELOG.md) for full details.
 
 ---
 
@@ -280,10 +280,10 @@ Automatic recall of relevant memories based on what you're currently working on.
 ### How to Request Features
 
 **Open an issue:**
-https://github.com/varun369/SuperLocalMemoryV2/issues
+https://github.com/qualixar/superlocalmemory/issues
 
 **Start a discussion:**
-https://github.com/varun369/SuperLocalMemoryV2/discussions
+https://github.com/qualixar/superlocalmemory/discussions
 
 ---
 
@@ -310,7 +310,7 @@ https://github.com/varun369/SuperLocalMemoryV2/discussions
 - Build REST API server
 - Multi-language support
 
-**See:** [CONTRIBUTING.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CONTRIBUTING.md)
+**See:** [CONTRIBUTING.md](https://github.com/qualixar/superlocalmemory/blob/main/CONTRIBUTING.md)
 
 #### 2. Documentation
 
@@ -367,20 +367,20 @@ https://github.com/varun369/SuperLocalMemoryV2/discussions
 ## Related Pages
 
 - [Quick Start Tutorial](Quick-Start-Tutorial) - Get started
-- [CHANGELOG](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) - Detailed version history
+- [CHANGELOG](https://github.com/qualixar/superlocalmemory/blob/main/CHANGELOG.md) - Detailed version history
 - [Comparison Deep Dive](Comparison-Deep-Dive) - vs other solutions
 - [Why Local Matters](Why-Local-Matters) - Privacy philosophy
-- [CONTRIBUTING](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CONTRIBUTING.md) - How to contribute
+- [CONTRIBUTING](https://github.com/qualixar/superlocalmemory/blob/main/CONTRIBUTING.md) - How to contribute
 
 ---
 
 **Questions about the roadmap?**
 
-Open a discussion: https://github.com/varun369/SuperLocalMemoryV2/discussions
+Open a discussion: https://github.com/qualixar/superlocalmemory/discussions
 
 ---
 
 **Created by Varun Pratap Bhardwaj**
 *Solution Architect • SuperLocalMemory*
 
-[GitHub](https://github.com/varun369/SuperLocalMemoryV2) • [Issues](https://github.com/varun369/SuperLocalMemoryV2/issues) • [Wiki](https://github.com/varun369/SuperLocalMemoryV2/wiki)
+[GitHub](https://github.com/qualixar/superlocalmemory) • [Issues](https://github.com/qualixar/superlocalmemory/issues) • [Wiki](https://github.com/qualixar/superlocalmemory/wiki)

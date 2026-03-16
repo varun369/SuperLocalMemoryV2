@@ -795,7 +795,7 @@ server = Server(host="127.0.0.1", port=0)  # Localhost only
 **Solution:**
 ```bash
 # Recreate default config
-cd ~/path/to/SuperLocalMemoryV2
+cd ~/path/to/superlocalmemory
 ./install.sh
 ```
 
@@ -839,4 +839,4 @@ source ~/.bashrc  # or ~/.zshrc
 **Created by Varun Pratap Bhardwaj**
 *Solution Architect • SuperLocalMemory*
 
-[GitHub](https://github.com/varun369/SuperLocalMemoryV2) • [Issues](https://github.com/varun369/SuperLocalMemoryV2/issues) • [Wiki](https://github.com/varun369/SuperLocalMemoryV2/wiki)
+[GitHub](https://github.com/qualixar/superlocalmemory) • [Issues](https://github.com/qualixar/superlocalmemory/issues) • [Wiki](https://github.com/qualixar/superlocalmemory/wiki)

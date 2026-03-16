@@ -6,7 +6,7 @@
  * Solution Architect & Original Creator
  *
  * Licensed under MIT License (see LICENSE file)
- * Repository: https://github.com/varun369/SuperLocalMemoryV2
+ * Repository: https://github.com/qualixar/superlocalmemory
  *
  * ATTRIBUTION REQUIRED: This notice must be preserved in all copies.
  */
@@ -19,7 +19,7 @@ const fs = require('fs');
 console.log('\n════════════════════════════════════════════════════════════');
 console.log('  SuperLocalMemory V2 - Post-Installation');
 console.log('  by Varun Pratap Bhardwaj');
-console.log('  https://github.com/varun369/SuperLocalMemoryV2');
+console.log('  https://github.com/qualixar/superlocalmemory');
 console.log('════════════════════════════════════════════════════════════\n');
 
 // Detect if this is a global install
@@ -117,8 +117,8 @@ console.log('  slm status');
 console.log('  slm help\n');
 
 console.log('Documentation:');
-console.log('  README: https://github.com/varun369/SuperLocalMemoryV2');
-console.log('  Wiki: https://github.com/varun369/SuperLocalMemoryV2/wiki');
+console.log('  README: https://github.com/qualixar/superlocalmemory');
+console.log('  Wiki: https://github.com/qualixar/superlocalmemory/wiki');
 console.log('  Local: ~/.claude-memory/\n');
 
 console.log('MCP Integration:');

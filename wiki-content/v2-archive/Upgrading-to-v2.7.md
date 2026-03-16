@@ -67,7 +67,7 @@ npm install -g superlocalmemory@2.7.0
 
 ```bash
 # Navigate to your clone
-cd SuperLocalMemoryV2
+cd superlocalmemory
 
 # Pull latest
 git pull origin main
@@ -283,7 +283,7 @@ slm status
 ### Git Rollback
 
 ```bash
-cd SuperLocalMemoryV2
+cd superlocalmemory
 
 # Check out the v2.6.5 tag
 git checkout v2.6.5
@@ -384,4 +384,4 @@ Yes. Set `"learning": { "enabled": false }` in `config.json`. Everything works e
 **Created by Varun Pratap Bhardwaj**
 *Solution Architect - SuperLocalMemory*
 
-[GitHub](https://github.com/varun369/SuperLocalMemoryV2) | [Issues](https://github.com/varun369/SuperLocalMemoryV2/issues) | [Wiki](https://github.com/varun369/SuperLocalMemoryV2/wiki)
+[GitHub](https://github.com/qualixar/superlocalmemory) | [Issues](https://github.com/qualixar/superlocalmemory/issues) | [Wiki](https://github.com/qualixar/superlocalmemory/wiki)

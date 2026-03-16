@@ -84,12 +84,12 @@ python3 generate-videos.py
 
 ### GitHub Video Embedding
 ```markdown
-https://github.com/varun369/SuperLocalMemoryV2/assets/videos/installation-walkthrough.mp4
+https://github.com/qualixar/superlocalmemory/assets/videos/installation-walkthrough.mp4
 ```
 
 ### Documentation Links
 ```markdown
-[Watch Installation Guide](https://github.com/varun369/SuperLocalMemoryV2/blob/main/assets/videos/installation-walkthrough.mp4)
+[Watch Installation Guide](https://github.com/qualixar/superlocalmemory/blob/main/assets/videos/installation-walkthrough.mp4)
 ```
 
 ## Regeneration

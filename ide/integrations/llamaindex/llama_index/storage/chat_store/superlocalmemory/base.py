@@ -39,8 +39,8 @@ try:
 except ImportError as exc:
     raise ImportError(
         "SuperLocalMemory V2 is not installed. "
-        "Run: curl -fsSL https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/install.sh | bash\n"
-        "Or visit: https://github.com/varun369/SuperLocalMemoryV2"
+        "Run: curl -fsSL https://raw.githubusercontent.com/qualixar/superlocalmemory/main/install.sh | bash\n"
+        "Or visit: https://github.com/qualixar/superlocalmemory"
     ) from exc
 
 

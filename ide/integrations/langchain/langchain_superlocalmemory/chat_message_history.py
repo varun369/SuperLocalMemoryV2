@@ -61,7 +61,7 @@ def _ensure_slm_imported():
     except ImportError as exc:
         raise ImportError(
             "SuperLocalMemory V2 is not installed. "
-            "Run the installer from https://github.com/varun369/SuperLocalMemoryV2 "
+            "Run the installer from https://github.com/qualixar/superlocalmemory "
             "or ensure ~/.claude-memory/memory_store_v2.py exists."
         ) from exc
 

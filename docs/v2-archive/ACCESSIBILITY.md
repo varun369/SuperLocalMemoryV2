@@ -282,7 +282,7 @@ var lastFocusedElement = null;         // For modal focus return
 
 If you encounter accessibility issues, please report them:
 
-- **GitHub Issues:** https://github.com/varun369/SuperLocalMemoryV2/issues
+- **GitHub Issues:** https://github.com/qualixar/superlocalmemory/issues
 - **Label:** Use `accessibility` tag
 - **Include:** Browser, screen reader (if applicable), and steps to reproduce
 

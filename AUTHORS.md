@@ -13,4 +13,4 @@ Varun Pratap Bhardwaj ([@varun369](https://github.com/varun369)) — Solution Ar
 
 ## Contributors
 
-See [GitHub contributors](https://github.com/varun369/SuperLocalMemoryV2/graphs/contributors).
+See [GitHub contributors](https://github.com/qualixar/superlocalmemory/graphs/contributors).

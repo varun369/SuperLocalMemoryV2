@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to SuperLocalMemory V2 will be documented in this file.
+All notable changes to SuperLocalMemory V3 will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Varun Pratap Bhardwaj**
 *Solution Architect*
 
-SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
+SuperLocalMemory V3 - Intelligent local memory system for AI coding assistants.
 
 ---
 
@@ -302,7 +302,7 @@ SuperLocalMemory now works across 16+ IDEs and CLI tools.
 
 ### Initial Release — Complete Rewrite
 
-SuperLocalMemory V2 represents a complete architectural rewrite with intelligent knowledge graphs, pattern learning, and enhanced organization.
+SuperLocalMemory V3 represents a complete architectural rewrite with intelligent knowledge graphs, pattern learning, and enhanced organization.
 
 ### Added
 - **4-Layer Architecture** — Storage, Hierarchical Index, Knowledge Graph, Pattern Learning
@@ -329,7 +329,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ## License
 
-SuperLocalMemory V2 is released under the [MIT License](LICENSE).
+SuperLocalMemory V3 is released under the [MIT License](LICENSE).
 
 ---
 

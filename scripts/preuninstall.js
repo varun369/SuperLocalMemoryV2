@@ -6,7 +6,7 @@
  * Solution Architect & Original Creator
  *
  * Licensed under MIT License (see LICENSE file)
- * Repository: https://github.com/varun369/SuperLocalMemoryV2
+ * Repository: https://github.com/qualixar/superlocalmemory
  *
  * ATTRIBUTION REQUIRED: This notice must be preserved in all copies.
  */

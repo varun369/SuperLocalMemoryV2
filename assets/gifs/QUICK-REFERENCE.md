@@ -41,7 +41,7 @@
 
 ### GitHub Wiki (raw URL)
 ```markdown
-![Demo](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/cli-demo.gif)
+![Demo](https://raw.githubusercontent.com/qualixar/superlocalmemory/main/assets/gifs/cli-demo.gif)
 ```
 
 ### Website (Astro)

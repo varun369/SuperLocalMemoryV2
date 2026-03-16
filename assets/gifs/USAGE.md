@@ -75,11 +75,11 @@ Subscribe to events via WebSocket, SSE, or HTTP webhooks.
 
 Navigate through all dashboard features:
 
-![Dashboard Navigation](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/dashboard-tabs.gif)
+![Dashboard Navigation](https://raw.githubusercontent.com/qualixar/superlocalmemory/main/assets/gifs/dashboard-tabs.gif)
 
 ## Real-Time Events (v2.5+)
 
-![Event Stream](https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/assets/gifs/event-stream.gif)
+![Event Stream](https://raw.githubusercontent.com/qualixar/superlocalmemory/main/assets/gifs/event-stream.gif)
 ```
 
 ## In Presentations

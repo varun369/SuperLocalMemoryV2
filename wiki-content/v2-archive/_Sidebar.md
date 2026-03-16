@@ -39,7 +39,7 @@
 - [[Python-API]]
 - [[Configuration]]
 - [[Performance-Benchmarks]]
-- [CHANGELOG](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md)
+- [CHANGELOG](https://github.com/qualixar/superlocalmemory/blob/main/CHANGELOG.md)
 
 ---
 
@@ -52,15 +52,15 @@
 ### 👥 Community
 - [[FAQ]]
 - [[Roadmap]]
-- [Troubleshooting](https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/MCP-TROUBLESHOOTING.md)
-- [Contributing](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CONTRIBUTING.md)
+- [Troubleshooting](https://github.com/qualixar/superlocalmemory/blob/main/docs/MCP-TROUBLESHOOTING.md)
+- [Contributing](https://github.com/qualixar/superlocalmemory/blob/main/CONTRIBUTING.md)
 
 ---
 
 ### 🔗 Links
-- [GitHub Repo](https://github.com/varun369/SuperLocalMemoryV2)
-- [Report Issue](https://github.com/varun369/SuperLocalMemoryV2/issues)
-- [Discussions](https://github.com/varun369/SuperLocalMemoryV2/discussions)
+- [GitHub Repo](https://github.com/qualixar/superlocalmemory)
+- [Report Issue](https://github.com/qualixar/superlocalmemory/issues)
+- [Discussions](https://github.com/qualixar/superlocalmemory/discussions)
 
 ---
 

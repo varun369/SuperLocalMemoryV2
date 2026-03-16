@@ -764,8 +764,8 @@ Plus **2 MCP prompts** and **6 MCP resources** for advanced use.
 
 1. **Check logs:** Most IDEs have MCP server logs in their developer tools
 2. **Test manually:** Run `python3 ~/.claude-memory/mcp_server.py` to see errors
-3. **GitHub Issues:** https://github.com/varun369/SuperLocalMemoryV2/issues
-4. **Documentation:** https://github.com/varun369/SuperLocalMemoryV2
+3. **GitHub Issues:** https://github.com/qualixar/superlocalmemory/issues
+4. **Documentation:** https://github.com/qualixar/superlocalmemory
 
 ---
 

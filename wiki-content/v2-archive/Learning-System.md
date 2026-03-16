@@ -316,4 +316,4 @@ slm switch-profile frontend-work
 **Created by Varun Pratap Bhardwaj**
 *Solution Architect • SuperLocalMemory*
 
-[GitHub](https://github.com/varun369/SuperLocalMemoryV2) • [Issues](https://github.com/varun369/SuperLocalMemoryV2/issues) • [Wiki](https://github.com/varun369/SuperLocalMemoryV2/wiki)
+[GitHub](https://github.com/qualixar/superlocalmemory) • [Issues](https://github.com/qualixar/superlocalmemory/issues) • [Wiki](https://github.com/qualixar/superlocalmemory/wiki)

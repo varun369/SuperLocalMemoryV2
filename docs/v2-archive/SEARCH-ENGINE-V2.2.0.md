@@ -744,6 +744,6 @@ MIT License - See [LICENSE](../LICENSE) file
 
 ---
 
-**Project:** [SuperLocalMemory V2](https://github.com/varun369/SuperLocalMemoryV2)
-**Documentation:** [Full Docs](https://github.com/varun369/SuperLocalMemoryV2/wiki)
-**Issues:** [Report Issues](https://github.com/varun369/SuperLocalMemoryV2/issues)
+**Project:** [SuperLocalMemory V2](https://github.com/qualixar/superlocalmemory)
+**Documentation:** [Full Docs](https://github.com/qualixar/superlocalmemory/wiki)
+**Issues:** [Report Issues](https://github.com/qualixar/superlocalmemory/issues)

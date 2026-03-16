@@ -33,7 +33,7 @@ Quick reference for deploying updated wiki pages to GitHub.
 
 ### Step 1: Navigate to GitHub Wiki
 
-1. Go to: https://github.com/varun369/SuperLocalMemoryV2/wiki
+1. Go to: https://github.com/qualixar/superlocalmemory/wiki
 2. Click "Edit" on the sidebar (or "New Page")
 
 ### Step 2: Update Existing Pages
@@ -262,13 +262,13 @@ After wiki deployment, update main README.md:
 ```markdown
 ## 📚 Documentation
 
-Visit our **[comprehensive wiki](https://github.com/varun369/SuperLocalMemoryV2/wiki)** with v2.1.0 documentation:
+Visit our **[comprehensive wiki](https://github.com/qualixar/superlocalmemory/wiki)** with v2.1.0 documentation:
 
-- [Getting Started](https://github.com/varun369/SuperLocalMemoryV2/wiki/Installation)
-- [MCP Integration](https://github.com/varun369/SuperLocalMemoryV2/wiki/MCP-Integration) - Setup for 11+ IDEs
-- [Universal Skills](https://github.com/varun369/SuperLocalMemoryV2/wiki/Universal-Skills) - 6 slash-commands
-- [Universal Architecture](https://github.com/varun369/SuperLocalMemoryV2/wiki/Universal-Architecture) - 7-layer system
-- [FAQ](https://github.com/varun369/SuperLocalMemoryV2/wiki/FAQ)
+- [Getting Started](https://github.com/qualixar/superlocalmemory/wiki/Installation)
+- [MCP Integration](https://github.com/qualixar/superlocalmemory/wiki/MCP-Integration) - Setup for 11+ IDEs
+- [Universal Skills](https://github.com/qualixar/superlocalmemory/wiki/Universal-Skills) - 6 slash-commands
+- [Universal Architecture](https://github.com/qualixar/superlocalmemory/wiki/Universal-Architecture) - 7-layer system
+- [FAQ](https://github.com/qualixar/superlocalmemory/wiki/FAQ)
 ```
 
 ### Announce Update
@@ -284,7 +284,7 @@ The SuperLocalMemory wiki has been completely updated with v2.1.0 documentation:
 ✅ Updated: [Universal Architecture](wiki/Universal-Architecture) - Now 7 layers
 ✅ Updated: All pages with v2.1.0 features
 
-Check it out: https://github.com/varun369/SuperLocalMemoryV2/wiki
+Check it out: https://github.com/qualixar/superlocalmemory/wiki
 ```
 
 ---

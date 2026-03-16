@@ -867,8 +867,8 @@ SuperLocalMemory V2's architecture provides:
 - [CLI Commands Reference](CLI-COMMANDS-REFERENCE.md)
 - [MCP Troubleshooting](MCP-TROUBLESHOOTING.md)
 - [Universal Integration Guide](UNIVERSAL-INTEGRATION.md)
-- [Wiki: Knowledge Graph Guide](https://github.com/varun369/SuperLocalMemoryV2/wiki/Knowledge-Graph-Guide)
-- [Wiki: Pattern Learning](https://github.com/varun369/SuperLocalMemoryV2/wiki/Pattern-Learning-Explained)
+- [Wiki: Knowledge Graph Guide](https://github.com/qualixar/superlocalmemory/wiki/Knowledge-Graph-Guide)
+- [Wiki: Pattern Learning](https://github.com/qualixar/superlocalmemory/wiki/Pattern-Learning-Explained)
 
 ---
 

@@ -119,7 +119,7 @@ ls -la ~/.claude-memory/pattern_learner.py
 **Fix:**
 1. Verify installation:
    ```bash
-   cd ~/path/to/SuperLocalMemoryV2
+   cd ~/path/to/superlocalmemory
    ./install.sh
    ```
 
@@ -298,7 +298,7 @@ ls -la ~/.claude-memory/*.py
 
 **If files missing:**
 ```bash
-cd ~/path/to/SuperLocalMemoryV2-repo
+cd ~/path/to/superlocalmemory-repo
 ./install.sh
 ```
 
@@ -714,7 +714,7 @@ If auto-configuration fails completely, manually add to your IDE's config:
 2. ✅ **Test server manually:** `python3 ~/.claude-memory/mcp_server.py`
 3. ✅ **Verify config is valid JSON**
 4. ✅ **Try manual configuration** (see above)
-5. ✅ **Search existing issues:** https://github.com/varun369/SuperLocalMemoryV2/issues
+5. ✅ **Search existing issues:** https://github.com/qualixar/superlocalmemory/issues
 
 ### Opening an Issue
 

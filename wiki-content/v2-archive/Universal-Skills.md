@@ -42,7 +42,7 @@ All skills use the `slm-*` prefix for consistency:
 The `install-skills.sh` script automatically detects and configures skills for supported IDEs:
 
 ```bash
-cd SuperLocalMemoryV2
+cd superlocalmemory
 ./install-skills.sh
 ```
 
@@ -545,7 +545,7 @@ All three save to the **same memory**, queryable by all methods.
 
 **Solution:** Reinstall skills:
 ```bash
-cd SuperLocalMemoryV2
+cd superlocalmemory
 ./install-skills.sh --force
 ```
 
@@ -581,7 +581,7 @@ For complete documentation of each skill, see:
 - `skills/slm-switch-profile/SKILL.md`
 - `skills/slm-show-patterns/SKILL.md`
 
-Or visit the [GitHub repository](https://github.com/varun369/SuperLocalMemoryV2/tree/main/skills).
+Or visit the [GitHub repository](https://github.com/qualixar/superlocalmemory/tree/main/skills).
 
 ---
 

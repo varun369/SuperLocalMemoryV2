@@ -461,12 +461,12 @@ cp -r ~/.claude-memory/ ~/.claude-memory.backup/
 
 # Soft reset (clear memories, keep structure)
 rm ~/.claude-memory/memory.db
-cd ~/path/to/SuperLocalMemoryV2
+cd ~/path/to/superlocalmemory
 ./install.sh
 
 # Hard reset (complete removal)
 rm -rf ~/.claude-memory/
-cd ~/path/to/SuperLocalMemoryV2
+cd ~/path/to/superlocalmemory
 ./install.sh
 ```
 
@@ -502,4 +502,4 @@ cd ~/path/to/SuperLocalMemoryV2
 **Created by Varun Pratap Bhardwaj**
 *Solution Architect • SuperLocalMemory*
 
-[GitHub](https://github.com/varun369/SuperLocalMemoryV2) • [Issues](https://github.com/varun369/SuperLocalMemoryV2/issues) • [Wiki](https://github.com/varun369/SuperLocalMemoryV2/wiki)
+[GitHub](https://github.com/qualixar/superlocalmemory) • [Issues](https://github.com/qualixar/superlocalmemory/issues) • [Wiki](https://github.com/qualixar/superlocalmemory/wiki)

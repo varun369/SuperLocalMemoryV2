@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://superlocalmemory.com/">🌐 Official Website</a> •
-  <a href="https://github.com/varun369/SuperLocalMemoryV2">⭐ Star on GitHub</a> •
+  <a href="https://github.com/qualixar/superlocalmemory">⭐ Star on GitHub</a> •
   <a href="https://buymeacoffee.com/varunpratah">☕ Buy Me a Coffee</a> •
   <a href="https://paypal.me/varunpratapbhardwaj">💸 PayPal</a>
 </p>
@@ -62,7 +62,7 @@
 >
 > **Upgrade:** `npm install -g superlocalmemory@latest`
 >
-> [[Universal Architecture|Universal-Architecture]] | [[Roadmap|Roadmap]] | [Full Changelog](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md)
+> [[Universal Architecture|Universal-Architecture]] | [[Roadmap|Roadmap]] | [Full Changelog](https://github.com/qualixar/superlocalmemory/blob/main/CHANGELOG.md)
 
 ---
 
@@ -127,7 +127,7 @@ SuperLocalMemory is an **intelligent ai memory system** that makes AI assistants
 | [[CLI-Cheatsheet]] | Quick command reference |
 | [[Python-API]] | Programmatic access |
 | [[Configuration]] | Customization options |
-| [CHANGELOG](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CHANGELOG.md) | Version history and release notes |
+| [CHANGELOG](https://github.com/qualixar/superlocalmemory/blob/main/CHANGELOG.md) | Version history and release notes |
 
 ### Comparisons
 | Guide | Description |
@@ -140,9 +140,9 @@ SuperLocalMemory is an **intelligent ai memory system** that makes AI assistants
 |-------|-------------|
 | [[FAQ]] | Frequently asked questions |
 | [[Roadmap]] | Version history and planned features |
-| [Troubleshooting](https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/MCP-TROUBLESHOOTING.md) | Common issues and solutions |
-| [Contributing](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CONTRIBUTING.md) | How to contribute |
-| [Issues](https://github.com/varun369/SuperLocalMemoryV2/issues) | Report bugs or request features |
+| [Troubleshooting](https://github.com/qualixar/superlocalmemory/blob/main/docs/MCP-TROUBLESHOOTING.md) | Common issues and solutions |
+| [Contributing](https://github.com/qualixar/superlocalmemory/blob/main/CONTRIBUTING.md) | How to contribute |
+| [Issues](https://github.com/qualixar/superlocalmemory/issues) | Report bugs or request features |
 
 ---
 
@@ -191,12 +191,12 @@ superlocalmemoryv2-recall "auth bug"
 
 ```bash
 # Mac/Linux
-git clone https://github.com/varun369/SuperLocalMemoryV2.git
-cd SuperLocalMemoryV2 && ./install.sh
+git clone https://github.com/qualixar/superlocalmemory.git
+cd superlocalmemory && ./install.sh
 
 # Windows
-git clone https://github.com/varun369/SuperLocalMemoryV2.git
-cd SuperLocalMemoryV2; .\install.ps1
+git clone https://github.com/qualixar/superlocalmemory.git
+cd superlocalmemory; .\install.ps1
 ```
 
 **That's it.** No Docker. No API keys. No cloud accounts.
@@ -238,7 +238,7 @@ Building open-source tools that make AI assistants actually useful for developer
 
 If SuperLocalMemory saves you time:
 
-- ⭐ [Star on GitHub](https://github.com/varun369/SuperLocalMemoryV2) — helps others discover it
+- ⭐ [Star on GitHub](https://github.com/qualixar/superlocalmemory) — helps others discover it
 - ☕ [Buy Me a Coffee](https://buymeacoffee.com/varunpratah) — fuel development
 - 💸 [PayPal](https://paypal.me/varunpratapbhardwaj) — direct support
 - 💖 [GitHub Sponsors](https://github.com/sponsors/varun369) — recurring support
@@ -254,5 +254,5 @@ If SuperLocalMemory saves you time:
 
 **🌐 Official Website:** [superlocalmemory.com](https://superlocalmemory.com/)
 **📦 NPM Package:** [npmjs.com/package/superlocalmemory](https://www.npmjs.com/package/superlocalmemory)
-**📖 Documentation:** [GitHub Wiki](https://github.com/varun369/SuperLocalMemoryV2/wiki)
-**💬 Support:** [GitHub Issues](https://github.com/varun369/SuperLocalMemoryV2/issues)
+**📖 Documentation:** [GitHub Wiki](https://github.com/qualixar/superlocalmemory/wiki)
+**💬 Support:** [GitHub Issues](https://github.com/qualixar/superlocalmemory/issues)

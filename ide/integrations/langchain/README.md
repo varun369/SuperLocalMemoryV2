@@ -1,13 +1,13 @@
 # langchain-superlocalmemory
 
-LangChain chat message history backed by [SuperLocalMemory V2](https://github.com/varun369/SuperLocalMemoryV2) -- 100% local, zero cloud.
+LangChain chat message history backed by [SuperLocalMemory V2](https://github.com/qualixar/superlocalmemory) -- 100% local, zero cloud.
 
 Every message stays on your machine in a SQLite database. No API keys, no subscriptions, no telemetry.
 
 ## Prerequisites
 
 - Python 3.10+
-- [SuperLocalMemory V2](https://github.com/varun369/SuperLocalMemoryV2) installed (`~/.claude-memory/` must exist)
+- [SuperLocalMemory V2](https://github.com/qualixar/superlocalmemory) installed (`~/.claude-memory/` must exist)
 - `langchain-core >= 1.0.0`
 
 ## Installation
@@ -101,6 +101,6 @@ MIT -- see [LICENSE](../../LICENSE) for details.
 
 ## Links
 
-- [SuperLocalMemory V2 Repository](https://github.com/varun369/SuperLocalMemoryV2)
+- [SuperLocalMemory V2 Repository](https://github.com/qualixar/superlocalmemory)
 - [Documentation](https://superlocalmemory.com/)
 - [LangChain Documentation](https://python.langchain.com/)

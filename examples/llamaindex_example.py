@@ -12,7 +12,7 @@ Usage:
 
 Requirements:
     pip install llama-index-core
-    SuperLocalMemory V2 installed (https://github.com/varun369/SuperLocalMemoryV2)
+    SuperLocalMemory V2 installed (https://github.com/qualixar/superlocalmemory)
 """
 import os
 import sys

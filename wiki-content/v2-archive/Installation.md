@@ -59,10 +59,10 @@ slm remember "Your first memory"
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/varun369/SuperLocalMemoryV2.git
+git clone https://github.com/qualixar/superlocalmemory.git
 
 # 2. Enter directory
-cd SuperLocalMemoryV2
+cd superlocalmemory
 
 # 3. Run installer
 ./install.sh
@@ -84,10 +84,10 @@ slm status
 
 ```powershell
 # 1. Clone the repository
-git clone https://github.com/varun369/SuperLocalMemoryV2.git
+git clone https://github.com/qualixar/superlocalmemory.git
 
 # 2. Enter directory
-cd SuperLocalMemoryV2
+cd superlocalmemory
 
 # 3. Run installer (Run PowerShell as Administrator)
 .\install.ps1
@@ -308,7 +308,7 @@ slm recall "test"  # Test functionality
 
 ```bash
 # Pull latest changes
-cd SuperLocalMemoryV2
+cd superlocalmemory
 git pull origin main
 
 # Re-run installer

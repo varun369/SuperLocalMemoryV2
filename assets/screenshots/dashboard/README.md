@@ -172,4 +172,4 @@ Copyright © 2026 Varun Pratap Bhardwaj
 Licensed under MIT License
 
 Creator: Varun Pratap Bhardwaj
-Repository: https://github.com/varun369/SuperLocalMemoryV2
+Repository: https://github.com/qualixar/superlocalmemory

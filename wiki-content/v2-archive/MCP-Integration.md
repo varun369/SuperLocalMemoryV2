@@ -70,8 +70,8 @@ These IDEs require manual configuration (see detailed steps below):
 ### Step 1: Install SuperLocalMemory
 
 ```bash
-git clone https://github.com/varun369/SuperLocalMemoryV2.git
-cd SuperLocalMemoryV2
+git clone https://github.com/qualixar/superlocalmemory.git
+cd superlocalmemory
 ./install.sh
 ```
 
@@ -435,7 +435,7 @@ mkdir -p ~/.cursor
 mkdir -p ~/.windsurf
 ```
 
-[[More troubleshooting: MCP-TROUBLESHOOTING.md →]](https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/MCP-TROUBLESHOOTING.md)
+[[More troubleshooting: MCP-TROUBLESHOOTING.md →]](https://github.com/qualixar/superlocalmemory/blob/main/docs/MCP-TROUBLESHOOTING.md)
 
 ---
 
@@ -443,7 +443,7 @@ mkdir -p ~/.windsurf
 
 For detailed manual setup instructions for all IDEs, see:
 
-**[docs/MCP-MANUAL-SETUP.md](https://github.com/varun369/SuperLocalMemoryV2/blob/main/docs/MCP-MANUAL-SETUP.md)**
+**[docs/MCP-MANUAL-SETUP.md](https://github.com/qualixar/superlocalmemory/blob/main/docs/MCP-MANUAL-SETUP.md)**
 
 Includes:
 - Step-by-step configuration for each IDE

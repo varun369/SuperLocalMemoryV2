@@ -16,8 +16,8 @@ SuperLocalMemory V2 now works across **16+ IDEs and CLI tools** with automatic d
 
 ### Step 1: Install
 ```bash
-git clone https://github.com/varun369/SuperLocalMemoryV2.git
-cd SuperLocalMemoryV2
+git clone https://github.com/qualixar/superlocalmemory.git
+cd superlocalmemory
 ./install.sh
 ```
 
@@ -481,7 +481,7 @@ python3 ~/.claude-memory/mcp_server.py --transport http --port 8001
 
 ---
 
-**Questions?** Open an issue: https://github.com/varun369/SuperLocalMemoryV2/issues
+**Questions?** Open an issue: https://github.com/qualixar/superlocalmemory/issues
 
 **Version:** 2.4.1
 **Author:** Varun Pratap Bhardwaj

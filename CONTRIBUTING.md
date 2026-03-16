@@ -1,6 +1,6 @@
-# Contributing to SuperLocalMemory V2
+# Contributing to SuperLocalMemory V3
 
-Thank you for considering contributing to SuperLocalMemory V2! This document provides guidelines and instructions for contributing to the project.
+Thank you for considering contributing to SuperLocalMemory V3! This document provides guidelines and instructions for contributing to the project.
 
 ---
 
@@ -641,7 +641,7 @@ Maintainers are responsible for:
 
 ## License
 
-By contributing to SuperLocalMemory V2, you agree that your contributions will be licensed under the MIT License.
+By contributing to SuperLocalMemory V3, you agree that your contributions will be licensed under the MIT License.
 
 See [LICENSE](LICENSE) for details.
 
@@ -679,7 +679,7 @@ See [LICENSE](LICENSE) for details.
 **Varun Pratap Bhardwaj**
 *Solution Architect*
 
-SuperLocalMemory V2 - Intelligent local memory system for AI coding assistants.
+SuperLocalMemory V3 - Intelligent local memory system for AI coding assistants.
 
 ---
 
@@ -691,6 +691,6 @@ Don't hesitate to ask! We're here to help.
 - Start a discussion
 - Reach out to maintainers
 
-**Thank you for contributing to SuperLocalMemory V2!**
+**Thank you for contributing to SuperLocalMemory V3!**
 
 Your contributions help make intelligent, local-first memory accessible to everyone.

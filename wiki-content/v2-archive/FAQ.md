@@ -417,7 +417,7 @@ pip install scikit-learn
 
 ### How can I contribute?
 
-See [Contributing](https://github.com/varun369/SuperLocalMemoryV2/blob/main/CONTRIBUTING.md) for guidelines. Areas we need help:
+See [Contributing](https://github.com/qualixar/superlocalmemory/blob/main/CONTRIBUTING.md) for guidelines. Areas we need help:
 - Performance optimizations
 - Graph visualization UI
 - Additional pattern categories
@@ -433,15 +433,15 @@ Yes! See [[Roadmap]] for upcoming features.
 
 ### Where do I report bugs?
 
-[GitHub Issues](https://github.com/varun369/SuperLocalMemoryV2/issues)
+[GitHub Issues](https://github.com/qualixar/superlocalmemory/issues)
 
 ### Where can I ask questions?
 
-[GitHub Discussions](https://github.com/varun369/SuperLocalMemoryV2/discussions)
+[GitHub Discussions](https://github.com/qualixar/superlocalmemory/discussions)
 
 ### How can I support the project?
 
-- ⭐ [Star on GitHub](https://github.com/varun369/SuperLocalMemoryV2)
+- ⭐ [Star on GitHub](https://github.com/qualixar/superlocalmemory)
 - ☕ [Buy Me a Coffee](https://buymeacoffee.com/varunpratah)
 - 💸 [PayPal](https://paypal.me/varunpratapbhardwaj)
 - 💖 [GitHub Sponsors](https://github.com/sponsors/varun369)

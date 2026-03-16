@@ -96,7 +96,7 @@ personal = SuperLocalMemoryChatMessageHistory(session_id="personal-blog")
 
 ## Links
 
-- [GitHub Repository](https://github.com/varun369/SuperLocalMemoryV2)
+- [GitHub Repository](https://github.com/qualixar/superlocalmemory)
 - [Full Documentation](https://superlocalmemory.com/)
 - [LlamaIndex Integration](LlamaIndex-Integration)
-- [Example Script](https://github.com/varun369/SuperLocalMemoryV2/blob/main/examples/langchain_example.py)
+- [Example Script](https://github.com/qualixar/superlocalmemory/blob/main/examples/langchain_example.py)

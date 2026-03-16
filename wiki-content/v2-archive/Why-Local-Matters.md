@@ -501,8 +501,8 @@ Personal.AI:        $1,980
 
 **SuperLocalMemory setup:**
 ```bash
-git clone https://github.com/varun369/SuperLocalMemoryV2.git
-cd SuperLocalMemoryV2
+git clone https://github.com/qualixar/superlocalmemory.git
+cd superlocalmemory
 ./install.sh
 ```
 
@@ -617,4 +617,4 @@ Estimated: ~5-10 Wh per 1000 memories stored/year
 **Created by Varun Pratap Bhardwaj**
 *Solution Architect • SuperLocalMemory*
 
-[GitHub](https://github.com/varun369/SuperLocalMemoryV2) • [Issues](https://github.com/varun369/SuperLocalMemoryV2/issues) • [Wiki](https://github.com/varun369/SuperLocalMemoryV2/wiki)
+[GitHub](https://github.com/qualixar/superlocalmemory) • [Issues](https://github.com/qualixar/superlocalmemory/issues) • [Wiki](https://github.com/qualixar/superlocalmemory/wiki)

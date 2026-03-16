@@ -1,6 +1,6 @@
 # LlamaIndex Chat Store — SuperLocalMemory V2
 
-A LlamaIndex `BaseChatStore` implementation backed by [SuperLocalMemory V2](https://github.com/varun369/SuperLocalMemoryV2). All chat history stays **100% local** on your machine — zero cloud calls, zero telemetry, zero API keys.
+A LlamaIndex `BaseChatStore` implementation backed by [SuperLocalMemory V2](https://github.com/qualixar/superlocalmemory). All chat history stays **100% local** on your machine — zero cloud calls, zero telemetry, zero API keys.
 
 ## Prerequisites
 
@@ -9,7 +9,7 @@ A LlamaIndex `BaseChatStore` implementation backed by [SuperLocalMemory V2](http
 
 ```bash
 # Install SuperLocalMemory V2 (one-time)
-curl -fsSL https://raw.githubusercontent.com/varun369/SuperLocalMemoryV2/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/qualixar/superlocalmemory/main/install.sh | bash
 ```
 
 ## Installation
@@ -76,6 +76,6 @@ chat_store = SuperLocalMemoryChatStore(db_path="/path/to/custom/memory.db")
 
 ## Links
 
-- [SuperLocalMemory V2](https://github.com/varun369/SuperLocalMemoryV2)
+- [SuperLocalMemory V2](https://github.com/qualixar/superlocalmemory)
 - [LlamaIndex Documentation](https://docs.llamaindex.ai/)
 - [LlamaIndex Chat Stores Guide](https://docs.llamaindex.ai/en/stable/module_guides/storing/chat_stores/)
