@@ -47,7 +47,7 @@ SuperLocalMemory V3 offers three operating modes. Choose based on your privacy r
 
 **Who it's for:** Developers who prioritize accuracy over privacy. Teams with approved cloud AI policies. Research and benchmarking.
 
-**Benchmark:** ~78% on LoCoMo (competitive with funded systems).
+**Benchmark:** 87.7% on LoCoMo conv-30 (competitive with funded systems like EverMemOS 92.3%).
 
 **Note:** Data is sent to the cloud provider you configure. Ensure your organization's policies allow this.
 

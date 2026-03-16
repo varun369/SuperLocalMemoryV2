@@ -139,13 +139,13 @@ superlocalmemory/
 
 Evaluated on the LoCoMo conversational memory benchmark:
 
-| Configuration | Single-hop | Multi-hop | Temporal | Open-domain | Aggregate |
-|:-------|:--:|:--:|:--:|:--:|:--:|
-| **Mode A Raw (Zero-LLM)** | 57.5% | 43.0% | 63.0% | 72.0% | **60.4%** |
-| **Mode A Retrieval** | 72.0% | 70.3% | 80.0% | 85.0% | **74.8%** |
-| **Mode C (Cloud)** | 64.0% | 100% | — | 86.0% | **87.7%** |
+| Configuration | Micro Avg | Multi-Hop | Open Domain |
+|:-------|:--:|:--:|:--:|
+| **Mode A (Zero-LLM, all layers)** | **62.3%** | **50%** | **78%** |
+| **Mode A (math layers off)** | 59.3% | 38% | 70% |
+| **Mode C (Cloud, full power)** | **87.7%** | — | — |
 
-Mathematical layers contribute +12.7pp average improvement over the engineering baseline across six conversations.
+Mathematical layers contribute +12.7pp average improvement over the engineering baseline across six conversations. Multi-hop sees the largest gain: 50% vs 38% (+12pp).
 
 Full methodology and results in the [V3 paper](https://zenodo.org/records/19038659).
 

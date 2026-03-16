@@ -54,7 +54,26 @@ document.getElementById('recall-lab-search')?.addEventListener('click', function
             var maxChannel = Math.max(channels.semantic || 0, channels.bm25 || 0, channels.entity_graph || 0, channels.temporal || 0) || 1;
 
             var item = document.createElement('div');
-            item.className = 'list-group-item';
+            item.className = 'list-group-item list-group-item-action';
+            item.style.cursor = 'pointer';
+            item.title = 'Click to view full memory';
+            (function(result) {
+                item.addEventListener('click', function() {
+                    if (typeof openMemoryDetail === 'function') {
+                        openMemoryDetail({
+                            id: result.fact_id,
+                            content: result.content,
+                            score: result.score,
+                            importance: Math.round((result.confidence || 0.5) * 10),
+                            category: 'recall',
+                            tags: Object.keys(result.channel_scores || {}).join(', '),
+                            created_at: null,
+                            trust_score: result.trust_score,
+                            channel_scores: result.channel_scores
+                        });
+                    }
+                });
+            })(r);
 
             var header = document.createElement('h6');
             header.className = 'mb-1';

@@ -112,15 +112,19 @@ if (pipInstall(coreDeps, 'core')) {
 }
 
 // Search dependencies (IMPORTANT — enables semantic search, 4-channel retrieval)
-const searchDeps = ['sentence-transformers>=2.5.0', 'geoopt>=0.5.0'];
+const searchDeps = ['sentence-transformers>=2.5.0', 'einops>=0.7.0', 'geoopt>=0.5.0'];
 
 console.log('\nInstalling semantic search engine (downloads ~500MB on first use)...');
 if (pipInstall(searchDeps, 'search')) {
-    console.log('✓ Semantic search engine installed (sentence-transformers + Fisher-Rao)');
+    console.log('✓ Semantic search engine installed (sentence-transformers + einops + Fisher-Rao)');
+    console.log('');
+    console.log('  Note: The embedding model (nomic-ai/nomic-embed-text-v1.5, ~500MB)');
+    console.log('  will download automatically on first use (slm remember / slm recall).');
+    console.log('  To pre-download now, run: slm warmup');
 } else {
     console.log('⚠ Semantic search installation failed (BM25 keyword search still works).');
     console.log('  For full 4-channel retrieval, run:');
-    console.log('  pip install sentence-transformers geoopt');
+    console.log('  pip install sentence-transformers einops geoopt');
 }
 
 // --- Step 4: Detect V2 installation ---

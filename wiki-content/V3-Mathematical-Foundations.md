@@ -67,21 +67,17 @@ This catches contradictions that no pairwise method can detect.
 
 Each row disables one component of the full system. Delta denotes the change in accuracy relative to the full system.
 
-| Configuration | LoCoMo (%) | Delta (pp) |
-|:-------------|:-----:|:------:|
-| **Full system** | **60.4** | — |
-| − Fisher metric | 49.6 | −10.8 |
-| − Sheaf consistency | 58.7 | −1.7 |
-| − All math layers | 52.8 | −7.6 |
-| − BM25 channel | 53.9 | −6.5 |
-| − Entity graph | 59.4 | −1.0 |
-| − Temporal channel | 60.2 | −0.2 |
-| − Cross-encoder | 29.7 | −30.7 |
+| Configuration | Micro Avg (%) | Multi-Hop | Open Domain | Delta (pp) |
+|:-------------|:-----:|:-----:|:-----:|:------:|
+| **Full system (all layers)** | **62.3** | **50%** | **78%** | — |
+| − Math layers off | 59.3 | 38% | 70% | −3.0 |
+| − Entity channel off | 56.8 | 38% | 73% | −5.5 |
+| − BM25 channel off | 53.2 | 23% | 71% | −9.1 |
+| − Cross-encoder off | 31.8 | 17% | — | −30.5 |
 
 **Key findings:**
-- Cross-encoder reranking is the single largest contributor (−30.7pp when removed)
-- Fisher metric removal causes −10.8pp — the largest single mathematical layer effect
-- All three mathematical layers contribute −7.6pp in aggregate on this conversation
+- Cross-encoder reranking is the single largest contributor (−30.5pp when removed)
+- Math layers contribute +3.0pp aggregate; the effect is strongest on multi-hop (+12pp: 50% vs 38%)
 - Across six conversations, mathematical layers average +12.7pp improvement over the engineering baseline, reaching +19.9pp on the most challenging dialogues
 
 ---

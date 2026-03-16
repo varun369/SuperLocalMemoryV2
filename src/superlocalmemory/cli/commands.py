@@ -29,6 +29,8 @@ def dispatch(args: Namespace) -> None:
         "status": cmd_status,
         "health": cmd_health,
         "trace": cmd_trace,
+        "warmup": cmd_warmup,
+        "dashboard": cmd_dashboard,
         "profile": cmd_profile,
     }
     handler = handlers.get(args.command)
@@ -214,6 +216,78 @@ def cmd_trace(args: Namespace) -> None:
         if hasattr(r, "channel_scores") and r.channel_scores:
             for ch, sc in r.channel_scores.items():
                 print(f"       {ch}: {sc:.3f}")
+
+
+def cmd_warmup(_args: Namespace) -> None:
+    """Pre-download the embedding model so first use is instant."""
+    print("Downloading embedding model (nomic-ai/nomic-embed-text-v1.5)...")
+    print("This is ~500MB and only needed once.\n")
+
+    try:
+        from superlocalmemory.core.config import EmbeddingConfig
+        from superlocalmemory.core.embeddings import EmbeddingService
+
+        config = EmbeddingConfig()
+        svc = EmbeddingService(config)
+
+        # Force model load (triggers download)
+        if svc.is_available:
+            # Verify it works
+            emb = svc.embed("warmup test")
+            if emb and len(emb) == config.dimension:
+                print(f"\nModel ready: {config.model_name} ({config.dimension}-dim)")
+                print("Semantic search is fully operational.")
+            else:
+                print("\nModel loaded but embedding verification failed.")
+                print("Run: pip install sentence-transformers einops")
+        else:
+            print("\nModel could not load.")
+            print("Install dependencies: pip install sentence-transformers einops torch")
+    except ImportError as exc:
+        print(f"\nMissing dependency: {exc}")
+        print("Install with: pip install sentence-transformers einops torch")
+    except Exception as exc:
+        print(f"\nWarmup failed: {exc}")
+        print("Check your internet connection and try again.")
+
+
+def cmd_dashboard(args: Namespace) -> None:
+    """Launch the web dashboard."""
+    try:
+        import uvicorn
+    except ImportError:
+        print("Dashboard requires: pip install 'fastapi[all]' uvicorn")
+        sys.exit(1)
+
+    import socket
+
+    port = getattr(args, "port", 8765)
+
+    def _find_port(preferred: int) -> int:
+        for p in [preferred] + list(range(preferred + 1, preferred + 20)):
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.bind(("127.0.0.1", p))
+                    return p
+            except OSError:
+                continue
+        return preferred
+
+    ui_port = _find_port(port)
+    if ui_port != port:
+        print(f"  Port {port} in use — using {ui_port} instead")
+
+    print("=" * 60)
+    print("  SuperLocalMemory V3 — Web Dashboard")
+    print("=" * 60)
+    print(f"  Dashboard:  http://localhost:{ui_port}")
+    print(f"  API Docs:   http://localhost:{ui_port}/api/docs")
+    print("  Press Ctrl+C to stop\n")
+
+    from superlocalmemory.server.ui import create_app
+
+    app = create_app()
+    uvicorn.run(app, host="127.0.0.1", port=ui_port, log_level="info")
 
 
 def cmd_profile(args: Namespace) -> None:

@@ -42,6 +42,8 @@ from superlocalmemory.storage.models import (
 class _MockEmbedder:
     """Deterministic mock embedder: text -> 768-dim vector via hashing."""
 
+    is_available = True
+
     def __init__(self, dimension: int = 768) -> None:
         self.dimension = dimension
 

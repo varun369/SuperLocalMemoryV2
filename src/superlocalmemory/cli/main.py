@@ -67,6 +67,15 @@ def main() -> None:
     trace_p = sub.add_parser("trace", help="Recall with channel breakdown")
     trace_p.add_argument("query", help="Search query")
 
+    # Warmup (pre-download model)
+    sub.add_parser("warmup", help="Pre-download embedding model (~500MB)")
+
+    # Dashboard
+    dashboard_p = sub.add_parser("dashboard", help="Open web dashboard")
+    dashboard_p.add_argument(
+        "--port", type=int, default=8765, help="Port (default 8765)",
+    )
+
     # Profiles
     profile_p = sub.add_parser("profile", help="Profile management")
     profile_p.add_argument(

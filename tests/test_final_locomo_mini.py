@@ -54,6 +54,8 @@ class _MockEmbedder:
     No ML models loaded. No network calls. ~0.1ms per embed.
     """
 
+    is_available = True
+
     def __init__(self, dimension: int = 768) -> None:
         self.dimension = dimension
 

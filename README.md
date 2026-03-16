@@ -95,6 +95,16 @@ Query  ──►  Strategy Classifier  ──►  4 Parallel Channels:
 
 > All Python dependencies are installed automatically during `npm install`. You don't need to run pip manually. If any dependency fails, the installer shows clear instructions.
 
+### What Gets Installed Automatically
+
+| Component | Size | When |
+|:----------|:-----|:-----|
+| Core math libraries (numpy, scipy, networkx) | ~50MB | During `npm install` |
+| Search engine (sentence-transformers, einops, torch) | ~200MB | During `npm install` |
+| Embedding model (nomic-ai/nomic-embed-text-v1.5) | ~500MB | On first use OR `slm warmup` |
+
+**If any dependency fails during install**, the installer prints the exact `pip install` command to fix it. BM25 keyword search works even without embeddings — you're never fully blocked.
+
 ---
 
 ## Quick Start
@@ -107,14 +117,17 @@ npm install -g superlocalmemory
 
 This single command:
 - Installs the V3 engine and CLI
-- Auto-installs all Python dependencies (numpy, scipy, networkx, sentence-transformers, etc.)
+- Auto-installs all Python dependencies (numpy, scipy, networkx, sentence-transformers, einops, torch, etc.)
 - Creates the data directory at `~/.superlocalmemory/`
 - Detects and guides V2 migration if applicable
 
-Then configure:
+Then configure and pre-download the embedding model:
 ```bash
-slm setup    # Choose mode, configure provider
+slm setup     # Choose mode, configure provider
+slm warmup    # Pre-download embedding model (~500MB, optional)
 ```
+
+> **First time?** If you skip `slm warmup`, the model downloads automatically on first `slm remember` or `slm recall`. Either way works.
 
 ### Install via pip
 

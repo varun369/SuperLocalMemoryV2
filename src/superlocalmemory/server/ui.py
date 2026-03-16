@@ -17,9 +17,12 @@ All route handlers live in routes/ directory:
     routes/ws.py        -- /ws/updates (WebSocket)
 """
 
+import logging
 import sys
 from pathlib import Path
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 _script_dir = str(Path(__file__).parent.resolve())
 sys.path = [p for p in sys.path if p not in ("", _script_dir)]

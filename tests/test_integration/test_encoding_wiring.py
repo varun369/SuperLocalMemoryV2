@@ -44,6 +44,8 @@ from superlocalmemory.storage.models import Mode
 # ---------------------------------------------------------------------------
 
 class _MockEmbedder:
+    is_available = True
+
     def __init__(self, dimension: int = 768) -> None:
         self.dimension = dimension
 

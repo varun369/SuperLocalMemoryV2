@@ -18,13 +18,15 @@
             --slm-gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow-y: scroll;  /* Always show scrollbar to prevent layout shift */
-        }
-
         html {
             scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: auto;
+            overflow-y: scroll;
+            min-width: min-content;
         }
 
         [data-bs-theme="light"] body,
@@ -77,11 +79,13 @@
 
         .tab-content {
             min-height: 700px;
-            overflow: visible;
+            overflow-x: auto;
+            overflow-y: visible;
         }
 
         .tab-pane {
-            overflow: visible;
+            overflow-x: auto;
+            overflow-y: visible;
         }
 
         #graph-container {
@@ -698,7 +702,7 @@
         </div>
 
         <!-- Main Content Tabs -->
-        <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
+        <ul class="nav nav-tabs flex-wrap mb-3" id="mainTabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard-pane">
                     <i class="bi bi-speedometer2"></i> Dashboard
