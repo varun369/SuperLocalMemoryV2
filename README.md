@@ -85,13 +85,35 @@ Query  ──►  Strategy Classifier  ──►  4 Parallel Channels:
 
 ---
 
+## Prerequisites
+
+| Requirement | Version | Why |
+|:-----------|:--------|:----|
+| **Node.js** | 14+ | npm package manager |
+| **Python** | 3.11+ | V3 engine runtime |
+| **pip** | Latest | Python dependency installer |
+
+> All Python dependencies are installed automatically during `npm install`. You don't need to run pip manually. If any dependency fails, the installer shows clear instructions.
+
+---
+
 ## Quick Start
 
-### Install via npm (recommended)
+### Install via npm (recommended — one command, everything included)
 
 ```bash
 npm install -g superlocalmemory
-slm setup
+```
+
+This single command:
+- Installs the V3 engine and CLI
+- Auto-installs all Python dependencies (numpy, scipy, networkx, sentence-transformers, etc.)
+- Creates the data directory at `~/.superlocalmemory/`
+- Detects and guides V2 migration if applicable
+
+Then configure:
+```bash
+slm setup    # Choose mode, configure provider
 ```
 
 ### Install via pip
