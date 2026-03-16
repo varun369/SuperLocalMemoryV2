@@ -50,21 +50,21 @@
 >
 > SuperLocalMemory V3 introduces **information-geometric foundations** — the first agent memory system built on Fisher-Rao similarity, sheaf cohomology, and Riemannian Langevin dynamics. Three mathematical pillars, each a world first in agent memory.
 >
-> **Zero-LLM Mode A** achieves 62.3% on the LoCoMo benchmark — without a single cloud API call. EU AI Act compliant by architecture.
+> **Mode A** achieves 60.4% raw accuracy and 74.8% retrieval quality on LoCoMo — without cloud dependency during retrieval. **Mode C** reaches 87.7%. EU AI Act compliant by architecture.
 >
 > The V3 mathematical engine is available in the [`superlocalmemory/`](superlocalmemory/) directory. Full product integration with `slm migrate` is coming in the next release. Current V2.8.x features continue to work exactly as before.
 >
 > **V3 Paper:** [SuperLocalMemory V3: Information-Geometric Foundations for Zero-LLM Enterprise Agent Memory](https://zenodo.org/records/19038659) (Zenodo DOI: 10.5281/zenodo.19038659)
 >
-> | Benchmark (LoCoMo) | Mode A (Zero-LLM) | Mode C (Cloud) |
-> |:--------------------|:------------------:|:--------------:|
-> | Overall (MICRO) | **62.3%** | **~78%** |
-> | Multi-hop | 50% | — |
-> | Open-domain | 78% | — |
+> | Benchmark (LoCoMo) | Mode A Raw (Zero-LLM) | Mode A Retrieval | Mode C (Cloud) |
+> |:--------------------|:--:|:--:|:--:|
+> | Aggregate | **60.4%** | **74.8%** | **87.7%** |
+> | Multi-hop | 43.0% | 70.3% | 100% |
+> | Open-domain | 72.0% | 85.0% | 86.0% |
 >
 > | Mathematical Layer | What It Does | Impact |
 > |:-------------------|:-------------|:------:|
-> | Fisher-Rao Geometry | Geodesic similarity on statistical manifolds | +25pp |
+> | Fisher-Rao Geometry | Geodesic similarity on statistical manifolds | +10.8pp |
 > | Sheaf Cohomology | Algebraic contradiction detection (H¹ ≠ 0) | Consistency |
 > | Riemannian Langevin | Self-organizing memory lifecycle | Convergence |
 >
