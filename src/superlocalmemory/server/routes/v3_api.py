@@ -187,29 +187,21 @@ async def recall_trace(request: Request):
         query = body.get("query", "")
         limit = body.get("limit", 10)
 
-        from .helpers import get_engine_lazy
-        engine = get_engine_lazy(request.app.state)
-        if not engine:
-            return JSONResponse({"error": "Engine not initialized"}, status_code=503)
+        from superlocalmemory.core.worker_pool import WorkerPool
+        pool = WorkerPool.shared()
+        result = pool.recall(query, limit=limit)
 
-        response = engine.recall(query, limit=limit)
-        results = []
-        for r in response.results[:limit]:
-            results.append({
-                "fact_id": r.fact.fact_id,
-                "content": r.fact.content[:300],
-                "score": round(r.score, 4),
-                "confidence": round(r.confidence, 4),
-                "trust_score": round(r.trust_score, 4),
-                "channel_scores": {k: round(v, 4) for k, v in (r.channel_scores or {}).items()},
-            })
-
+        if not result.get("ok"):
+            return JSONResponse(
+                {"error": result.get("error", "Recall failed")},
+                status_code=503,
+            )
         return {
             "query": query,
-            "query_type": response.query_type,
-            "result_count": len(results),
-            "retrieval_time_ms": round(response.retrieval_time_ms, 1),
-            "results": results,
+            "query_type": result.get("query_type", "unknown"),
+            "result_count": result.get("result_count", 0),
+            "retrieval_time_ms": result.get("retrieval_time_ms", 0),
+            "results": result.get("results", []),
         }
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)

@@ -1,0 +1,120 @@
+# Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
+# Licensed under the MIT License - see LICENSE file
+# Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
+
+"""Subprocess embedding worker — isolates PyTorch memory from main process.
+
+The main process (dashboard/MCP) stays at ~60 MB. All PyTorch/model memory
+lives in this worker subprocess, which auto-kills after idle timeout.
+
+Protocol (JSON over stdin/stdout):
+  Request:  {"cmd": "embed",  "texts": ["hello"]}
+  Response: {"ok": true, "vectors": [[0.1, ...]], "dim": 768}
+
+  Request:  {"cmd": "ping"}
+  Response: {"ok": true}
+
+  Request:  {"cmd": "quit"}
+  (worker exits)
+
+Part of Qualixar | Author: Varun Pratap Bhardwaj
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+import os
+
+# Force CPU BEFORE any torch import
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ["PYTORCH_MPS_HIGH_WATERMARK_RATIO"] = "0.0"
+os.environ["PYTORCH_MPS_MEM_LIMIT"] = "0"
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["TORCH_DEVICE"] = "cpu"
+
+
+def _worker_main() -> None:
+    """Main loop: read JSON requests from stdin, write responses to stdout."""
+    import numpy as np
+
+    model = None
+    model_name = None
+    dim = 0
+
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            req = json.loads(line)
+        except json.JSONDecodeError:
+            _respond({"ok": False, "error": "Invalid JSON"})
+            continue
+
+        cmd = req.get("cmd", "")
+
+        if cmd == "quit":
+            break
+
+        if cmd == "ping":
+            _respond({"ok": True})
+            continue
+
+        if cmd == "load":
+            name = req.get("model_name", "nomic-ai/nomic-embed-text-v1.5")
+            expected_dim = req.get("dimension", 768)
+            try:
+                from sentence_transformers import SentenceTransformer
+                model = SentenceTransformer(name, trust_remote_code=True, device="cpu")
+                dim = model.get_sentence_embedding_dimension()
+                if dim != expected_dim:
+                    _respond({"ok": False, "error": f"Dimension mismatch: {dim} != {expected_dim}"})
+                    model = None
+                    continue
+                model_name = name
+                _respond({"ok": True, "dim": dim, "model": name})
+            except Exception as exc:
+                _respond({"ok": False, "error": str(exc)})
+            continue
+
+        if cmd == "embed":
+            texts = req.get("texts", [])
+            if not texts:
+                _respond({"ok": False, "error": "No texts provided"})
+                continue
+            if model is None:
+                # Auto-load if not yet loaded
+                name = req.get("model_name", "nomic-ai/nomic-embed-text-v1.5")
+                expected_dim = req.get("dimension", 768)
+                try:
+                    from sentence_transformers import SentenceTransformer
+                    model = SentenceTransformer(name, trust_remote_code=True, device="cpu")
+                    dim = model.get_sentence_embedding_dimension()
+                    model_name = name
+                except Exception as exc:
+                    _respond({"ok": False, "error": f"Model load failed: {exc}"})
+                    continue
+            try:
+                vecs = model.encode(texts, normalize_embeddings=True)
+                if isinstance(vecs, np.ndarray) and vecs.ndim == 2:
+                    result = [vecs[i].tolist() for i in range(vecs.shape[0])]
+                else:
+                    result = [np.asarray(v, dtype=np.float32).tolist() for v in vecs]
+                _respond({"ok": True, "vectors": result, "dim": dim})
+            except Exception as exc:
+                _respond({"ok": False, "error": str(exc)})
+            continue
+
+        _respond({"ok": False, "error": f"Unknown command: {cmd}"})
+
+
+def _respond(data: dict) -> None:
+    """Write JSON response to stdout, flush immediately."""
+    sys.stdout.write(json.dumps(data) + "\n")
+    sys.stdout.flush()
+
+
+if __name__ == "__main__":
+    _worker_main()

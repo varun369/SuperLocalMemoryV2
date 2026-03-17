@@ -196,14 +196,22 @@ def create_app() -> FastAPI:
 
     @application.on_event("startup")
     async def startup_event():
-        """Initialize event bus on startup. Engine loads lazily on first API call."""
-        # Engine is NOT loaded here — it loads on first API call that needs it.
-        # This keeps the dashboard process lightweight (~30 MB) at startup.
-        # The embedding model (~500 MB) only loads when someone does a search.
+        """Initialize event bus. Engine runs in subprocess worker (never in this process)."""
+        # Engine is NEVER loaded in the dashboard process.
+        # All recall/search operations go through WorkerPool subprocess.
+        # This keeps the dashboard permanently at ~60 MB.
         application.state.engine = None
-        application.state._engine_init_attempted = False
-        logger.info("Dashboard started (engine loads on first API call)")
+        logger.info("Dashboard started (~60 MB, engine runs in subprocess worker)")
         register_event_listener()
+
+    @application.on_event("shutdown")
+    async def shutdown_event():
+        """Kill worker subprocess on dashboard shutdown."""
+        try:
+            from superlocalmemory.core.worker_pool import WorkerPool
+            WorkerPool.shared().shutdown()
+        except Exception:
+            pass
 
     return application
 

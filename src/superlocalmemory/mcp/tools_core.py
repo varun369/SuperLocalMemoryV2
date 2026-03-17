@@ -35,10 +35,16 @@ def register_core_tools(server, get_engine: Callable) -> None:
         and indexes for 4-channel retrieval.
         """
         try:
-            engine = get_engine()
-            metadata: dict[str, Any] = {"tags": tags, "project": project, "importance": importance, "agent_id": agent_id}
-            fact_ids = engine.store(content, session_id=session_id, metadata=metadata)
-            return {"success": True, "fact_ids": fact_ids, "count": len(fact_ids)}
+            from superlocalmemory.core.worker_pool import WorkerPool
+            pool = WorkerPool.shared()
+            result = pool.store(content, metadata={
+                "tags": tags, "project": project,
+                "importance": importance, "agent_id": agent_id,
+                "session_id": session_id,
+            })
+            if result.get("ok"):
+                return {"success": True, "fact_ids": result.get("fact_ids", []), "count": result.get("count", 0)}
+            return {"success": False, "error": result.get("error", "Store failed")}
         except Exception as exc:
             logger.exception("remember failed")
             return {"success": False, "error": str(exc)}
@@ -47,10 +53,17 @@ def register_core_tools(server, get_engine: Callable) -> None:
     async def recall(query: str, limit: int = 10, agent_id: str = "mcp_client") -> dict:
         """Search memories by semantic query with 4-channel retrieval, RRF fusion, and reranking."""
         try:
-            engine = get_engine()
-            response = engine.recall(query, limit=limit)
-            results = _format_results(response.results[:limit])
-            return {"success": True, "results": results, "count": len(results), "query_type": response.query_type}
+            from superlocalmemory.core.worker_pool import WorkerPool
+            pool = WorkerPool.shared()
+            result = pool.recall(query, limit=limit)
+            if result.get("ok"):
+                return {
+                    "success": True,
+                    "results": result.get("results", []),
+                    "count": result.get("result_count", 0),
+                    "query_type": result.get("query_type", "unknown"),
+                }
+            return {"success": False, "error": result.get("error", "Recall failed")}
         except Exception as exc:
             logger.exception("recall failed")
             return {"success": False, "error": str(exc)}

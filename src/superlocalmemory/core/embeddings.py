@@ -2,34 +2,28 @@
 # Licensed under the MIT License - see LICENSE file
 # Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
 
-"""SuperLocalMemory V3 — Embedding Service.
+"""SuperLocalMemory V3 — Embedding Service (Subprocess-Isolated).
 
-Thread-safe, dimension-validated embedding with Fisher variance computation.
-Supports local (768-dim nomic) and cloud (3072-dim) models with EXPLICIT errors
-on dimension mismatch — NEVER silently falls back to a different dimension.
+All PyTorch/model work runs in a SEPARATE subprocess. The main process
+(dashboard, MCP, CLI) never imports torch and stays at ~60 MB.
 
-Memory management: Forces CPU-only inference to prevent GPU memory accumulation.
-Auto-unloads model after idle timeout to keep long-running MCP servers lean.
+The worker subprocess auto-kills after 2 minutes idle, returning all
+memory to the OS. It respawns on next embed call (~3 sec cold start).
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
 """
 
 from __future__ import annotations
 
+import json
 import logging
 import os
+import subprocess
+import sys
 import threading
 import time
+from pathlib import Path
 from typing import TYPE_CHECKING
-
-# Force CPU before any torch/sentence-transformers import.
-# On Apple Silicon, PyTorch defaults to Metal (MPS) which allocates 4-6 GB
-# of GPU shader buffers that grow over time and never get released.
-# On Windows/Linux with CUDA, similar GPU memory issues occur.
-# CPU-only keeps footprint under 1 GB (vs 6+ GB with GPU).
-os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
-os.environ.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.0")
-os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
 
 import numpy as np
 
@@ -40,68 +34,193 @@ from superlocalmemory.core.config import EmbeddingConfig
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
 # Fisher variance constants
-# ---------------------------------------------------------------------------
 _FISHER_VAR_MIN = 0.05
 _FISHER_VAR_MAX = 2.0
-_FISHER_VAR_RANGE = _FISHER_VAR_MAX - _FISHER_VAR_MIN  # 1.95
+_FISHER_VAR_RANGE = _FISHER_VAR_MAX - _FISHER_VAR_MIN
 
 
 class DimensionMismatchError(RuntimeError):
-    """Raised when the actual embedding dimension differs from config.
-
-    This is a HARD failure — V1 silently fell back to local embeddings
-    when Azure failed, changing dimension from 3072 to 768 mid-run.
-    We crash loudly instead.
-    """
+    """Raised when the actual embedding dimension differs from config."""
 
 
-_IDLE_TIMEOUT_SECONDS = 300  # 5 minutes — unload model after idle
+_IDLE_TIMEOUT_SECONDS = 120  # 2 minutes — kill worker after idle
 
 
 class EmbeddingService:
-    """Thread-safe embedding service with strict dimension validation.
+    """Subprocess-isolated embedding service.
 
-    Lazy-loads the underlying model on first embed call.
-    Validates every output dimension against the configured expectation.
-    Auto-unloads after 5 minutes idle to keep MCP server memory low.
-    Forces CPU-only inference to prevent GPU memory accumulation.
+    All model inference runs in a child process. The main process never
+    imports torch/sentence-transformers, keeping its memory at ~60 MB.
+
+    The worker auto-kills after 2 min idle. First embed after idle takes
+    ~3 sec (model reload). Subsequent embeds are instant (<100ms).
     """
 
     def __init__(self, config: EmbeddingConfig) -> None:
         self._config = config
-        self._model: object | None = None
         self._lock = threading.Lock()
-        self._loaded = False
-        self._available = True  # Set False if model can't load
+        self._worker_proc: subprocess.Popen | None = None
+        self._available = True
         self._last_used: float = 0.0
         self._idle_timer: threading.Timer | None = None
+        self._worker_ready = False
 
     @property
     def is_available(self) -> bool:
-        """Check if embedding service has a usable model."""
-        if not self._loaded:
-            self._ensure_loaded()
-        return self._available and self._model is not None
+        """Check if embedding service can produce embeddings."""
+        if self._config.is_cloud:
+            return bool(self._config.api_endpoint and self._config.api_key)
+        return self._available
+
+    @property
+    def dimension(self) -> int:
+        return self._config.dimension
 
     def unload(self) -> None:
-        """Explicitly unload the model to free memory.
-
-        Called automatically after idle timeout, or manually for cleanup.
-        The model will lazy-reload on next embed call.
-        """
+        """Kill the worker subprocess to free all memory."""
         with self._lock:
-            if self._model is not None:
-                del self._model
-                self._model = None
-                self._loaded = False
-                import gc
-                gc.collect()
-                logger.info("EmbeddingService: model unloaded (idle timeout)")
+            self._kill_worker()
+            logger.info("EmbeddingService: worker killed (idle timeout)")
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def embed(self, text: str) -> list[float] | None:
+        """Embed a single text string. Returns list of floats or None."""
+        if not text or not text.strip():
+            raise ValueError("Cannot embed empty text")
+        if self._config.is_cloud:
+            return self._cloud_embed_single(text)
+        result = self._subprocess_embed([text])
+        if result is None:
+            return None
+        vec = result[0]
+        self._validate_dimension(np.asarray(vec))
+        return vec
+
+    def embed_batch(self, texts: list[str]) -> list[list[float] | None]:
+        """Embed a batch of texts."""
+        if not texts:
+            raise ValueError("Cannot embed empty batch")
+        if self._config.is_cloud:
+            return self._cloud_embed_batch(texts)
+        result = self._subprocess_embed(texts)
+        if result is None:
+            return [None] * len(texts)
+        for vec in result:
+            if vec is not None:
+                self._validate_dimension(np.asarray(vec))
+        return result
+
+    def compute_fisher_params(
+        self, embedding: list[float],
+    ) -> tuple[list[float], list[float]]:
+        """Compute Fisher-Rao parameters from a raw embedding."""
+        arr = np.asarray(embedding, dtype=np.float64)
+        norm = float(np.linalg.norm(arr))
+        if norm < 1e-10:
+            mean = np.zeros(len(arr), dtype=np.float64)
+            variance = np.full(len(arr), _FISHER_VAR_MAX, dtype=np.float64)
+            return mean.tolist(), variance.tolist()
+        mean = arr / norm
+        abs_mean = np.abs(mean)
+        max_val = float(np.max(abs_mean)) + 1e-10
+        signal_strength = abs_mean / max_val
+        variance = _FISHER_VAR_MAX - _FISHER_VAR_RANGE * signal_strength
+        variance = np.clip(variance, _FISHER_VAR_MIN, _FISHER_VAR_MAX)
+        return mean.tolist(), variance.tolist()
+
+    # ------------------------------------------------------------------
+    # Subprocess worker management
+    # ------------------------------------------------------------------
+
+    def _subprocess_embed(self, texts: list[str]) -> list[list[float]] | None:
+        """Send texts to worker subprocess, get embeddings back."""
+        with self._lock:
+            self._ensure_worker()
+            if self._worker_proc is None:
+                return None
+
+            req = json.dumps({
+                "cmd": "embed",
+                "texts": texts,
+                "model_name": self._config.model_name,
+                "dimension": self._config.dimension,
+            }) + "\n"
+
+            try:
+                self._worker_proc.stdin.write(req)
+                self._worker_proc.stdin.flush()
+                resp_line = self._worker_proc.stdout.readline()
+                if not resp_line:
+                    logger.warning("Worker returned empty response, restarting")
+                    self._kill_worker()
+                    return None
+                resp = json.loads(resp_line)
+                if not resp.get("ok"):
+                    logger.warning("Worker error: %s", resp.get("error"))
+                    return None
+                self._reset_idle_timer()
+                return resp["vectors"]
+            except (BrokenPipeError, OSError, json.JSONDecodeError) as exc:
+                logger.warning("Worker communication failed: %s", exc)
+                self._kill_worker()
+                return None
+
+    def _ensure_worker(self) -> None:
+        """Spawn worker subprocess if not running."""
+        if self._worker_proc is not None and self._worker_proc.poll() is None:
+            return
+        self._worker_proc = None
+        worker_module = "superlocalmemory.core.embedding_worker"
+        try:
+            env = {
+                **os.environ,
+                "CUDA_VISIBLE_DEVICES": "",
+                "PYTORCH_MPS_HIGH_WATERMARK_RATIO": "0.0",
+                "PYTORCH_MPS_MEM_LIMIT": "0",
+                "PYTORCH_ENABLE_MPS_FALLBACK": "1",
+                "TOKENIZERS_PARALLELISM": "false",
+                "TORCH_DEVICE": "cpu",
+            }
+            self._worker_proc = subprocess.Popen(
+                [sys.executable, "-m", worker_module],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                bufsize=1,
+                env=env,
+            )
+            logger.info("Embedding worker spawned (PID %d)", self._worker_proc.pid)
+            self._worker_ready = True
+        except Exception as exc:
+            logger.warning("Failed to spawn embedding worker: %s", exc)
+            self._available = False
+            self._worker_proc = None
+
+    def _kill_worker(self) -> None:
+        """Terminate worker subprocess."""
+        if self._idle_timer is not None:
+            self._idle_timer.cancel()
+            self._idle_timer = None
+        if self._worker_proc is not None:
+            try:
+                self._worker_proc.stdin.write('{"cmd":"quit"}\n')
+                self._worker_proc.stdin.flush()
+                self._worker_proc.wait(timeout=3)
+            except Exception:
+                try:
+                    self._worker_proc.kill()
+                except Exception:
+                    pass
+            self._worker_proc = None
+            self._worker_ready = False
 
     def _reset_idle_timer(self) -> None:
-        """Reset the idle unload timer after each use."""
+        """Reset idle timer — kills worker after 2 min inactivity."""
         if self._idle_timer is not None:
             self._idle_timer.cancel()
         self._idle_timer = threading.Timer(
@@ -112,204 +231,18 @@ class EmbeddingService:
         self._last_used = time.time()
 
     # ------------------------------------------------------------------
-    # Public API
+    # Cloud embedding (no subprocess needed — just HTTP)
     # ------------------------------------------------------------------
 
-    @property
-    def dimension(self) -> int:
-        """Expected embedding dimension (from config)."""
-        return self._config.dimension
+    def _cloud_embed_single(self, text: str) -> list[float]:
+        vecs = self._cloud_embed_batch([text])
+        return vecs[0]
 
-    def embed(self, text: str) -> list[float]:
-        """Embed a single text string.
-
-        Returns:
-            L2-normalized embedding of exactly ``self.dimension`` floats.
-
-        Raises:
-            ValueError: If text is empty.
-            DimensionMismatchError: If output dimension != config.
-        """
-        if not text or not text.strip():
-            raise ValueError("Cannot embed empty text")
-        self._ensure_loaded()
-        if self._model is None:
-            return None
-        vec = self._encode_single(text)
-        self._validate_dimension(vec)
-        self._reset_idle_timer()
-        return vec.tolist()
-
-    def embed_batch(self, texts: list[str]) -> list[list[float]]:
-        """Embed a batch of texts.
-
-        Returns:
-            List of L2-normalized embeddings, each ``self.dimension`` floats.
-
-        Raises:
-            ValueError: If any text is empty or list is empty.
-            DimensionMismatchError: If any output dimension != config.
-        """
-        if not texts:
-            raise ValueError("Cannot embed empty batch")
-        for i, t in enumerate(texts):
-            if not t or not t.strip():
-                raise ValueError(f"Text at index {i} is empty")
-
-        self._ensure_loaded()
-        if self._model is None:
-            return [None] * len(texts)
-        vectors = self._encode_batch(texts)
-        for vec in vectors:
-            self._validate_dimension(vec)
-        self._reset_idle_timer()
-        return [v.tolist() for v in vectors]
-
-    def compute_fisher_params(
-        self,
-        embedding: list[float],
-    ) -> tuple[list[float], list[float]]:
-        """Compute Fisher-Rao parameters from a raw embedding.
-
-        Variance is content-derived (NOT uniform). Dimensions with strong
-        signal (high absolute value) get LOW variance (high confidence).
-        Weak-signal dimensions get HIGH variance (uncertainty).
-
-        This heterogeneous variance is what gives Fisher-Rao metric
-        discriminative power beyond simple cosine similarity.
-
-        Args:
-            embedding: Raw embedding vector (already L2-normalized).
-
-        Returns:
-            (mean, variance) — both lists of ``self.dimension`` floats.
-            Variance values are clamped to [0.3, 2.0].
-        """
-        arr = np.asarray(embedding, dtype=np.float64)
-        norm = float(np.linalg.norm(arr))
-
-        if norm < 1e-10:
-            mean = np.zeros(len(arr), dtype=np.float64)
-            variance = np.full(len(arr), _FISHER_VAR_MAX, dtype=np.float64)
-            return mean.tolist(), variance.tolist()
-
-        mean = arr / norm
-
-        # Content-derived heterogeneous variance
-        abs_mean = np.abs(mean)
-        max_val = float(np.max(abs_mean)) + 1e-10
-        signal_strength = abs_mean / max_val  # [0, 1]
-
-        # Inverse: strong signal -> low variance, weak -> high
-        variance = _FISHER_VAR_MAX - _FISHER_VAR_RANGE * signal_strength
-        variance = np.clip(variance, _FISHER_VAR_MIN, _FISHER_VAR_MAX)
-
-        return mean.tolist(), variance.tolist()
-
-    # ------------------------------------------------------------------
-    # Internals — model loading
-    # ------------------------------------------------------------------
-
-    def _ensure_loaded(self) -> None:
-        """Lazy-load the model on first use (thread-safe)."""
-        if self._loaded:
-            return
-        with self._lock:
-            if self._loaded:
-                return
-            if self._config.is_cloud:
-                # Cloud mode: no local model needed, validate config
-                if not self._config.api_endpoint or not self._config.api_key:
-                    raise RuntimeError(
-                        "Cloud embedding requires api_endpoint and api_key"
-                    )
-                logger.info(
-                    "EmbeddingService: cloud mode (%s, %d-dim)",
-                    self._config.deployment_name,
-                    self._config.dimension,
-                )
-            else:
-                self._load_local_model()
-            self._loaded = True
-
-    def _load_local_model(self) -> None:
-        """Load sentence-transformers model for local embedding.
-
-        Forces CPU device to prevent GPU memory accumulation:
-        - Apple Silicon MPS: allocates 4-6 GB Metal shader buffers
-        - NVIDIA CUDA: allocates GPU VRAM that never releases
-        - CPU-only: stable ~880 MB footprint, no growth over time
-        """
-        try:
-            from sentence_transformers import SentenceTransformer
-        except ImportError:
-            logger.warning(
-                "sentence-transformers not installed. Embeddings disabled. "
-                "Install with: pip install sentence-transformers"
-            )
-            self._model = None
-            self._loaded = True
-            self._available = False
-            return
-        model = SentenceTransformer(
-            self._config.model_name, trust_remote_code=True,
-            device="cpu",
-        )
-        actual_dim = model.get_sentence_embedding_dimension()
-        if actual_dim != self._config.dimension:
-            raise DimensionMismatchError(
-                f"Model '{self._config.model_name}' produces {actual_dim}-dim "
-                f"embeddings but config expects {self._config.dimension}-dim"
-            )
-        self._model = model
-        logger.info(
-            "EmbeddingService: local model loaded (%s, %d-dim, device=cpu)",
-            self._config.model_name,
-            actual_dim,
-        )
-
-    # ------------------------------------------------------------------
-    # Internals — encoding
-    # ------------------------------------------------------------------
-
-    def _encode_single(self, text: str) -> NDArray[np.float32]:
-        """Encode one text. Dispatches to local or cloud."""
-        self._ensure_loaded()
-        if self._config.is_cloud:
-            return self._cloud_embed([text])[0]
-        return self._local_embed_batch([text])[0]
-
-    def _encode_batch(self, texts: list[str]) -> list[NDArray[np.float32]]:
-        """Encode a batch. Dispatches to local or cloud."""
-        self._ensure_loaded()
-        if self._config.is_cloud:
-            return self._cloud_embed(texts)
-        return self._local_embed_batch(texts)
-
-    def _local_embed_batch(
-        self,
-        texts: list[str],
-    ) -> list[NDArray[np.float32]]:
-        """Encode via local sentence-transformers (L2-normalized)."""
-        if self._model is None:
-            raise RuntimeError("Local model not loaded")
-        vecs = self._model.encode(texts, normalize_embeddings=True)
-        if isinstance(vecs, np.ndarray) and vecs.ndim == 2:
-            return [vecs[i] for i in range(vecs.shape[0])]
-        return [np.asarray(v, dtype=np.float32) for v in vecs]
-
-    def _cloud_embed(
-        self,
-        texts: list[str],
-        *,
-        max_retries: int = 3,
-    ) -> list[NDArray[np.float32]]:
-        """Encode via Azure OpenAI embedding API with retry logic.
-
-        Raises on failure — NEVER falls back to local model.
-        """
+    def _cloud_embed_batch(
+        self, texts: list[str], *, max_retries: int = 3,
+    ) -> list[list[float]]:
+        """Encode via Azure OpenAI embedding API with retry."""
         import httpx
-
         url = (
             f"{self._config.api_endpoint.rstrip('/')}/openai/deployments/"
             f"{self._config.deployment_name}/embeddings"
@@ -320,7 +253,6 @@ class EmbeddingService:
             "api-key": self._config.api_key,
         }
         body = {"input": texts, "model": self._config.deployment_name}
-
         last_error: Exception | None = None
         for attempt in range(max_retries):
             try:
@@ -328,39 +260,23 @@ class EmbeddingService:
                     resp = client.post(url, headers=headers, json=body)
                     resp.raise_for_status()
                 data = resp.json()
-                results: list[NDArray[np.float32]] = []
+                results = []
                 for item in sorted(data["data"], key=lambda d: d["index"]):
-                    vec = np.asarray(item["embedding"], dtype=np.float32)
-                    results.append(vec)
+                    results.append(item["embedding"])
                 return results
             except Exception as exc:
                 last_error = exc
-                wait = 2 ** attempt  # 1s, 2s, 4s
-                logger.warning(
-                    "Cloud embed attempt %d/%d failed: %s (retry in %ds)",
-                    attempt + 1,
-                    max_retries,
-                    exc,
-                    wait,
-                )
                 if attempt < max_retries - 1:
-                    time.sleep(wait)
-
-        raise RuntimeError(
-            f"Cloud embedding failed after {max_retries} attempts: "
-            f"{last_error}"
-        )
+                    time.sleep(2 ** attempt)
+        raise RuntimeError(f"Cloud embedding failed: {last_error}")
 
     # ------------------------------------------------------------------
     # Validation
     # ------------------------------------------------------------------
 
     def _validate_dimension(self, vec: NDArray) -> None:
-        """Hard validation — crash on mismatch, never silently fall back."""
         actual = len(vec)
         if actual != self._config.dimension:
             raise DimensionMismatchError(
-                f"Embedding dimension {actual} != "
-                f"expected {self._config.dimension}. "
-                f"This is a HARD failure — check your model/API config."
+                f"Embedding dimension {actual} != expected {self._config.dimension}"
             )

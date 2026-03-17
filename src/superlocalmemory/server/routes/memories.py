@@ -313,39 +313,22 @@ async def get_graph(
 
 @router.post("/api/search")
 async def search_memories(request: Request, body: SearchRequest):
-    """Semantic search using V3 engine recall or fallback."""
+    """Semantic search via subprocess worker pool (memory-isolated)."""
     try:
-        engine = _get_engine(request)
+        from superlocalmemory.core.worker_pool import WorkerPool
+        pool = WorkerPool.shared()
+        result = pool.recall(body.query, limit=body.limit)
 
-        if engine:
-            response = engine.recall(body.query, limit=body.limit)
-            results = []
-            for r in response.results:
-                score = r.score
-                if score < body.min_score:
-                    continue
-                if body.category and getattr(r.fact, 'fact_type', None) != body.category:
-                    continue
-                results.append({
-                    "id": r.fact.fact_id,
-                    "content": r.fact.content,
-                    "score": round(score, 4),
-                    "confidence": round(r.confidence, 4),
-                    "trust_score": round(r.trust_score, 4) if r.trust_score else None,
-                    "channel_scores": r.channel_scores,
-                    "fact_type": getattr(r.fact, 'fact_type', None),
-                    "created_at": getattr(r.fact, 'created_at', None),
-                })
-                if len(results) >= body.limit:
-                    break
-
+        if result.get("ok"):
             return {
-                "query": body.query, "results": results, "total": len(results),
-                "query_type": response.query_type,
-                "retrieval_time_ms": response.retrieval_time_ms,
+                "query": body.query,
+                "results": result.get("results", []),
+                "total": result.get("result_count", 0),
+                "query_type": result.get("query_type", "unknown"),
+                "retrieval_time_ms": result.get("retrieval_time_ms", 0),
             }
 
-        # Fallback: direct DB search (no V3 engine)
+        # Fallback: direct DB text search (no engine needed)
         conn = get_db_connection()
         conn.row_factory = dict_factory
         cursor = conn.cursor()
