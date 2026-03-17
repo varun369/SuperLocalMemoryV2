@@ -740,7 +740,7 @@
             </li>
             <li class="nav-item">
                 <button class="nav-link" id="learning-tab" data-bs-toggle="tab" data-bs-target="#learning-pane">
-                    <i class="bi bi-mortarboard"></i> Learning <span class="badge bg-warning text-dark" style="font-size:0.6rem;vertical-align:top;">v2.7</span>
+                    <i class="bi bi-mortarboard"></i> Learning
                 </button>
             </li>
             <li class="nav-item">
@@ -760,17 +760,17 @@
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="lifecycle-tab" data-bs-toggle="tab" data-bs-target="#lifecycle-pane" type="button" role="tab">
-                    <i class="bi bi-hourglass-split"></i> Lifecycle <span class="badge bg-success ms-1">v2.8</span>
+                    <i class="bi bi-hourglass-split"></i> Lifecycle
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="behavioral-tab" data-bs-toggle="tab" data-bs-target="#behavioral-pane" type="button" role="tab">
-                    <i class="bi bi-lightbulb"></i> Behavioral <span class="badge bg-success ms-1">v2.8</span>
+                    <i class="bi bi-lightbulb"></i> Behavioral
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="compliance-tab" data-bs-toggle="tab" data-bs-target="#compliance-pane" type="button" role="tab">
-                    <i class="bi bi-shield-lock"></i> Compliance <span class="badge bg-success ms-1">v2.8</span>
+                    <i class="bi bi-shield-lock"></i> Compliance
                 </button>
             </li>
             <li class="nav-item">
@@ -1023,8 +1023,13 @@
                 <p class="text-muted">See how each retrieval channel contributes to results.</p>
                 <div class="input-group mb-3">
                     <input type="text" id="recall-lab-query" class="form-control form-control-lg" placeholder="Enter your query...">
+                    <select id="recall-lab-per-page" class="form-select" style="max-width:100px;">
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
                     <button class="btn btn-primary btn-lg" id="recall-lab-search">
-                        <i class="bi bi-search"></i> Search with Trace
+                        <i class="bi bi-search"></i> Search
                     </button>
                 </div>
                 <div id="recall-lab-meta" class="mb-3 text-muted small"></div>
@@ -1070,8 +1075,19 @@
                 </div>
             </div>
 
-            <!-- Learning System (v2.7) -->
+            <!-- Learning System -->
             <div class="tab-pane fade" id="learning-pane">
+                <!-- Getting Started Guide -->
+                <div class="alert alert-light border mb-3" id="learning-getting-started">
+                    <h6 class="mb-2"><i class="bi bi-info-circle text-primary"></i> How Learning Works</h6>
+                    <p class="mb-1 small">SuperLocalMemory learns from your usage patterns to improve retrieval ranking over time. This happens automatically as you use <code>slm recall</code> or search via MCP.</p>
+                    <ul class="small mb-0">
+                        <li><strong>0-20 signals:</strong> Baseline phase (collecting data)</li>
+                        <li><strong>20+ signals:</strong> Rule-based ranking adjustments</li>
+                        <li><strong>200+ signals:</strong> ML model trained on your patterns</li>
+                    </ul>
+                    <p class="mb-0 mt-1 small text-muted">Each recall query generates a signal. Keep using SLM and this tab will populate automatically.</p>
+                </div>
                 <!-- Ranking Phase & Engagement -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
@@ -1424,11 +1440,17 @@
                 </div>
             </div>
 
-            <!-- Behavioral Learning (v2.8) -->
+            <!-- Behavioral Learning -->
             <div class="tab-pane fade" id="behavioral-pane" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="mb-0"><i class="bi bi-lightbulb text-info"></i> Behavioral Learning</h5>
                     <span class="badge bg-secondary" id="behavioral-profile-badge">default</span>
+                </div>
+                <!-- Getting Started Guide -->
+                <div class="alert alert-light border mb-3">
+                    <h6 class="mb-2"><i class="bi bi-info-circle text-primary"></i> How Behavioral Learning Works</h6>
+                    <p class="mb-1 small">This tab tracks how memories are used in practice — which recalls led to successful outcomes (code written, decisions made, bugs fixed) and which didn't.</p>
+                    <p class="mb-0 small text-muted">Report outcomes using the form below, or via MCP: <code>report_outcome</code>. Patterns emerge after 10+ outcomes.</p>
                 </div>
                 <!-- Stats Row -->
                 <div class="row g-3 mb-4">
@@ -1465,11 +1487,17 @@
                 </div>
             </div>
 
-            <!-- Compliance & Audit (v2.8) -->
+            <!-- Compliance & Audit -->
             <div class="tab-pane fade" id="compliance-pane" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="mb-0"><i class="bi bi-shield-lock text-success"></i> Compliance &amp; Audit</h5>
                     <span class="badge bg-secondary" id="compliance-profile-badge">default</span>
+                </div>
+                <!-- Getting Started Guide -->
+                <div class="alert alert-light border mb-3">
+                    <h6 class="mb-2"><i class="bi bi-info-circle text-primary"></i> Compliance Overview</h6>
+                    <p class="mb-1 small">Set retention policies and access controls for your memories. In Mode A, all data stays on your device — EU AI Act compliant by default.</p>
+                    <p class="mb-0 small text-muted">Create a retention policy below to start managing memory lifecycle automatically.</p>
                 </div>
                 <!-- Stats Row -->
                 <div class="row g-3 mb-4">

@@ -46,19 +46,61 @@ def _fetch_graph_data(
 ) -> tuple[list, list, list]:
     """Fetch graph nodes, links, clusters from V3 or V2 schema."""
     if use_v3:
+        # Graph-first: fetch edges, then get connected nodes, then fill slots
         cursor.execute("""
-            SELECT f.fact_id as id, f.content, f.fact_type as category,
-                   f.confidence as importance, f.session_id as project_name,
-                   f.created_at
-            FROM atomic_facts f WHERE f.profile_id = ? AND f.confidence >= ?
-            ORDER BY f.confidence DESC, f.created_at DESC LIMIT ?
-        """, (profile, min_importance / 10.0, max_nodes))
-        nodes = cursor.fetchall()
+            SELECT source_id as source, target_id as target,
+                   weight, edge_type as relationship_type
+            FROM graph_edges WHERE profile_id = ?
+            ORDER BY weight DESC
+        """, (profile,))
+        all_links = cursor.fetchall()
+
+        connected_ids = set()
+        for lk in all_links:
+            connected_ids.add(lk['source'])
+            connected_ids.add(lk['target'])
+
+        # Fetch connected nodes first (these have edges to display)
+        connected_nodes: list = []
+        if connected_ids:
+            ph = ','.join('?' * len(connected_ids))
+            cursor.execute(f"""
+                SELECT fact_id as id, content, fact_type as category,
+                       confidence as importance, session_id as project_name,
+                       created_at
+                FROM atomic_facts
+                WHERE profile_id = ? AND fact_id IN ({ph})
+            """, [profile] + list(connected_ids))
+            connected_nodes = cursor.fetchall()
+
+        # Fill remaining slots with top-confidence unconnected nodes
+        remaining = max_nodes - len(connected_nodes)
+        if remaining > 0:
+            existing = {n['id'] for n in connected_nodes}
+            cursor.execute("""
+                SELECT fact_id as id, content, fact_type as category,
+                       confidence as importance, session_id as project_name,
+                       created_at
+                FROM atomic_facts
+                WHERE profile_id = ? AND confidence >= ?
+                ORDER BY confidence DESC, created_at DESC
+                LIMIT ?
+            """, (profile, min_importance / 10.0, remaining + len(existing)))
+            for n in cursor.fetchall():
+                if n['id'] not in existing:
+                    connected_nodes.append(n)
+                    if len(connected_nodes) >= max_nodes:
+                        break
+
+        nodes = connected_nodes[:max_nodes]
         for n in nodes:
             n['entities'] = []
             n['content_preview'] = _preview(n.get('content'))
-        ids = [n['id'] for n in nodes]
-        links = _fetch_edges_v3(cursor, profile, ids)
+
+        # Filter edges to only those between displayed nodes
+        node_ids = {n['id'] for n in nodes}
+        links = [lk for lk in all_links
+                 if lk['source'] in node_ids and lk['target'] in node_ids]
         return nodes, links, []
 
     # V2 fallback

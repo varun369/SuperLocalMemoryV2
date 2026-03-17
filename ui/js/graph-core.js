@@ -98,8 +98,10 @@ function transformDataForCytoscape(data) {
 
     // Add nodes
     data.nodes.forEach(node => {
-        const label = node.category || node.project_name || `Memory #${node.id}`;
         const contentPreview = node.content_preview || node.summary || node.content || '';
+        // Label: first 4 words of content (readable on node), fallback to category
+        const contentWords = contentPreview.split(/\s+/).slice(0, 4).join(' ');
+        const label = contentWords || node.category || `Memory #${node.id}`;
         const preview = contentPreview.substring(0, 50) + (contentPreview.length > 50 ? '...' : '');
 
         elements.push({

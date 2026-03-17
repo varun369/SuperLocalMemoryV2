@@ -1,6 +1,6 @@
 [project]
 name = "superlocalmemory"
-version = "3.0.16"
+version = "3.0.17"
 description = "Information-geometric agent memory with mathematical guarantees"
 readme = "README.md"
 license = {text = "MIT"}
@@ -83,5 +83,7 @@ select = ["E", "F", "I", "W"]
 
 [dependency-groups]
 dev = [
+    "build>=1.4.0",
     "pytest>=9.0.2",
+    "twine>=6.2.0",
 ]

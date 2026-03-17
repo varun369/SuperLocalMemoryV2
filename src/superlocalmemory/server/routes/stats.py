@@ -72,6 +72,17 @@ async def get_stats():
                 total_clusters = cursor.fetchone()['total']
             except Exception:
                 pass
+            # Fallback: V2-migrated clusters stored as cluster_id on memories
+            if total_clusters == 0:
+                try:
+                    cursor.execute(
+                        "SELECT COUNT(DISTINCT cluster_id) as total FROM memories "
+                        "WHERE cluster_id IS NOT NULL AND profile = ?",
+                        (active_profile,),
+                    )
+                    total_clusters = cursor.fetchone()['total']
+                except Exception:
+                    pass
 
             # Fact type breakdown (replaces category in V3)
             cursor.execute("""

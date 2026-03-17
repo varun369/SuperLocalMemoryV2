@@ -21,6 +21,27 @@ def register_v3_tools(server, get_engine: Callable) -> None:
     """Register 5 V3-exclusive tools on *server*."""
 
     # ------------------------------------------------------------------
+    # 0. get_version (so IDEs can check compatibility)
+    # ------------------------------------------------------------------
+    @server.tool()
+    async def get_version() -> dict:
+        """Get SuperLocalMemory version, Python version, and platform info."""
+        try:
+            from importlib.metadata import version as _pkg_version
+            slm_ver = _pkg_version("superlocalmemory")
+        except Exception:
+            slm_ver = "unknown"
+        import platform
+        import sys as _sys
+        return {
+            "success": True,
+            "version": slm_ver,
+            "python": _sys.version.split()[0],
+            "platform": platform.system(),
+            "arch": platform.machine(),
+        }
+
+    # ------------------------------------------------------------------
     # 1. set_mode
     # ------------------------------------------------------------------
     @server.tool()

@@ -23,6 +23,7 @@ def dispatch(args: Namespace) -> None:
         "provider": cmd_provider,
         "connect": cmd_connect,
         "migrate": cmd_migrate,
+        "list": cmd_list,
         "remember": cmd_remember,
         "recall": cmd_recall,
         "forget": cmd_forget,
@@ -111,6 +112,34 @@ def cmd_migrate(args: Namespace) -> None:
     from superlocalmemory.cli.migrate_cmd import cmd_migrate as _migrate
 
     _migrate(args)
+
+
+def cmd_list(args: Namespace) -> None:
+    """List recent memories chronologically."""
+    from superlocalmemory.core.config import SLMConfig
+    from superlocalmemory.core.engine import MemoryEngine
+
+    config = SLMConfig.load()
+    engine = MemoryEngine(config)
+    engine.initialize()
+
+    limit = getattr(args, "limit", 20)
+    facts = engine._db.get_all_facts(engine.profile_id)
+    # Sort by created_at descending, take limit
+    facts.sort(key=lambda f: f.created_at or "", reverse=True)
+    facts = facts[:limit]
+
+    if not facts:
+        print("No memories stored yet.")
+        return
+
+    print(f"Recent memories ({len(facts)}):\n")
+    for i, f in enumerate(facts, 1):
+        date = (f.created_at or "")[:19]
+        ftype_raw = getattr(f, "fact_type", "")
+        ftype = ftype_raw.value if hasattr(ftype_raw, "value") else str(ftype_raw)
+        content = f.content[:100] + ("..." if len(f.content) > 100 else "")
+        print(f"  {i:3d}. [{date}] ({ftype}) {content}")
 
 
 def cmd_remember(args: Namespace) -> None:

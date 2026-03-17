@@ -1,7 +1,5 @@
-// SuperLocalMemory V2 - Clusters View
-// Depends on: core.js
-//
-// Security: All dynamic values escaped via escapeHtml(). Data from local DB only.
+// SuperLocalMemory V3 - Clusters View
+// Part of Qualixar | https://superlocalmemory.com
 
 async function loadClusters() {
     showLoading('clusters-list', 'Loading clusters...');
@@ -18,152 +16,180 @@ async function loadClusters() {
 function renderClusters(clusters) {
     var container = document.getElementById('clusters-list');
     if (!clusters || clusters.length === 0) {
-        showEmpty('clusters-list', 'collection', 'No clusters found. Run "slm build-graph" to generate clusters.');
+        showEmpty('clusters-list', 'collection', 'No clusters found yet. Clusters form automatically as you store related memories.');
         return;
     }
 
-    var colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a'];
+    var colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#30cfd0', '#764ba2', '#f5576c'];
     container.textContent = '';
 
     clusters.forEach(function(cluster, idx) {
         var color = colors[idx % colors.length];
 
         var card = document.createElement('div');
-        card.className = 'card cluster-card';
-        card.style.cssText = 'border-color:' + color + '; cursor:pointer;';
-        card.setAttribute('data-cluster-id', cluster.cluster_id);
-        card.title = 'Click to filter graph to this cluster';
+        card.className = 'card mb-2';
+        card.style.borderLeft = '4px solid ' + color;
 
         var body = document.createElement('div');
-        body.className = 'card-body';
+        body.className = 'card-body py-2 px-3';
+        body.style.cursor = 'pointer';
+
+        // Header row
+        var headerRow = document.createElement('div');
+        headerRow.className = 'd-flex justify-content-between align-items-center';
 
         var title = document.createElement('h6');
-        title.className = 'card-title';
-        title.textContent = 'Cluster ' + cluster.cluster_id + ' ';
+        title.className = 'mb-0';
+        title.textContent = 'Cluster ' + cluster.cluster_id;
+
+        var badges = document.createElement('div');
         var countBadge = document.createElement('span');
-        countBadge.className = 'badge bg-secondary float-end';
+        countBadge.className = 'badge bg-secondary me-1';
         countBadge.textContent = cluster.member_count + ' memories';
-        title.appendChild(countBadge);
-        body.appendChild(title);
+        badges.appendChild(countBadge);
 
-        var imp = document.createElement('p');
-        imp.className = 'mb-2';
-        imp.textContent = 'Avg Importance: ' + parseFloat(cluster.avg_importance).toFixed(1);
-        body.appendChild(imp);
-
-        var cats = document.createElement('p');
-        cats.className = 'mb-2';
-        cats.textContent = 'Categories: ' + (cluster.categories || 'None');
-        body.appendChild(cats);
-
-        var entLabel = document.createElement('strong');
-        entLabel.textContent = 'Top Entities:';
-        body.appendChild(entLabel);
-        body.appendChild(document.createElement('br'));
-
-        if (cluster.top_entities && cluster.top_entities.length > 0) {
-            cluster.top_entities.forEach(function(e) {
-                var badge = document.createElement('span');
-                badge.className = 'badge bg-info entity-badge';
-                badge.textContent = e.entity + ' (' + e.count + ')';
-                body.appendChild(badge);
-                body.appendChild(document.createTextNode(' '));
-            });
-        } else {
-            var none = document.createElement('span');
-            none.className = 'text-muted';
-            none.textContent = 'No entities';
-            body.appendChild(none);
+        if (cluster.avg_importance) {
+            var impBadge = document.createElement('span');
+            impBadge.className = 'badge bg-outline-primary';
+            impBadge.style.cssText = 'border:1px solid #667eea; color:#667eea;';
+            impBadge.textContent = 'imp: ' + parseFloat(cluster.avg_importance).toFixed(1);
+            badges.appendChild(impBadge);
         }
 
+        var expandIcon = document.createElement('i');
+        expandIcon.className = 'bi bi-chevron-down ms-2';
+        expandIcon.style.transition = 'transform 0.2s';
+        badges.appendChild(expandIcon);
+
+        headerRow.appendChild(title);
+        headerRow.appendChild(badges);
+        body.appendChild(headerRow);
+
+        // Summary line (categories if available)
+        if (cluster.categories) {
+            var catLine = document.createElement('small');
+            catLine.className = 'text-muted';
+            catLine.textContent = cluster.categories;
+            body.appendChild(catLine);
+        }
+
+        // Expandable member area (hidden by default)
+        var memberArea = document.createElement('div');
+        memberArea.className = 'mt-2';
+        memberArea.style.display = 'none';
+        memberArea.id = 'cluster-members-' + cluster.cluster_id;
+
+        var loadingText = document.createElement('div');
+        loadingText.className = 'text-center text-muted small py-2';
+        loadingText.textContent = 'Loading members...';
+        memberArea.appendChild(loadingText);
+
+        body.appendChild(memberArea);
         card.appendChild(body);
         container.appendChild(card);
 
-        // v2.6.5: Click card → filter graph to this cluster
-        card.addEventListener('click', function(e) {
-            // Don't trigger if clicking on badge or entity
-            if (e.target.classList.contains('entity-badge') || e.target.classList.contains('badge')) {
-                return;
+        // Click to expand/collapse
+        var expanded = false;
+        body.addEventListener('click', function(e) {
+            expanded = !expanded;
+            memberArea.style.display = expanded ? 'block' : 'none';
+            expandIcon.style.transform = expanded ? 'rotate(180deg)' : 'rotate(0)';
+
+            if (expanded && memberArea.children.length === 1 && memberArea.children[0] === loadingText) {
+                loadClusterMembers(cluster.cluster_id, memberArea);
             }
-
-            const clusterId = parseInt(card.getAttribute('data-cluster-id'));
-            filterGraphToCluster(clusterId);
-        });
-
-        // v2.6.5: Click entity badge → filter graph by entity
-        if (cluster.top_entities && cluster.top_entities.length > 0) {
-            const entityBadges = body.querySelectorAll('.entity-badge');
-            entityBadges.forEach(function(badge) {
-                badge.style.cursor = 'pointer';
-                badge.title = 'Click to show memories with this entity';
-                badge.addEventListener('click', function(e) {
-                    e.stopPropagation(); // Don't trigger card click
-                    const entityText = badge.textContent.split(' (')[0]; // Extract entity name
-                    filterGraphByEntity(entityText);
-                });
-            });
-        }
-
-        // v2.6.5: Click "X memories" badge → show list in sidebar (future feature)
-        countBadge.style.cursor = 'pointer';
-        countBadge.title = 'Click to view memories in this cluster';
-        countBadge.addEventListener('click', function(e) {
-            e.stopPropagation(); // Don't trigger card click
-            showClusterMemories(cluster.cluster_id);
         });
     });
 }
 
-// v2.6.5: Filter graph to a specific cluster
-function filterGraphToCluster(clusterId) {
-    // Switch to Graph tab
-    const graphTab = document.querySelector('a[href="#graph"]');
-    if (graphTab) {
-        graphTab.click();
-    }
+async function loadClusterMembers(clusterId, container) {
+    try {
+        var response = await fetch('/api/clusters/' + clusterId + '?limit=10');
+        var data = await response.json();
+        container.textContent = '';
 
-    // Apply filter after a delay (for tab to load)
+        if (!data.members || data.members.length === 0) {
+            var empty = document.createElement('div');
+            empty.className = 'text-muted small';
+            empty.textContent = 'No members found.';
+            container.appendChild(empty);
+            return;
+        }
+
+        data.members.forEach(function(m, i) {
+            var row = document.createElement('div');
+            row.className = 'border-bottom py-1';
+            if (i === data.members.length - 1) row.className = 'py-1';
+
+            var content = document.createElement('div');
+            content.className = 'small';
+            var text = m.content || m.summary || '';
+            content.textContent = (i + 1) + '. ' + (text.length > 150 ? text.substring(0, 150) + '...' : text);
+            row.appendChild(content);
+
+            var meta = document.createElement('div');
+            meta.className = 'text-muted';
+            meta.style.fontSize = '0.7rem';
+            var parts = [];
+            if (m.category) parts.push(m.category);
+            if (m.importance) parts.push('imp: ' + m.importance);
+            if (m.created_at) parts.push(m.created_at.substring(0, 10));
+            meta.textContent = parts.join(' | ');
+            row.appendChild(meta);
+
+            container.appendChild(row);
+        });
+
+        // View in graph button
+        var graphBtn = document.createElement('button');
+        graphBtn.className = 'btn btn-sm btn-outline-primary mt-2';
+        graphBtn.textContent = 'View in Knowledge Graph';
+        graphBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            filterGraphToCluster(clusterId);
+        });
+        container.appendChild(graphBtn);
+
+    } catch (error) {
+        container.textContent = '';
+        var errDiv = document.createElement('div');
+        errDiv.className = 'text-danger small';
+        errDiv.textContent = 'Failed to load: ' + error.message;
+        container.appendChild(errDiv);
+    }
+}
+
+function filterGraphToCluster(clusterId) {
+    var graphTab = document.querySelector('a[href="#graph"]');
+    if (graphTab) graphTab.click();
+
     setTimeout(function() {
         if (typeof filterState !== 'undefined' && typeof filterByCluster === 'function' && typeof renderGraph === 'function') {
             filterState.cluster_id = clusterId;
-            const filtered = filterByCluster(originalGraphData, clusterId);
+            var filtered = filterByCluster(originalGraphData, clusterId);
             renderGraph(filtered);
-
-            // Update URL
-            const url = new URL(window.location);
+            var url = new URL(window.location);
             url.searchParams.set('cluster_id', clusterId);
             window.history.replaceState({}, '', url);
         }
     }, 300);
 }
 
-// v2.6.5: Filter graph by entity
 function filterGraphByEntity(entity) {
-    // Switch to Graph tab
-    const graphTab = document.querySelector('a[href="#graph"]');
-    if (graphTab) {
-        graphTab.click();
-    }
+    var graphTab = document.querySelector('a[href="#graph"]');
+    if (graphTab) graphTab.click();
 
-    // Apply filter after a delay
     setTimeout(function() {
         if (typeof filterState !== 'undefined' && typeof filterByEntity === 'function' && typeof renderGraph === 'function') {
             filterState.entity = entity;
-            const filtered = filterByEntity(originalGraphData, entity);
+            var filtered = filterByEntity(originalGraphData, entity);
             renderGraph(filtered);
         }
     }, 300);
 }
 
-// v2.6.5: Show memories in a cluster (future: sidebar list)
 function showClusterMemories(clusterId) {
-    // For now, just filter Memories tab
-    const memoriesTab = document.querySelector('a[href="#memories"]');
-    if (memoriesTab) {
-        memoriesTab.click();
-    }
-
-    // TODO: Implement sidebar memory list view
-    console.log('Show memories for cluster', clusterId);
-    showToast('Filtering memories for cluster ' + clusterId);
+    var memoriesTab = document.querySelector('a[href="#memories"]');
+    if (memoriesTab) memoriesTab.click();
+    if (typeof showToast === 'function') showToast('Filtering memories for cluster ' + clusterId);
 }
