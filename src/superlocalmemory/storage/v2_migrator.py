@@ -151,20 +151,33 @@ class V2Migrator:
         self._backup_db = self._v3_base / BACKUP_NAME
 
     def detect_v2(self) -> bool:
-        """Check if a V2 installation exists."""
+        """Check if a V2 installation exists.
+
+        Returns False if .claude-memory is a symlink (already migrated).
+        """
+        if self._v2_base.is_symlink():
+            return False
         return self._v2_db.exists() and self._v2_db.is_file()
 
     def is_already_migrated(self) -> bool:
-        """Check if migration has already been performed."""
+        """Check if migration has already been performed.
+
+        Detects migration by:
+        1. .claude-memory is a symlink to .superlocalmemory (definitive)
+        2. V3 schema tables exist in the V3 database
+        """
+        if self._v2_base.is_symlink():
+            return True
         if not self._v3_db.exists():
             return False
         try:
             conn = sqlite3.connect(str(self._v3_db))
             try:
-                tables = [r[0] for r in conn.execute(
+                tables = {r[0] for r in conn.execute(
                     "SELECT name FROM sqlite_master WHERE type='table'"
-                ).fetchall()]
-                return "semantic_facts" in tables and "v3_config" in tables
+                ).fetchall()}
+                # Check for actual V3 schema tables (not old migration markers)
+                return "atomic_facts" in tables and "canonical_entities" in tables
             finally:
                 conn.close()
         except Exception:
@@ -217,11 +230,11 @@ class V2Migrator:
 
         Returns dict with migration stats.
         """
-        if not self.detect_v2():
-            return {"success": False, "error": "No V2 installation found"}
-
         if self.is_already_migrated():
             return {"success": True, "message": "Already migrated"}
+
+        if not self.detect_v2():
+            return {"success": False, "error": "No V2 installation found"}
 
         stats = {"steps": []}
 
@@ -267,6 +280,19 @@ class V2Migrator:
                 pass
             # Disable FK enforcement for migrated DBs (V2 schema is incompatible)
             conn.execute("PRAGMA foreign_keys=OFF")
+
+            # Drop ALL triggers before renaming tables.
+            # ALTER TABLE RENAME auto-updates trigger bodies but corrupts
+            # FTS5 delete-command column names, causing:
+            #   "table _v2_bak_*_fts has no column named *_fts"
+            v2_triggers = [r[0] for r in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='trigger'"
+            ).fetchall()]
+            for trigger in v2_triggers:
+                try:
+                    conn.execute(f'DROP TRIGGER IF EXISTS "{trigger}"')
+                except Exception:
+                    pass
 
             # Rename ALL tables with incompatible schemas (V2 + old alpha)
             # User data is in 'memories' table (already upgraded above)

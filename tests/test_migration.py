@@ -77,10 +77,11 @@ def test_migrate_extends_schema(tmp_path, migrator):
     conn = sqlite3.connect(str(tmp_path / ".superlocalmemory" / "memory.db"))
     tables = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
     conn.close()
-    assert "semantic_facts" in tables
-    assert "kg_nodes" in tables
-    assert "memory_edges" in tables
-    assert "v3_config" in tables
+    # V3 schema tables (created by schema.create_all_tables)
+    assert "atomic_facts" in tables
+    assert "canonical_entities" in tables
+    assert "graph_edges" in tables
+    assert "config" in tables
 
 
 def test_migrate_preserves_data(tmp_path, migrator):

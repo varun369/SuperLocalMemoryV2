@@ -151,6 +151,7 @@ def cmd_forget(args: Namespace) -> None:
 
     config = SLMConfig.load()
     engine = MemoryEngine(config)
+    engine.initialize()
     facts = engine._db.get_all_facts(engine.profile_id)
     query_lower = args.query.lower()
     matches = [f for f in facts if query_lower in f.content.lower()]
@@ -191,6 +192,7 @@ def cmd_health(_args: Namespace) -> None:
 
     config = SLMConfig.load()
     engine = MemoryEngine(config)
+    engine.initialize()
     facts = engine._db.get_all_facts(engine.profile_id)
     fisher_count = sum(1 for f in facts if f.fisher_mean is not None)
     langevin_count = sum(1 for f in facts if f.langevin_position is not None)

@@ -216,6 +216,28 @@ CREATE INDEX IF NOT EXISTS idx_facts_interval
 # FTS5 virtual table on atomic_facts for full-text search
 # ---------------------------------------------------------------------------
 
+_SQL_V2_MIGRATION_CLEANUP: Final[str] = """
+-- Clean up stale V2 triggers that fire on active tables but reference
+-- renamed backup FTS tables. The V2→V3 migration renames tables via
+-- ALTER TABLE RENAME, which auto-updates trigger bodies to reference
+-- _v2_bak_* tables but leaves FTS5 delete-command column names stale.
+-- This causes: "table _v2_bak_*_fts has no column named *_fts"
+
+-- Drop V2-era triggers on memories table (memories_ai/ad/au)
+DROP TRIGGER IF EXISTS memories_ai;
+DROP TRIGGER IF EXISTS memories_ad;
+DROP TRIGGER IF EXISTS memories_au;
+
+-- Drop stale V3 triggers (may have been corrupted by V2 rename)
+DROP TRIGGER IF EXISTS atomic_facts_fts_insert;
+DROP TRIGGER IF EXISTS atomic_facts_fts_delete;
+DROP TRIGGER IF EXISTS atomic_facts_fts_update;
+
+-- Drop renamed V2 backup FTS virtual tables (and their shadow tables)
+DROP TABLE IF EXISTS "_v2_bak_atomic_facts_fts";
+DROP TABLE IF EXISTS "_v2_bak_memories_fts";
+"""
+
 _SQL_ATOMIC_FACTS_FTS: Final[str] = """
 CREATE VIRTUAL TABLE IF NOT EXISTS atomic_facts_fts
     USING fts5(
@@ -226,8 +248,11 @@ CREATE VIRTUAL TABLE IF NOT EXISTS atomic_facts_fts
     );
 
 -- Triggers to keep FTS in sync with atomic_facts.
+-- Always DROP+CREATE (not IF NOT EXISTS) to replace any stale triggers
+-- left by V2 migration.
+
 -- INSERT trigger
-CREATE TRIGGER IF NOT EXISTS atomic_facts_fts_insert
+CREATE TRIGGER atomic_facts_fts_insert
     AFTER INSERT ON atomic_facts
 BEGIN
     INSERT INTO atomic_facts_fts (rowid, fact_id, content)
@@ -235,7 +260,7 @@ BEGIN
 END;
 
 -- DELETE trigger
-CREATE TRIGGER IF NOT EXISTS atomic_facts_fts_delete
+CREATE TRIGGER atomic_facts_fts_delete
     AFTER DELETE ON atomic_facts
 BEGIN
     INSERT INTO atomic_facts_fts (atomic_facts_fts, rowid, fact_id, content)
@@ -243,7 +268,7 @@ BEGIN
 END;
 
 -- UPDATE trigger
-CREATE TRIGGER IF NOT EXISTS atomic_facts_fts_update
+CREATE TRIGGER atomic_facts_fts_update
     AFTER UPDATE OF content ON atomic_facts
 BEGIN
     INSERT INTO atomic_facts_fts (atomic_facts_fts, rowid, fact_id, content)
@@ -655,7 +680,9 @@ _DDL_ORDERED: Final[tuple[str, ...]] = (
     _SQL_COMPLIANCE_AUDIT,
     _SQL_BM25_TOKENS,
     _SQL_CONFIG,
-    # FTS5 must come after atomic_facts (content table)
+    # V2 migration cleanup — drop stale triggers/FTS before recreating
+    _SQL_V2_MIGRATION_CLEANUP,
+    # FTS5 must come after atomic_facts (content table) AND after cleanup
     _SQL_ATOMIC_FACTS_FTS,
 )
 
