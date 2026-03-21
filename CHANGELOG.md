@@ -16,6 +16,14 @@ SuperLocalMemory V3 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [3.0.29] - 2026-03-21
+
+### Fixed
+- Profile sync across CLI, Dashboard, and MCP — all entry points now see the same profiles
+- Profile switching now persists correctly across restarts
+
+---
+
 ## [2.8.6] - 2026-03-06
 
 ### Fixed

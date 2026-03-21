@@ -6,16 +6,21 @@
 
 Routes: /api/profiles, /api/profiles/{name}/switch,
         /api/profiles/create, DELETE /api/profiles/{name}
+
+SQLite is the single source of truth for profiles. profiles.json
+is kept in sync as a cache for backward compatibility.
 """
-import json
 import logging
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 
 from .helpers import (
-    get_db_connection, get_active_profile, validate_profile_name,
-    ProfileSwitch, MEMORY_DIR, DB_PATH,
+    get_db_connection, validate_profile_name,
+    ProfileSwitch, DB_PATH,
+    sync_profiles, ensure_profile_in_db, ensure_profile_in_json,
+    set_active_profile_everywhere, delete_profile_from_db,
+    _load_profiles_json, _save_profiles_json,
 )
 
 logger = logging.getLogger("superlocalmemory.routes.profiles")
@@ -25,35 +30,11 @@ router = APIRouter()
 ws_manager = None
 
 
-def _load_profiles_config() -> dict:
-    """Load profiles.json config."""
-    config_file = MEMORY_DIR / "profiles.json"
-    if config_file.exists():
-        try:
-            with open(config_file, 'r') as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
-            pass
-    return {
-        'profiles': {'default': {'name': 'default', 'description': 'Default memory profile'}},
-        'active_profile': 'default',
-    }
-
-
-def _save_profiles_config(config: dict) -> None:
-    """Save profiles.json config."""
-    MEMORY_DIR.mkdir(parents=True, exist_ok=True)
-    config_file = MEMORY_DIR / "profiles.json"
-    with open(config_file, 'w') as f:
-        json.dump(config, f, indent=2)
-
-
 def _get_memory_count(profile: str) -> int:
-    """Get memory count for a profile (V3 atomic_facts or V2 memories)."""
+    """Get memory count for a profile."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Try V3 table first
         try:
             cursor.execute(
                 "SELECT COUNT(*) FROM atomic_facts WHERE profile_id = ?", (profile,),
@@ -72,20 +53,22 @@ def _get_memory_count(profile: str) -> int:
 
 @router.get("/api/profiles")
 async def list_profiles():
-    """List available memory profiles."""
+    """List available memory profiles (synced from SQLite + profiles.json)."""
     try:
-        config = _load_profiles_config()
-        active = config.get('active_profile', 'default')
-        profiles = []
+        merged = sync_profiles()
+        json_config = _load_profiles_json()
+        active = json_config.get('active_profile', 'default')
 
-        for name, info in config.get('profiles', {}).items():
+        profiles = []
+        for p in merged:
+            name = p.get('name', p.get('profile_id', ''))
             count = _get_memory_count(name)
             profiles.append({
                 "name": name,
-                "description": info.get('description', ''),
+                "description": p.get('description', ''),
                 "memory_count": count,
-                "created_at": info.get('created_at', ''),
-                "last_used": info.get('last_used', ''),
+                "created_at": p.get('created_at', ''),
+                "last_used": p.get('last_used', ''),
                 "is_active": name == active,
             })
 
@@ -101,24 +84,29 @@ async def list_profiles():
 
 @router.post("/api/profiles/{name}/switch")
 async def switch_profile(name: str):
-    """Switch active memory profile."""
+    """Switch active memory profile (persists to both config stores)."""
     try:
         if not validate_profile_name(name):
             raise HTTPException(status_code=400, detail="Invalid profile name.")
 
-        config = _load_profiles_config()
+        merged = sync_profiles()
+        merged_names = {p.get('name', p.get('profile_id', '')) for p in merged}
 
-        if name not in config.get('profiles', {}):
-            available = ', '.join(config.get('profiles', {}).keys())
+        if name not in merged_names:
+            available = ', '.join(sorted(merged_names))
             raise HTTPException(
                 status_code=404,
                 detail=f"Profile '{name}' not found. Available: {available}",
             )
 
-        previous = config.get('active_profile', 'default')
-        config['active_profile'] = name
-        config['profiles'][name]['last_used'] = datetime.now().isoformat()
-        _save_profiles_config(config)
+        previous = _load_profiles_json().get('active_profile', 'default')
+        set_active_profile_everywhere(name)
+
+        # Update last_used in profiles.json
+        json_config = _load_profiles_json()
+        if name in json_config.get('profiles', {}):
+            json_config['profiles'][name]['last_used'] = datetime.now().isoformat()
+            _save_profiles_json(json_config)
 
         count = _get_memory_count(name)
 
@@ -143,22 +131,22 @@ async def switch_profile(name: str):
 
 @router.post("/api/profiles/create")
 async def create_profile(body: ProfileSwitch):
-    """Create a new memory profile."""
+    """Create a new memory profile (writes to BOTH SQLite and profiles.json)."""
     try:
         name = body.profile_name
         if not validate_profile_name(name):
             raise HTTPException(status_code=400, detail="Invalid profile name")
 
-        config = _load_profiles_config()
-
-        if name in config.get('profiles', {}):
+        # Check both stores for duplicates
+        merged = sync_profiles()
+        merged_names = {p.get('name', p.get('profile_id', '')) for p in merged}
+        if name in merged_names:
             raise HTTPException(status_code=409, detail=f"Profile '{name}' already exists")
 
-        config['profiles'][name] = {
-            'name': name, 'description': f'Memory profile: {name}',
-            'created_at': datetime.now().isoformat(), 'last_used': None,
-        }
-        _save_profiles_config(config)
+        # Write to BOTH stores atomically
+        desc = f'Memory profile: {name}'
+        ensure_profile_in_db(name, desc)
+        ensure_profile_in_json(name, desc)
 
         return {"success": True, "profile": name, "message": f"Profile '{name}' created"}
 
@@ -175,16 +163,18 @@ async def delete_profile(name: str):
         if name == 'default':
             raise HTTPException(status_code=400, detail="Cannot delete 'default' profile")
 
-        config = _load_profiles_config()
-
-        if name not in config.get('profiles', {}):
+        merged = sync_profiles()
+        merged_names = {p.get('name', p.get('profile_id', '')) for p in merged}
+        if name not in merged_names:
             raise HTTPException(status_code=404, detail=f"Profile '{name}' not found")
-        if config.get('active_profile') == name:
+
+        json_config = _load_profiles_json()
+        if json_config.get('active_profile') == name:
             raise HTTPException(status_code=400, detail="Cannot delete active profile.")
 
+        # Move data to default before deleting (bypasses CASCADE)
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Move memories to default (try V3 first, then V2)
         moved = 0
         try:
             cursor.execute(
@@ -196,7 +186,7 @@ async def delete_profile(name: str):
             pass
         try:
             cursor.execute(
-                "UPDATE memories SET profile = 'default' WHERE profile = ?",
+                "UPDATE memories SET profile_id = 'default' WHERE profile_id = ?",
                 (name,),
             )
             moved += cursor.rowcount
@@ -205,8 +195,13 @@ async def delete_profile(name: str):
         conn.commit()
         conn.close()
 
-        del config['profiles'][name]
-        _save_profiles_config(config)
+        # Delete from BOTH stores
+        delete_profile_from_db(name)
+
+        profiles = json_config.get('profiles', {})
+        profiles.pop(name, None)
+        json_config['profiles'] = profiles
+        _save_profiles_json(json_config)
 
         return {
             "success": True,

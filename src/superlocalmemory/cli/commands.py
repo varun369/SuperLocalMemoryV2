@@ -699,10 +699,17 @@ def cmd_dashboard(args: Namespace) -> None:
 
 
 def cmd_profile(args: Namespace) -> None:
-    """Profile management (list, switch, create)."""
+    """Profile management (list, switch, create).
+
+    Writes to BOTH SQLite and profiles.json so CLI, Dashboard, and
+    MCP all see the same profiles.
+    """
     from superlocalmemory.core.config import SLMConfig
     from superlocalmemory.storage.database import DatabaseManager
     from superlocalmemory.storage import schema
+    from superlocalmemory.server.routes.helpers import (
+        ensure_profile_in_json, set_active_profile_everywhere,
+    )
 
     config = SLMConfig.load()
     db = DatabaseManager(config.db_path)
@@ -721,6 +728,7 @@ def cmd_profile(args: Namespace) -> None:
                            {"command": "slm profile switch <name> --json", "description": "Switch profile"},
                        ])
         elif args.action == "switch":
+            set_active_profile_everywhere(args.name)
             config.active_profile = args.name
             config.save()
             json_print("profile", data={"action": "switched", "profile": args.name})
@@ -729,6 +737,7 @@ def cmd_profile(args: Namespace) -> None:
                 "INSERT OR IGNORE INTO profiles (profile_id, name) VALUES (?, ?)",
                 (args.name, args.name),
             )
+            ensure_profile_in_json(args.name)
             json_print("profile", data={"action": "created", "profile": args.name},
                        next_actions=[
                            {"command": f"slm profile switch {args.name} --json",
@@ -743,13 +752,14 @@ def cmd_profile(args: Namespace) -> None:
             d = dict(r)
             print(f"  - {d['profile_id']}: {d.get('name', '')}")
     elif args.action == "switch":
+        set_active_profile_everywhere(args.name)
         config.active_profile = args.name
         config.save()
         print(f"Switched to profile: {args.name}")
     elif args.action == "create":
-        from superlocalmemory.storage.models import _new_id
         db.execute(
             "INSERT OR IGNORE INTO profiles (profile_id, name) VALUES (?, ?)",
             (args.name, args.name),
         )
+        ensure_profile_in_json(args.name)
         print(f"Created profile: {args.name}")

@@ -104,6 +104,10 @@ class OllamaEmbedder:
         self._dimension = dim
 
     @property
+    def is_available(self) -> bool:
+        return True
+
+    @property
     def dimension(self) -> int:
         return self._dimension
 

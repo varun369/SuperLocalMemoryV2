@@ -201,6 +201,14 @@ def register_core_tools(server, get_engine: Callable) -> None:
             engine = get_engine()
             old = engine.profile_id
             engine.profile_id = profile_id
+
+            # Persist to both config stores so CLI and Dashboard stay in sync
+            from superlocalmemory.server.routes.helpers import (
+                ensure_profile_in_db, set_active_profile_everywhere,
+            )
+            ensure_profile_in_db(profile_id)
+            set_active_profile_everywhere(profile_id)
+
             return {
                 "success": True,
                 "previous_profile": old,
