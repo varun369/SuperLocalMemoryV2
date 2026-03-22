@@ -5,13 +5,14 @@
 """SuperLocalMemory V3 — Database Manager.
 
 SQLite with WAL, profile-scoped CRUD, FTS5 search, BM25 persistence.
-All connections use try/finally. Only ``except sqlite3.Error``.
+Concurrent-safe: WAL mode + busy_timeout + retry on SQLITE_BUSY.
+Multiple processes (MCP, CLI, integrations) can read/write safely.
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
 """
 from __future__ import annotations
 
-import json, logging, sqlite3, threading
+import json, logging, sqlite3, threading, time
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
@@ -37,11 +38,22 @@ def _jd(val: Any) -> str | None:
     return json.dumps(val) if val is not None else None
 
 
-class DatabaseManager:
-    """Thread-safe SQLite manager with WAL, profile isolation, and FTS5.
+_BUSY_TIMEOUT_MS = 10_000   # 10 seconds — wait for other writers
+_MAX_RETRIES = 5            # retry on transient SQLITE_BUSY
+_RETRY_BASE_DELAY = 0.1    # seconds — exponential backoff base
 
-    Per-call connections outside transactions; shared connection inside
-    a ``transaction()`` block. Thread-safe via threading.Lock.
+
+class DatabaseManager:
+    """Concurrent-safe SQLite manager with WAL, profile isolation, and FTS5.
+
+    Designed for multi-process access: MCP server, CLI, LangChain, CrewAI,
+    and other integrations can all read/write the same database safely.
+
+    Concurrency model:
+    - WAL mode: readers never block writers, writers never block readers
+    - busy_timeout: writers wait up to 10s for other writers instead of failing
+    - Retry with backoff: transient SQLITE_BUSY errors are retried automatically
+    - Per-call connections: no shared state between processes
     """
 
     def __init__(self, db_path: str | Path) -> None:
@@ -55,6 +67,7 @@ class DatabaseManager:
         conn = sqlite3.connect(str(self.db_path))
         try:
             conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute(f"PRAGMA busy_timeout={_BUSY_TIMEOUT_MS}")
             conn.execute("PRAGMA foreign_keys=ON")
             conn.commit()
         finally:
@@ -62,9 +75,8 @@ class DatabaseManager:
 
     def initialize(self, schema_module: ModuleType) -> None:
         """Create all tables. *schema_module* must expose ``create_all_tables(conn)``."""
-        conn = sqlite3.connect(str(self.db_path))
+        conn = self._connect()
         try:
-            conn.execute("PRAGMA foreign_keys=ON")
             schema_module.create_all_tables(conn)
             conn.commit()
             logger.info("Schema initialized at %s", self.db_path)
@@ -81,8 +93,9 @@ class DatabaseManager:
         self.close()
 
     def _connect(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(str(self.db_path))
+        conn = sqlite3.connect(str(self.db_path), timeout=_BUSY_TIMEOUT_MS / 1000)
         conn.row_factory = sqlite3.Row
+        conn.execute(f"PRAGMA busy_timeout={_BUSY_TIMEOUT_MS}")
         conn.execute("PRAGMA foreign_keys=ON")
         return conn
 
@@ -103,16 +116,36 @@ class DatabaseManager:
                 conn.close()
 
     def execute(self, sql: str, params: tuple[Any, ...] = ()) -> list[sqlite3.Row]:
-        """Execute SQL. Uses shared conn inside transaction, else per-call."""
+        """Execute SQL with automatic retry on SQLITE_BUSY.
+
+        Uses shared conn inside transaction, else per-call with retry.
+        """
         if self._txn_conn is not None:
             return self._txn_conn.execute(sql, params).fetchall()
-        conn = self._connect()
-        try:
-            rows = conn.execute(sql, params).fetchall()
-            conn.commit()
-            return rows
-        finally:
-            conn.close()
+
+        last_error: Exception | None = None
+        for attempt in range(_MAX_RETRIES):
+            conn = self._connect()
+            try:
+                rows = conn.execute(sql, params).fetchall()
+                conn.commit()
+                return rows
+            except sqlite3.OperationalError as exc:
+                last_error = exc
+                if "locked" in str(exc).lower() or "busy" in str(exc).lower():
+                    delay = _RETRY_BASE_DELAY * (2 ** attempt)
+                    logger.debug(
+                        "DB busy (attempt %d/%d), retrying in %.1fs: %s",
+                        attempt + 1, _MAX_RETRIES, delay, exc,
+                    )
+                    time.sleep(delay)
+                    continue
+                raise
+            finally:
+                conn.close()
+
+        logger.warning("DB operation failed after %d retries: %s", _MAX_RETRIES, last_error)
+        raise last_error  # type: ignore[misc]
 
     def store_memory(self, record: MemoryRecord) -> str:
         """Persist a raw memory record. Returns memory_id."""
