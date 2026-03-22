@@ -348,7 +348,7 @@ class SLMConfig:
                 ),
                 llm=LLMConfig(),  # No LLM
                 retrieval=RetrievalConfig(
-                    use_cross_encoder=True,  # Hotpatch: CE ON for Mode A with bge-reranker
+                    use_cross_encoder=False,  # Disabled: 30s PyTorch cold start kills UX
                 ),
                 math=MathConfig(
                     sheaf_contradiction_threshold=0.45,  # 768d threshold
@@ -370,7 +370,7 @@ class SLMConfig:
                     api_base=llm_api_base or "http://localhost:11434",
                     api_key=llm_api_key or "",
                 ),
-                retrieval=RetrievalConfig(use_cross_encoder=True),
+                retrieval=RetrievalConfig(use_cross_encoder=False),
             )
 
         # Mode C — FULL POWER, UNRESTRICTED
