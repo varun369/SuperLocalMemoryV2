@@ -82,7 +82,7 @@ class TestJsonEnvelope:
         from pathlib import Path
         json_print("test_cmd", data={"path": Path("/tmp/test")})
         output = json.loads(capsys.readouterr().out)
-        assert output["data"]["path"] == "/tmp/test"
+        assert output["data"]["path"] == str(Path("/tmp/test"))
 
 
 # -- CLI --json Integration Tests (no engine needed) ----------------------
