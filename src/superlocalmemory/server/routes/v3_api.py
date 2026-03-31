@@ -112,11 +112,22 @@ async def set_mode(request: Request):
         new_config.active_profile = old_config.active_profile
         new_config.save()
 
+        # V3.3: Check if embedding model changed — flag for re-indexing
+        needs_reindex = (
+            old_config.embedding.provider != new_config.embedding.provider
+            or old_config.embedding.model_name != new_config.embedding.model_name
+        )
+
         # Reset engine to pick up new config
         if hasattr(request.app.state, "engine"):
             request.app.state.engine = None
 
-        return {"success": True, "mode": new_mode}
+        return {
+            "success": True,
+            "mode": new_mode,
+            "needs_reindex": needs_reindex,
+            "message": "Embedding re-indexing will run on next recall." if needs_reindex else "",
+        }
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
@@ -1188,5 +1199,496 @@ async def get_vector_store_status(request: Request, profile: str = ""):
                 pass
 
         return result
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# ── Phase 10: V3.3 API Endpoints ────────────────────────────
+# 7 new endpoints for the V3.3 dashboard:
+#   Forgetting (2), Quantization (1), CCQ (1),
+#   Soft Prompts (1), Process Health (1), V3.3 Overview (1)
+#
+# Rules enforced:
+#   01 - Profile scoping on ALL endpoints
+#   06 - No engine import from routes (direct sqlite3)
+#   11 - Parameterized SQL everywhere
+#   19 - Silent errors with JSONResponse
+# ──────────────────────────────────────────────────────────────
+
+
+# ── 1a. GET /api/v3/forgetting/stats ────────────────────────
+
+@router.get("/forgetting/stats")
+async def forgetting_stats(request: Request, profile: str = ""):
+    """Get memory retention zone distribution."""
+    try:
+        from superlocalmemory.server.routes.helpers import get_active_profile, DB_PATH
+        import sqlite3 as _sqlite3
+        pid = profile or get_active_profile()
+
+        zones = {"active": 0, "warm": 0, "cold": 0, "archive": 0, "forgotten": 0}
+        total = 0
+
+        if not DB_PATH.exists():
+            return {"total": total, "zones": zones}
+
+        conn = _sqlite3.connect(str(DB_PATH))
+        conn.row_factory = _sqlite3.Row
+
+        try:
+            rows = conn.execute(
+                "SELECT lifecycle_zone, COUNT(*) AS cnt "
+                "FROM fact_retention WHERE profile_id = ? "
+                "GROUP BY lifecycle_zone",
+                (pid,),
+            ).fetchall()
+            for row in rows:
+                zone = dict(row)["lifecycle_zone"]
+                cnt = dict(row)["cnt"]
+                if zone in zones:
+                    zones[zone] = cnt
+                total += cnt
+        except Exception:
+            # Table may not exist in older DBs -- graceful fallback
+            pass
+
+        conn.close()
+        return {"total": total, "zones": zones}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# ── 1b. POST /api/v3/forgetting/run ─────────────────────────
+
+@router.post("/forgetting/run")
+async def run_forgetting(request: Request):
+    """Trigger a forgetting decay cycle.
+
+    Body: {"profile": ""} (optional profile override).
+    """
+    try:
+        body = await request.json()
+        profile = body.get("profile", "")
+
+        from superlocalmemory.server.routes.helpers import get_active_profile, DB_PATH
+        import sqlite3 as _sqlite3
+        pid = profile or get_active_profile()
+
+        if not DB_PATH.exists():
+            return {"success": False, "error": "Database not found"}
+
+        conn = _sqlite3.connect(str(DB_PATH))
+        conn.row_factory = _sqlite3.Row
+
+        updated = 0
+        try:
+            # Apply Ebbinghaus decay: reduce retention for facts not accessed recently
+            # Formula: retention *= exp(-0.1) for each cycle (simplified batch decay)
+            conn.execute(
+                "UPDATE fact_retention "
+                "SET retention_score = MAX(0.0, retention_score * 0.9), "
+                "    last_computed_at = datetime('now') "
+                "WHERE profile_id = ? "
+                "AND lifecycle_zone NOT IN ('archive', 'forgotten')",
+                (pid,),
+            )
+            updated = conn.total_changes
+
+            # Transition zones based on new retention scores
+            zone_thresholds = [
+                ("forgotten", 0.05),
+                ("archive", 0.15),
+                ("cold", 0.35),
+                ("warm", 0.65),
+            ]
+            for zone, threshold in zone_thresholds:
+                conn.execute(
+                    "UPDATE fact_retention "
+                    "SET lifecycle_zone = ? "
+                    "WHERE profile_id = ? "
+                    "AND retention_score < ? "
+                    "AND lifecycle_zone NOT IN ('archive', 'forgotten')",
+                    (zone, pid, threshold),
+                )
+
+            # Ensure high-retention facts are active
+            conn.execute(
+                "UPDATE fact_retention "
+                "SET lifecycle_zone = 'active' "
+                "WHERE profile_id = ? AND retention_score >= 0.65 "
+                "AND lifecycle_zone NOT IN ('archive', 'forgotten')",
+                (pid,),
+            )
+
+            conn.commit()
+        except Exception as exc:
+            conn.close()
+            return {"success": False, "error": str(exc)}
+
+        conn.close()
+        return {"success": True, "facts_decayed": updated, "profile": pid}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# ── 1c. GET /api/v3/quantization/stats ──────────────────────
+
+@router.get("/quantization/stats")
+async def quantization_stats(request: Request, profile: str = ""):
+    """Get embedding quantization tier distribution."""
+    try:
+        from superlocalmemory.server.routes.helpers import get_active_profile, DB_PATH
+        import sqlite3 as _sqlite3
+        pid = profile or get_active_profile()
+
+        tiers = {"float32": 0, "int8": 0, "polar4": 0, "polar2": 0}
+        total = 0
+        compression_ratio = 1.0
+
+        if not DB_PATH.exists():
+            return {"total": total, "tiers": tiers, "compression_ratio": compression_ratio}
+
+        conn = _sqlite3.connect(str(DB_PATH))
+        conn.row_factory = _sqlite3.Row
+
+        try:
+            rows = conn.execute(
+                "SELECT quantization_level, COUNT(*) AS cnt "
+                "FROM embedding_quantization_metadata "
+                "WHERE profile_id = ? "
+                "GROUP BY quantization_level",
+                (pid,),
+            ).fetchall()
+            for row in rows:
+                level = dict(row)["quantization_level"]
+                cnt = dict(row)["cnt"]
+                if level in tiers:
+                    tiers[level] = cnt
+                total += cnt
+        except Exception:
+            pass
+
+        # Compute compression ratio from actual sizes if available
+        try:
+            size_row = conn.execute(
+                "SELECT "
+                "SUM(CASE WHEN bit_width = 32 THEN 768 * 4 ELSE "
+                "    COALESCE(compressed_size_bytes, 768 * bit_width / 8) END) AS actual, "
+                "SUM(768 * 4) AS uncompressed "
+                "FROM embedding_quantization_metadata "
+                "WHERE profile_id = ?",
+                (pid,),
+            ).fetchone()
+            if size_row:
+                d = dict(size_row)
+                uncompressed = d.get("uncompressed") or 0
+                actual = d.get("actual") or 0
+                if actual > 0 and uncompressed > 0:
+                    compression_ratio = round(uncompressed / actual, 2)
+        except Exception:
+            pass
+
+        conn.close()
+        return {"total": total, "tiers": tiers, "compression_ratio": compression_ratio}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# ── 1d. GET /api/v3/ccq/blocks ──────────────────────────────
+
+@router.get("/ccq/blocks")
+async def ccq_blocks(request: Request, profile: str = "", limit: int = 50):
+    """Get CCQ consolidated blocks."""
+    try:
+        from superlocalmemory.server.routes.helpers import get_active_profile, DB_PATH
+        import sqlite3 as _sqlite3
+        pid = profile or get_active_profile()
+
+        if not DB_PATH.exists():
+            return {"blocks": [], "total": 0}
+
+        conn = _sqlite3.connect(str(DB_PATH))
+        conn.row_factory = _sqlite3.Row
+
+        blocks = []
+        total = 0
+        try:
+            rows = conn.execute(
+                "SELECT block_id, content, source_fact_ids, char_count, "
+                "compiled_by, cluster_id, created_at "
+                "FROM ccq_consolidated_blocks "
+                "WHERE profile_id = ? "
+                "ORDER BY created_at DESC LIMIT ?",
+                (pid, limit),
+            ).fetchall()
+
+            for row in rows:
+                d = dict(row)
+                source_ids = []
+                try:
+                    source_ids = json.loads(d.get("source_fact_ids", "[]"))
+                except (json.JSONDecodeError, TypeError):
+                    pass
+                blocks.append({
+                    "block_id": d["block_id"],
+                    "content": d["content"],
+                    "source_fact_count": len(source_ids),
+                    "char_count": d["char_count"],
+                    "compiled_by": d["compiled_by"],
+                    "cluster_id": d["cluster_id"],
+                    "created_at": d["created_at"],
+                })
+
+            count_row = conn.execute(
+                "SELECT COUNT(*) FROM ccq_consolidated_blocks "
+                "WHERE profile_id = ?",
+                (pid,),
+            ).fetchone()
+            total = count_row[0] if count_row else 0
+        except Exception:
+            pass
+
+        conn.close()
+        return {"blocks": blocks, "total": total}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# ── 1e. GET /api/v3/soft-prompts ─────────────────────────────
+
+@router.get("/soft-prompts")
+async def get_soft_prompts(request: Request, profile: str = ""):
+    """Get active soft prompt templates."""
+    try:
+        from superlocalmemory.server.routes.helpers import get_active_profile, DB_PATH
+        import sqlite3 as _sqlite3
+        pid = profile or get_active_profile()
+
+        if not DB_PATH.exists():
+            return {"prompts": [], "total": 0, "total_tokens": 0}
+
+        conn = _sqlite3.connect(str(DB_PATH))
+        conn.row_factory = _sqlite3.Row
+
+        prompts = []
+        total_tokens = 0
+        try:
+            rows = conn.execute(
+                "SELECT prompt_id, category, content, confidence, "
+                "effectiveness, token_count, retention_score, "
+                "active, version, created_at, updated_at "
+                "FROM soft_prompt_templates "
+                "WHERE profile_id = ? AND active = 1 "
+                "ORDER BY confidence DESC",
+                (pid,),
+            ).fetchall()
+
+            for row in rows:
+                d = dict(row)
+                tokens = d.get("token_count", 0)
+                total_tokens += tokens
+                prompts.append({
+                    "prompt_id": d["prompt_id"],
+                    "category": d["category"],
+                    "content": d["content"][:200],
+                    "confidence": round(float(d["confidence"]), 3),
+                    "effectiveness": round(float(d.get("effectiveness", 0.5)), 3),
+                    "token_count": tokens,
+                    "retention_score": round(float(d.get("retention_score", 1.0)), 3),
+                    "version": d["version"],
+                    "created_at": d["created_at"],
+                })
+        except Exception:
+            pass
+
+        conn.close()
+        return {"prompts": prompts, "total": len(prompts), "total_tokens": total_tokens}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# ── 1f. GET /api/v3/health/processes ─────────────────────────
+
+@router.get("/health/processes")
+async def process_health(request: Request):
+    """Get SLM process health status."""
+    try:
+        import os as _os
+
+        processes = {
+            "mcp_server": {"pid": _os.getpid(), "status": "running"},
+            "parent": {"pid": _os.getppid(), "status": "unknown"},
+        }
+
+        # Check parent process
+        try:
+            _os.kill(_os.getppid(), 0)
+            processes["parent"]["status"] = "running"
+        except ProcessLookupError:
+            processes["parent"]["status"] = "dead"
+        except PermissionError:
+            processes["parent"]["status"] = "running"
+        except OSError:
+            processes["parent"]["status"] = "unknown"
+
+        # Check worker pool status
+        worker_status = "unavailable"
+        try:
+            from superlocalmemory.core.worker_pool import WorkerPool
+            pool = WorkerPool.shared()
+            worker_status = "running" if pool else "stopped"
+        except Exception:
+            pass
+        processes["worker_pool"] = {"status": worker_status}
+
+        # Memory usage of current process (approximate)
+        memory_mb = 0.0
+        try:
+            import resource
+            usage = resource.getrusage(resource.RUSAGE_SELF)
+            memory_mb = round(usage.ru_maxrss / (1024 * 1024), 1)
+        except Exception:
+            pass
+
+        return {
+            "processes": processes,
+            "memory_mb": memory_mb,
+            "healthy": processes["parent"]["status"] != "dead",
+        }
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# ── 1g. GET /api/v3/v33/overview ─────────────────────────────
+
+@router.get("/v33/overview")
+async def v33_overview(request: Request, profile: str = ""):
+    """Get SLM 3.3 feature overview -- all new capabilities at a glance."""
+    try:
+        from superlocalmemory.server.routes.helpers import get_active_profile, DB_PATH
+        import sqlite3 as _sqlite3
+        pid = profile or get_active_profile()
+
+        overview: dict = {
+            "version": "3.3",
+            "profile": pid,
+            "forgetting": {"total": 0, "zones": {}},
+            "quantization": {"total": 0, "tiers": {}, "compression_ratio": 1.0},
+            "ccq": {"blocks": 0, "facts_archived": 0},
+            "soft_prompts": {"total": 0, "total_tokens": 0},
+            "hopfield": {
+                "available": False,
+                "description": "Modern Continuous Hopfield Network retrieval channel",
+            },
+            "process_health": {"healthy": True},
+        }
+
+        if not DB_PATH.exists():
+            return overview
+
+        conn = _sqlite3.connect(str(DB_PATH))
+        conn.row_factory = _sqlite3.Row
+
+        # Forgetting stats
+        try:
+            zones = {"active": 0, "warm": 0, "cold": 0, "archive": 0, "forgotten": 0}
+            rows = conn.execute(
+                "SELECT lifecycle_zone, COUNT(*) AS cnt "
+                "FROM fact_retention WHERE profile_id = ? "
+                "GROUP BY lifecycle_zone",
+                (pid,),
+            ).fetchall()
+            total_fg = 0
+            for row in rows:
+                d = dict(row)
+                zone = d["lifecycle_zone"]
+                if zone in zones:
+                    zones[zone] = d["cnt"]
+                total_fg += d["cnt"]
+            overview["forgetting"] = {"total": total_fg, "zones": zones}
+        except Exception:
+            pass
+
+        # Quantization stats
+        try:
+            tiers = {"float32": 0, "int8": 0, "polar4": 0, "polar2": 0}
+            rows = conn.execute(
+                "SELECT quantization_level, COUNT(*) AS cnt "
+                "FROM embedding_quantization_metadata "
+                "WHERE profile_id = ? GROUP BY quantization_level",
+                (pid,),
+            ).fetchall()
+            total_q = 0
+            for row in rows:
+                d = dict(row)
+                level = d["quantization_level"]
+                if level in tiers:
+                    tiers[level] = d["cnt"]
+                total_q += d["cnt"]
+            overview["quantization"] = {
+                "total": total_q, "tiers": tiers, "compression_ratio": 1.0,
+            }
+        except Exception:
+            pass
+
+        # CCQ stats
+        try:
+            block_count = conn.execute(
+                "SELECT COUNT(*) FROM ccq_consolidated_blocks "
+                "WHERE profile_id = ?", (pid,),
+            ).fetchone()[0]
+            # Count archived facts (lifecycle='archived' from CCQ)
+            archived_count = 0
+            try:
+                archived_count = conn.execute(
+                    "SELECT COUNT(*) FROM atomic_facts "
+                    "WHERE profile_id = ? AND lifecycle = 'archived'",
+                    (pid,),
+                ).fetchone()[0]
+            except Exception:
+                pass
+            overview["ccq"] = {
+                "blocks": block_count,
+                "facts_archived": archived_count,
+            }
+        except Exception:
+            pass
+
+        # Soft prompts stats
+        try:
+            prompt_rows = conn.execute(
+                "SELECT COUNT(*) AS cnt, COALESCE(SUM(token_count), 0) AS tokens "
+                "FROM soft_prompt_templates "
+                "WHERE profile_id = ? AND active = 1",
+                (pid,),
+            ).fetchone()
+            if prompt_rows:
+                d = dict(prompt_rows)
+                overview["soft_prompts"] = {
+                    "total": d["cnt"],
+                    "total_tokens": d["tokens"],
+                }
+        except Exception:
+            pass
+
+        # Hopfield channel availability
+        try:
+            from superlocalmemory.retrieval.hopfield_channel import HopfieldChannel  # noqa: F401
+            overview["hopfield"]["available"] = True
+        except ImportError:
+            pass
+
+        # Process health
+        try:
+            import os as _os
+            _os.kill(_os.getppid(), 0)
+            overview["process_health"] = {"healthy": True}
+        except ProcessLookupError:
+            overview["process_health"] = {"healthy": False}
+        except (PermissionError, OSError):
+            overview["process_health"] = {"healthy": True}
+
+        conn.close()
+        return overview
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)

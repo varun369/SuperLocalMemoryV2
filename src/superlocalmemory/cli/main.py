@@ -187,6 +187,50 @@ def main() -> None:
     obs_p = sub.add_parser("observe", help="Auto-capture content (pipe or argument)")
     obs_p.add_argument("content", nargs="?", default="", help="Content to evaluate")
 
+    # -- V3.3 Commands -------------------------------------------------
+    decay_p = sub.add_parser("decay", help="Run Ebbinghaus forgetting decay cycle")
+    decay_p.add_argument(
+        "--dry-run", action="store_true", default=True,
+        help="Preview without applying (default)",
+    )
+    decay_p.add_argument(
+        "--execute", dest="dry_run", action="store_false",
+        help="Apply zone transitions",
+    )
+    decay_p.add_argument("--profile", default="", help="Target profile")
+    decay_p.add_argument("--json", action="store_true", help="Output structured JSON (agent-native)")
+
+    quantize_p = sub.add_parser("quantize", help="Run EAP embedding quantization cycle")
+    quantize_p.add_argument(
+        "--dry-run", action="store_true", default=True,
+        help="Preview without applying (default)",
+    )
+    quantize_p.add_argument(
+        "--execute", dest="dry_run", action="store_false",
+        help="Apply precision changes",
+    )
+    quantize_p.add_argument("--profile", default="", help="Target profile")
+    quantize_p.add_argument("--json", action="store_true", help="Output structured JSON (agent-native)")
+
+    consolidate_p = sub.add_parser("consolidate", help="Run memory consolidation pipeline")
+    consolidate_p.add_argument(
+        "--cognitive", action="store_true",
+        help="Run CCQ cognitive consolidation",
+    )
+    consolidate_p.add_argument("--profile", default="", help="Target profile")
+    consolidate_p.add_argument("--json", action="store_true", help="Output structured JSON (agent-native)")
+
+    sp_p = sub.add_parser("soft-prompts", help="List active soft prompts (auto-learned patterns)")
+    sp_p.add_argument("--profile", default="", help="Target profile")
+    sp_p.add_argument("--json", action="store_true", help="Output structured JSON (agent-native)")
+
+    reap_p = sub.add_parser("reap", help="Find and kill orphaned SLM processes")
+    reap_p.add_argument(
+        "--force", action="store_true",
+        help="Kill orphans (default: dry run only)",
+    )
+    reap_p.add_argument("--json", action="store_true", help="Output structured JSON (agent-native)")
+
     args = parser.parse_args()
 
     if not args.command:

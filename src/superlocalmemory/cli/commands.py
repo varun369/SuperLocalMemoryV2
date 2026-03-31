@@ -41,6 +41,12 @@ def dispatch(args: Namespace) -> None:
         "hooks": cmd_hooks,
         "session-context": cmd_session_context,
         "observe": cmd_observe,
+        # V3.3 commands
+        "decay": cmd_decay,
+        "quantize": cmd_quantize,
+        "consolidate": cmd_consolidate,
+        "soft-prompts": cmd_soft_prompts,
+        "reap": cmd_reap,
     }
     handler = handlers.get(args.command)
     if handler:
@@ -102,6 +108,11 @@ def cmd_mode(args: Namespace) -> None:
         )
         updated.save()
         print(f"Mode set to: {args.value.upper()}")
+
+        # V3.3: Check if embedding model changed — inform about re-indexing
+        if (config.embedding.provider != updated.embedding.provider
+                or config.embedding.model_name != updated.embedding.model_name):
+            print("  ⚠ Embedding model changed. Re-indexing will run on next recall.")
     else:
         print(f"Current mode: {config.mode.value.upper()}")
 
@@ -1174,3 +1185,301 @@ def cmd_observe(args: Namespace) -> None:
             print(f"Not captured: {decision.reason}")
     except Exception as exc:
         logger.debug("observe failed: %s", exc)
+
+
+# -- V3.3 Commands -----------------------------------------------------------
+
+
+def cmd_decay(args: Namespace) -> None:
+    """Run Ebbinghaus forgetting decay cycle."""
+    from superlocalmemory.core.config import SLMConfig
+    from superlocalmemory.core.engine import MemoryEngine
+
+    use_json = getattr(args, "json", False)
+    dry_run = getattr(args, "dry_run", True)
+    profile = getattr(args, "profile", "")
+
+    try:
+        config = SLMConfig.load()
+        engine = MemoryEngine(config)
+        engine.initialize()
+        pid = profile or engine.profile_id
+
+        from superlocalmemory.math.ebbinghaus import EbbinghausCurve
+        from superlocalmemory.learning.forgetting_scheduler import (
+            ForgettingScheduler,
+        )
+
+        ebbinghaus = EbbinghausCurve(config.forgetting)
+        scheduler = ForgettingScheduler(
+            engine._db, ebbinghaus, config.forgetting,
+        )
+        result = scheduler.run_decay_cycle(pid, force=True)
+    except Exception as exc:
+        if use_json:
+            from superlocalmemory.cli.json_output import json_print
+            json_print("decay", error={"code": "DECAY_ERROR", "message": str(exc)})
+            sys.exit(1)
+        raise
+
+    if use_json:
+        from superlocalmemory.cli.json_output import json_print
+        json_print("decay", data={"dry_run": dry_run, **result},
+                   next_actions=[
+                       {"command": "slm decay --execute --json", "description": "Apply transitions"},
+                       {"command": "slm status --json", "description": "Check system status"},
+                   ])
+        return
+
+    if result.get("skipped"):
+        print(f"Skipped: {result.get('reason', 'unknown')}")
+        return
+
+    total = result.get("total", 0)
+    print(f"Decay cycle complete (dry_run={dry_run})")
+    print(f"  Total facts:  {total}")
+    print(f"  Active:       {result.get('active', 0)}")
+    print(f"  Warm:         {result.get('warm', 0)}")
+    print(f"  Cold:         {result.get('cold', 0)}")
+    print(f"  Archive:      {result.get('archive', 0)}")
+    print(f"  Forgotten:    {result.get('forgotten', 0)}")
+    print(f"  Transitions:  {result.get('transitions', 0)}")
+
+
+def cmd_quantize(args: Namespace) -> None:
+    """Run EAP embedding quantization cycle."""
+    from superlocalmemory.core.config import SLMConfig
+    from superlocalmemory.core.engine import MemoryEngine
+
+    use_json = getattr(args, "json", False)
+    dry_run = getattr(args, "dry_run", True)
+    profile = getattr(args, "profile", "")
+
+    try:
+        config = SLMConfig.load()
+        engine = MemoryEngine(config)
+        engine.initialize()
+        pid = profile or engine.profile_id
+
+        from superlocalmemory.math.ebbinghaus import EbbinghausCurve
+        from superlocalmemory.dynamics.eap_scheduler import EAPScheduler
+        from superlocalmemory.storage.quantized_store import (
+            QuantizedEmbeddingStore,
+        )
+
+        from superlocalmemory.math.polar_quant import PolarQuantEncoder
+        from superlocalmemory.math.qjl import QJLEncoder
+
+        ebbinghaus = EbbinghausCurve(config.forgetting)
+        polar = PolarQuantEncoder(config.quantization.polar)
+        qjl = QJLEncoder(config.quantization.qjl)
+        qstore = QuantizedEmbeddingStore(
+            engine._db, polar, qjl, config.quantization,
+        )
+        scheduler = EAPScheduler(
+            engine._db, ebbinghaus, qstore, config.quantization,
+        )
+        result = scheduler.run_eap_cycle(pid)
+    except Exception as exc:
+        if use_json:
+            from superlocalmemory.cli.json_output import json_print
+            json_print("quantize", error={"code": "EAP_ERROR", "message": str(exc)})
+            sys.exit(1)
+        raise
+
+    if use_json:
+        from superlocalmemory.cli.json_output import json_print
+        json_print("quantize", data={"dry_run": dry_run, **result},
+                   next_actions=[
+                       {"command": "slm quantize --execute --json", "description": "Apply changes"},
+                       {"command": "slm status --json", "description": "Check status"},
+                   ])
+        return
+
+    print(f"EAP quantization cycle (dry_run={dry_run})")
+    print(f"  Total:       {result.get('total', 0)}")
+    print(f"  Downgrades:  {result.get('downgrades', 0)}")
+    print(f"  Upgrades:    {result.get('upgrades', 0)}")
+    print(f"  Skipped:     {result.get('skipped', 0)}")
+    print(f"  Errors:      {result.get('errors', 0)}")
+
+
+def cmd_consolidate(args: Namespace) -> None:
+    """Run cognitive consolidation pipeline."""
+    from superlocalmemory.core.config import SLMConfig
+    from superlocalmemory.core.engine import MemoryEngine
+
+    use_json = getattr(args, "json", False)
+    cognitive = getattr(args, "cognitive", False)
+    profile = getattr(args, "profile", "")
+
+    if not cognitive:
+        if use_json:
+            from superlocalmemory.cli.json_output import json_print
+            json_print("consolidate", error={
+                "code": "MISSING_FLAG",
+                "message": "Use --cognitive to run CCQ pipeline",
+            })
+            sys.exit(1)
+        print("Use --cognitive to run CCQ consolidation pipeline.")
+        print("  slm consolidate --cognitive")
+        return
+
+    try:
+        config = SLMConfig.load()
+        engine = MemoryEngine(config)
+        engine.initialize()
+        pid = profile or engine.profile_id
+
+        from superlocalmemory.encoding.cognitive_consolidator import (
+            CognitiveConsolidator,
+        )
+
+        consolidator = CognitiveConsolidator(db=engine._db)
+        result = consolidator.run_pipeline(pid)
+    except Exception as exc:
+        if use_json:
+            from superlocalmemory.cli.json_output import json_print
+            json_print("consolidate", error={
+                "code": "CCQ_ERROR", "message": str(exc),
+            })
+            sys.exit(1)
+        raise
+
+    if use_json:
+        from superlocalmemory.cli.json_output import json_print
+        json_print("consolidate", data={
+            "clusters_found": result.clusters_found,
+            "blocks_created": result.blocks_created,
+            "facts_archived": result.facts_archived,
+            "compression_ratio": round(result.compression_ratio, 3),
+        }, next_actions=[
+            {"command": "slm list --json", "description": "List recent memories"},
+            {"command": "slm status --json", "description": "Check status"},
+        ])
+        return
+
+    print("CCQ Cognitive Consolidation")
+    print(f"  Clusters found:     {result.clusters_found}")
+    print(f"  Blocks created:     {result.blocks_created}")
+    print(f"  Facts archived:     {result.facts_archived}")
+    print(f"  Compression ratio:  {result.compression_ratio:.3f}")
+
+
+def cmd_soft_prompts(args: Namespace) -> None:
+    """List active soft prompts (auto-learned user patterns)."""
+    from superlocalmemory.core.config import SLMConfig
+    from superlocalmemory.core.engine import MemoryEngine
+
+    use_json = getattr(args, "json", False)
+    profile = getattr(args, "profile", "")
+
+    try:
+        config = SLMConfig.load()
+        engine = MemoryEngine(config)
+        engine.initialize()
+        pid = profile or engine.profile_id
+
+        rows = engine._db.execute(
+            "SELECT prompt_id, category, content, confidence, "
+            "  effectiveness, token_count, version, created_at "
+            "FROM soft_prompt_templates "
+            "WHERE profile_id = ? AND active = 1 "
+            "ORDER BY confidence DESC",
+            (pid,),
+        )
+        prompts = []
+        for row in rows:
+            r = dict(row)
+            prompts.append({
+                "prompt_id": r["prompt_id"],
+                "category": r["category"],
+                "content": r["content"],
+                "confidence": round(float(r["confidence"]), 3),
+                "effectiveness": round(float(r["effectiveness"]), 3),
+                "token_count": int(r["token_count"]),
+                "version": int(r["version"]),
+                "created_at": r["created_at"],
+            })
+    except Exception as exc:
+        if use_json:
+            from superlocalmemory.cli.json_output import json_print
+            json_print("soft-prompts", error={
+                "code": "QUERY_ERROR", "message": str(exc),
+            })
+            sys.exit(1)
+        raise
+
+    if use_json:
+        from superlocalmemory.cli.json_output import json_print
+        json_print("soft-prompts", data={
+            "prompts": prompts, "count": len(prompts), "profile": pid,
+        }, next_actions=[
+            {"command": "slm status --json", "description": "Check status"},
+        ])
+        return
+
+    if not prompts:
+        print("No active soft prompts.")
+        return
+
+    print(f"Active soft prompts ({len(prompts)}):\n")
+    for i, p in enumerate(prompts, 1):
+        print(f"  {i}. [{p['category']}] (conf={p['confidence']:.2f})")
+        content_preview = p["content"][:100]
+        if len(p["content"]) > 100:
+            content_preview += "..."
+        print(f"     {content_preview}")
+
+
+def cmd_reap(args: Namespace) -> None:
+    """Find and kill orphaned SLM processes."""
+    use_json = getattr(args, "json", False)
+    dry_run = not getattr(args, "force", False)
+
+    try:
+        from superlocalmemory.infra.process_reaper import (
+            cleanup_all_orphans,
+            ReaperConfig,
+        )
+
+        config = ReaperConfig()
+        result = cleanup_all_orphans(config, dry_run=dry_run)
+    except Exception as exc:
+        if use_json:
+            from superlocalmemory.cli.json_output import json_print
+            json_print("reap", error={
+                "code": "REAP_ERROR", "message": str(exc),
+            })
+            sys.exit(1)
+        raise
+
+    if use_json:
+        from superlocalmemory.cli.json_output import json_print
+        json_print("reap", data={
+            "dry_run": dry_run,
+            "total_found": result.get("total_found", 0),
+            "orphans_found": result.get("orphans_found", 0),
+            "killed": result.get("killed", 0),
+            "skipped": result.get("skipped", 0),
+        }, next_actions=[
+            {"command": "slm reap --force --json", "description": "Kill orphans"},
+            {"command": "slm status --json", "description": "Check status"},
+        ])
+        return
+
+    total = result.get("total_found", 0)
+    orphans = result.get("orphans_found", 0)
+    killed = result.get("killed", 0)
+    skipped = result.get("skipped", 0)
+
+    if dry_run:
+        print(f"Process reaper (dry run)")
+    else:
+        print(f"Process reaper")
+    print(f"  Total SLM processes: {total}")
+    print(f"  Orphans found:       {orphans}")
+    print(f"  Killed:              {killed}")
+    print(f"  Skipped:             {skipped}")
+    if dry_run and orphans > 0:
+        print("\n  Use --force to kill orphaned processes.")

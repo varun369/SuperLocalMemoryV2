@@ -40,6 +40,9 @@ if TYPE_CHECKING:
         BehavioralPatternStore,
         BehavioralTracker,
     )
+    from superlocalmemory.learning.consolidation_quantization_worker import (
+        CCQWorker,
+    )
     from superlocalmemory.storage.database import DatabaseManager
 
 logger = logging.getLogger(__name__)
@@ -72,6 +75,7 @@ class ConsolidationEngine:
         graph_analyzer: GraphAnalyzer | None = None,
         temporal_validator: TemporalValidator | None = None,
         slm_config: SLMConfig | None = None,
+        ccq_worker: CCQWorker | None = None,
     ) -> None:
         self._db = db
         self._config = config
@@ -81,6 +85,7 @@ class ConsolidationEngine:
         self._graph_analyzer = graph_analyzer
         self._temporal_validator = temporal_validator
         self._slm_config = slm_config
+        self._ccq_worker = ccq_worker
         self._mode = slm_config.mode.value if slm_config else "a"
         self._store_count: int = 0  # For step-count trigger (L7)
 
@@ -119,6 +124,8 @@ class ConsolidationEngine:
                 results["new_associations"] = self._step6_derive_associations(
                     profile_id,
                 )
+                # Step 7: Cognitive Consolidation Quantization (Phase E)
+                results["ccq"] = self._step7_ccq(profile_id)
             results["success"] = True
         except Exception as exc:
             logger.warning(
@@ -462,6 +469,36 @@ class ConsolidationEngine:
                     except Exception:
                         pass
         return {"summary_facts_linked": linked}
+
+    # ------------------------------------------------------------------
+    # Step 7: Cognitive Consolidation Quantization (Phase E)
+    # ------------------------------------------------------------------
+
+    def _step7_ccq(self, profile_id: str) -> dict[str, Any]:
+        """Run CCQ pipeline after existing 6-step consolidation.
+
+        CCQ is step 7 because it depends on retention data from Phase A
+        and benefits from running after standard consolidation cleanup.
+        """
+        if self._ccq_worker is None:
+            return {"enabled": False}
+
+        if not self._ccq_worker.should_run(
+            self._store_count, is_session_end=False,
+        ):
+            return {"skipped": True, "reason": "trigger not met"}
+
+        try:
+            result = self._ccq_worker.run(profile_id)
+            return {
+                "clusters": result.clusters_processed,
+                "blocks": result.blocks_created,
+                "archived": result.facts_archived,
+                "compression_ratio": result.compression_ratio,
+            }
+        except Exception as exc:
+            logger.warning("CCQ step failed (non-fatal): %s", exc)
+            return {"error": str(exc)}
 
     # ------------------------------------------------------------------
     # Core Memory Block Storage

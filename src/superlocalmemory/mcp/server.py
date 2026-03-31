@@ -59,12 +59,14 @@ from superlocalmemory.mcp.tools_core import register_core_tools
 from superlocalmemory.mcp.tools_v28 import register_v28_tools
 from superlocalmemory.mcp.tools_v3 import register_v3_tools
 from superlocalmemory.mcp.tools_active import register_active_tools
+from superlocalmemory.mcp.tools_v33 import register_v33_tools
 from superlocalmemory.mcp.resources import register_resources
 
 register_core_tools(server, get_engine)
 register_v28_tools(server, get_engine)
 register_v3_tools(server, get_engine)
 register_active_tools(server, get_engine)
+register_v33_tools(server, get_engine)
 register_resources(server, get_engine)
 
 

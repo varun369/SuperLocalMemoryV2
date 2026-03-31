@@ -191,3 +191,15 @@ claude-skills/
 # install.ps1 - Windows installer (REQUIRED)
 # install-skills.sh - Skills installer (REQUIRED)
 # requirements*.txt - Python deps (REQUIRED)
+
+# Environment files
+.env
+.env.*
+.env.local
+
+# IDE integration tests (dev only)
+ide/integrations/*/tests/
+ide/integrations/*/tests/**
+
+# Screenshots (bloat)
+docs/screenshots/

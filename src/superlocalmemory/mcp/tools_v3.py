@@ -69,14 +69,24 @@ def register_v3_tools(server, get_engine: Callable) -> None:
             from superlocalmemory.mcp.server import reset_engine
 
             mode_enum = Mode(mode_lower)
+            old_config = SLMConfig.load()
             config = SLMConfig.for_mode(mode_enum)
             config.save()
+
+            # V3.3: Check if embedding model changed — flag for re-indexing
+            needs_reindex = (
+                old_config.embedding.provider != config.embedding.provider
+                or old_config.embedding.model_name != config.embedding.model_name
+            )
+
             reset_engine()
 
             return {
                 "success": True,
                 "mode": mode_lower,
                 "description": _mode_description(mode_lower),
+                "needs_reindex": needs_reindex,
+                "message": "Embedding re-indexing will run on next recall." if needs_reindex else "",
             }
         except Exception as exc:
             logger.exception("set_mode failed")

@@ -16,6 +16,48 @@ SuperLocalMemory V3 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [3.3.0] - 2026-03-31 — The Living Brain
+
+### New Features
+- **Adaptive Memory Lifecycle** — memories naturally strengthen with use and fade when neglected. No manual cleanup needed.
+- **Smart Compression** — embedding precision adapts to memory importance, achieving up to 32x storage savings on low-priority memories.
+- **Cognitive Consolidation** — automatic pattern extraction from clusters of related memories. Your knowledge graph self-organizes.
+- **Pattern Learning** — auto-learned soft prompts injected into agent context at session start. The system teaches itself what matters.
+- **Hopfield Retrieval** — 6th retrieval channel for vague or partial query completion. Ask half a question, get the whole answer.
+- **Process Health** — automatic detection and cleanup of orphaned SLM processes. No more zombie workers.
+
+### New CLI Commands
+- `slm decay` — run memory lifecycle review
+- `slm quantize` — run smart compression cycle
+- `slm consolidate --cognitive` — extract patterns from memory clusters
+- `slm soft-prompts` — view auto-learned patterns
+- `slm reap` — clean orphaned processes
+
+### New MCP Tools
+- `forget` — programmatic memory archival via lifecycle rules
+- `quantize` — trigger smart compression on demand
+- `consolidate_cognitive` — extract and store patterns from memory clusters
+- `get_soft_prompts` — retrieve auto-learned patterns for context injection
+- `reap_processes` — clean orphaned SLM processes
+- `get_retention_stats` — memory lifecycle analytics
+
+### Dashboard
+- 7 new API endpoints for lifecycle stats, compression stats, patterns, and process health
+- New dashboard tabs: Memory Lifecycle, Compression, Patterns
+
+### Improvements
+- Mode A/B memory usage reduced from ~4GB to ~40MB (100x reduction)
+- Embedding migration on mode switch (auto-detects model change)
+- Forgetting filter in retrieval pipeline (archived memories excluded from results)
+- 6-channel retrieval (was 5)
+
+### Migration
+- Fully backward compatible with 3.2.x
+- New tables created automatically on first run
+- No manual migration needed
+
+---
+
 ## [3.2.2] - 2026-03-30
 
 ### Added
@@ -381,7 +423,7 @@ We use [Semantic Versioning](https://semver.org/):
 - **MINOR:** New features (backward compatible, e.g., 2.0.0 → 2.1.0)
 - **PATCH:** Bug fixes (backward compatible, e.g., 2.1.0 → 2.1.1)
 
-**Current Version:** v3.2.2
+**Current Version:** v3.3.0
 **Website:** [superlocalmemory.com](https://superlocalmemory.com)
 **npm:** `npm install -g superlocalmemory`
 

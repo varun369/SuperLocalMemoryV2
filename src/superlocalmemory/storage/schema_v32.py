@@ -31,6 +31,9 @@ from typing import Final
 # ---------------------------------------------------------------------------
 
 V32_TABLES: Final[tuple[str, ...]] = (
+    "fact_retention",
+    "polar_embeddings",
+    "embedding_quantization_metadata",
     "fact_access_log",
     "fact_embeddings",
     "embedding_metadata",
@@ -40,6 +43,9 @@ V32_TABLES: Final[tuple[str, ...]] = (
     "fact_importance",
     "fact_temporal_validity",
     "core_memory_blocks",
+    "ccq_consolidated_blocks",
+    "ccq_audit_log",
+    "soft_prompt_templates",
 )
 
 # ---------------------------------------------------------------------------
@@ -48,6 +54,60 @@ V32_TABLES: Final[tuple[str, ...]] = (
 # ---------------------------------------------------------------------------
 
 V32_DDL: list[str] = [
+    # --- Phase A: Forgetting Brain (fact_retention) ---
+    """
+    CREATE TABLE IF NOT EXISTS fact_retention (
+        fact_id          TEXT PRIMARY KEY,
+        profile_id       TEXT NOT NULL,
+        retention_score  REAL NOT NULL DEFAULT 1.0,
+        memory_strength  REAL NOT NULL DEFAULT 1.0,
+        access_count     INTEGER NOT NULL DEFAULT 0,
+        last_accessed_at TEXT,
+        last_computed_at TEXT NOT NULL DEFAULT (datetime('now')),
+        lifecycle_zone   TEXT NOT NULL DEFAULT 'active'
+                         CHECK (lifecycle_zone IN ('active', 'warm', 'cold', 'archive', 'forgotten')),
+
+        FOREIGN KEY (fact_id) REFERENCES atomic_facts (fact_id) ON DELETE CASCADE,
+        FOREIGN KEY (profile_id) REFERENCES profiles (profile_id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_retention_profile
+        ON fact_retention (profile_id, lifecycle_zone);
+    CREATE INDEX IF NOT EXISTS idx_retention_score
+        ON fact_retention (profile_id, retention_score DESC);
+    """,
+    # --- Phase B: PolarQuant Embedding Quantization ---
+    """
+    CREATE TABLE IF NOT EXISTS polar_embeddings (
+        fact_id     TEXT PRIMARY KEY,
+        profile_id  TEXT NOT NULL,
+        radius      REAL NOT NULL,
+        angle_indices BLOB NOT NULL,
+        qjl_bits    BLOB,
+        bit_width   INTEGER NOT NULL DEFAULT 4,
+        created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+
+        FOREIGN KEY (fact_id) REFERENCES atomic_facts (fact_id) ON DELETE CASCADE,
+        FOREIGN KEY (profile_id) REFERENCES profiles (profile_id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_polar_profile
+        ON polar_embeddings (profile_id);
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS embedding_quantization_metadata (
+        fact_id               TEXT PRIMARY KEY,
+        profile_id            TEXT NOT NULL,
+        quantization_level    TEXT NOT NULL DEFAULT 'float32'
+                              CHECK (quantization_level IN ('float32', 'int8', 'polar4', 'polar2', 'deleted')),
+        bit_width             INTEGER NOT NULL DEFAULT 32,
+        compressed_size_bytes INTEGER,
+        created_at            TEXT NOT NULL DEFAULT (datetime('now')),
+
+        FOREIGN KEY (fact_id) REFERENCES atomic_facts (fact_id) ON DELETE CASCADE,
+        FOREIGN KEY (profile_id) REFERENCES profiles (profile_id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_eqm_profile_level
+        ON embedding_quantization_metadata (profile_id, quantization_level);
+    """,
     # --- Phase 1: Vector Foundation ---
     """
     CREATE TABLE IF NOT EXISTS fact_access_log (
@@ -198,6 +258,52 @@ V32_DDL: list[str] = [
     CREATE UNIQUE INDEX IF NOT EXISTS idx_core_blocks_unique
         ON core_memory_blocks(profile_id, block_type);
     """,
+    # --- Phase E: CCQ Consolidated Blocks (dedicated table, many-per-profile) ---
+    """
+    CREATE TABLE IF NOT EXISTS ccq_consolidated_blocks (
+        block_id        TEXT PRIMARY KEY,
+        profile_id      TEXT NOT NULL,
+        content         TEXT NOT NULL,
+        source_fact_ids TEXT NOT NULL DEFAULT '[]',
+        gist_embedding_rowid INTEGER,
+        char_count      INTEGER NOT NULL DEFAULT 0,
+        compiled_by     TEXT NOT NULL DEFAULT 'ccq',
+        cluster_id      TEXT NOT NULL,
+        created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+
+        FOREIGN KEY (profile_id) REFERENCES profiles (profile_id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_ccq_blocks_profile
+        ON ccq_consolidated_blocks (profile_id);
+    CREATE INDEX IF NOT EXISTS idx_ccq_blocks_cluster
+        ON ccq_consolidated_blocks (cluster_id);
+    """,
+    # --- Phase E: CCQ Audit Log ---
+    """
+    CREATE TABLE IF NOT EXISTS ccq_audit_log (
+        audit_id        TEXT PRIMARY KEY,
+        profile_id      TEXT NOT NULL,
+        cluster_id      TEXT NOT NULL,
+        block_id        TEXT NOT NULL,
+        fact_ids        TEXT NOT NULL DEFAULT '[]',
+        fact_count      INTEGER NOT NULL DEFAULT 0,
+        gist_text       TEXT NOT NULL,
+        extraction_mode TEXT NOT NULL DEFAULT 'rules'
+                        CHECK (extraction_mode IN ('rules', 'llm')),
+        bytes_before    INTEGER NOT NULL DEFAULT 0,
+        bytes_after     INTEGER NOT NULL DEFAULT 0,
+        compression_ratio REAL NOT NULL DEFAULT 0.0,
+        shared_entities TEXT NOT NULL DEFAULT '[]',
+        created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+
+        FOREIGN KEY (profile_id) REFERENCES profiles (profile_id) ON DELETE CASCADE,
+        FOREIGN KEY (block_id) REFERENCES ccq_consolidated_blocks (block_id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_ccq_audit_profile
+        ON ccq_audit_log (profile_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_ccq_audit_block
+        ON ccq_audit_log (block_id);
+    """,
     # --- Phase 4: Temporal Intelligence ---
     """
     CREATE TABLE IF NOT EXISTS fact_temporal_validity (
@@ -225,6 +331,37 @@ V32_DDL: list[str] = [
         ON fact_temporal_validity(profile_id, system_expired_at);
     CREATE INDEX IF NOT EXISTS idx_temporal_invalidated_by
         ON fact_temporal_validity(invalidated_by);
+    """,
+    # --- Phase F: The Learning Brain (Memory Parameterization) ---
+    """
+    CREATE TABLE IF NOT EXISTS soft_prompt_templates (
+        prompt_id       TEXT PRIMARY KEY,
+        profile_id      TEXT NOT NULL,
+        category        TEXT NOT NULL CHECK (category IN (
+            'identity', 'tech_preference', 'communication_style',
+            'workflow_pattern', 'project_context', 'decision_history',
+            'avoidance', 'custom'
+        )),
+        content         TEXT NOT NULL,
+        source_pattern_ids TEXT NOT NULL DEFAULT '[]',
+        confidence      REAL NOT NULL DEFAULT 0.0,
+        effectiveness   REAL NOT NULL DEFAULT 0.5,
+        token_count     INTEGER NOT NULL DEFAULT 0,
+        retention_score REAL NOT NULL DEFAULT 1.0,
+        active          INTEGER NOT NULL DEFAULT 1,
+        version         INTEGER NOT NULL DEFAULT 1,
+        created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
+
+        FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_soft_prompt_profile
+        ON soft_prompt_templates(profile_id, active);
+    CREATE INDEX IF NOT EXISTS idx_soft_prompt_category
+        ON soft_prompt_templates(profile_id, category);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_soft_prompt_unique_cat
+        ON soft_prompt_templates(profile_id, category)
+        WHERE active = 1;
     """,
 ]
 

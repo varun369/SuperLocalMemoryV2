@@ -2,9 +2,10 @@
 # Licensed under the MIT License - see LICENSE file
 # Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
 
-"""SuperLocalMemory V3 — Retrieval Engine (4-Channel Orchestrator).
+"""SuperLocalMemory V3 — Retrieval Engine (6-Channel Orchestrator).
 
-4 channels -> single RRF fusion -> optional cross-encoder rerank.
+6 channels -> single RRF fusion -> optional cross-encoder rerank.
+Channels: semantic, BM25, entity_graph, temporal, spreading_activation, hopfield.
 Replaces V1's broken 10-channel triple-re-fusion pipeline.
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
@@ -28,6 +29,7 @@ from superlocalmemory.storage.models import (
 if TYPE_CHECKING:
     from superlocalmemory.retrieval.bm25_channel import BM25Channel
     from superlocalmemory.retrieval.entity_channel import EntityGraphChannel
+    from superlocalmemory.retrieval.hopfield_channel import HopfieldChannel
     from superlocalmemory.retrieval.semantic_channel import SemanticChannel
     from superlocalmemory.retrieval.temporal_channel import TemporalChannel
     from superlocalmemory.storage.database import DatabaseManager
@@ -47,7 +49,7 @@ class EmbeddingProvider(Protocol):
 
 
 class RetrievalEngine:
-    """4-channel retrieval: semantic + BM25 + entity_graph + temporal.
+    """6-channel retrieval: semantic + BM25 + entity_graph + temporal + spreading_activation + hopfield.
 
     Usage::
         engine = RetrievalEngine(db, config, channels, embedder)
@@ -71,6 +73,8 @@ class RetrievalEngine:
         self._bm25: BM25Channel | None = channels.get("bm25")
         self._entity: EntityGraphChannel | None = channels.get("entity_graph")
         self._temporal: TemporalChannel | None = channels.get("temporal")
+        # Phase G: Hopfield channel (6th)
+        self._hopfield: HopfieldChannel | None = channels.get("hopfield")
         self._embedder = embedder
         self._reranker = reranker
         self._strategy = strategy or QueryStrategyClassifier()
@@ -90,6 +94,9 @@ class RetrievalEngine:
             self._registry.register_channel("entity_graph", self._entity)
         if self._temporal is not None:
             self._registry.register_channel("temporal", self._temporal)
+        # Phase G: Hopfield channel (6th) — needs embedding input
+        if self._hopfield is not None:
+            self._registry.register_channel("hopfield", self._hopfield, needs_embedding=True)
 
     def recall(
         self, query: str, profile_id: str,
@@ -222,6 +229,17 @@ class RetrievalEngine:
                     out["temporal"] = r
             except Exception as exc:
                 logger.warning("Temporal channel: %s", exc)
+
+        # Phase G: Hopfield channel (6th) — energy-based pattern completion
+        if self._hopfield is not None and "hopfield" not in disabled:
+            try:
+                q_emb = self._embedder.embed(query) if self._embedder else None
+                if q_emb is not None:
+                    r = self._hopfield.search(q_emb, profile_id, self._config.hopfield_top_k)
+                    if r:
+                        out["hopfield"] = r
+            except Exception as exc:
+                logger.warning("Hopfield channel: %s", exc)
 
         return out
 

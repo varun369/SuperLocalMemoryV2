@@ -42,7 +42,13 @@ class AutoInvoker:
     - trust_scorer: TrustScorer (for per-fact trust)
     - embedder: EmbeddingService (for query encoding)
     - config: AutoInvokeConfig
+    - prompt_injector: PromptInjector or None (V3.3 soft prompt injection)
     """
+
+    # Lifecycle zones that are excluded from auto-invoke results.
+    # "archived" was always skipped; "forgotten" added in V3.3 for
+    # forgetting-aware auto-invoke (Phase A integration).
+    _EXCLUDED_ZONES: frozenset[str] = frozenset({"archived", "forgotten"})
 
     def __init__(
         self,
@@ -51,12 +57,14 @@ class AutoInvoker:
         trust_scorer=None,     # TrustScorer (existing)
         embedder=None,         # EmbeddingService for query encoding
         config=None,           # AutoInvokeConfig
+        prompt_injector=None,  # PromptInjector (V3.3 soft prompt injection)
     ) -> None:
         self._db = db
         self._vector_store = vector_store
         self._trust_scorer = trust_scorer
         self._embedder = embedder
         self._config = config or AutoInvokeConfig()
+        self._prompt_injector = prompt_injector
 
     # ------------------------------------------------------------------
     # Public API: AutoRecall-compatible interface (Rule 16 / AI-04)
@@ -68,6 +76,9 @@ class AutoInvoker:
         EXACT same signature as AutoRecall.get_session_context().
         Returns a formatted string of relevant memories suitable
         for injection into an AI's system prompt.
+
+        V3.3: If a PromptInjector is wired, soft prompts are prepended
+        to the memory context with priority (soft prompts first).
         """
         if not self._config.enabled:
             return ""
@@ -79,10 +90,16 @@ class AutoInvoker:
                 limit=self._config.max_memories_injected,
             )
 
-            if not results:
-                return ""
+            memory_context = self.format_for_injection(results) if results else ""
 
-            return self.format_for_injection(results)
+            # V3.3: Inject soft prompts (priority over memory context)
+            soft_prompt_text = self._get_soft_prompt_text()
+            if soft_prompt_text and self._prompt_injector is not None:
+                return self._prompt_injector.inject_into_context(
+                    soft_prompt_text, memory_context,
+                )
+
+            return soft_prompt_text + ("\n\n" + memory_context if memory_context else "") if soft_prompt_text else memory_context
         except Exception as exc:
             logger.debug("Auto-invoke failed: %s", exc)
             return ""
@@ -210,10 +227,12 @@ class AutoInvoker:
                 logger.debug("VectorStore search failed: %s", exc)
 
         # Fallback: text search for candidates (Mode A degradation)
+        # V3.3: Exclude archived/forgotten facts from candidates
         try:
             rows = self._db.execute(
                 "SELECT fact_id FROM atomic_facts "
                 "WHERE profile_id = ? AND content LIKE ? "
+                "AND COALESCE(lifecycle, 'active') NOT IN ('archived', 'forgotten') "
                 "ORDER BY access_count DESC LIMIT ?",
                 (profile_id, f"%{query[:50]}%", top_k),
             )
@@ -431,11 +450,9 @@ class AutoInvoker:
                 return None
             fact_data = dict(fact_rows[0])
 
-            # Skip archived facts unless config allows
-            if (
-                fact_data.get("lifecycle") in ("archived",)
-                and not self._config.include_archived
-            ):
+            # Skip archived/forgotten facts unless config allows (V3.3: forgetting-aware)
+            lifecycle = fact_data.get("lifecycle", "")
+            if lifecycle in self._EXCLUDED_ZONES and not self._config.include_archived:
                 return None
 
             # Get contextual description
@@ -482,3 +499,24 @@ class AutoInvoker:
             f"(FOK >= {self._config.fok_threshold})_"
         )
         return "\n".join(lines)
+
+    # ------------------------------------------------------------------
+    # V3.3: Soft prompt injection
+    # ------------------------------------------------------------------
+
+    def _get_soft_prompt_text(self) -> str:
+        """Retrieve soft prompt text via PromptInjector (V3.3).
+
+        Returns assembled soft prompt text, or "" if injector is not
+        wired or no active soft prompts exist. Errors are logged and
+        swallowed -- soft prompt failure MUST NOT block auto-invoke.
+        """
+        if self._prompt_injector is None:
+            return ""
+        try:
+            return self._prompt_injector.get_injection_context(
+                self._config.profile_id,
+            )
+        except Exception as exc:
+            logger.debug("Soft prompt injection failed: %s", exc)
+            return ""

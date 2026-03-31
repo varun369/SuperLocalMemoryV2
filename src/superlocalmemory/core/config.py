@@ -92,6 +92,7 @@ class ChannelWeights:
     entity_graph: float = 1.3
     temporal: float = 1.0
     spreading_activation: float = 1.0  # Phase 3: 5th channel (BC-08: default value)
+    hopfield: float = 0.8  # Phase G: 6th channel (Hopfield associative memory)
 
     def as_dict(self) -> dict[str, float]:
         return {
@@ -100,6 +101,7 @@ class ChannelWeights:
             "entity_graph": self.entity_graph,
             "temporal": self.temporal,
             "spreading_activation": self.spreading_activation,
+            "hopfield": self.hopfield,
         }
 
 
@@ -161,6 +163,9 @@ class RetrievalConfig:
     # Spreading activation
     spreading_activation_decay: float = 0.7
     spreading_activation_threshold: float = 0.1
+
+    # Hopfield (Phase G: 6th channel)
+    hopfield_top_k: int = 50
 
     # Trust weighting — apply Bayesian trust scores to retrieval ranking.
     # When enabled, each fact's score is multiplied by a trust weight in [0.5, 1.5].
@@ -231,6 +236,224 @@ class ConsolidationConfig:
     promotion_min_access: int = 3           # Min access count for promotion
     promotion_min_trust: float = 0.5        # Min trust for promotion
     decay_days_threshold: int = 30          # Edge decay after N days
+
+
+@dataclass(frozen=True)
+class ForgettingConfig:
+    """Ebbinghaus forgetting configuration."""
+
+    enabled: bool = True
+    # Strength coefficients
+    alpha: float = 2.0              # Access frequency weight (log scale)
+    beta: float = 1.5               # Importance weight (PageRank)
+    gamma: float = 1.0              # Confirmation count weight
+    delta: float = 0.5              # Emotional salience weight
+    # Strength bounds
+    min_strength: float = 0.1       # Floor (prevents instant forgetting)
+    max_strength: float = 100.0     # Ceiling (numerical stability)
+    # Zone thresholds
+    archive_threshold: float = 0.2  # Below this -> ARCHIVE
+    forget_threshold: float = 0.05  # Below this -> FORGOTTEN
+    # Spaced repetition
+    learning_rate: float = 1.0      # eta in spaced repetition update
+    # Coupling
+    forgetting_drift_scale: float = 0.5  # How strongly forgetting affects Langevin drift
+    # Scheduler
+    scheduler_interval_minutes: int = 30  # How often to recompute retentions
+    # Immunity
+    core_memory_immune: bool = True  # Core Memory blocks never forget
+
+
+@dataclass(frozen=True)
+class HopfieldConfig:
+    """Modern Continuous Hopfield Network configuration (Ramsauer et al., 2020).
+
+    Energy: E(xi) = -log(sum_i exp(B * xi' * x_i)) + B/2 * ||xi||^2
+    Update: xi_new = X' @ softmax(B * X @ xi)
+    Beta:   B = 1/sqrt(d) where d = dimension
+    Storage capacity: O(e^{d/2}) -- exponential in dimension.
+    """
+
+    enabled: bool = True
+    dimension: int = 768
+    max_iterations: int = 1
+    convergence_epsilon: float = 1e-6
+    prefilter_threshold: int = 10_000
+    prefilter_candidates: int = 1000
+    skip_threshold: int = 100_000
+    cache_ttl_seconds: float = 60.0
+
+
+@dataclass(frozen=True)
+class ReaperConfig:
+    """Process health & stale reaper configuration (Phase H0).
+
+    Prevents zombie SLM processes from exhausting RAM.
+    """
+
+    enabled: bool = True
+    heartbeat_interval_seconds: int = 60
+    orphan_age_threshold_hours: float = 4.0
+    pid_file_path: str = ""
+    graceful_timeout_seconds: float = 5.0
+
+
+@dataclass(frozen=True)
+class PolarQuantConfig:
+    """PolarQuant embedding quantization configuration.
+
+    Random orthogonal rotation + recursive polar + scalar quantization.
+    Reference: TurboQuant (ICLR 2026), PolarQuant (arXiv 2502.02617).
+    """
+
+    dimension: int = 768
+    rotation_matrix_path: str = ""  # empty = ~/.superlocalmemory/polar_rotation.npy
+    seed: int = 42                  # reproducible rotation matrix
+
+
+@dataclass(frozen=True)
+class QJLConfig:
+    """QJL 1-bit residual correction configuration.
+
+    Random projection + sign-bit quantization for asymmetric IP estimation.
+    Reference: QJL (AAAI 2025, arXiv 2406.03482).
+    """
+
+    projection_dim: int = 128
+    seed: int = 43  # separate from PolarQuant
+
+
+@dataclass(frozen=True)
+class QuantizationConfig:
+    """Memory-aware embedding quantization (EAP + LP2E).
+
+    Couples Ebbinghaus retention to embedding precision.
+    """
+
+    enabled: bool = True
+    polar: PolarQuantConfig = field(default_factory=PolarQuantConfig)
+    qjl: QJLConfig = field(default_factory=QJLConfig)
+    default_bit_width: int = 32
+    eap_enabled: bool = True
+    keep_float32_backup: bool = True
+    auto_compact_interval_hours: int = 6
+    polar_search_penalty: float = 0.95
+
+
+@dataclass(frozen=True)
+class CCQConfig:
+    """Cognitive Consolidation Quantization configuration (Phase E).
+
+    Ships enabled by default. CCQ runs as Step 7 of the consolidation cycle.
+    Biological analogy: sleep-time hippocampal-neocortical transfer.
+    """
+
+    enabled: bool = True
+
+    # Candidate identification
+    retention_threshold: float = 0.5
+    max_candidates_per_run: int = 200
+
+    # Clustering
+    min_entity_overlap: int = 2
+    temporal_window_days: int = 7
+    min_cluster_size: int = 3
+    max_cluster_size: int = 20
+
+    # Gist extraction
+    use_llm_gist: bool = True
+    max_gist_chars: int = 500
+    min_entity_coverage: float = 0.5
+
+    # Embedding compression
+    target_bit_width: int = 2
+    compress_embeddings: bool = True
+
+    # Scheduling
+    store_count_trigger: int = 100
+    run_on_session_end: bool = True
+
+    # Safety
+    core_memory_immune: bool = True
+
+
+@dataclass(frozen=True)
+class SAGQConfig:
+    """Spreading Activation-Guided Quantization configuration.
+
+    Centrality formula:
+        centrality(i) = w_pagerank * pr_norm + w_degree * deg_norm + w_sa_freq * sa_freq_norm
+
+    SAGQ precision:
+        sagq_bw = b_min + (b_max - b_min) * centrality, snapped to valid_bit_widths
+
+    Combined precision (with Phase A EAP):
+        final_bw = max(eap_bw, sagq_bw)
+    """
+
+    enabled: bool = True
+
+    # Centrality weights (MUST sum to 1.0 -- validated in __post_init__)
+    w_pagerank: float = 0.5      # PageRank structural importance
+    w_degree: float = 0.3        # Degree centrality (connection count)
+    w_sa_freq: float = 0.2       # Spreading activation frequency (7-day window)
+
+    # Bit-width range
+    b_min: int = 2               # Minimum bit-width (most aggressive quantization)
+    b_max: int = 32              # Maximum bit-width (full float32 precision)
+
+    # Valid bit-widths (snapping targets) -- must be sorted ascending
+    valid_bit_widths: tuple[int, ...] = (2, 4, 8, 32)
+
+    # SA frequency window (days to look back in activation_cache)
+    sa_frequency_window_days: int = 7
+
+    # Scheduler
+    scheduler_interval_hours: float = 6.0   # How often to run combined scheduler
+
+    def __post_init__(self) -> None:
+        weight_sum = self.w_pagerank + self.w_degree + self.w_sa_freq
+        if abs(weight_sum - 1.0) > 1e-6:
+            raise ValueError(
+                f"SAGQConfig centrality weights must sum to 1.0, got {weight_sum:.6f}"
+            )
+        if not self.valid_bit_widths:
+            raise ValueError("SAGQConfig.valid_bit_widths must not be empty")
+        if self.b_min < 1:
+            raise ValueError(f"SAGQConfig.b_min must be >= 1, got {self.b_min}")
+        if self.b_max < self.b_min:
+            raise ValueError(
+                f"SAGQConfig.b_max ({self.b_max}) must be >= b_min ({self.b_min})"
+            )
+
+
+@dataclass(frozen=True)
+class ParameterizationConfig:
+    """Soft prompt parameterization configuration (Phase F: The Learning Brain).
+
+    Controls pattern extraction, prompt generation, injection, and lifecycle.
+    Ships enabled by default. Pure text soft prompts — no LoRA, no weights.
+    """
+
+    enabled: bool = True
+
+    # Pattern extraction
+    min_confidence: float = 0.7        # Minimum pattern confidence [0.3, 1.0]
+    min_evidence: int = 5              # Minimum evidence count for behavioral/workflow
+    cross_project_boost: float = 1.2   # 20% confidence boost for cross-project patterns
+
+    # Prompt generation
+    max_prompt_tokens: int = 500       # Token budget for soft prompts
+    max_memory_tokens: int = 1500      # Token budget for regular memories
+    categories_enabled: tuple[str, ...] = (
+        "identity", "tech_preference", "communication_style",
+        "workflow_pattern", "project_context", "decision_history",
+        "avoidance",
+    )
+
+    # Lifecycle
+    refresh_interval_hours: float = 24.0   # Min hours between parameterization runs
+    effectiveness_tracking: bool = True     # Track prompt effectiveness via feedback
 
 
 @dataclass(frozen=True)
@@ -340,6 +563,15 @@ class SLMConfig:
     consolidation: ConsolidationConfig = field(
         default_factory=ConsolidationConfig,
     )
+    forgetting: ForgettingConfig = field(default_factory=ForgettingConfig)
+    hopfield: HopfieldConfig = field(default_factory=HopfieldConfig)
+    reaper: ReaperConfig = field(default_factory=ReaperConfig)
+    quantization: QuantizationConfig = field(default_factory=QuantizationConfig)
+    sagq: SAGQConfig = field(default_factory=SAGQConfig)
+    ccq: CCQConfig = field(default_factory=CCQConfig)
+    parameterization: ParameterizationConfig = field(
+        default_factory=ParameterizationConfig,
+    )
 
     def __post_init__(self) -> None:
         if self.db_path is None:
@@ -368,6 +600,22 @@ class SLMConfig:
             embedding_deployment=emb_data.get("deployment_name", ""),
         )
         config.active_profile = data.get("active_profile", "default")
+
+        # V3.3 config fields (additive — defaults work if missing from JSON)
+        fg = data.get("forgetting", {})
+        if fg:
+            config.forgetting = ForgettingConfig(**{
+                k: v for k, v in fg.items()
+                if k in ForgettingConfig.__dataclass_fields__
+            })
+
+        rt = data.get("retrieval", {})
+        if rt:
+            config.retrieval = RetrievalConfig(**{
+                k: v for k, v in rt.items()
+                if k in RetrievalConfig.__dataclass_fields__
+            })
+
         return config
 
     def save(self, config_path: Path | None = None) -> None:
@@ -375,6 +623,14 @@ class SLMConfig:
         import json
         path = config_path or (self.base_dir / "config.json")
         path.parent.mkdir(parents=True, exist_ok=True)
+        # Read existing config to preserve V3.3 fields not in this save
+        existing = {}
+        if path.exists():
+            try:
+                existing = json.loads(path.read_text())
+            except (json.JSONDecodeError, OSError):
+                pass
+
         data = {
             "mode": self.mode.value,
             "active_profile": self.active_profile,
@@ -392,7 +648,16 @@ class SLMConfig:
                 "api_key": self.embedding.api_key,
                 "deployment_name": self.embedding.deployment_name,
             },
+            "retrieval": {
+                "use_cross_encoder": self.retrieval.use_cross_encoder,
+            },
         }
+
+        # Preserve existing V3.3 config sections that aren't in for_mode()
+        for key in ("forgetting", "quantization", "sagq", "embedding_signature", "auto_invoke"):
+            if key in existing:
+                data[key] = existing[key]
+
         path.write_text(json.dumps(data, indent=2))
 
     @staticmethod
@@ -455,11 +720,13 @@ class SLMConfig:
                 embedding=EmbeddingConfig(
                     model_name="nomic-ai/nomic-embed-text-v1.5",
                     dimension=768,
-                    provider=embedding_provider,
+                    # Mode A: sentence-transformers in SUBPROCESS (never in-process)
+                    provider=embedding_provider or "sentence-transformers",
                 ),
                 llm=LLMConfig(),  # No LLM
                 retrieval=RetrievalConfig(
-                    use_cross_encoder=True,
+                    # Mode A: no cross-encoder (saves ~1.5GB PyTorch RAM)
+                    use_cross_encoder=False,
                 ),
                 math=MathConfig(
                     sheaf_contradiction_threshold=0.45,  # 768d threshold
@@ -473,7 +740,8 @@ class SLMConfig:
                 embedding=EmbeddingConfig(
                     model_name="nomic-ai/nomic-embed-text-v1.5",
                     dimension=768,
-                    provider=embedding_provider,
+                    # Mode B: Ollama HTTP API (zero PyTorch in-process)
+                    provider=embedding_provider or "ollama",
                 ),
                 llm=LLMConfig(
                     provider=llm_provider or "ollama",
@@ -481,7 +749,10 @@ class SLMConfig:
                     api_base=llm_api_base or "http://localhost:11434",
                     api_key=llm_api_key or "",
                 ),
-                retrieval=RetrievalConfig(use_cross_encoder=True),
+                retrieval=RetrievalConfig(
+                    # Mode B: no cross-encoder (saves ~1.5GB PyTorch RAM)
+                    use_cross_encoder=False,
+                ),
             )
 
         # Mode C — FULL POWER, UNRESTRICTED
@@ -507,6 +778,7 @@ class SLMConfig:
                 entity_graph=1.3,
                 temporal=1.0,
                 spreading_activation=1.2,  # Phase 3: SA boost in Mode C
+                hopfield=1.0,  # Phase G: Hopfield in Mode C
             ),
             retrieval=RetrievalConfig(
                 use_cross_encoder=True,

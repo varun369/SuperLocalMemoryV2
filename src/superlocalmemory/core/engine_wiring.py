@@ -64,34 +64,52 @@ def init_embedder(config: SLMConfig) -> Any | None:
 
     Priority order:
     1. Explicit provider in config (ollama / cloud / sentence-transformers)
-    2. Auto-detect: if Ollama has embedding model -> use it
-    3. Fallback to sentence-transformers subprocess
-    4. If nothing works -> None (BM25-only mode)
+    2. Auto-detect: Ollama first (lightweight), then sentence-transformers
+       subprocess (NEVER in-process for Mode A/B)
+    3. If nothing works -> None (BM25-only mode)
+
+    Memory safety: Mode A/B NEVER load sentence-transformers in-process.
+    EmbeddingService uses subprocess isolation — the main process stays
+    at ~60MB and never imports torch.
     """
     from superlocalmemory.core.embeddings import EmbeddingService
+    from superlocalmemory.storage.models import Mode
 
     emb_cfg = config.embedding
     provider = emb_cfg.provider
 
     # --- Explicit ollama provider ---
     if provider == "ollama":
-        return _try_ollama_embedder(emb_cfg)
+        result = _try_ollama_embedder(emb_cfg)
+        if result is not None:
+            return result
+        # Mode B explicitly wants Ollama — if unavailable, fall through
+        # to subprocess (still safe, never in-process)
+        if config.mode == Mode.B:
+            logger.warning(
+                "Ollama unavailable for Mode B. Falling back to "
+                "sentence-transformers subprocess."
+            )
+            return _try_service_embedder(EmbeddingService, emb_cfg)
+        return None
 
     # --- Explicit cloud provider ---
     if provider == "cloud" or emb_cfg.is_cloud:
         return _try_service_embedder(EmbeddingService, emb_cfg)
 
-    # --- Explicit sentence-transformers ---
+    # --- Explicit sentence-transformers (subprocess-isolated) ---
     if provider == "sentence-transformers":
         return _try_service_embedder(EmbeddingService, emb_cfg)
 
-    # --- Auto-detect: try Ollama first (fast path, <1s) ---
+    # --- Auto-detect: try Ollama first (lightweight, <1s) ---
     ollama_emb = _try_ollama_embedder(emb_cfg)
     if ollama_emb is not None:
         logger.info("Auto-detected Ollama embeddings (fast path)")
         return ollama_emb
 
     # --- Fallback: sentence-transformers subprocess ---
+    # EmbeddingService ALWAYS uses subprocess isolation (see embeddings.py).
+    # The main process never imports torch — safe for Mode A/B.
     return _try_service_embedder(EmbeddingService, emb_cfg)
 
 
@@ -358,6 +376,24 @@ def _init_auto_invoker(
 # init_retrieval  (was MemoryEngine._init_retrieval)
 # ---------------------------------------------------------------------------
 
+def _init_hopfield_channel(
+    db: DatabaseManager,
+    vector_store: Any,
+    config: SLMConfig,
+) -> Any | None:
+    """Create HopfieldChannel for Phase G 6th retrieval channel."""
+    if not config.hopfield.enabled:
+        return None
+    try:
+        from superlocalmemory.retrieval.hopfield_channel import HopfieldChannel
+        return HopfieldChannel(
+            db=db, vector_store=vector_store, config=config.hopfield,
+        )
+    except Exception as exc:
+        logger.debug("HopfieldChannel init failed: %s", exc)
+        return None
+
+
 def init_retrieval(
     config: SLMConfig,
     db: DatabaseManager,
@@ -366,7 +402,7 @@ def init_retrieval(
     trust_scorer: Any,
     vector_store: Any = None,
 ) -> Any:
-    """Create the RetrievalEngine with 5 channels. Returns it."""
+    """Create the RetrievalEngine with 6 channels. Returns it."""
     from superlocalmemory.retrieval.engine import RetrievalEngine
     from superlocalmemory.retrieval.semantic_channel import SemanticChannel
     from superlocalmemory.retrieval.bm25_channel import BM25Channel
@@ -394,6 +430,11 @@ def init_retrieval(
     if sa_channel is not None:
         channels["spreading_activation"] = sa_channel
 
+    # Phase G: Register Hopfield as 6th channel
+    hopfield_channel = _init_hopfield_channel(db, vector_store, config)
+    if hopfield_channel is not None:
+        channels["hopfield"] = hopfield_channel
+
     reranker = None
     if config.retrieval.use_cross_encoder:
         reranker = CrossEncoderReranker(config.retrieval.cross_encoder_model)
@@ -401,7 +442,7 @@ def init_retrieval(
     profile_ch = ProfileChannel(db)
     bridge = BridgeDiscovery(db)
 
-    return RetrievalEngine(
+    engine = RetrievalEngine(
         db=db, config=config.retrieval, channels=channels,
         embedder=embedder, reranker=reranker,
         base_weights=config.channel_weights,
@@ -409,6 +450,15 @@ def init_retrieval(
         bridge_discovery=bridge,
         trust_scorer=trust_scorer,
     )
+
+    # Phase A: Register forgetting filter into the channel registry
+    try:
+        from superlocalmemory.retrieval.forgetting_filter import register_forgetting_filter
+        register_forgetting_filter(engine._registry, db, config.forgetting)
+    except Exception as exc:
+        logger.debug("Forgetting filter registration failed: %s", exc)
+
+    return engine
 
 
 # ---------------------------------------------------------------------------

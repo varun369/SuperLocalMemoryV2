@@ -2,7 +2,7 @@
   <img src="https://superlocalmemory.com/assets/logo-mark.png" alt="SuperLocalMemory" width="200"/>
 </p>
 
-<h1 align="center">SuperLocalMemory V3.2</h1>
+<h1 align="center">SuperLocalMemory V3.3</h1>
 <p align="center"><strong>The first local-only AI memory to break 74% retrieval on LoCoMo.<br/>No cloud. No APIs. No data leaves your machine.</strong></p>
 
 <p align="center">
@@ -47,63 +47,109 @@ Mathematical layers contribute **+12.7 percentage points** on average across 6 c
 
 ---
 
-## What's New in V3.2 — The Living Brain
+## What's New in V3.3 — The Living Brain Evolves
 
-> Your AI agent now remembers the way humans do: associatively, temporally, and with consolidation during idle time. V3.2 transforms SLM from a retrieval engine into a living memory system that surfaces what you need before you ask for it.
+> V3.3 gives your memory a lifecycle. Memories strengthen when used, fade when neglected, compress when idle, and consolidate into reusable patterns — all automatically, all locally. Your agent gets smarter the longer it runs.
 
-### Headline Features
+### Features at a Glance
 
-**100x Faster Recall** — Retrieval latency drops from ~500ms to <10ms at 10K facts. Vector KNN search replaces full-table scan. You feel the difference on the first query.
+- **Adaptive Memory Lifecycle** — memories naturally strengthen with use and fade when neglected. No manual cleanup, no hardcoded TTLs.
+- **Smart Compression** — embedding precision adapts to memory importance. Low-priority memories compress up to 32x. High-value memories stay full-resolution.
+- **Cognitive Consolidation** — the system automatically extracts patterns from clusters of related memories. One decision referenced 50 times becomes one reusable insight.
+- **Pattern Learning** — auto-learned soft prompts injected into your agent's context at session start. The system teaches itself what matters to you.
+- **Hopfield Retrieval (6th Channel)** — vague or partial queries now complete themselves. Ask half a question, get the whole answer.
+- **Process Health** — orphaned SLM processes detected and cleaned automatically. No more zombie workers eating RAM.
 
-**Automatic Memory Surfacing** — Memories now come to you. A multi-signal scoring engine (similarity + recency + frequency + trust) proactively injects relevant context at session start and during conversations. No more "I forgot we decided that last week."
+### New CLI Commands
 
-**Associative Retrieval (5th Channel)** — V3 had 4 retrieval channels. V3.2 adds a 5th: multi-hop spreading activation across your knowledge graph. Ask about "deployment" and it surfaces the related database migration decision three hops away.
+```bash
+# Run a memory lifecycle review — strengthens active memories, archives neglected ones
+slm decay
 
-**Temporal Intelligence** — Facts now carry time-awareness. Bi-temporal validity tracks when something was true vs. when it was recorded. Contradictions are detected automatically: "We use Postgres" + "We migrated to MySQL" triggers a conflict resolution flow.
+# Run smart compression — adapts embedding precision to memory importance
+slm quantize
 
-**Sleep-Time Consolidation** — During idle periods, SLM compresses, deduplicates, and reorganizes your memory store. Redundant facts merge. Clusters tighten. Important memories get promoted to Core Memory blocks that stay permanently in context (inspired by Letta's core memory, but fully local).
+# Extract reusable patterns from memory clusters
+slm consolidate --cognitive
 
-**Core Memory Blocks** — Pin your most critical context (architecture decisions, team conventions, project constraints) into always-available working memory. These blocks are injected into every session automatically — your agent never starts cold.
+# View auto-learned patterns that get injected into agent context
+slm soft-prompts
 
-### By the Numbers
+# Clean up orphaned SLM processes
+slm reap
+```
+
+### New MCP Tools
+
+| Tool | Description |
+|:-----|:------------|
+| `forget` | Programmatic memory archival via lifecycle rules |
+| `quantize` | Trigger smart compression on demand |
+| `consolidate_cognitive` | Extract and store patterns from memory clusters |
+| `get_soft_prompts` | Retrieve auto-learned patterns for context injection |
+| `reap_processes` | Clean orphaned SLM processes |
+| `get_retention_stats` | Memory lifecycle analytics |
+
+### Mode A/B Memory Improvements
+
+| Metric | V3.2 | V3.3 | Change |
+|:-------|:----:|:----:|:------:|
+| RAM usage (Mode A/B) | ~4GB | ~40MB | **100x reduction** |
+| Retrieval channels | 5 | 6 | +Hopfield completion |
+| MCP tools | 29 | 35 | +6 new |
+| CLI commands | 21 | 26 | +5 new |
+| Dashboard tabs | 20 | 23 | +3 new |
+| API endpoints | 9 | 16 | +7 new |
+
+Embedding migration happens automatically when you switch modes — no manual steps needed.
+
+### Dashboard
+
+Three new tabs: **Memory Lifecycle** (retention curves, decay stats), **Compression** (storage savings, precision distribution), and **Patterns** (auto-learned soft prompts, consolidation history). Seven new API endpoints power the new views.
+
+### Enable V3.3 Features
+
+All new features default OFF. Zero breaking changes. Opt in when ready:
+
+```bash
+# Turn on adaptive memory lifecycle
+slm config set lifecycle.enabled true
+
+# Turn on smart compression
+slm config set quantization.enabled true
+
+# Turn on cognitive consolidation
+slm config set consolidation.cognitive.enabled true
+
+# Turn on pattern learning (soft prompts)
+slm config set soft_prompts.enabled true
+
+# Turn on Hopfield retrieval (6th channel)
+slm config set retrieval.hopfield.enabled true
+
+# Or enable everything at once
+slm config set v33_features.all true
+```
+
+**Fully backward compatible.** All existing MCP tools, CLI commands, and configs work unchanged. New tables are created automatically on first run. No migration needed.
+
+---
+
+<details>
+<summary><strong>What's New in V3.2 — The Living Brain</strong> (click to expand)</summary>
+
+100x faster recall (<10ms at 10K facts), automatic memory surfacing, associative retrieval (5th channel), temporal intelligence with bi-temporal validity, sleep-time consolidation, and core memory blocks. All features default OFF, zero breaking changes.
 
 | Metric | V3.0 | V3.2 | Change |
 |:-------|:----:|:----:|:------:|
 | Recall latency (10K facts) | ~500ms | <10ms | **100x faster** |
 | Retrieval channels | 4 | 5 | +spreading activation |
 | MCP tools | 24 | 29 | +5 new |
-| CLI commands | 16 | 21 | +5 new |
-| Dashboard tabs | 17 | 20 | +3 new |
-| API endpoints | — | 9 new | configuration & status |
-| DB tables | 9 | 18 | +9 for temporal, consolidation, core memory |
+| DB tables | 9 | 18 | +9 new |
 
-### Enable V3.2 Features
+Enable with `slm config set v32_features.all true`. See the [V3.2 Overview](https://github.com/qualixar/superlocalmemory/wiki/V3.2-Overview) wiki page for details.
 
-All new features default OFF. Zero breaking changes. Opt in when ready:
-
-```bash
-# Turn on automatic memory surfacing
-slm config set auto_invoke.enabled true
-
-# Turn on sleep-time consolidation
-slm config set consolidation.enabled true
-
-# Turn on temporal intelligence
-slm config set temporal.enabled true
-
-# Turn on associative retrieval (5th channel)
-slm config set retrieval.synapse.enabled true
-```
-
-Or enable everything at once:
-
-```bash
-slm config set v32_features.all true
-```
-
-**Fully backward compatible.** All 29 MCP tools, 21 CLI commands work the same. Existing data untouched. New features activate only when you flip the switch.
-
-> **V3.2 Paper** — Technical details, formal guarantees, and benchmark results in the upcoming companion paper. Watch the [arXiv page](https://arxiv.org/abs/2603.14588) for updates.
+</details>
 
 ---
 
@@ -145,7 +191,7 @@ slm status
 }
 ```
 
-27 MCP tools + 7 resources available. Works with Claude Code, Cursor, Windsurf, VS Code Copilot, Continue, Cody, ChatGPT Desktop, Gemini CLI, JetBrains, Zed, and 17+ AI tools. **V3.1: Active Memory tools auto-learn your patterns.**
+35 MCP tools + 7 resources available. Works with Claude Code, Cursor, Windsurf, VS Code Copilot, Continue, Cody, ChatGPT Desktop, Gemini CLI, JetBrains, Zed, and 17+ AI tools. **V3.3: Adaptive lifecycle, smart compression, and pattern learning.**
 
 ### Dual Interface: MCP + CLI
 
@@ -196,11 +242,13 @@ slm mode c   # Cloud LLM
 ## Architecture
 
 ```
-Query  ──►  Strategy Classifier  ──►  4 Parallel Channels:
+Query  ──►  Strategy Classifier  ──►  6 Parallel Channels:
                                        ├── Semantic (Fisher-Rao geodesic distance)
                                        ├── BM25 (keyword matching)
                                        ├── Entity Graph (spreading activation, 3 hops)
-                                       └── Temporal (date-aware retrieval)
+                                       ├── Temporal (date-aware retrieval)
+                                       ├── Associative (multi-hop spreading activation)
+                                       └── Hopfield (partial query completion)
                                                     │
                                        RRF Fusion (k=60)
                                                     │
@@ -304,58 +352,39 @@ slm dashboard    # Opens at http://localhost:8765
 </p>
 </details>
 
-17 tabs: Dashboard, Recall Lab, Knowledge Graph, Memories, Trust Scores, Math Health, Compliance, Learning, IDE Connections, Settings, and more. Runs locally — no data leaves your machine.
+23 tabs: Dashboard, Recall Lab, Knowledge Graph, Memories, Trust Scores, Math Health, Compliance, Learning, IDE Connections, Settings, Memory Lifecycle, Compression, Patterns, and more. Runs locally — no data leaves your machine.
 
 ---
 
-## Active Memory (V3.1) — Memory That Learns
+<details>
+<summary><strong>Active Memory (V3.1) — Memory That Learns</strong> (click to expand)</summary>
 
-Most AI memory systems are passive databases — you store, you search, you get results. **SuperLocalMemory learns.**
+Every recall generates learning signals. Over time, the system adapts to your patterns — from baseline (0-19 signals) → rule-based (20+) → ML model (200+, LightGBM trained on YOUR usage). Zero LLM tokens spent. Four mathematical signals computed locally: co-retrieval, confidence lifecycle, channel performance, and entropy gap.
 
-Every recall you make generates learning signals. Over time, the system adapts to your patterns:
+Auto-capture hooks: `slm hooks install` + `slm observe` + `slm session-context`. MCP tools: `session_init`, `observe`, `report_feedback`.
 
-| Phase | Signals | What Happens |
-|-------|---------|-------------|
-| **Baseline** | 0-19 | Cross-encoder ranking (default behavior) |
-| **Rule-Based** | 20+ | Heuristic boosts: recency, access count, trust score |
-| **ML Model** | 200+ | LightGBM model trained on YOUR usage patterns |
+**No competitor learns at zero token cost.**
 
-### Zero-Cost Learning Signals
-No LLM tokens spent. Four mathematical signals computed locally:
-- **Co-Retrieval** — memories retrieved together strengthen their connections
-- **Confidence Lifecycle** — accessed facts get boosted, unused facts decay
-- **Channel Performance** — tracks which retrieval channel works best for your queries
-- **Entropy Gap** — surprising content gets prioritized for deeper indexing
-
-### Auto-Capture & Auto-Recall
-```bash
-slm hooks install     # Install Claude Code hooks for invisible injection
-slm observe "We decided to use PostgreSQL"  # Auto-detects decisions, bugs, preferences
-slm session-context   # Get relevant context at session start
-```
-
-### MCP Active Memory Tools
-Three new tools for AI assistants:
-- `session_init` — call at session start, get relevant project context automatically
-- `observe` — send conversation content, auto-captures decisions/bugs/preferences
-- `report_feedback` — explicit feedback for faster learning
-
-**No competitor learns at zero token cost.** Mem0, Zep, and Letta all require cloud LLM calls for their learning loops. SLM learns through mathematics.
+</details>
 
 ---
 
 ## Features
 
 ### Retrieval
-- 4-channel hybrid: Semantic (Fisher-Rao) + BM25 + Entity Graph + Temporal
+- 6-channel hybrid: Semantic (Fisher-Rao) + BM25 + Entity Graph + Temporal + Associative + Hopfield
 - RRF fusion + cross-encoder reranking
 - Agentic sufficiency verification (auto-retry on weak results)
 - Adaptive ranking with LightGBM (learns from usage)
+- Hopfield completion for vague/partial queries
 
 ### Intelligence
 - 11-step ingestion pipeline (entity resolution, fact extraction, emotional tagging, scene building)
 - Automatic contradiction detection via sheaf cohomology
-- Self-organizing memory lifecycle (no hardcoded thresholds)
+- Adaptive memory lifecycle — memories strengthen with use, fade when neglected
+- Smart compression — embedding precision adapts to memory importance (up to 32x savings)
+- Cognitive consolidation — automatic pattern extraction from related memories
+- Auto-learned soft prompts injected into agent context
 - Behavioral pattern detection and outcome tracking
 
 ### Trust & Security
@@ -365,12 +394,13 @@ Three new tools for AI assistants:
 - Tamper-proof hash-chain audit trail (SHA-256 linked entries)
 
 ### Infrastructure
-- 17-tab web dashboard with real-time visualization
+- 23-tab web dashboard with real-time visualization
 - 17+ IDE integrations (Claude, Cursor, Windsurf, VS Code, JetBrains, Zed, etc.)
-- 24 MCP tools + 6 MCP resources
+- 35 MCP tools + 7 MCP resources
 - Profile isolation (independent memory spaces)
 - 1400+ tests, MIT license, cross-platform (Mac/Linux/Windows)
 - CPU-only — no GPU required
+- Automatic orphaned process cleanup
 
 ---
 
@@ -394,6 +424,11 @@ Three new tools for AI assistants:
 | `slm connect` | Configure IDE integrations |
 | `slm hooks install` | Wire auto-memory into Claude Code hooks |
 | `slm profile list/create/switch` | Profile management |
+| `slm decay` | Run memory lifecycle review |
+| `slm quantize` | Run smart compression cycle |
+| `slm consolidate --cognitive` | Extract patterns from memory clusters |
+| `slm soft-prompts` | View auto-learned patterns |
+| `slm reap` | Clean orphaned SLM processes |
 
 ---
 

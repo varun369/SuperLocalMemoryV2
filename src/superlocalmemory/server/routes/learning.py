@@ -81,13 +81,29 @@ async def learning_status():
 
         # Real signal count from V3.1 learning_feedback table
         signal_count = 0
+        unique_queries = 0
         try:
             from superlocalmemory.learning.feedback import FeedbackCollector
             from pathlib import Path
+            import sqlite3 as _sqlite3
             learning_db = Path.home() / ".superlocalmemory" / "learning.db"
             if learning_db.exists():
                 collector = FeedbackCollector(learning_db)
                 signal_count = collector.get_feedback_count(active_profile)
+                # Count unique queries for the dashboard
+                _conn = _sqlite3.connect(str(learning_db))
+                _conn.row_factory = _sqlite3.Row
+                try:
+                    _row = _conn.execute(
+                        "SELECT COUNT(DISTINCT query_hash) AS cnt "
+                        "FROM learning_feedback WHERE profile_id = ?",
+                        (active_profile,),
+                    ).fetchone()
+                    unique_queries = _row["cnt"] if _row else 0
+                except Exception:
+                    pass
+                finally:
+                    _conn.close()
         except Exception:
             pass
 
@@ -100,13 +116,14 @@ async def learning_status():
             result["ranking_phase"] = "baseline"
 
         # Feedback stats — merge old system + new V3.1 signals
-        stats_dict = {"feedback_count": signal_count, "active_profile": active_profile}
+        stats_dict = {"feedback_count": signal_count, "unique_queries": unique_queries, "active_profile": active_profile}
         feedback = _get_feedback()
         if feedback:
             try:
                 old_stats = feedback.get_feedback_summary(active_profile)
                 if isinstance(old_stats, dict):
                     old_stats["feedback_count"] = signal_count
+                    old_stats["unique_queries"] = unique_queries
                     old_stats["active_profile"] = active_profile
                     stats_dict = old_stats
             except Exception as exc:

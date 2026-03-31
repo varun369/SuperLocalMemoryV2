@@ -675,17 +675,17 @@ class TestE2EV32:
     # test_channel_weights_5_fields -- Phase 3 requirement
     # ------------------------------------------------------------------
 
-    def test_channel_weights_5_fields(self, tmp_path: Path) -> None:
-        """ChannelWeights has exactly 5 fields including spreading_activation."""
+    def test_channel_weights_6_fields(self, tmp_path: Path) -> None:
+        """ChannelWeights has exactly 6 fields including spreading_activation + hopfield."""
         engine = _create_v32_engine(tmp_path)
 
         weights = engine._config.channel_weights.as_dict()
-        assert len(weights) == 5, (
-            f"Expected 5 channel weights, got {len(weights)}: {weights}"
+        assert len(weights) == 6, (
+            f"Expected 6 channel weights, got {len(weights)}: {weights}"
         )
         expected_keys = {
             "semantic", "bm25", "entity_graph",
-            "temporal", "spreading_activation",
+            "temporal", "spreading_activation", "hopfield",
         }
         assert set(weights.keys()) == expected_keys
 

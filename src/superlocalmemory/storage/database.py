@@ -962,3 +962,209 @@ class DatabaseManager:
             "DELETE FROM core_memory_blocks WHERE profile_id = ?",
             (profile_id,),
         )
+
+    # ------------------------------------------------------------------
+    # Phase A: Fact Retention CRUD (Forgetting Brain)
+    # ------------------------------------------------------------------
+
+    def get_retention(self, fact_id: str, profile_id: str) -> dict | None:
+        """Get retention data for a single fact.
+
+        Returns dict with column names as keys, or None if not found.
+        All SQL parameterized (HR-05).
+        """
+        rows = self.execute(
+            "SELECT fact_id, retention_score, memory_strength, access_count, "
+            "       last_accessed_at, lifecycle_zone, last_computed_at "
+            "FROM fact_retention WHERE fact_id = ? AND profile_id = ?",
+            (fact_id, profile_id),
+        )
+        return dict(rows[0]) if rows else None
+
+    def batch_get_retention(
+        self, fact_ids: list[str], profile_id: str,
+    ) -> list[dict]:
+        """Get retention data for a batch of facts.
+
+        Uses dynamic ? placeholders for IN clause (never string concat).
+        Missing fact_ids are simply absent from results.
+        All SQL parameterized (HR-05).
+        """
+        if not fact_ids:
+            return []
+        placeholders = ",".join("?" for _ in fact_ids)
+        rows = self.execute(
+            f"SELECT fact_id, retention_score, lifecycle_zone "
+            f"FROM fact_retention "
+            f"WHERE fact_id IN ({placeholders}) AND profile_id = ?",
+            (*fact_ids, profile_id),
+        )
+        return [dict(r) for r in rows]
+
+    def upsert_retention(
+        self,
+        fact_id: str,
+        profile_id: str,
+        retention_score: float,
+        memory_strength: float,
+        access_count: int,
+        last_accessed_at: str,
+        lifecycle_zone: str,
+    ) -> None:
+        """UPSERT retention data for a fact.
+
+        Retries 3x on SQLITE_BUSY (handled by execute()).
+        All SQL parameterized (HR-05).
+        """
+        self.execute(
+            "INSERT INTO fact_retention "
+            "(fact_id, profile_id, retention_score, memory_strength, "
+            " access_count, last_accessed_at, lifecycle_zone, last_computed_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now')) "
+            "ON CONFLICT(fact_id) DO UPDATE SET "
+            "  retention_score = excluded.retention_score, "
+            "  memory_strength = excluded.memory_strength, "
+            "  access_count = excluded.access_count, "
+            "  lifecycle_zone = excluded.lifecycle_zone, "
+            "  last_computed_at = excluded.last_computed_at",
+            (fact_id, profile_id, retention_score, memory_strength,
+             access_count, last_accessed_at, lifecycle_zone),
+        )
+
+    def batch_upsert_retention(
+        self, facts: list[dict], profile_id: str,
+    ) -> int:
+        """Batch UPSERT retention data. Wraps in transaction for atomicity.
+
+        Each dict must contain: fact_id, retention, strength,
+        access_count, last_accessed_at, zone.
+
+        Returns count of successfully upserted rows.
+        """
+        count = 0
+        with self.transaction():
+            for f in facts:
+                self.upsert_retention(
+                    fact_id=f["fact_id"],
+                    profile_id=profile_id,
+                    retention_score=f["retention"],
+                    memory_strength=f["strength"],
+                    access_count=f["access_count"],
+                    last_accessed_at=f["last_accessed_at"],
+                    lifecycle_zone=f["zone"],
+                )
+                count += 1
+        return count
+
+    def get_facts_needing_decay(self, profile_id: str) -> list[dict]:
+        """Get facts that need decay computation (excludes core memory).
+
+        Core memory facts are immune to forgetting (HR-01).
+        All SQL parameterized (HR-05).
+        """
+        rows = self.execute(
+            "SELECT f.fact_id, f.created_at, f.profile_id "
+            "FROM atomic_facts f "
+            "LEFT JOIN fact_retention r ON f.fact_id = r.fact_id "
+            "WHERE f.profile_id = ? "
+            "AND f.fact_id NOT IN ("
+            "  SELECT json_each.value "
+            "  FROM core_memory_blocks, json_each(core_memory_blocks.source_fact_ids) "
+            "  WHERE core_memory_blocks.profile_id = ?"
+            ")",
+            (profile_id, profile_id),
+        )
+        return [dict(r) for r in rows]
+
+    def soft_delete_fact(self, fact_id: str, profile_id: str) -> None:
+        """Soft-delete a forgotten fact.
+
+        Sets fact_retention.lifecycle_zone to 'forgotten' and
+        atomic_facts.lifecycle to 'archived' (valid enum value).
+        Never physically deletes (HR-04).
+
+        Idempotent: if fact not found, logs warning and returns.
+        """
+        # Check existence first (idempotent)
+        rows = self.execute(
+            "SELECT fact_id FROM fact_retention WHERE fact_id = ? AND profile_id = ?",
+            (fact_id, profile_id),
+        )
+        if not rows:
+            logger.warning(
+                "soft_delete_fact: fact_id=%s not found in fact_retention, skipping",
+                fact_id,
+            )
+            return
+
+        # Update fact_retention
+        self.execute(
+            "UPDATE fact_retention SET lifecycle_zone = 'forgotten', "
+            "  retention_score = 0.0 "
+            "WHERE fact_id = ? AND profile_id = ?",
+            (fact_id, profile_id),
+        )
+
+        # Mark in atomic_facts as archived (valid enum value per A-CRIT-01)
+        self.execute(
+            "UPDATE atomic_facts SET lifecycle = 'archived' "
+            "WHERE fact_id = ? AND profile_id = ?",
+            (fact_id, profile_id),
+        )
+
+    # ------------------------------------------------------------------
+    # Phase E: CCQ Consolidated Blocks & Audit CRUD
+    # ------------------------------------------------------------------
+
+    def store_ccq_block(
+        self,
+        block_id: str,
+        profile_id: str,
+        content: str,
+        source_fact_ids: str,
+        gist_embedding_rowid: int | None,
+        char_count: int,
+        cluster_id: str,
+    ) -> None:
+        """Store a CCQ consolidated block. Parameterized SQL only."""
+        self.execute(
+            "INSERT INTO ccq_consolidated_blocks "
+            "(block_id, profile_id, content, source_fact_ids, "
+            " gist_embedding_rowid, char_count, compiled_by, cluster_id, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, 'ccq', ?, datetime('now'))",
+            (block_id, profile_id, content, source_fact_ids,
+             gist_embedding_rowid, char_count, cluster_id),
+        )
+
+    def get_ccq_blocks(self, profile_id: str) -> list[dict]:
+        """Get all CCQ consolidated blocks for a profile."""
+        rows = self.execute(
+            "SELECT * FROM ccq_consolidated_blocks "
+            "WHERE profile_id = ? ORDER BY created_at DESC",
+            (profile_id,),
+        )
+        return [dict(r) for r in rows]
+
+    def store_ccq_audit(self, entry: dict) -> None:
+        """Store a CCQ audit log entry. Parameterized SQL only."""
+        self.execute(
+            "INSERT INTO ccq_audit_log "
+            "(audit_id, profile_id, cluster_id, block_id, fact_ids, fact_count, "
+            " gist_text, extraction_mode, bytes_before, bytes_after, "
+            " compression_ratio, shared_entities, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+            (entry["audit_id"], entry["profile_id"], entry["cluster_id"],
+             entry["block_id"], entry["fact_ids"], entry["fact_count"],
+             entry["gist_text"], entry["extraction_mode"],
+             entry["bytes_before"], entry["bytes_after"],
+             entry["compression_ratio"], entry["shared_entities"]),
+        )
+
+    def get_ccq_audit(self, profile_id: str, limit: int = 50) -> list[dict]:
+        """Get CCQ audit log entries for a profile."""
+        rows = self.execute(
+            "SELECT * FROM ccq_audit_log "
+            "WHERE profile_id = ? ORDER BY created_at DESC LIMIT ?",
+            (profile_id, limit),
+        )
+        return [dict(r) for r in rows]

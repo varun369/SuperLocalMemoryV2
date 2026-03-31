@@ -73,15 +73,75 @@ async def get_agent_stats(request: Request):
 
 @router.get("/api/trust/stats")
 async def get_trust_stats(request: Request):
-    """Get trust scoring statistics."""
-    if not TRUST_AVAILABLE:
-        return {"total_signals": 0, "message": "Trust scorer not available"}
+    """Get trust scoring statistics.
+
+    Queries trust_scores and trust_signals tables directly (no engine needed).
+    Falls back to engine._trust_scorer if available.
+    """
     try:
-        engine = getattr(request.app.state, "engine", None)
-        if engine and engine._trust_scorer:
-            scorer = engine._trust_scorer
-            return scorer.get_trust_stats()
-        return {"total_signals": 0, "message": "Trust scorer not initialized"}
+        # Try engine-based scorer first
+        try:
+            engine = getattr(request.app.state, "engine", None)
+            if engine and getattr(engine, "_trust_scorer", None):
+                return engine._trust_scorer.get_trust_stats()
+        except (AttributeError, Exception):
+            pass  # Fall through to direct DB query
+
+        # Direct DB query (dashboard runs without engine subprocess)
+        import sqlite3
+        from .helpers import get_active_profile
+        pid = get_active_profile()
+
+        total_signals = 0
+        avg_trust_score = 0.667
+        by_signal_type = {}
+
+        if DB_PATH.exists():
+            conn = sqlite3.connect(str(DB_PATH))
+            conn.row_factory = sqlite3.Row
+            try:
+                # Count trust signals
+                row = conn.execute(
+                    "SELECT COUNT(*) AS cnt FROM trust_signals "
+                    "WHERE profile_id = ?", (pid,),
+                ).fetchone()
+                total_signals = row["cnt"] if row else 0
+            except sqlite3.OperationalError:
+                pass
+
+            try:
+                # Average trust score
+                row = conn.execute(
+                    "SELECT AVG(trust_score) AS avg_ts FROM trust_scores "
+                    "WHERE profile_id = ?", (pid,),
+                ).fetchone()
+                if row and row["avg_ts"] is not None:
+                    avg_trust_score = round(float(row["avg_ts"]), 3)
+            except sqlite3.OperationalError:
+                pass
+
+            try:
+                # Signal breakdown by type
+                rows = conn.execute(
+                    "SELECT signal_type, COUNT(*) AS cnt "
+                    "FROM trust_signals WHERE profile_id = ? "
+                    "GROUP BY signal_type", (pid,),
+                ).fetchall()
+                by_signal_type = {r["signal_type"]: r["cnt"] for r in rows}
+            except sqlite3.OperationalError:
+                pass
+
+            conn.close()
+
+        # Enforcement status: SLM uses "Silent Collection" by default
+        enforcement = "Silent Collection"
+
+        return {
+            "total_signals": total_signals,
+            "avg_trust_score": avg_trust_score,
+            "enforcement": enforcement,
+            "by_signal_type": by_signal_type,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Trust stats error: {str(e)}")
 

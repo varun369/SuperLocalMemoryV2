@@ -16,13 +16,14 @@ import re
 from dataclasses import dataclass, field
 
 STRATEGY_PRESETS: dict[str, dict[str, float]] = {
-    "temporal": {"semantic": 0.8, "bm25": 1.5, "entity_graph": 0.8, "temporal": 2.0, "spreading_activation": 0.5},
-    "multi_hop": {"semantic": 1.0, "bm25": 0.8, "entity_graph": 2.0, "temporal": 0.5, "spreading_activation": 2.0},
-    "aggregation": {"semantic": 1.2, "bm25": 1.5, "entity_graph": 1.0, "temporal": 0.5, "spreading_activation": 0.8},
-    "opinion": {"semantic": 1.8, "bm25": 0.6, "entity_graph": 0.8, "temporal": 0.3, "spreading_activation": 0.5},
-    "factual": {"semantic": 1.2, "bm25": 1.4, "entity_graph": 1.0, "temporal": 0.6, "spreading_activation": 0.8},
-    "entity": {"semantic": 1.0, "bm25": 1.5, "entity_graph": 1.2, "temporal": 0.5, "spreading_activation": 1.0},
+    "temporal": {"semantic": 0.8, "bm25": 1.5, "entity_graph": 0.8, "temporal": 2.0, "spreading_activation": 0.5, "hopfield": 0.5},
+    "multi_hop": {"semantic": 1.0, "bm25": 0.8, "entity_graph": 2.0, "temporal": 0.5, "spreading_activation": 2.0, "hopfield": 0.7},
+    "aggregation": {"semantic": 1.2, "bm25": 1.5, "entity_graph": 1.0, "temporal": 0.5, "spreading_activation": 0.8, "hopfield": 0.6},
+    "opinion": {"semantic": 1.8, "bm25": 0.6, "entity_graph": 0.8, "temporal": 0.3, "spreading_activation": 0.5, "hopfield": 0.5},
+    "factual": {"semantic": 1.2, "bm25": 1.4, "entity_graph": 1.0, "temporal": 0.6, "spreading_activation": 0.8, "hopfield": 0.8},
+    "entity": {"semantic": 1.0, "bm25": 1.5, "entity_graph": 1.2, "temporal": 0.5, "spreading_activation": 1.0, "hopfield": 0.9},
     "general": {},
+    "vague": {"semantic": 0.8, "bm25": 0.5, "entity_graph": 0.6, "temporal": 0.3, "spreading_activation": 1.5, "hopfield": 1.1},
 }
 
 _TEMPORAL_WORDS: frozenset[str] = frozenset({
@@ -46,6 +47,12 @@ _AGGREGATION_WORDS: frozenset[str] = frozenset({
 _OPINION_WORDS: tuple[str, ...] = (
     "think", "feel", "opinion", "prefer", "favorite", "best", "worst",
     "believe", "like about", "dislike", "enjoy", "hate", "love",
+)
+
+_VAGUE_PHRASES: tuple[str, ...] = (
+    "something about", "i think", "maybe", "not sure",
+    "vaguely remember", "partially recall", "sort of",
+    "kind of", "i forgot", "what was that",
 )
 
 
@@ -93,4 +100,7 @@ class QueryStrategyClassifier:
             return "entity"
         if q.startswith(("what ", "where ", "who ", "which ", "how ")):
             return "factual"
+        # Vague/fuzzy recall — Hopfield pattern completion excels here
+        if any(p in q for p in _VAGUE_PHRASES):
+            return "vague"
         return "general"

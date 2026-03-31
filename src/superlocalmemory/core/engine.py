@@ -191,6 +191,9 @@ class MemoryEngine:
             behavioral_store=None,
         )
 
+        # V3.3: Check for embedding model migration on mode switch
+        self._check_embedding_migration()
+
         self._initialized = True
         logger.info(
             "MemoryEngine initialized: mode=%s profile=%s",
@@ -319,6 +322,24 @@ class MemoryEngine:
         return self._db.get_fact_count(self._profile_id)
 
     # -- Internal -----------------------------------------------------------
+
+    def _check_embedding_migration(self) -> None:
+        """Detect embedding model change and re-index if needed."""
+        try:
+            from superlocalmemory.storage.embedding_migrator import (
+                check_embedding_migration,
+                run_embedding_migration,
+            )
+            if check_embedding_migration(self._config):
+                count = run_embedding_migration(
+                    self._config, self._db, self._embedder,
+                )
+                if count > 0:
+                    logger.info(
+                        "Embedding migration: %d facts re-embedded", count,
+                    )
+        except Exception as exc:
+            logger.warning("Embedding migration check failed: %s", exc)
 
     def _ensure_init(self) -> None:
         if not self._initialized:

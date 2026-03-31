@@ -147,3 +147,8 @@ website/VERIFICATION-CHECKLIST.md
 test-output/
 test-results/
 <superlocalmemory.*
+
+# Environment files (safety net)
+.env
+.env.*
+.env.local
