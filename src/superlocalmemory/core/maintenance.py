@@ -6,6 +6,7 @@
 
 Periodic batch processing for mathematical layers:
 1. Langevin batch_step on all active facts (self-organization)
+   1a. Backfill: seed uninitialized facts with metadata-aware positions (B+C)
 2. Sheaf batch consistency check on recent facts
 3. Fisher adaptive temperature recalculation
 
@@ -18,14 +19,71 @@ License: MIT
 from __future__ import annotations
 
 import logging
+import math as _math
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
+
+import numpy as np
 
 if TYPE_CHECKING:
     from superlocalmemory.core.config import SLMConfig
     from superlocalmemory.storage.database import DatabaseManager
 
 logger = logging.getLogger(__name__)
+
+# Backfill constants
+_BACKFILL_BURN_IN_STEPS = 50
+_LANGEVIN_DIM = 8
+_MAX_NORM = 0.99
+
+
+def _compute_equilibrium_radius(
+    access_count: int,
+    age_days: float,
+    importance: float,
+    temperature: float = 0.3,
+    dim: int = 8,
+) -> float:
+    """Compute metadata-aware equilibrium radius (Strategy B).
+
+    Uses the Langevin potential coefficients to estimate where a fact
+    would settle if it had been in the dynamics from the start.
+
+    r_eq ≈ sqrt(T * dim / (2 * effective_alpha))
+    """
+    alpha, beta, gamma, delta = 3.0, 0.8, 0.005, 0.5
+    effective_alpha = (
+        alpha
+        + beta * _math.log(access_count + 1) / 10.0
+        - gamma * min(age_days, 365.0) / 365.0
+        + delta * importance
+    )
+    effective_alpha = max(0.1, effective_alpha)
+    r_eq = _math.sqrt(temperature * dim / (2.0 * effective_alpha))
+    return min(r_eq, _MAX_NORM * 0.95)
+
+
+def _seed_langevin_position(
+    access_count: int,
+    age_days: float,
+    importance: float,
+    temperature: float = 0.3,
+    dim: int = 8,
+) -> list[float]:
+    """Create a metadata-aware initial position (Strategy B).
+
+    Places the fact at the equilibrium radius with a random direction.
+    """
+    r_eq = _compute_equilibrium_radius(
+        access_count, age_days, importance, temperature, dim,
+    )
+    rng = np.random.default_rng()
+    direction = rng.standard_normal(dim)
+    norm = float(np.linalg.norm(direction))
+    if norm < 1e-8:
+        direction = np.ones(dim)
+        norm = float(np.linalg.norm(direction))
+    return (direction / norm * r_eq).tolist()
 
 
 def run_maintenance(
@@ -44,6 +102,7 @@ def run_maintenance(
         Dict of counts: langevin_updated, sheaf_checked, etc.
     """
     counts: dict[str, int] = {
+        "langevin_backfilled": 0,
         "langevin_updated": 0,
         "fisher_coupled": 0,
         "sheaf_checked": 0,
@@ -53,13 +112,60 @@ def run_maintenance(
     if not facts:
         return counts
 
-    # 1. Langevin batch step
+    # 1a. Backfill: seed uninitialized facts with metadata-aware positions (B+C)
     if config.math.langevin_persist_positions:
         try:
             from superlocalmemory.math.langevin import LangevinDynamics
 
             ld = LangevinDynamics(
-                dim=8,
+                dim=_LANGEVIN_DIM,
+                dt=config.math.langevin_dt,
+                temperature=config.math.langevin_temperature,
+            )
+
+            backfilled = 0
+            for f in facts:
+                if f.langevin_position is not None:
+                    continue
+                created = datetime.fromisoformat(
+                    f.created_at.replace("Z", "+00:00")
+                ) if f.created_at else datetime.now(UTC)
+                age_days = max(
+                    0.0,
+                    (datetime.now(UTC) - created).total_seconds() / 86400.0,
+                )
+                # Strategy B: metadata-aware seed position
+                position = _seed_langevin_position(
+                    f.access_count, age_days, f.importance,
+                    config.math.langevin_temperature, _LANGEVIN_DIM,
+                )
+                # Strategy C: burn-in from the seeded position
+                for step_i in range(_BACKFILL_BURN_IN_STEPS):
+                    position, _ = ld.step(
+                        position, f.access_count, age_days, f.importance,
+                    )
+                weight = ld.compute_lifecycle_weight(position)
+                lifecycle = ld.get_lifecycle_state(weight).value
+                db.update_fact(f.fact_id, {
+                    "langevin_position": position,
+                    "lifecycle": lifecycle,
+                })
+                f.langevin_position = position  # update in-memory for step 1b
+                backfilled += 1
+
+            counts["langevin_backfilled"] = backfilled
+            if backfilled:
+                logger.info("Langevin backfill: %d facts initialized", backfilled)
+        except Exception as exc:
+            logger.warning("Langevin backfill failed: %s", exc)
+
+    # 1b. Langevin batch step on all positioned facts
+    if config.math.langevin_persist_positions:
+        try:
+            from superlocalmemory.math.langevin import LangevinDynamics
+
+            ld = LangevinDynamics(
+                dim=_LANGEVIN_DIM,
                 dt=config.math.langevin_dt,
                 temperature=config.math.langevin_temperature,
             )
@@ -165,8 +271,8 @@ def run_maintenance(
             logger.warning("Sheaf maintenance failed: %s", exc)
 
     logger.info(
-        "Maintenance complete: %d Langevin, %d Fisher-coupled, %d Sheaf",
-        counts["langevin_updated"], counts["fisher_coupled"],
-        counts["sheaf_checked"],
+        "Maintenance complete: %d backfilled, %d Langevin, %d Fisher-coupled, %d Sheaf",
+        counts["langevin_backfilled"], counts["langevin_updated"],
+        counts["fisher_coupled"], counts["sheaf_checked"],
     )
     return counts

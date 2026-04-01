@@ -16,6 +16,18 @@ SuperLocalMemory V3 - Intelligent local memory system for AI coding assistants.
 
 ---
 
+## [3.3.3] - 2026-04-01 — Langevin Awakening
+
+### Fixed
+- **Langevin dynamics now active** — positions were never initialized at store time, causing the entire Langevin lifecycle system to be inert (0 positioned facts). New facts now receive near-origin positions (Strategy A).
+- **Backfill for existing facts** — maintenance now initializes unpositioned facts using metadata-aware equilibrium seeding (Strategy B) followed by 50-step burn-in (Strategy C). Old, rarely-accessed facts land in their correct lifecycle zones immediately.
+
+### Improved
+- Maintenance returns `langevin_backfilled` count for observability
+- Health check now reports positioned facts accurately after backfill
+
+---
+
 ## [3.3.0] - 2026-03-31 — The Living Brain
 
 ### New Features

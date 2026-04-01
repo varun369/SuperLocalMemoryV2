@@ -25,6 +25,25 @@ from superlocalmemory.storage.models import (
 
 logger = logging.getLogger(__name__)
 
+# Langevin initialization radius for new facts (ACTIVE zone < 0.3)
+_INIT_LANGEVIN_RADIUS = 0.05
+
+
+def _init_langevin_position(dim: int = 8) -> list[float]:
+    """Initialize Langevin position near origin for a new fact.
+
+    Small random perturbation ensures each fact gets a unique position
+    while staying deep in the ACTIVE zone (radius < 0.3).
+    """
+    import numpy as np
+    rng = np.random.default_rng()
+    direction = rng.standard_normal(dim)
+    norm = float(np.linalg.norm(direction))
+    if norm < 1e-8:
+        direction = np.ones(dim)
+        norm = float(np.linalg.norm(direction))
+    return (direction / norm * _INIT_LANGEVIN_RADIUS).tolist()
+
 
 # ---------------------------------------------------------------------------
 # enrich_fact  (was MemoryEngine._enrich_fact)
@@ -59,6 +78,10 @@ def enrich_fact(
     emotion = tag_emotion(fact.content)
     signal = infer_signal(fact.content)
 
+    # Strategy A: initialize Langevin position near origin (ACTIVE zone).
+    # New facts start as ACTIVE; dynamics will evolve them based on access patterns.
+    langevin_pos = _init_langevin_position(dim=8)
+
     return AtomicFact(
         fact_id=fact.fact_id, memory_id=record.memory_id,
         profile_id=profile_id, content=fact.content,
@@ -73,6 +96,7 @@ def enrich_fact(
         evidence_count=fact.evidence_count,
         source_turn_ids=fact.source_turn_ids, session_id=record.session_id,
         embedding=embedding, fisher_mean=fisher_mean, fisher_variance=fisher_variance,
+        langevin_position=langevin_pos,
         emotional_valence=emotion.valence, emotional_arousal=emotion.arousal,
         signal_type=signal, created_at=fact.created_at,
     )
