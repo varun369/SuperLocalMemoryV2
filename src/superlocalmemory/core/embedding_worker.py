@@ -23,9 +23,10 @@ Part of Qualixar | Author: Varun Pratap Bhardwaj
 from __future__ import annotations
 
 import json
+import os
 import signal
 import sys
-import os
+import threading
 
 # Force CPU BEFORE any torch import
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -41,8 +42,33 @@ if sys.platform != "win32":
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
 
 
+def _start_parent_watchdog() -> None:
+    """Monitor parent process — self-terminate if parent dies.
+
+    Prevents orphaned workers that consume 500-800 MB each when the parent
+    process crashes, is killed, or exits without cleanup.
+
+    V3.3.7: Added after incident where orphaned workers consumed 33 GB.
+    """
+    parent_pid = os.getppid()
+
+    def _watch() -> None:
+        import time
+        while True:
+            time.sleep(5)
+            try:
+                os.kill(parent_pid, 0)
+            except OSError:
+                os._exit(0)
+
+    t = threading.Thread(target=_watch, daemon=True, name="parent-watchdog")
+    t.start()
+
+
 def _worker_main() -> None:
     """Main loop: read JSON requests from stdin, write responses to stdout."""
+    _start_parent_watchdog()  # V3.3.7: self-terminate if parent dies
+
     import numpy as np
 
     model = None

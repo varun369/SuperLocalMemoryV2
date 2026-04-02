@@ -15,6 +15,7 @@ Part of Qualixar | Author: Varun Pratap Bhardwaj
 
 from __future__ import annotations
 
+import atexit
 import json
 import logging
 import os
@@ -22,10 +23,14 @@ import subprocess
 import sys
 import threading
 import time
+import weakref
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
+
+# Track all live embedding services for atexit cleanup
+_live_embedding_services: set[weakref.ref] = set()
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -68,6 +73,17 @@ class EmbeddingService:
         self._idle_timer: threading.Timer | None = None
         self._worker_ready = False
         self._request_count: int = 0
+
+        # Register for atexit cleanup (prevent orphaned workers)
+        ref = weakref.ref(self, _live_embedding_services.discard)
+        _live_embedding_services.add(ref)
+
+    def __del__(self) -> None:
+        """Kill worker subprocess when service is garbage-collected."""
+        try:
+            self._kill_worker()
+        except Exception:
+            pass
 
     @property
     def is_available(self) -> bool:
@@ -338,3 +354,26 @@ class EmbeddingService:
             raise DimensionMismatchError(
                 f"Embedding dimension {actual} != expected {self._config.dimension}"
             )
+
+
+# ---------------------------------------------------------------------------
+# Module-level atexit: kill ALL embedding workers on process exit
+# ---------------------------------------------------------------------------
+
+def _cleanup_all_embedding_services() -> None:
+    """Kill all embedding worker subprocesses on interpreter exit.
+
+    Prevents orphaned 500-800 MB sentence-transformer workers surviving
+    after parent exits (especially during test runs with parallel agents).
+    """
+    for ref in list(_live_embedding_services):
+        svc = ref()
+        if svc is not None:
+            try:
+                svc._kill_worker()
+            except Exception:
+                pass
+    _live_embedding_services.clear()
+
+
+atexit.register(_cleanup_all_embedding_services)

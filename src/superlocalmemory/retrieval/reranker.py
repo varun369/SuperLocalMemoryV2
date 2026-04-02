@@ -16,6 +16,7 @@ License: MIT
 
 from __future__ import annotations
 
+import atexit
 import json
 import logging
 import os
@@ -23,9 +24,13 @@ import subprocess
 import sys
 import threading
 import time
+import weakref
 from typing import Any
 
 from superlocalmemory.storage.models import AtomicFact
+
+# Track all live reranker instances for atexit cleanup
+_live_rerankers: set[weakref.ref] = set()
 
 logger = logging.getLogger(__name__)
 
@@ -64,10 +69,21 @@ class CrossEncoderReranker:
         self._idle_timer: threading.Timer | None = None
         self._request_count: int = 0
 
+        # Register for atexit cleanup (prevent orphaned workers)
+        ref = weakref.ref(self, _live_rerankers.discard)
+        _live_rerankers.add(ref)
+
         # Start background warmup immediately — worker loads model
         # while the rest of init continues. First recall gets instant
         # fallback; second recall uses the warm model.
         self._start_background_warmup()
+
+    def __del__(self) -> None:
+        """Kill worker subprocess when reranker is garbage-collected."""
+        try:
+            self._kill_worker()
+        except Exception:
+            pass
 
     # ------------------------------------------------------------------
     # Background warmup (non-blocking model load)
@@ -330,3 +346,26 @@ class CrossEncoderReranker:
         if resp is None:
             return False
         return resp.get("ok", False)
+
+
+# ---------------------------------------------------------------------------
+# Module-level atexit: kill ALL reranker workers on process exit
+# ---------------------------------------------------------------------------
+
+def _cleanup_all_rerankers() -> None:
+    """Kill all reranker worker subprocesses on interpreter exit.
+
+    Prevents orphaned 1.3 GB ONNX/PyTorch workers surviving after
+    parent exits (especially during test runs with parallel agents).
+    """
+    for ref in list(_live_rerankers):
+        reranker = ref()
+        if reranker is not None:
+            try:
+                reranker._kill_worker()
+            except Exception:
+                pass
+    _live_rerankers.clear()
+
+
+atexit.register(_cleanup_all_rerankers)

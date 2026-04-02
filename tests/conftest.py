@@ -6,16 +6,61 @@
 
 Provides in-memory DB, mock embedder, Mode A config, and
 engine-with-mock-deps fixtures used across all test modules.
+
+V3.3.7: Added session-scoped worker cleanup to prevent orphaned
+subprocess workers (reranker_worker, embedding_worker) from leaking
+memory across parallel test runs. Each worker consumes 0.5-1.5 GB.
 """
 
 from __future__ import annotations
 
+import os
+import signal
 import sqlite3
+import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+
+
+# ---------------------------------------------------------------------------
+# Session-scoped worker cleanup (prevents orphaned subprocess leak)
+# ---------------------------------------------------------------------------
+
+def _kill_orphaned_slm_workers() -> None:
+    """Kill any orphaned SLM subprocess workers.
+
+    Targets: reranker_worker, embedding_worker, recall_worker.
+    These subprocesses each consume 0.5-1.5 GB and can orphan when
+    tests crash, get interrupted, or when parallel agents run tests.
+    """
+    worker_patterns = [
+        "superlocalmemory.core.reranker_worker",
+        "superlocalmemory.core.embedding_worker",
+        "superlocalmemory.core.recall_worker",
+    ]
+    for pattern in worker_patterns:
+        try:
+            subprocess.run(
+                ["pkill", "-f", pattern],
+                capture_output=True,
+                timeout=5,
+            )
+        except Exception:
+            pass
+
+
+@pytest.fixture(autouse=True, scope="session")
+def cleanup_slm_workers_at_end():
+    """Kill all SLM subprocess workers when the test session ends.
+
+    Session-scoped + autouse = runs once at session start (yields),
+    then cleans up after ALL tests complete or crash.
+    """
+    yield
+    _kill_orphaned_slm_workers()
 
 
 @pytest.fixture

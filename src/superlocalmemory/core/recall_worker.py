@@ -20,6 +20,7 @@ import json
 import os
 import signal
 import sys
+import threading
 
 # Force CPU BEFORE any torch import
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -33,6 +34,29 @@ os.environ["TORCH_DEVICE"] = "cpu"
 # Without this, the worker ignores SIGTERM and becomes a zombie.
 if sys.platform != "win32":
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+
+
+def _start_parent_watchdog() -> None:
+    """Monitor parent process — self-terminate if parent dies.
+
+    Prevents orphaned workers that consume 500+ MB each when the parent
+    process crashes, is killed, or exits without cleanup.
+
+    V3.3.7: Added after incident where orphaned workers consumed 33 GB.
+    """
+    parent_pid = os.getppid()
+
+    def _watch() -> None:
+        import time
+        while True:
+            time.sleep(5)
+            try:
+                os.kill(parent_pid, 0)
+            except OSError:
+                os._exit(0)
+
+    t = threading.Thread(target=_watch, daemon=True, name="parent-watchdog")
+    t.start()
 
 _engine = None
 
@@ -209,6 +233,8 @@ def _handle_status() -> dict:
 
 def _worker_main() -> None:
     """Main loop: read JSON requests from stdin, write responses to stdout."""
+    _start_parent_watchdog()  # V3.3.7: self-terminate if parent dies
+
     for line in sys.stdin:
         line = line.strip()
         if not line:
