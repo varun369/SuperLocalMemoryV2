@@ -115,7 +115,7 @@ class EncodingConfig:
 
     # Fact extraction
     chunk_size: int = 10           # Conversation turns per extraction chunk
-    max_facts_per_chunk: int = 5   # Max facts extracted per chunk
+    max_facts_per_chunk: int = 10  # V3.3.11: increased from 5 to preserve more details
     min_fact_confidence: float = 0.3
 
     # Entity resolution

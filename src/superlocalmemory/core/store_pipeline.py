@@ -166,6 +166,27 @@ def run_store(
         turns=[content], session_id=session_id,
         session_date=parsed_date, speaker_a=speaker,
     )
+
+    # V3.3.11: Also store raw content as a verbatim fact to preserve details
+    # that fact extraction may abstract away (dates, names, specifics).
+    # This ensures BM25 and semantic search can always find the original text.
+    if content.strip() and len(content.strip()) >= 20:
+        import uuid
+        verbatim = AtomicFact(
+            fact_id=uuid.uuid4().hex[:16],
+            content=content.strip(),
+            fact_type=FactType.EPISODIC,
+            entities=[],
+            session_id=session_id,
+            observation_date=parsed_date,
+            confidence=0.9,
+            importance=0.5,
+        )
+        # Avoid duplicate if extraction already produced the exact same text
+        extracted_texts = {f.content.strip().lower() for f in facts}
+        if verbatim.content.strip().lower() not in extracted_texts:
+            facts.append(verbatim)
+
     if not facts:
         return []
 
