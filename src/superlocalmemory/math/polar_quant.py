@@ -83,13 +83,23 @@ class PolarQuantEncoder:
     HR-09: Angle indices as uint8, packed into bytes.
     """
 
-    __slots__ = ("_config", "_d", "_S", "_codebooks")
+    __slots__ = ("_config", "_d", "_S", "_codebooks", "_turbo", "_use_turbo")
 
     def __init__(self, config: PolarQuantConfig) -> None:
         self._config = config
         self._d = config.dimension
-        self._S = self._load_or_create_rotation_matrix()
-        self._codebooks = self._generate_uniform_codebooks()
+        codebook_method = getattr(config, "codebook_method", "turbo")
+        if codebook_method == "turbo":
+            from superlocalmemory.math.turbo_quant import TurboQuantEncoder
+            self._turbo = TurboQuantEncoder(config)
+            self._S = self._turbo._S
+            self._codebooks = self._generate_uniform_codebooks()  # for legacy decode
+            self._use_turbo = True
+        else:
+            self._turbo = None
+            self._S = self._load_or_create_rotation_matrix()
+            self._codebooks = self._generate_uniform_codebooks()
+            self._use_turbo = False
 
     # -- Rotation matrix (HR-01, HR-02) ------------------------------------
 
@@ -156,14 +166,14 @@ class PolarQuantEncoder:
     # -- Encode ------------------------------------------------------------
 
     def encode(self, embedding: NDArray, bit_width: int = 4) -> QuantizedEmbedding:
-        """Encode a float32 embedding into quantized polar representation.
+        """Encode a float32 embedding into quantized representation.
 
         Args:
             embedding: 1-D float vector of dimension self._d.
             bit_width:  2, 4, or 8.
 
         Returns:
-            QuantizedEmbedding with packed angle indices.
+            QuantizedEmbedding with packed indices.
 
         Raises:
             ValueError: Invalid bit_width or dimension mismatch.
@@ -177,13 +187,25 @@ class PolarQuantEncoder:
                 f"shape mismatch: expected ({self._d},), got {embedding.shape}"
             )
 
-        # Step 1: Random rotation
-        v_rot = self._S @ embedding
+        # V3.3.8: TurboQuant path (default)
+        if self._use_turbo:
+            result = self._turbo.encode(embedding, bit_width)
+            return QuantizedEmbedding(
+                fact_id="",
+                radius=result.radius,
+                angle_indices=result.indices,
+                bit_width=result.bit_width,
+                qjl_bits=None,
+            )
 
-        # Step 2: Compute radius
+        # Legacy PolarQuant path
+        return self._encode_polar(embedding, bit_width)
+
+    def _encode_polar(self, embedding: NDArray, bit_width: int) -> QuantizedEmbedding:
+        """Legacy PolarQuant encode (polar coordinate transform)."""
+        v_rot = self._S @ embedding
         r = float(np.linalg.norm(v_rot))
 
-        # Degenerate zero vector
         if r < 1e-12:
             zero_angles = np.zeros(self._d - 1, dtype=np.uint8)
             if bit_width == 8:
@@ -200,17 +222,11 @@ class PolarQuantEncoder:
                 qjl_bits=None,
             )
 
-        # Step 3: Normalize
         v_unit = v_rot / r
-
-        # Step 4: Cartesian to polar angles
         angles = _cartesian_to_polar_angles(v_unit)
-
-        # Step 5: Quantize angles using codebook
         cb = self._codebooks[bit_width]
         indices = np.digitize(angles, cb["boundaries"][1:-1]).astype(np.uint8)
 
-        # Step 6: Pack into bytes
         if bit_width == 8:
             packed = indices.tobytes()
         elif bit_width == 4:
@@ -228,8 +244,14 @@ class PolarQuantEncoder:
 
     # -- Decode ------------------------------------------------------------
 
+    # TQ magic prefix for format detection (HR-MIG-02)
+    _TQ_MAGIC = b"\x54\x51"
+
     def decode(self, qe: QuantizedEmbedding) -> NDArray:
         """Decode a QuantizedEmbedding back to float64 vector.
+
+        V3.3.8: Detects "TQ" prefix (0x54, 0x51) to route between
+        TurboQuant and legacy PolarQuant decode paths.
 
         Args:
             qe: Quantized embedding produced by encode().
@@ -237,9 +259,28 @@ class PolarQuantEncoder:
         Returns:
             Reconstructed vector of dimension self._d.
         """
+        # Format detection: TQ prefix = TurboQuant, else legacy polar
+        if qe.angle_indices[:2] == self._TQ_MAGIC:
+            return self._decode_turbo(qe)
+        return self._decode_polar(qe)
+
+    def _decode_turbo(self, qe: QuantizedEmbedding) -> NDArray:
+        """Decode TurboQuant-encoded BLOB (has TQ prefix)."""
+        if self._turbo is None:
+            from superlocalmemory.math.turbo_quant import TurboQuantEncoder
+            self._turbo = TurboQuantEncoder(self._config)
+        from superlocalmemory.math.turbo_quant import TurboQuantResult
+        result = TurboQuantResult(
+            radius=qe.radius,
+            indices=qe.angle_indices,
+            bit_width=qe.bit_width,
+        )
+        return self._turbo.decode(result)
+
+    def _decode_polar(self, qe: QuantizedEmbedding) -> NDArray:
+        """Decode legacy PolarQuant BLOB (no TQ prefix)."""
         n_angles = self._d - 1
 
-        # Step 1: Unpack angle indices
         if qe.bit_width == 8:
             indices = np.frombuffer(qe.angle_indices, dtype=np.uint8).copy()
         elif qe.bit_width == 4:
@@ -247,19 +288,12 @@ class PolarQuantEncoder:
         else:
             indices = self.unpack_2bit(qe.angle_indices, n_angles)
 
-        # Step 2: Dequantize -- map indices to centroid angles
         centroids = self._codebooks[qe.bit_width]["centroids"]
-        # Clip indices to valid range
         indices = np.clip(indices, 0, len(centroids) - 1)
         angles = centroids[indices]
 
-        # Step 3: Polar to Cartesian
         v_unit = _polar_to_cartesian(angles, self._d)
-
-        # Step 4: Scale by radius
         v_rot = v_unit * qe.radius
-
-        # Step 5: Inverse rotation (S is orthogonal, so S^T = S^{-1})
         v_orig = self._S.T @ v_rot
 
         return v_orig

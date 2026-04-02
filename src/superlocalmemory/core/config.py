@@ -310,6 +310,7 @@ class PolarQuantConfig:
     dimension: int = 768
     rotation_matrix_path: str = ""  # empty = ~/.superlocalmemory/polar_rotation.npy
     seed: int = 42                  # reproducible rotation matrix
+    codebook_method: str = "turbo"  # "turbo" (default) or "polar_legacy"
 
 
 @dataclass(frozen=True)
@@ -338,7 +339,7 @@ class QuantizationConfig:
     eap_enabled: bool = True
     keep_float32_backup: bool = True
     auto_compact_interval_hours: int = 6
-    polar_search_penalty: float = 0.95
+    polar_search_penalty: float = 0.97  # V3.3.8: 0.95→0.97, TurboQuant has lower MSE
 
 
 @dataclass(frozen=True)
