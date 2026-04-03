@@ -102,7 +102,11 @@ class BridgeDiscovery:
                 for f in entity_facts[:5]:
                     if f.fact_id not in seen:
                         seen.add(f.fact_id)
-                        bridges.append((f.fact_id, 0.7))
+                        overlap = (
+                            len(set(f.canonical_entities) & entities_a)
+                            + len(set(f.canonical_entities) & entities_b)
+                        )
+                        bridges.append((f.fact_id, min(1.0, 0.5 + overlap * 0.15)))
 
             if len(bridges) >= max_bridges:
                 break

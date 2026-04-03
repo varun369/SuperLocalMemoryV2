@@ -98,7 +98,11 @@ class QuantizationAwareSearch:
     ) -> list[tuple[str, float]]:
         """Tier 1: float32 exact cosine via VectorStore."""
         try:
-            return self._vector_store.search(query, profile_id, top_k)
+            return self._vector_store.search(
+                query_embedding=list(query) if hasattr(query, 'tolist') else query,
+                top_k=top_k,
+                profile_id=profile_id,
+            )
         except Exception as exc:
             logger.debug("float32 search failed: %s", exc)
             return []
@@ -109,9 +113,13 @@ class QuantizationAwareSearch:
         """Tier 2: int8 approximate via VectorStore.search_int8.
 
         Applies 0.98x penalty to account for int8 quantization error.
+        Gracefully returns [] if VectorStore lacks search_int8 method.
         """
+        fn = getattr(self._vector_store, "search_int8", None)
+        if fn is None:
+            return []
         try:
-            raw = self._vector_store.search_int8(query, profile_id, top_k)
+            raw = fn(query, profile_id=profile_id, top_k=top_k)
             return [(fid, score * _INT8_PENALTY) for fid, score in raw]
         except Exception as exc:
             logger.debug("int8 search failed: %s", exc)

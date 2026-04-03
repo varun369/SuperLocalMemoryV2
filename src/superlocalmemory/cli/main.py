@@ -100,7 +100,11 @@ def main() -> None:
         help="Enable PreToolUse gate (experimental — blocks tools until session_init)",
     )
 
-    sub.add_parser("setup", help="Interactive first-time setup wizard")
+    setup_p = sub.add_parser("setup", help="Interactive first-time setup wizard")
+    setup_p.add_argument(
+        "--auto", action="store_true",
+        help="Non-interactive mode: use defaults (for CI/scripts)",
+    )
 
     mode_p = sub.add_parser("mode", help="Get or set operating mode (a/b/c)")
     mode_p.add_argument(
@@ -130,6 +134,10 @@ def main() -> None:
     remember_p.add_argument("content", help="Content to remember")
     remember_p.add_argument("--tags", default="", help="Comma-separated tags")
     remember_p.add_argument("--json", action="store_true", help="Output structured JSON (agent-native)")
+    remember_p.add_argument(
+        "--async", dest="fire_and_forget", action="store_true",
+        help="Return immediately, process in background (for hooks/scripts)",
+    )
 
     recall_p = sub.add_parser("recall", help="Semantic search with 4-channel retrieval")
     recall_p.add_argument("query", help="Search query")
@@ -261,6 +269,10 @@ def main() -> None:
     if not args.command:
         parser.print_help()
         sys.exit(0)
+
+    # V3.3.19: Auto-trigger setup wizard on first use
+    from superlocalmemory.cli.setup_wizard import check_first_use
+    check_first_use(args.command)
 
     from superlocalmemory.cli.commands import dispatch
 

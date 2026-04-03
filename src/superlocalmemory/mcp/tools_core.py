@@ -95,14 +95,20 @@ def register_core_tools(server, get_engine: Callable) -> None:
         Extracts atomic facts, resolves entities, builds graph edges,
         and indexes for 4-channel retrieval.
         """
+        import asyncio
         try:
             from superlocalmemory.core.worker_pool import WorkerPool
             pool = WorkerPool.shared()
-            result = pool.store(content, metadata={
-                "tags": tags, "project": project,
-                "importance": importance, "agent_id": agent_id,
-                "session_id": session_id,
-            })
+            # V3.3.19: Run store in thread pool so it doesn't block the
+            # MCP event loop. Before this fix, every remember call blocked
+            # the IDE/agent for 11-17s in Mode B (Ollama LLM fact extraction).
+            result = await asyncio.to_thread(
+                pool.store, content, metadata={
+                    "tags": tags, "project": project,
+                    "importance": importance, "agent_id": agent_id,
+                    "session_id": session_id,
+                },
+            )
             if result.get("ok"):
                 _emit_event("memory.created", {
                     "content_preview": content[:80],
@@ -118,10 +124,12 @@ def register_core_tools(server, get_engine: Callable) -> None:
     @server.tool()
     async def recall(query: str, limit: int = 10, agent_id: str = "mcp_client") -> dict:
         """Search memories by semantic query with 4-channel retrieval, RRF fusion, and reranking."""
+        import asyncio
         try:
             from superlocalmemory.core.worker_pool import WorkerPool
             pool = WorkerPool.shared()
-            result = pool.recall(query, limit=limit)
+            # V3.3.19: Run in thread pool to avoid blocking MCP event loop
+            result = await asyncio.to_thread(pool.recall, query, limit=limit)
             if result.get("ok"):
                 # Record implicit feedback: every returned result is a recall_hit
                 try:

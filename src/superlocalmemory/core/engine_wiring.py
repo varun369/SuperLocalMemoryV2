@@ -394,6 +394,46 @@ def _init_hopfield_channel(
         return None
 
 
+def _init_quantization_aware_search(
+    vector_store: Any,
+    db: DatabaseManager,
+    config: SLMConfig,
+) -> Any | None:
+    """Create QuantizationAwareSearch if quantized store is available.
+
+    Returns None on failure — SemanticChannel falls back to VectorStore KNN.
+    Stateless wrapper: zero memory overhead, no workers, no threads.
+    """
+    if vector_store is None:
+        return None
+    try:
+        from superlocalmemory.retrieval.quantization_aware_search import QuantizationAwareSearch
+        from superlocalmemory.storage.quantized_store import QuantizedEmbeddingStore
+        from superlocalmemory.math.polar_quant import PolarQuantEncoder
+        from superlocalmemory.math.qjl import QJLEncoder
+
+        polar = PolarQuantEncoder(dimension=config.embedding.dimension)
+        qjl: QJLEncoder | None = None
+        try:
+            qjl = QJLEncoder(dimension=config.embedding.dimension)
+        except Exception:
+            pass  # QJL is optional (HR-07)
+
+        q_store = QuantizedEmbeddingStore(
+            db=db, polar=polar, qjl=qjl, config=config.quantization,
+        )
+        qas = QuantizationAwareSearch(
+            vector_store=vector_store,
+            quantized_store=q_store,
+            config=config.quantization,
+        )
+        logger.info("QuantizationAwareSearch initialized (TurboQuant 3-tier search)")
+        return qas
+    except Exception as exc:
+        logger.debug("QuantizationAwareSearch init failed (non-fatal): %s", exc)
+        return None
+
+
 def init_retrieval(
     config: SLMConfig,
     db: DatabaseManager,
@@ -412,6 +452,9 @@ def init_retrieval(
     from superlocalmemory.retrieval.profile_channel import ProfileChannel
     from superlocalmemory.retrieval.bridge_discovery import BridgeDiscovery
 
+    # V3.3.19: TurboQuant 3-tier search (stateless, zero memory overhead)
+    qas = _init_quantization_aware_search(vector_store, db, config)
+
     channels: dict = {
         "semantic": SemanticChannel(
             db,
@@ -419,6 +462,7 @@ def init_retrieval(
             embedder=embedder,
             fisher_mode=config.math.fisher_mode,
             vector_store=vector_store,
+            quantization_aware_search=qas,
         ),
         "bm25": BM25Channel(db),
         "entity_graph": EntityGraphChannel(db, entity_resolver),

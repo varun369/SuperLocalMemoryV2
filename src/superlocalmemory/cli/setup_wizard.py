@@ -4,7 +4,11 @@
 
 """Interactive setup wizard for first-time configuration.
 
-Guides new users through mode selection and provider setup.
+Runs automatically on first use of any `slm` command, or via `slm setup`.
+Downloads models, configures mode, verifies installation.
+
+For npm: triggered by postinstall.js after dependency installation.
+For pip: triggered on first `slm` command when .setup-complete is missing.
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
 """
@@ -12,98 +16,453 @@ Part of Qualixar | Author: Varun Pratap Bhardwaj
 from __future__ import annotations
 
 import os
+import platform
 import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
 
 
-def run_wizard() -> None:
-    """Run the interactive setup wizard."""
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+_SLM_HOME = Path(os.environ.get("SL_MEMORY_PATH", Path.home() / ".superlocalmemory"))
+_SETUP_MARKER = _SLM_HOME / ".setup-complete"
+_EMBED_MODEL = "nomic-ai/nomic-embed-text-v1.5"
+_RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-12-v2"
+
+
+# ---------------------------------------------------------------------------
+# Detection helpers
+# ---------------------------------------------------------------------------
+
+def is_interactive() -> bool:
+    """True if running in a terminal (not CI, not piped, not MCP)."""
+    if os.environ.get("CI"):
+        return False
+    if os.environ.get("SLM_NON_INTERACTIVE"):
+        return False
+    return sys.stdin.isatty() and sys.stdout.isatty()
+
+
+def is_setup_complete() -> bool:
+    """True if the setup wizard has been run at least once."""
+    return _SETUP_MARKER.exists()
+
+
+def needs_setup() -> bool:
+    """True if setup should auto-trigger (first use)."""
+    return not is_setup_complete()
+
+
+def _prompt(message: str, default: str = "") -> str:
+    """Prompt user for input. Returns default if non-interactive."""
+    if not is_interactive():
+        return default
+    try:
+        return input(message).strip() or default
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return default
+
+
+def _get_ram_gb() -> float:
+    """Get total system RAM in GB."""
+    try:
+        import psutil
+        return psutil.virtual_memory().total / (1024 ** 3)
+    except ImportError:
+        pass
+    # Fallback: macOS
+    if platform.system() == "Darwin":
+        try:
+            out = subprocess.check_output(["sysctl", "-n", "hw.memsize"], text=True)
+            return int(out.strip()) / (1024 ** 3)
+        except Exception:
+            pass
+    # Fallback: Linux
+    try:
+        with open("/proc/meminfo") as f:
+            for line in f:
+                if line.startswith("MemTotal:"):
+                    return int(line.split()[1]) / (1024 ** 2)
+    except Exception:
+        pass
+    return 0.0
+
+
+# ---------------------------------------------------------------------------
+# Model download
+# ---------------------------------------------------------------------------
+
+def _download_model(model_name: str, label: str) -> bool:
+    """Download a HuggingFace model with visible progress.
+
+    Runs in a subprocess so the main process never loads torch.
+    stderr is inherited so the user sees download progress bars.
+    Returns True on success.
+    """
+    print(f"\n  Downloading {label}: {model_name}")
+    print(f"  (this may take a few minutes on first run)\n")
+
+    script = (
+        f"import sys; "
+        f"from sentence_transformers import SentenceTransformer; "
+        f"m = SentenceTransformer('{model_name}', trust_remote_code=True); "
+        f"d = m.get_sentence_embedding_dimension(); "
+        f"print(f'OK dim={{d}}'); "
+    )
+
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            timeout=600,  # 10 min for large model downloads
+            capture_output=False,  # Show download progress
+            text=True,
+            env={
+                **os.environ,
+                "CUDA_VISIBLE_DEVICES": "",
+                "TOKENIZERS_PARALLELISM": "false",
+                "TORCH_DEVICE": "cpu",
+            },
+        )
+        if result.returncode == 0:
+            print(f"  ✓ {label} ready")
+            return True
+        print(f"  ✗ {label} download failed (exit code {result.returncode})")
+        return False
+    except subprocess.TimeoutExpired:
+        print(f"  ✗ {label} download timed out (10 min)")
+        return False
+    except FileNotFoundError:
+        print(f"  ✗ Python not found: {sys.executable}")
+        return False
+    except Exception as exc:
+        print(f"  ✗ {label} download error: {exc}")
+        return False
+
+
+def _download_reranker(model_name: str) -> bool:
+    """Download cross-encoder reranker model."""
+    print(f"\n  Downloading reranker: {model_name}")
+    print(f"  (cross-encoder for result re-ranking)\n")
+
+    script = (
+        f"from sentence_transformers import CrossEncoder; "
+        f"m = CrossEncoder('{model_name}', trust_remote_code=True); "
+        f"print('OK'); "
+    )
+
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            timeout=300,
+            capture_output=False,
+            text=True,
+            env={
+                **os.environ,
+                "CUDA_VISIBLE_DEVICES": "",
+                "TOKENIZERS_PARALLELISM": "false",
+                "TORCH_DEVICE": "cpu",
+            },
+        )
+        if result.returncode == 0:
+            print(f"  ✓ Reranker ready")
+            return True
+        print(f"  ✗ Reranker download failed")
+        return False
+    except Exception as exc:
+        print(f"  ✗ Reranker error: {exc}")
+        return False
+
+
+# ---------------------------------------------------------------------------
+# Verification
+# ---------------------------------------------------------------------------
+
+def _verify_installation() -> bool:
+    """Quick smoke test: embed a sentence, verify dimension."""
+    print("\n  Running verification test...")
+
+    script = (
+        "from superlocalmemory.core.embeddings import EmbeddingService; "
+        "from superlocalmemory.core.config import EmbeddingConfig; "
+        "cfg = EmbeddingConfig(); "
+        "svc = EmbeddingService(cfg); "
+        "vec = svc.embed('SuperLocalMemory setup verification test'); "
+        "print(f'OK dim={len(vec)}' if vec else 'FAIL'); "
+        "svc.unload(); "
+    )
+
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            timeout=120,
+            capture_output=True,
+            text=True,
+            env={
+                **os.environ,
+                "CUDA_VISIBLE_DEVICES": "",
+                "TOKENIZERS_PARALLELISM": "false",
+                "TORCH_DEVICE": "cpu",
+            },
+        )
+        stdout = result.stdout.strip()
+        if "OK dim=" in stdout:
+            dim = stdout.split("dim=")[1]
+            print(f"  ✓ Embedding verified (dimension={dim})")
+            return True
+        print(f"  ✗ Verification failed: {stdout}")
+        if result.stderr:
+            # Show last 3 lines of stderr for diagnosis
+            lines = result.stderr.strip().split("\n")
+            for line in lines[-3:]:
+                print(f"    {line}")
+        return False
+    except subprocess.TimeoutExpired:
+        print("  ✗ Verification timed out (120s)")
+        return False
+    except Exception as exc:
+        print(f"  ✗ Verification error: {exc}")
+        return False
+
+
+# ---------------------------------------------------------------------------
+# Mark setup complete
+# ---------------------------------------------------------------------------
+
+def _mark_complete() -> None:
+    """Write .setup-complete marker file."""
+    _SLM_HOME.mkdir(parents=True, exist_ok=True)
+    _SETUP_MARKER.write_text(
+        f"setup_completed={time.strftime('%Y-%m-%dT%H:%M:%S')}\n"
+        f"python={sys.executable}\n"
+        f"platform={platform.system()}\n"
+        f"version={platform.python_version()}\n"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Main wizard
+# ---------------------------------------------------------------------------
+
+def run_wizard(auto: bool = False) -> None:
+    """Run the interactive setup wizard.
+
+    Args:
+        auto: If True, use defaults without prompting (for npm postinstall
+              or CI environments).
+    """
+    interactive = is_interactive() and not auto
+
     print()
-    print("SuperLocalMemory V3 — First Time Setup")
-    print("=" * 40)
+    print("╔══════════════════════════════════════════════════════════╗")
+    print("║  SuperLocalMemory V3 — Setup Wizard                    ║")
+    print("║  by Varun Pratap Bhardwaj / Qualixar                   ║")
+    print("╚══════════════════════════════════════════════════════════╝")
     print()
-    print("Choose your operating mode:")
+
+    # -- Step 1: System check --
+    print("─── Step 1/5: System Check ───")
     print()
-    print("  [A] Local Guardian (default)")
-    print("      Zero cloud. Zero LLM. Your data never leaves your machine.")
+    py_ver = platform.python_version()
+    py_ok = sys.version_info >= (3, 11)
+    ram_gb = _get_ram_gb()
+    print(f"  Python:   {py_ver} {'✓' if py_ok else '✗ (3.11+ required)'}")
+    print(f"  Platform: {platform.system()} {platform.machine()}")
+    if ram_gb > 0:
+        print(f"  RAM:      {ram_gb:.1f} GB {'✓' if ram_gb >= 4 else '⚠ (4GB+ recommended)'}")
+    print(f"  Data dir: {_SLM_HOME}")
+
+    # Check sentence-transformers
+    st_ok = False
+    try:
+        import sentence_transformers  # noqa: F401
+        st_ok = True
+        print(f"  sentence-transformers: ✓")
+    except ImportError:
+        print(f"  sentence-transformers: ✗ (not installed)")
+        print(f"    Run: pip install 'sentence-transformers>=4.0.0'")
+
+    if not py_ok:
+        print("\n  ✗ Python 3.11+ is required. Please upgrade Python.")
+        print("    https://python.org/downloads/")
+        return
+
+    # -- Step 2: Mode selection --
+    print()
+    print("─── Step 2/5: Choose Operating Mode ───")
+    print()
+    print("  [A] Local Guardian (recommended)")
+    print("      Zero cloud. Zero LLM. Full privacy.")
     print("      EU AI Act compliant. Works immediately.")
     print()
     print("  [B] Smart Local")
-    print("      Local LLM via Ollama for answer synthesis.")
-    print("      Still private — nothing leaves your machine.")
+    print("      Local LLM via Ollama for enrichment.")
+    print("      Data stays on your machine.")
     print()
     print("  [C] Full Power")
-    print("      Cloud LLM for best accuracy (~78% on LoCoMo).")
-    print("      Requires: API key from a supported provider.")
+    print("      Cloud LLM for maximum accuracy.")
+    print("      Requires API key.")
     print()
 
-    choice = input("Select mode [A/B/C] (default: A): ").strip().lower() or "a"
+    if interactive:
+        choice = _prompt("  Select mode [A/B/C] (default: A): ", "a").lower()
+    else:
+        choice = "a"
+        print("  Auto-selecting Mode A (non-interactive)")
 
     if choice not in ("a", "b", "c"):
-        print(f"Invalid choice: {choice}. Using Mode A.")
+        print(f"  Invalid choice '{choice}', using Mode A.")
         choice = "a"
 
     from superlocalmemory.core.config import SLMConfig
     from superlocalmemory.storage.models import Mode
 
-    if choice == "a":
-        config = SLMConfig.for_mode(Mode.A)
-        config.save()
-        print()
-        print("Mode A configured. Zero cloud, zero LLM.")
-        print(f"Config saved to: {config.base_dir / 'config.json'}")
+    mode_map = {"a": Mode.A, "b": Mode.B, "c": Mode.C}
+    config = SLMConfig.for_mode(mode_map[choice])
 
-    elif choice == "b":
-        config = SLMConfig.for_mode(Mode.B)
+    if choice == "b":
         print()
-        print("Checking for Ollama...")
         if shutil.which("ollama"):
-            print("  Ollama found!")
+            print("  ✓ Ollama found!")
         else:
-            print("  Ollama not found. Install it from https://ollama.ai")
-            print("  After installing, run: ollama pull llama3.2")
-        config.save()
-        print(f"Config saved to: {config.base_dir / 'config.json'}")
+            print("  ⚠ Ollama not found. Install: https://ollama.ai")
+            print("    After installing: ollama pull llama3.2")
 
-    elif choice == "c":
-        config = SLMConfig.for_mode(Mode.C)
+    if choice == "c" and interactive:
         configure_provider(config)
+    else:
+        config.save()
+
+    mode_names = {"a": "Local Guardian", "b": "Smart Local", "c": "Full Power"}
+    print(f"\n  ✓ Mode {choice.upper()} ({mode_names[choice]}) configured")
+
+    # -- Step 3: Download embedding model --
+    print()
+    print("─── Step 3/5: Download Embedding Model ───")
+
+    if not st_ok:
+        print("  ⚠ Skipped (sentence-transformers not installed)")
+        print("    Models will download on first use.")
+    else:
+        embed_ok = _download_model(_EMBED_MODEL, "Embedding model")
+        if not embed_ok:
+            print("  ⚠ Model will download on first use (may take a few minutes)")
+
+    # -- Step 4: Download reranker model --
+    print()
+    print("─── Step 4/5: Download Reranker Model ───")
+
+    if not st_ok:
+        print("  ⚠ Skipped (sentence-transformers not installed)")
+    else:
+        _download_reranker(_RERANKER_MODEL)
+
+    # -- Step 5: Verification --
+    print()
+    print("─── Step 5/5: Verification ───")
+
+    if st_ok:
+        verified = _verify_installation()
+    else:
+        print("  ⚠ Skipped (sentence-transformers not installed)")
+        verified = False
+
+    # -- Done --
+    _mark_complete()
 
     print()
-    print("Ready! Your AI now remembers you.")
+    print("╔══════════════════════════════════════════════════════════╗")
+    if verified:
+        print("║  ✓ Setup Complete — SuperLocalMemory is ready!         ║")
+    else:
+        print("║  ✓ Setup Complete — basic config saved                 ║")
+        print("║    Models will auto-download on first use              ║")
+    print("╚══════════════════════════════════════════════════════════╝")
+    print()
+    print("  Quick start:")
+    print('    slm remember "your first memory"')
+    print('    slm recall "search query"')
+    print("    slm dashboard")
+    print()
+    print("  Need help?")
+    print("    slm doctor     — diagnose issues")
+    print("    slm --help     — all commands")
+    print("    https://github.com/qualixar/superlocalmemory")
     print()
 
+
+# ---------------------------------------------------------------------------
+# First-use auto-trigger
+# ---------------------------------------------------------------------------
+
+def check_first_use(command: str) -> None:
+    """Check if setup is needed before running a command.
+
+    Called from main.py before dispatching any command.
+    Skips for commands that don't need setup (setup, hook, --version, --help).
+    """
+    # Commands that work without setup
+    _SKIP_COMMANDS = {"setup", "init", "hook", "hooks", "reap", "mcp"}
+    if command in _SKIP_COMMANDS:
+        return
+
+    if is_setup_complete():
+        return
+
+    # Non-interactive: use defaults silently, don't block the command
+    if not is_interactive():
+        # Just create config with defaults and mark complete
+        try:
+            from superlocalmemory.core.config import SLMConfig
+            from superlocalmemory.storage.models import Mode
+            config = SLMConfig.for_mode(Mode.A)
+            config.save()
+            _mark_complete()
+        except Exception:
+            pass
+        return
+
+    # Interactive: run the full wizard
+    print()
+    print("  First time using SuperLocalMemory!")
+    print("  Running setup wizard...\n")
+    run_wizard()
+
+
+# ---------------------------------------------------------------------------
+# Mode C provider config (preserved from original)
+# ---------------------------------------------------------------------------
 
 def configure_provider(config: object) -> None:
-    """Configure LLM provider for Mode C.
-
-    Args:
-        config: An SLMConfig instance (typed as object to avoid circular import
-                at module level; actual type checked at runtime).
-    """
+    """Configure LLM provider for Mode C."""
     from superlocalmemory.core.config import SLMConfig
     from superlocalmemory.storage.models import Mode
 
     presets = SLMConfig.provider_presets()
 
     print()
-    print("Choose your LLM provider:")
+    print("  Choose your LLM provider:")
     print()
     providers = list(presets.keys())
     for i, name in enumerate(providers, 1):
         preset = presets[name]
-        print(f"  [{i}] {name.capitalize()} — {preset['model']}")
+        print(f"    [{i}] {name.capitalize()} — {preset['model']}")
     print()
 
-    idx = input(f"Select provider [1-{len(providers)}]: ").strip()
+    idx = _prompt(f"  Select provider [1-{len(providers)}]: ", "1")
     try:
         provider_name = providers[int(idx) - 1]
     except (ValueError, IndexError):
-        print("Invalid choice. Using OpenAI.")
+        print("  Invalid choice. Using OpenAI.")
         provider_name = "openai"
 
     preset = presets[provider_name]
 
-    # Resolve API key from environment or prompt
+    # Resolve API key
     env_key = preset.get("env_key", "")
     api_key = ""
     if env_key:
@@ -111,10 +470,10 @@ def configure_provider(config: object) -> None:
         if existing:
             print(f"  Found {env_key} in environment.")
             api_key = existing
-        else:
-            api_key = input(
+        elif is_interactive():
+            api_key = _prompt(
                 f"  Enter your {provider_name.capitalize()} API key: ",
-            ).strip()
+            )
 
     updated = SLMConfig.for_mode(
         Mode.C,
@@ -126,4 +485,3 @@ def configure_provider(config: object) -> None:
     updated.save()
     print(f"  Provider: {provider_name}")
     print(f"  Model: {preset['model']}")
-    print(f"Config saved to: {updated.base_dir / 'config.json'}")

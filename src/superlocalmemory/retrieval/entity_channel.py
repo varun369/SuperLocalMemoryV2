@@ -89,8 +89,8 @@ class EntityGraphChannel:
     def __init__(
         self, db: DatabaseManager,
         entity_resolver: EntityResolver | None = None,
-        decay: float = 0.7, activation_threshold: float = 0.1,
-        max_hops: int = 3,
+        decay: float = 0.7, activation_threshold: float = 0.05,
+        max_hops: int = 4,
     ) -> None:
         self._db = db
         self._resolver = entity_resolver

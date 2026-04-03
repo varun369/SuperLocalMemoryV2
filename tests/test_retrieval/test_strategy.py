@@ -77,8 +77,29 @@ class TestQueryTypeDetection:
     def test_entity_two_proper_nouns(
         self, classifier: QueryStrategyClassifier
     ) -> None:
-        strat = classifier.classify("Did Alice meet Bob?", {})
+        # V3.3.19: 2 entities WITHOUT causal/temporal word → entity
+        strat = classifier.classify("Tell me about Alice and Bob", {})
         assert strat.query_type == "entity"
+
+    def test_multi_hop_two_entities_with_causal_word(
+        self, classifier: QueryStrategyClassifier
+    ) -> None:
+        # V3.3.19: 2 entities + causal verb → multi_hop
+        strat = classifier.classify("Did Alice meet Bob?", {})
+        assert strat.query_type == "multi_hop"
+
+    def test_multi_hop_entity_before(
+        self, classifier: QueryStrategyClassifier
+    ) -> None:
+        # V3.3.19: Classic LoCoMo multi-hop pattern
+        strat = classifier.classify("What did Alice study before moving to New York?", {})
+        assert strat.query_type == "multi_hop"
+
+    def test_multi_hop_entity_after(
+        self, classifier: QueryStrategyClassifier
+    ) -> None:
+        strat = classifier.classify("What happened after Alice told Bob?", {})
+        assert strat.query_type == "multi_hop"
 
     def test_factual_what(self, classifier: QueryStrategyClassifier) -> None:
         strat = classifier.classify("what is the capital of france?", {})

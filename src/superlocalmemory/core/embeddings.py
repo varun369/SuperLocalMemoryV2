@@ -191,10 +191,17 @@ class EmbeddingService:
                 )
                 if not resp_line:
                     logger.warning(
-                        "Embedding worker timed out after %ds. On first run, model "
-                        "download can take several minutes. Run 'slm doctor' to "
-                        "diagnose or 'slm warmup' to pre-download the model.",
+                        "Embedding worker timed out after %ds. "
+                        "Run 'slm setup' to download models and verify installation.",
                         _SUBPROCESS_RESPONSE_TIMEOUT,
+                    )
+                    # Print to stderr so CLI users see this even without logging
+                    print(
+                        f"\n⚠ Embedding worker did not respond within "
+                        f"{_SUBPROCESS_RESPONSE_TIMEOUT}s.\n"
+                        f"  Run: slm setup   (download models + verify)\n"
+                        f"  Run: slm doctor  (diagnose issues)\n",
+                        file=sys.stderr,
                     )
                     self._kill_worker()
                     return None

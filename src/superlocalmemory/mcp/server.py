@@ -53,7 +53,60 @@ def reset_engine():
     _engine = None
 
 
-# Register all tools and resources --------------------------------------------
+# Register tools and resources -------------------------------------------------
+#
+# V3.3.19: Trimmed from 38 tools to 15 essential tools.
+# IDEs cap at 50-100 tools total (Cursor, Antigravity, Windsurf).
+# 38 tools from SLM alone crowds out other MCP servers.
+#
+# Essential 15: the tools an AI agent actually needs during a session.
+# Admin/diagnostics tools remain available via CLI (`slm <command>`).
+# Set SLM_MCP_ALL_TOOLS=1 to enable all 38 tools (power users).
+
+import os as _os_reg
+
+_ESSENTIAL_TOOLS: frozenset[str] = frozenset({
+    # Core memory operations (8)
+    "remember", "recall", "search", "fetch",
+    "list_recent", "delete_memory", "update_memory", "get_status",
+    # Session lifecycle (3)
+    "session_init", "observe", "close_session",
+    # Memory management (2)
+    "forget", "run_maintenance",
+    # Infinite memory + learning (4)
+    "consolidate_cognitive", "get_soft_prompts",
+    "set_mode", "report_outcome",
+})
+
+_all_tools = _os_reg.environ.get("SLM_MCP_ALL_TOOLS") == "1"
+
+
+class _FilteredServer:
+    """Wraps FastMCP to only register essential tools.
+
+    Non-essential tools are silently skipped (not registered on the MCP
+    server). They remain available via CLI. When SLM_MCP_ALL_TOOLS=1,
+    all tools are registered (bypass filter).
+    """
+    __slots__ = ("_server", "_allowed")
+
+    def __init__(self, real_server: FastMCP, allowed: frozenset[str]) -> None:
+        self._server = real_server
+        self._allowed = allowed
+
+    def tool(self, *args, **kwargs):
+        def decorator(func):
+            if func.__name__ in self._allowed:
+                return self._server.tool(*args, **kwargs)(func)
+            return func  # Skip registration — still importable, just not MCP-visible
+        return decorator
+
+    def __getattr__(self, name):
+        return getattr(self._server, name)
+
+
+# Choose full or filtered registration target
+_target = server if _all_tools else _FilteredServer(server, _ESSENTIAL_TOOLS)
 
 from superlocalmemory.mcp.tools_core import register_core_tools
 from superlocalmemory.mcp.tools_v28 import register_v28_tools
@@ -62,12 +115,12 @@ from superlocalmemory.mcp.tools_active import register_active_tools
 from superlocalmemory.mcp.tools_v33 import register_v33_tools
 from superlocalmemory.mcp.resources import register_resources
 
-register_core_tools(server, get_engine)
-register_v28_tools(server, get_engine)
-register_v3_tools(server, get_engine)
-register_active_tools(server, get_engine)
-register_v33_tools(server, get_engine)
-register_resources(server, get_engine)
+register_core_tools(_target, get_engine)
+register_v28_tools(_target, get_engine)
+register_v3_tools(_target, get_engine)
+register_active_tools(_target, get_engine)
+register_v33_tools(_target, get_engine)
+register_resources(server, get_engine)  # Resources always registered (not tools)
 
 
 if __name__ == "__main__":

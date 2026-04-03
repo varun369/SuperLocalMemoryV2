@@ -35,9 +35,33 @@ _TEMPORAL_WORDS: frozenset[str] = frozenset({
 })
 
 _MULTI_HOP_PHRASES: tuple[str, ...] = (
+    # Original 8 phrases
     "and then", "after that", "because", "how did",
     "as a result", "led to", "connection between", "relationship between",
+    # V3.3.19: LoCoMo-style multi-hop patterns (causal/temporal chains)
+    "what happened when", "what was happening",
+    "during the time", "at the same time",
+    "how did it affect", "what changed after",
+    "what did they do after", "what did they do before",
+    "what was the result", "what was the outcome",
+    "what was the reason", "why did they",
+    "in response to", "as a consequence",
+    "prior to", "following that", "subsequent to",
+    "in the meantime", "at that point",
+    "which led to", "which caused", "which resulted in",
 )
+
+# Words that signal causal/temporal chain when combined with 2+ entities.
+# Excludes common instruction verbs (tell, help) to avoid false positives
+# on queries like "Tell me about Alice and Bob".
+_CAUSAL_TEMPORAL_WORDS: frozenset[str] = frozenset({
+    "before", "after", "when", "while", "because", "then",
+    "during", "since", "until", "once",
+    "affect", "cause", "change", "happen", "result",
+    "influence", "impact", "lead", "meet",
+    "start", "stop", "begin", "end", "move", "leave",
+    "join", "visit", "return",
+})
 
 _AGGREGATION_WORDS: frozenset[str] = frozenset({
     "all", "list", "every", "everything", "various", "different",
@@ -80,22 +104,30 @@ class QueryStrategyClassifier:
         # Strip punctuation from words so "january?" matches "january"
         words = set(re.sub(r"[^\w\s'-]", "", q).split())
 
-        # Check multi_hop BEFORE temporal — phrases like "connection between"
-        # must not be short-circuited by the word "between" in _TEMPORAL_WORDS.
+        # Check multi_hop phrases FIRST (exact phrase match)
         if any(p in q for p in _MULTI_HOP_PHRASES):
             return "multi_hop"
+
+        # Extract proper nouns EARLY for the multi-entity heuristic
+        _SENTENCE_STARTERS = {"What", "Where", "Who", "Which", "How", "When",
+                              "Does", "Did", "Can", "Could", "Would", "Should",
+                              "Are", "Is", "Was", "Were", "Has", "Have", "The", "Tell"}
+        proper_nouns = [m for m in re.findall(r"\b[A-Z][a-z]{1,}\b", query)
+                        if m not in _SENTENCE_STARTERS]
+
+        # V3.3.19: 2+ entities + causal/temporal word → multi_hop
+        # This MUST fire BEFORE the temporal check, otherwise "What did
+        # Alice study before moving to New York?" would classify as
+        # "temporal" instead of "multi_hop".
+        if len(proper_nouns) >= 2 and words & _CAUSAL_TEMPORAL_WORDS:
+            return "multi_hop"
+
         if words & _TEMPORAL_WORDS:
             return "temporal"
         if words & _AGGREGATION_WORDS:
             return "aggregation"
         if any(w in q for w in _OPINION_WORDS):
             return "opinion"
-        # Proper nouns — exclude common sentence-initial words
-        _SENTENCE_STARTERS = {"What", "Where", "Who", "Which", "How", "When",
-                              "Does", "Did", "Can", "Could", "Would", "Should",
-                              "Are", "Is", "Was", "Were", "Has", "Have", "The", "Tell"}
-        proper_nouns = [m for m in re.findall(r"\b[A-Z][a-z]{1,}\b", query)
-                        if m not in _SENTENCE_STARTERS]
         if len(proper_nouns) >= 2:
             return "entity"
         if q.startswith(("what ", "where ", "who ", "which ", "how ")):

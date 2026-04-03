@@ -240,28 +240,54 @@ if (fs.existsSync(hooksDisabledFile)) {
     }
 }
 
+// --- Step 6: Run interactive setup wizard ---
+// Downloads embedding + reranker models, configures mode, verifies installation.
+// If TTY is available (interactive terminal), runs the full wizard.
+// If not (CI, piped), uses defaults (Mode A, skip model download).
+console.log('\n════════════════════════════════════════════════════════════');
+console.log('  Running setup wizard (model download + verification)...');
+console.log('════════════════════════════════════════════════════════════\n');
+
+const isTTY = process.stdin.isTTY && process.stdout.isTTY;
+const setupArgs = isTTY ? ['setup'] : ['setup'];
+const setupEnv = {
+    ...process.env,
+    PATH: '/opt/homebrew/bin:/usr/local/bin:/usr/bin:' + (process.env.PATH || ''),
+    PYTHONPATH: path.join(__dirname, '..', 'src') + ':' + (process.env.PYTHONPATH || ''),
+    CUDA_VISIBLE_DEVICES: '',
+    TOKENIZERS_PARALLELISM: 'false',
+    TORCH_DEVICE: 'cpu',
+};
+
+// Non-interactive: set env flag so wizard uses defaults
+if (!isTTY) {
+    setupEnv.SLM_NON_INTERACTIVE = '1';
+}
+
+const setupResult = spawnSync(pythonParts[0], [
+    ...pythonParts.slice(1), '-m', 'superlocalmemory.cli.main', ...setupArgs,
+], {
+    stdio: 'inherit',  // Show all output including download progress
+    timeout: 900000,    // 15 min (model downloads can be slow)
+    env: setupEnv,
+});
+
+if (setupResult.status === 0) {
+    console.log('✓ Setup wizard completed successfully');
+} else {
+    console.log('⚠ Setup wizard had issues (run: slm setup)');
+    console.log('  SuperLocalMemory will still work — models download on first use.');
+}
+
 // --- Done ---
-console.log('════════════════════════════════════════════════════════════');
-console.log('  ✓ SuperLocalMemory V3 installed successfully!');
+console.log('\n════════════════════════════════════════════════════════════');
+console.log('  ✓ SuperLocalMemory V3 installed!');
 console.log('');
 console.log('  Quick start:');
-console.log('    Just open Claude Code — memory works automatically!');
-console.log('');
-console.log('  Other commands:');
-console.log('    slm doctor         # Pre-flight check (verify everything works)');
-console.log('    slm warmup         # Pre-download embedding model (~500MB)');
-console.log('    slm remember "..." # Store a memory');
-console.log('    slm recall "..."   # Search memories');
-console.log('    slm dashboard      # Open 17-tab web dashboard');
-console.log('    slm hooks status   # Check hook installation');
-console.log('    slm hooks remove   # Opt out of auto-memory hooks');
-console.log('');
-console.log('  Prerequisites satisfied:');
-console.log('    ✓ Python 3.11+');
-console.log('    ✓ Core math & search libraries');
-console.log('    ✓ Dashboard server (fastapi, uvicorn)');
-console.log('    ✓ Learning engine (lightgbm)');
-console.log('    ✓ Data directory (~/.superlocalmemory/)');
+console.log('    slm remember "..."   # Store a memory');
+console.log('    slm recall "..."     # Search memories');
+console.log('    slm dashboard        # Open web dashboard');
+console.log('    slm setup            # Re-run setup wizard');
 console.log('');
 console.log('  Docs: https://github.com/qualixar/superlocalmemory/wiki');
 console.log('════════════════════════════════════════════════════════════\n');

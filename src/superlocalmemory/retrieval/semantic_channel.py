@@ -84,6 +84,7 @@ class SemanticChannel:
         embedder: object | None = None,
         fisher_mode: str = "simplified",
         vector_store: Any | None = None,
+        quantization_aware_search: Any | None = None,
     ) -> None:
         self._db = db
         self._temperature = fisher_temperature
@@ -92,6 +93,8 @@ class SemanticChannel:
         # Lazily instantiated full metric (avoids import cost when not needed)
         self._full_metric: object | None = None
         self._vector_store = vector_store
+        # V3.3.19: TurboQuant 3-tier search (stateless, optional)
+        self._qas = quantization_aware_search
 
     def search(
         self,
@@ -137,11 +140,26 @@ class SemanticChannel:
         profile_id: str,
         top_k: int,
     ) -> list[tuple[str, float]]:
-        """KNN via VectorStore, then Fisher-Rao re-scoring on top-K subset."""
-        # Step 1: Fast KNN -- get 2x top_k candidates for Fisher re-ranking
-        knn_results = self._vector_store.search(
-            query_embedding, top_k=top_k * 2, profile_id=profile_id,
-        )
+        """KNN via VectorStore (or QAS 3-tier), then Fisher-Rao re-scoring."""
+        # V3.3.19: Try TurboQuant 3-tier search first (float32 + int8 + polar)
+        if self._qas is not None:
+            try:
+                knn_results = self._qas.search(
+                    query_embedding=q_vec, profile_id=profile_id,
+                    top_k=top_k * 2,
+                )
+            except Exception:
+                knn_results = []
+            # Fall through to VectorStore if QAS returned nothing
+            if not knn_results:
+                knn_results = self._vector_store.search(
+                    query_embedding, top_k=top_k * 2, profile_id=profile_id,
+                )
+        else:
+            # Step 1: Fast KNN -- get 2x top_k candidates for Fisher re-ranking
+            knn_results = self._vector_store.search(
+                query_embedding, top_k=top_k * 2, profile_id=profile_id,
+            )
         if not knn_results:
             return []  # Caller falls through to full scan
 

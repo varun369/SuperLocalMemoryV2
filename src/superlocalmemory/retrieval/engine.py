@@ -146,13 +146,14 @@ class RetrievalEngine:
         fused = weighted_rrf(ch_results, strat.weights, k=self._config.rrf_k)
 
         # Bridge discovery for multi-hop queries
+        # V3.3.19: Only bridge.discover() (86ms). Removed bridge.spreading_activation()
+        # which did per-node SQL queries across 254K edges → 78s latency.
+        # The SYNAPSE SA channel already provides proper SA with in-memory caching.
         if self._bridge is not None and strat.query_type in ("multi_hop", "entity", "factual", "general"):
             try:
                 seed_ids = [fr.fact_id for fr in fused[:10]]
                 bridges = self._bridge.discover(seed_ids, profile_id, max_bridges=10)
-                spread = self._bridge.spreading_activation(seed_ids, profile_id)
-                extra = bridges + spread
-                for fid, score in extra:
+                for fid, score in bridges:
                     if not any(fr.fact_id == fid for fr in fused):
                         fused.append(FusionResult(
                             fact_id=fid, fused_score=score * 0.8,

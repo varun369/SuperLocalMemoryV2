@@ -97,7 +97,7 @@ class SpreadingActivation:
         try:
             # Step 0: Get seed nodes from VectorStore KNN
             seed_results = self._vector_store.search(
-                query, top_k=self._config.top_m,
+                query, top_k=self._config.top_m, profile_id=profile_id,
             )
             if not seed_results:
                 return []
@@ -125,7 +125,7 @@ class SpreadingActivation:
             return results[:top_k]
 
         except Exception as exc:
-            logger.debug(
+            logger.warning(
                 "SpreadingActivation.search failed for profile %s: %s",
                 profile_id, exc,
             )

@@ -68,11 +68,12 @@ def dispatch(args: Namespace) -> None:
 # -- Setup & Config (no --json — interactive commands) ---------------------
 
 
-def cmd_setup(_args: Namespace) -> None:
+def cmd_setup(args: Namespace) -> None:
     """Run the interactive setup wizard."""
     from superlocalmemory.cli.setup_wizard import run_wizard
 
-    run_wizard()
+    run_wizard(auto=getattr(args, "auto", False))
+    sys.exit(0)  # Force clean exit (background threads from imports may linger)
 
 
 def cmd_mode(args: Namespace) -> None:
@@ -249,9 +250,32 @@ def cmd_list(args: Namespace) -> None:
 def cmd_remember(args: Namespace) -> None:
     """Store a memory via the engine."""
     from superlocalmemory.core.config import SLMConfig
-    from superlocalmemory.core.engine import MemoryEngine
 
     use_json = getattr(args, 'json', False)
+    fire_and_forget = getattr(args, 'fire_and_forget', False)
+
+    # V3.3.19: --async flag for hooks/scripts — spawn background process, return instantly
+    if fire_and_forget:
+        import subprocess
+        cmd = [sys.executable, "-m", "superlocalmemory.cli.main", "remember", args.content]
+        if args.tags:
+            cmd.extend(["--tags", args.tags])
+        if use_json:
+            cmd.append("--json")
+        # Spawn detached subprocess — parent exits immediately
+        subprocess.Popen(
+            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        if use_json:
+            from superlocalmemory.cli.json_output import json_print
+            json_print("remember", data={"queued": True, "async": True})
+        else:
+            print("Queued for background processing.")
+        return
+
+    from superlocalmemory.core.engine import MemoryEngine
+
     try:
         config = SLMConfig.load()
         engine = MemoryEngine(config)

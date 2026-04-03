@@ -1,6 +1,6 @@
 [project]
 name = "superlocalmemory"
-version = "3.3.18"
+version = "3.3.19"
 description = "Information-geometric agent memory with mathematical guarantees"
 readme = "README.md"
 license = {text = "MIT"}
