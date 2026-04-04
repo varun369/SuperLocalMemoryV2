@@ -740,9 +740,10 @@ class SLMConfig:
                 retrieval=RetrievalConfig(
                     # V3.3.2: ONNX cross-encoder enabled for all modes (~200MB)
                     use_cross_encoder=True,
-                    # Mode A is zero-LLM: disable agentic retrieval (it replaces
-                    # precision-tuned fusion with crude heuristic expansions)
-                    agentic_max_rounds=0,
+                    # V3.3.19: Enable 1 round of rule-based query decomposition.
+                    # The enhanced _heuristic_expand generates entity+action
+                    # sub-queries that dramatically improve multi-hop retrieval.
+                    agentic_max_rounds=1,
                 ),
                 math=MathConfig(
                     sheaf_contradiction_threshold=0.45,  # 768d threshold

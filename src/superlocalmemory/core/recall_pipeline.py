@@ -157,13 +157,17 @@ def run_recall(
     response = retrieval_engine.recall(query, profile_id, m, limit)
 
     # Agentic sufficiency verification
+    # V3.3.19: Only trigger for multi_hop queries in Mode A (rule-based).
+    # Single-hop/factual/temporal queries get WORSE with decomposition —
+    # sub-query noise dilutes precision. Mode C (LLM) can trigger broadly.
     agentic_rounds = config.retrieval.agentic_max_rounds
     if agentic_rounds > 0 and response.results:
         max_score = max((r.score for r in response.results), default=0.0)
+        has_llm = llm is not None and getattr(llm, "is_available", False)
         should_trigger = (
-            max_score < config.retrieval.agentic_confidence_threshold
-            or response.query_type == "multi_hop"
-            or len(response.results) < 3
+            response.query_type == "multi_hop"
+            or (has_llm and max_score < config.retrieval.agentic_confidence_threshold)
+            or (has_llm and len(response.results) < 3)
         )
         if should_trigger:
             try:

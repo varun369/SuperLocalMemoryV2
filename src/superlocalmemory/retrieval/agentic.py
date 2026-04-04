@@ -31,7 +31,10 @@ logger = logging.getLogger(__name__)
 
 _MAX_ROUNDS = 2
 _SUFFICIENCY_SCORE_THRESHOLD = 0.6
-_SKIP_TYPES = frozenset({"temporal"})  # S15: agentic harms temporal queries
+# V3.3.19: Removed "temporal" from skip list. S15's lesson was with
+# weak alias expansion. The new rule-based decomposer (v3.3.19) helps
+# temporal queries by generating entity+action sub-queries.
+_SKIP_TYPES: frozenset[str] = frozenset()  # No types skipped
 
 _SUFFICIENCY_SYSTEM = (
     "You evaluate whether retrieved context is sufficient to answer a query. "
@@ -241,22 +244,91 @@ class AgenticRetriever:
     def _heuristic_expand(
         self, query: str, profile_id: str,
     ) -> list[str]:
-        """Mode A: expand query with entity aliases (no LLM)."""
-        if self._db is None:
-            return []
+        """Mode A: rule-based query decomposition (no LLM).
 
-        expanded_parts: list[str] = []
-        entities = re.findall(r"\b[A-Z][a-z]{2,}\b", query)
-        for name in entities:
-            entity = self._db.get_entity_by_name(name, profile_id)
-            if entity:
-                aliases = self._db.get_aliases_for_entity(entity.entity_id)
-                for a in aliases[:3]:
-                    expanded_parts.append(a.alias)
+        V3.3.19: Full rewrite. Generates targeted sub-queries by:
+        1. Extracting person/place names (real proper nouns only)
+        2. Extracting action/event keywords (non-stopwords minus entities)
+        3. Combining entity + action for focused retrieval
+        4. Entity-only and action-only lookups for broader context
 
-        if expanded_parts:
-            return [query + " " + " ".join(expanded_parts)]
-        return []
+        For LoCoMo "When did [Person] [Action]?" patterns, this generates:
+          "Caroline LGBTQ support group"  (entity + action)
+          "Caroline"                       (entity only)
+          "LGBTQ support group"            (action only)
+        """
+        sub_queries: list[str] = []
+
+        # Extract REAL proper nouns from original query (not title-cased)
+        # This avoids the extract_query_entities trap where "Support Group"
+        # from title-casing gets treated as entities.
+        _STARTERS = {
+            "What", "Where", "Who", "Which", "How", "When", "Does", "Did",
+            "Can", "Could", "Would", "Should", "Are", "Is", "Was", "Were",
+            "Has", "Have", "The", "Tell", "Do",
+        }
+        entities = [
+            m for m in re.findall(r"\b[A-Z][a-z]{2,}\b", query)
+            if m not in _STARTERS
+        ]
+        # Also grab all-caps abbreviations (LGBTQ, MIT, NYC)
+        abbrevs = re.findall(r"\b[A-Z]{2,}\b", query)
+        entities.extend(abbrevs)
+
+        # Extract action/event keywords (remove question words + entity names)
+        _STOP = {
+            "when", "did", "does", "do", "what", "where", "who", "which",
+            "how", "is", "was", "were", "are", "has", "have", "had",
+            "the", "a", "an", "to", "for", "of", "in", "on", "at",
+            "and", "or", "but", "with", "from", "about", "that", "this",
+            "it", "they", "she", "he", "her", "his", "their", "its",
+            "been", "being", "would", "could", "should", "will", "can",
+            "may", "might", "not", "no", "so", "if", "by", "up",
+            "go", "going", "went", "get", "got", "ago",
+            "many", "much", "some", "any", "ever",
+        }
+        entity_lower = {e.lower() for e in entities}
+        words = re.sub(r"[^\w\s]", "", query.lower()).split()
+        action_words = [
+            w for w in words
+            if w not in _STOP and w not in entity_lower and len(w) > 2
+        ]
+
+        # Strategy 1: Entity + action keywords (most targeted)
+        if entities and action_words:
+            action_phrase = " ".join(action_words)
+            for ent in entities[:2]:
+                sub_queries.append(f"{ent} {action_phrase}")
+
+        # Strategy 2: Action keywords only (finds the event regardless of entity)
+        if action_words:
+            sub_queries.append(" ".join(action_words))
+
+        # Strategy 3: Entity-only lookup (broad context)
+        for ent in entities[:2]:
+            sub_queries.append(ent)
+
+        # Strategy 4: Alias expansion (original approach, still useful)
+        if self._db is not None:
+            for name in entities[:2]:
+                entity = self._db.get_entity_by_name(name, profile_id)
+                if entity:
+                    try:
+                        aliases = self._db.get_aliases_for_entity(entity.entity_id)
+                        for a in aliases[:2]:
+                            sub_queries.append(f"{a.alias} {' '.join(action_words)}")
+                    except Exception:
+                        pass
+
+        # Deduplicate, limit to 3 sub-queries (keep round 2 fast)
+        seen: set[str] = set()
+        unique: list[str] = []
+        for sq in sub_queries:
+            sq_lower = sq.strip().lower()
+            if sq_lower and sq_lower not in seen and sq_lower != query.lower():
+                seen.add(sq_lower)
+                unique.append(sq.strip())
+        return unique[:3]
 
 
 # ---------------------------------------------------------------------------

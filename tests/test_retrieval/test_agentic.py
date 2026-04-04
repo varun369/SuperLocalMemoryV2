@@ -204,10 +204,12 @@ class TestAgenticRetrieverRetrieve:
 # ---------------------------------------------------------------------------
 
 class TestHeuristicExpansion:
-    def test_no_db_returns_empty(self) -> None:
+    def test_no_db_generates_sub_queries(self) -> None:
+        """V3.3.19: Without DB, still generates entity+action sub-queries."""
         retriever = AgenticRetriever(db=None)
         expanded = retriever._heuristic_expand("What about Alice?", "default")
-        assert expanded == []
+        # "Alice" is extracted as entity, generates entity-only sub-query
+        assert any("Alice" in q for q in expanded)
 
     def test_with_db_expands_aliases(self) -> None:
         db = MagicMock()
@@ -220,5 +222,17 @@ class TestHeuristicExpansion:
 
         retriever = AgenticRetriever(db=db)
         expanded = retriever._heuristic_expand("What about Alice?", "default")
-        assert len(expanded) == 1
-        assert "Al" in expanded[0]
+        # V3.3.19: Returns entity sub-queries + alias expansion
+        assert len(expanded) >= 1
+        assert any("Al" in q for q in expanded)
+
+    def test_decomposition_multi_hop(self) -> None:
+        """V3.3.19: Multi-hop decomposition generates entity+action sub-queries."""
+        retriever = AgenticRetriever(db=None)
+        expanded = retriever._heuristic_expand(
+            "When did Caroline go to the LGBTQ support group?", "default",
+        )
+        assert len(expanded) >= 2
+        # Should generate entity+action and action-only sub-queries
+        assert any("support" in q.lower() for q in expanded)
+        assert any("Caroline" in q for q in expanded)
