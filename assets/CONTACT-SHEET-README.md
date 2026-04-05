@@ -79,4 +79,4 @@ February 12, 2026
 ## Attribution
 
 SuperLocalMemory V2 - Universal AI Memory System
-Created by Varun Pratap Bhardwaj | MIT License
+Created by Varun Pratap Bhardwaj | Elastic License 2.0

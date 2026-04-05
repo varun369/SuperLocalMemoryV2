@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
 
 """Knowledge graph construction — 4 edge types, zero memory limits.
@@ -12,7 +12,7 @@ Edge types: ENTITY (shared entity, weight 1.0), TEMPORAL (exp-decay,
 weight 0.8). CONTRADICTION exposed for external Sheaf module (Wave 4).
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
-License: MIT
+License: Elastic-2.0
 """
 from __future__ import annotations
 

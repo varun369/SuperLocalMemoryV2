@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3
 
 """Root conftest — shared fixtures for Phase 0 Safety Net.

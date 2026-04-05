@@ -1,7 +1,7 @@
 /**
  * SuperLocalMemory V2 - Feedback Module (v2.7.4)
  * Copyright (c) 2026 Varun Pratap Bhardwaj
- * Licensed under MIT License
+ * Licensed under Elastic License 2.0
  *
  * Collects implicit and explicit feedback signals from dashboard
  * interactions. All data stays 100% local.

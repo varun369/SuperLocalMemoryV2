@@ -2,7 +2,7 @@
 /**
  * SuperLocalMemory V3 - Session Start Context Hook
  * Copyright (c) 2026 Varun Pratap Bhardwaj
- * Licensed under MIT License
+ * Licensed under Elastic License 2.0
  *
  * Loads recent memories and learned patterns on Claude Code session start.
  * Outputs context to stderr (Claude Code reads hook stderr as context).

@@ -443,7 +443,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ## License
 
-SuperLocalMemory V3 is released under the [MIT License](LICENSE).
+SuperLocalMemory V3 is released under the [Elastic License 2.0](LICENSE).
 
 ---
 

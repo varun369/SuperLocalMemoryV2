@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3
 
 """SLM 3.3 End-to-End Integration Tests.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Elastic-2.0
 // Copyright (c) 2026 SuperLocalMemory (superlocalmemory.com)
 // Compliance tab — audit trail, retention policies, ABAC (v2.8)
 // NOTE: All dynamic values use textContent or escapeHtml() from core.js before DOM insertion.

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
 
 """SuperLocalMemory V3 — Approximate Nearest Neighbor Index.
@@ -12,7 +12,7 @@ scale we target (up to 100K facts). At that scale, a single cosine
 scan takes ~5ms on CPU which is well within our latency budget.
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
-License: MIT
+License: Elastic-2.0
 """
 
 from __future__ import annotations

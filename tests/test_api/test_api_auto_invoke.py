@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3.2 | Phase 6 API Tests
 
 """Tests for GET/PUT /api/v3/auto-invoke/config endpoints.

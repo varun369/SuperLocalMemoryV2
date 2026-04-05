@@ -288,4 +288,4 @@ If you encounter accessibility issues, please report them:
 
 ---
 
-**Copyright © 2026 Varun Pratap Bhardwaj - MIT License**
+**Copyright © 2026 Varun Pratap Bhardwaj - Elastic License 2.0**

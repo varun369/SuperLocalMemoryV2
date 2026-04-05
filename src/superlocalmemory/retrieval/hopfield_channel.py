@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3
 
 """SuperLocalMemory V3.3 -- Hopfield Associative Memory (6th Retrieval Channel).
@@ -19,7 +19,7 @@ Key features:
   - Returns [] on any error (HR-06)
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
-License: MIT
+License: Elastic-2.0
 """
 
 from __future__ import annotations

@@ -2,7 +2,7 @@
 name: slm-build-graph
 description: Build or rebuild the knowledge graph from existing memories using TF-IDF entity extraction and Leiden clustering. Use when search results seem poor, after bulk imports, or to optimize performance. Automatically discovers relationships between memories and creates topic clusters.
 version: "3.0.0"
-license: MIT
+license: Elastic-2.0
 compatibility: "Requires SuperLocalMemory V3 installed at ~/.superlocalmemory/, optional dependencies: python-igraph, leidenalg"
 attribution:
   creator: Varun Pratap Bhardwaj
@@ -417,7 +417,7 @@ Each profile has separate graph
 
 **Created by:** [Varun Pratap Bhardwaj](https://github.com/varun369) (Solution Architect)
 **Project:** SuperLocalMemory V3
-**License:** MIT (see [LICENSE](../../LICENSE))
+**License:** Elastic License 2.0 (see [LICENSE](../../LICENSE))
 **Repository:** https://github.com/qualixar/superlocalmemory
 
-*Open source doesn't mean removing credit. Attribution must be preserved per MIT License terms.*
+*Open source doesn't mean removing credit. Attribution must be preserved per Elastic License 2.0 terms.*

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
 
 """SuperLocalMemory V3 — Core MCP Tools (13 tools).
@@ -453,7 +453,7 @@ def register_core_tools(server, get_engine: Callable) -> None:
             "product": "SuperLocalMemory V3",
             "author": "Varun Pratap Bhardwaj",
             "organization": "Qualixar",
-            "license": "MIT",
+            "license": "Elastic-2.0",
             "urls": {
                 "product": "https://superlocalmemory.com",
                 "author": "https://varunpratap.com",

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
 
 """SuperLocalMemory V3 — Weighted Reciprocal Rank Fusion.
@@ -8,7 +8,7 @@ Single-pass RRF with k=15 for sharp rank discrimination on small candidate pools
 V1 had triple re-fusion which destroyed rankings — fixed in V2.
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
-License: MIT
+License: Elastic-2.0
 """
 from __future__ import annotations
 

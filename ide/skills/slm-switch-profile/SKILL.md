@@ -2,7 +2,7 @@
 name: slm-switch-profile
 description: Switch between memory profiles for context isolation and management. Use when the user wants to change profile context, separate work/personal memories, or manage multiple independent memory spaces. Each profile has its own database, graph, and patterns.
 version: "3.0.0"
-license: MIT
+license: Elastic-2.0
 compatibility: "Requires SuperLocalMemory V3 installed at ~/.superlocalmemory/"
 attribution:
   creator: Varun Pratap Bhardwaj
@@ -436,7 +436,7 @@ slm list-profiles
 
 **Created by:** [Varun Pratap Bhardwaj](https://github.com/varun369) (Solution Architect)
 **Project:** SuperLocalMemory V3
-**License:** MIT (see [LICENSE](../../LICENSE))
+**License:** Elastic License 2.0 (see [LICENSE](../../LICENSE))
 **Repository:** https://github.com/qualixar/superlocalmemory
 
-*Open source doesn't mean removing credit. Attribution must be preserved per MIT License terms.*
+*Open source doesn't mean removing credit. Attribution must be preserved per Elastic License 2.0 terms.*

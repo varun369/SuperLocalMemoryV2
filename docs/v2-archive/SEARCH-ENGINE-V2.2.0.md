@@ -738,9 +738,9 @@ cache = CacheManager(
 
 ## License
 
-MIT License - See [LICENSE](../LICENSE) file
+Elastic License 2.0 - See [LICENSE](../LICENSE) file
 
-**Attribution Required:** This notice must be preserved in all copies per MIT License terms.
+**Attribution Required:** This notice must be preserved in all copies per Elastic License 2.0 terms.
 
 ---
 

@@ -772,4 +772,4 @@ Plus **2 MCP prompts** and **6 MCP resources** for advanced use.
 **100% local. 100% private. Works everywhere.**
 
 SuperLocalMemory V2 - by Varun Pratap Bhardwaj
-Licensed under MIT License
+Licensed under Elastic License 2.0

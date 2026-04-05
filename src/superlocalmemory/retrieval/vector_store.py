@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3
 
 """VectorStore -- sqlite-vec backed KNN search with profile isolation.
@@ -9,7 +9,7 @@ Falls back to ANNIndex if sqlite-vec is unavailable (Rule 03).
 Implements ANNSearchable protocol for GraphBuilder compatibility (Rule 07).
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
-License: MIT
+License: Elastic-2.0
 """
 
 from __future__ import annotations

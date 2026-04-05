@@ -281,4 +281,4 @@ engine = MemoryEngine(SLMConfig())
 
 ---
 
-*SuperLocalMemory V3 — Copyright 2026 Varun Pratap Bhardwaj. MIT License. Part of Qualixar.*
+*SuperLocalMemory V3 — Copyright 2026 Varun Pratap Bhardwaj. Elastic License 2.0. Part of Qualixar.*

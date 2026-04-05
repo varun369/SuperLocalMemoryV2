@@ -485,4 +485,4 @@ python3 ~/.superlocalmemory/mcp_server.py --transport http --port 8001
 
 **Version:** 2.4.1
 **Author:** Varun Pratap Bhardwaj
-**License:** MIT
+**License:** Elastic License 2.0

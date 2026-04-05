@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
 
 """Sheaf cohomology for contradiction detection at ENCODING time.
@@ -14,7 +14,7 @@ Severity = ||delta_0 f(e)|| / (||R_a emb_a|| + ||R_b emb_b||).
 Refs: Curry 2014 (arXiv:1303.3255), Hansen & Ghrist 2019, Robinson 2020.
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
-License: MIT
+License: Elastic-2.0
 """
 from __future__ import annotations
 

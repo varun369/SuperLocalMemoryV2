@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3
 
 """TurboQuant embedding quantization (ICLR 2026).
@@ -9,7 +9,7 @@ D_mse <= sqrt(3*pi/2) / 4^b. No scipy (HR-SCIPY-01). 2-byte "TQ" prefix on
 all BLOBs (HR-MIG-02). Bit-widths: 2, 4, 8 only (HR-3BIT-01).
 
 References: TurboQuant (arXiv 2504.19874), PolarQuant (arXiv 2502.02617).
-Part of Qualixar | Author: Varun Pratap Bhardwaj | License: MIT
+Part of Qualixar | Author: Varun Pratap Bhardwaj | License: Elastic-2.0
 """
 
 from __future__ import annotations

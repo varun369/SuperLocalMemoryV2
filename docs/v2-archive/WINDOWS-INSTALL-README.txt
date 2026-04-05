@@ -31,4 +31,4 @@ Documentation:
 • Issues: https://github.com/varun369/SuperLocalMemoryV2/issues
 
 Copyright (c) 2026 Varun Pratap Bhardwaj
-Licensed under MIT License
+Licensed under Elastic License 2.0

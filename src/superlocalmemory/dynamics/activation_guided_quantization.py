@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3
 
 """Spreading Activation-Guided Quantization (SAGQ) engine.
@@ -22,7 +22,7 @@ HR-05: All SQL uses parameterized queries.
 HR-07: No-op when config.enabled=False.
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
-License: MIT
+License: Elastic-2.0
 """
 
 from __future__ import annotations

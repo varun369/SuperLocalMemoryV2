@@ -2,7 +2,7 @@
 /**
  * SuperLocalMemory V3 - Post-Recall Hook
  * Copyright (c) 2026 Varun Pratap Bhardwaj
- * Licensed under MIT License
+ * Licensed under Elastic License 2.0
  *
  * Claude Code hook that tracks recall events for implicit signal collection.
  * This hook fires after the slm-recall skill completes, recording timing

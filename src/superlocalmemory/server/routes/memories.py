@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
-"""SuperLocalMemory V3 - Memory Routes (MIT License).
+"""SuperLocalMemory V3 - Memory Routes (Elastic License 2.0).
 Routes: /api/memories, /api/graph, /api/search, /api/clusters, /api/clusters/{id}
 Uses V3 MemoryEngine for store/recall. Falls back to direct DB for list/graph.
 """

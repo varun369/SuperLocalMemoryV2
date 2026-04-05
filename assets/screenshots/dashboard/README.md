@@ -169,7 +169,7 @@ python -m playwright install chromium
 
 SuperLocalMemory V2
 Copyright © 2026 Varun Pratap Bhardwaj
-Licensed under MIT License
+Licensed under Elastic License 2.0
 
 Creator: Varun Pratap Bhardwaj
 Repository: https://github.com/qualixar/superlocalmemory

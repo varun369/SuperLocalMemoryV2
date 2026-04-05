@@ -178,7 +178,7 @@ ifconfig en0 up
 - Data: SQLite (open standard)
 - Format: SQL + JSON (universal)
 - Tools: Python (open source)
-- License: MIT (permissive)
+- License: Elastic-2.0 (permissive)
 
 **Export anytime:**
 ```bash
@@ -566,7 +566,7 @@ Estimated: ~5-10 Wh per 1000 memories stored/year
 
 **SuperLocalMemory:**
 - Source code: Public
-- License: MIT (permissive)
+- License: Elastic-2.0 (permissive)
 - No vendor lock-in
 - Community owned
 - Forever free

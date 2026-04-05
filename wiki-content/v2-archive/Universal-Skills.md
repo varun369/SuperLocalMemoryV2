@@ -457,7 +457,7 @@ Each skill includes a `SKILL.md` file with complete metadata:
 name: slm-remember
 description: Save content to SuperLocalMemory
 version: "2.1.0"
-license: MIT
+license: Elastic-2.0
 compatibility: "Requires SuperLocalMemory installed"
 attribution:
   creator: Varun Pratap Bhardwaj

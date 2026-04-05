@@ -1,5 +1,5 @@
 // SuperLocalMemory V2.6.5 - Interactive Knowledge Graph - Interactions Module
-// Copyright (c) 2026 Varun Pratap Bhardwaj — MIT License
+// Copyright (c) 2026 Varun Pratap Bhardwaj — Elastic License 2.0
 // Part of modular graph visualization system (split from monolithic graph-cytoscape.js)
 
 // ============================================================================

@@ -344,7 +344,7 @@ https://github.com/qualixar/superlocalmemory/discussions
 
 1. **100% Local-First** — No required cloud dependencies, privacy is non-negotiable
 2. **Zero Cost Core** — Core features always free, no premium tiers for basic functionality
-3. **Open Source** — Source code always public, MIT License maintained
+3. **Open Source** — Source code always public, Elastic License 2.0 maintained
 4. **Backward Compatibility** — No breaking changes without major version bump
 5. **Performance First** — Fast operations, scales to 10K+ memories, minimal resource usage
 

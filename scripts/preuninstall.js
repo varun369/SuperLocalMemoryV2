@@ -5,7 +5,7 @@
  * Copyright (c) 2026 Varun Pratap Bhardwaj
  * Solution Architect & Original Creator
  *
- * Licensed under MIT License (see LICENSE file)
+ * Licensed under Elastic License 2.0 (see LICENSE file)
  * Repository: https://github.com/qualixar/superlocalmemory
  *
  * ATTRIBUTION REQUIRED: This notice must be preserved in all copies.

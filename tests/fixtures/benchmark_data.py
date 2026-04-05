@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3
 
 """Benchmark data generator for Phase 1 performance tests.
@@ -8,7 +8,7 @@ Generates deterministic synthetic facts with embeddings for
 reproducible latency benchmarks. Uses numpy RNG with fixed seeds.
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
-License: MIT
+License: Elastic-2.0
 """
 
 from __future__ import annotations

@@ -106,4 +106,4 @@ This will overwrite existing videos with updated content from the latest screens
 ## License
 
 Copyright (c) 2026 Varun Pratap Bhardwaj
-Licensed under MIT License
+Licensed under Elastic License 2.0

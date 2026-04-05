@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
 
 """Cognitive Consolidation Quantization (CCQ) — Phase E.
@@ -34,7 +34,7 @@ References:
   TurboQuant (ICLR 2026). Recursive polar quantization.
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
-License: MIT
+License: Elastic-2.0
 IP Novelty: 92% (no prior art for retention-gated consolidation + polar quantization)
 """
 

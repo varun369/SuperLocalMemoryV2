@@ -152,3 +152,6 @@ test-results/
 .env
 .env.*
 .env.local
+.coverage
+65%.
+70%

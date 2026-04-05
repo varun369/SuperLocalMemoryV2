@@ -10,7 +10,7 @@ SuperLocalMemory is a persistent memory system for AI assistants. It stores your
 
 ### Is it really free?
 
-Yes. SuperLocalMemory is open-source (MIT license) and completely free. No usage limits, no credit system, no subscription. Forever.
+Yes. SuperLocalMemory is open-source (Elastic License 2.0) and completely free. No usage limits, no credit system, no subscription. Forever.
 
 ### Where is my data stored?
 

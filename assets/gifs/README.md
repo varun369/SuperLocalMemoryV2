@@ -71,4 +71,4 @@ python3 tools/optimize_event_stream.py
 ---
 
 **Copyright © 2026 Varun Pratap Bhardwaj**
-Licensed under MIT License
+Licensed under Elastic License 2.0

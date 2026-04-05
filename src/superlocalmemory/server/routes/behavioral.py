@@ -1,8 +1,8 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
 """SuperLocalMemory V3 - Behavioral Routes
- - MIT License
+ - Elastic License 2.0
 
 Routes: /api/behavioral/status, /api/behavioral/report-outcome
 Uses V3 learning.behavioral.BehavioralPatternStore and learning.outcomes.OutcomeTracker.

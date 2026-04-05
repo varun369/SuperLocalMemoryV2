@@ -99,4 +99,4 @@ The dashboard exposes 25+ REST endpoints covering: memory CRUD, search, graph da
 
 ---
 
-*SuperLocalMemory v2.5 — Created by Varun Pratap Bhardwaj. MIT License.*
+*SuperLocalMemory v2.5 — Created by Varun Pratap Bhardwaj. Elastic License 2.0.*

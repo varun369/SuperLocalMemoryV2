@@ -1,5 +1,5 @@
 // SuperLocalMemory V2 - Learning System Dashboard (v2.7)
-// Copyright (c) 2026 Varun Pratap Bhardwaj - MIT License
+// Copyright (c) 2026 Varun Pratap Bhardwaj - Elastic License 2.0
 // NOTE: All dynamic values pass through escapeHtml() from core.js before DOM insertion.
 
 var _learningData = null;

@@ -2,7 +2,7 @@
 name: slm-remember
 description: Save content to SuperLocalMemory with intelligent indexing and knowledge graph integration. Use when the user wants to remember information, save context, store coding decisions, or persist knowledge for future sessions. Automatically indexes, graphs, and learns patterns.
 version: "3.0.0"
-license: MIT
+license: Elastic-2.0
 compatibility: "Requires SuperLocalMemory V3 installed at ~/.superlocalmemory/"
 attribution:
   creator: Varun Pratap Bhardwaj
@@ -188,7 +188,7 @@ slm remember "Commit: $commit_msg (${commit_hash:0:7})" \
 
 **Created by:** [Varun Pratap Bhardwaj](https://github.com/varun369) (Solution Architect)
 **Project:** SuperLocalMemory V3
-**License:** MIT (see [LICENSE](../../LICENSE))
+**License:** Elastic License 2.0 (see [LICENSE](../../LICENSE))
 **Repository:** https://github.com/qualixar/superlocalmemory
 
-*Open source doesn't mean removing credit. Attribution must be preserved per MIT License terms.*
+*Open source doesn't mean removing credit. Attribution must be preserved per Elastic License 2.0 terms.*

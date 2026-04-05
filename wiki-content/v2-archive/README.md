@@ -114,7 +114,7 @@ These are documentation files for reference only:
 **Creator:** Varun Pratap Bhardwaj
 **GitHub:** https://github.com/varun369
 **Project:** https://github.com/qualixar/superlocalmemory
-**License:** MIT
+**License:** Elastic License 2.0
 
 ---
 

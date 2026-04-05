@@ -188,7 +188,7 @@ superlocalmemory-repo/
 ├── CONTRIBUTING.md               # This file
 ├── SECURITY.md                   # Security policy
 ├── CHANGELOG.md                  # Version history
-└── LICENSE                       # MIT License
+└── LICENSE                       # Elastic License 2.0
 ```
 
 ---
@@ -641,7 +641,7 @@ Maintainers are responsible for:
 
 ## License
 
-By contributing to SuperLocalMemory V3, you agree that your contributions will be licensed under the MIT License.
+By contributing to SuperLocalMemory V3, you agree that your contributions will be licensed under the Elastic License 2.0.
 
 See [LICENSE](LICENSE) for details.
 

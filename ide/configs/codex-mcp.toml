@@ -1,6 +1,6 @@
 # SuperLocalMemory V3 - Codex CLI MCP Configuration
 # Copyright (c) 2026 Varun Pratap Bhardwaj
-# Licensed under MIT License
+# Licensed under Elastic License 2.0
 #
 # Auto-configured by install.sh or use: codex mcp add
 # Manual: Copy this to ~/.codex/config.toml

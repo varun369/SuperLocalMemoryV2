@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License
+# Licensed under the Elastic License 2.0
 
 """Tests for PatternExtractor (Phase F: The Learning Brain).
 

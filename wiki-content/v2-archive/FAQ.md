@@ -12,7 +12,7 @@ SuperLocalMemory is an **intelligent local memory system** for AI assistants. It
 
 ### Is it really free?
 
-**Yes, 100% free.** MIT license. No usage limits. No credit systems. No "free tier" restrictions. Use it commercially if you want.
+**Yes, 100% free.** Elastic License 2.0. No usage limits. No credit systems. No "free tier" restrictions. Use it commercially if you want.
 
 ### Does it only work with Claude?
 
@@ -457,7 +457,7 @@ Yes! See [[Roadmap]] for upcoming features.
 SuperLocalMemory is built as an open-source alternative to expensive cloud-based memory services like Mem0 and Zep.
 
 - **GitHub:** [github.com/varun369](https://github.com/varun369)
-- **License:** MIT (free for commercial use)
+- **License:** Elastic License 2.0
 - **Support:** [Buy me a coffee](https://buymeacoffee.com/varunpratah)
 
 ---

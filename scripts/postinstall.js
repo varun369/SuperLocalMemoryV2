@@ -6,7 +6,7 @@
  * Python deps auto-installed. Embeddings auto-downloaded.
  *
  * Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
- * Licensed under MIT License
+ * Licensed under Elastic License 2.0
  */
 
 const { spawnSync } = require('child_process');

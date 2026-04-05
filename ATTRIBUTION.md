@@ -12,7 +12,7 @@
 
 ### License
 
-This software is licensed under the MIT License. See [LICENSE](LICENSE) for full terms.
+This software is licensed under the Elastic License 2.0. See [LICENSE](LICENSE) for full terms.
 
 ### Output Attribution
 

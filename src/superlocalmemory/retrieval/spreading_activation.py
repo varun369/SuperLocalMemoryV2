@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Licensed under the MIT License - see LICENSE file
+# Licensed under the Elastic License 2.0 - see LICENSE file
 # Part of SuperLocalMemory V3
 
 """SYNAPSE spreading activation -- 5th retrieval channel.
@@ -12,7 +12,7 @@ Reads BOTH graph_edges + association_edges via UNION query (Rule 13).
 Registered as 5th channel via ChannelRegistry (needs_embedding=True).
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
-License: MIT
+License: Elastic-2.0
 """
 
 from __future__ import annotations

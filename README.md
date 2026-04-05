@@ -14,7 +14,7 @@
   <a href="https://arxiv.org/abs/2603.14588"><img src="https://img.shields.io/badge/arXiv-2603.14588-b31b1b?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv Paper"/></a>
   <a href="https://pypi.org/project/superlocalmemory/"><img src="https://img.shields.io/pypi/v/superlocalmemory?style=for-the-badge&logo=pypi&logoColor=white" alt="PyPI"/></a>
   <a href="https://www.npmjs.com/package/superlocalmemory"><img src="https://img.shields.io/npm/v/superlocalmemory?style=for-the-badge&logo=npm&logoColor=white" alt="npm"/></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="MIT License"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Elastic%202.0-blue?style=for-the-badge" alt="Elastic License 2.0"/></a>
   <a href="#eu-ai-act-compliance"><img src="https://img.shields.io/badge/EU_AI_Act-Compliant-brightgreen?style=for-the-badge" alt="EU AI Act"/></a>
   <a href="https://superlocalmemory.com"><img src="https://img.shields.io/badge/Web-superlocalmemory.com-ff6b35?style=for-the-badge" alt="Website"/></a>
   <a href="#dual-interface-mcp--cli"><img src="https://img.shields.io/badge/MCP-Native-blue?style=for-the-badge" alt="MCP Native"/></a>
@@ -35,9 +35,9 @@ SuperLocalMemory V3 takes a different approach: **mathematics instead of cloud c
 |:-------|:-----:|:--------------:|:-----------:|:-------:|
 | EverMemOS | 92.3% | Yes | No | — |
 | Hindsight | 89.6% | Yes | No | — |
-| **SLM V3 Mode C** | **87.7%** | Optional | **Yes (MIT)** | $0 |
+| **SLM V3 Mode C** | **87.7%** | Optional | **Yes (EL2)** | $0 |
 | Zep v3 | 85.2% | Yes | Deprecated | $35M |
-| **SLM V3 Mode A** | **74.8%** | **No** | **Yes (MIT)** | $0 |
+| **SLM V3 Mode A** | **74.8%** | **No** | **Yes (EL2)** | $0 |
 | Mem0 | 64.2% | Yes | Partial | $24M |
 
 Mode A scores **74.8% with zero cloud dependency** — outperforming Mem0 by 16 percentage points without a single API call. On open-domain questions, Mode A scores **85.0% — the highest of any system in the evaluation**, including cloud-powered ones. Mode C reaches **87.7%**, matching enterprise cloud systems.
@@ -399,7 +399,7 @@ Auto-capture hooks: `slm hooks install` + `slm observe` + `slm session-context`.
 - 17+ IDE integrations (Claude, Cursor, Windsurf, VS Code, JetBrains, Zed, etc.)
 - 35 MCP tools + 7 MCP resources
 - Profile isolation (independent memory spaces)
-- 1400+ tests, MIT license, cross-platform (Mac/Linux/Windows)
+- 1400+ tests, Elastic License 2.0, cross-platform (Mac/Linux/Windows)
 - CPU-only — no GPU required
 - Automatic orphaned process cleanup
 
@@ -485,7 +485,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. [Wiki](https://github.com
 
 ## License
 
-MIT License. See [LICENSE](LICENSE).
+Elastic License 2.0. See [LICENSE](LICENSE). Previously MIT — changed April 2026 to protect research IP while keeping the project open for use and contributions.
 
 ## Attribution
 
