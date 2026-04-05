@@ -122,7 +122,7 @@ register_v3_tools(_target, get_engine)
 register_active_tools(_target, get_engine)
 register_v33_tools(_target, get_engine)
 register_resources(server, get_engine)  # Resources always registered (not tools)
-register_code_graph_tools(server, get_engine)  # CodeGraph: registered on `server` (always visible when installed)
+register_code_graph_tools(_target, get_engine)  # CodeGraph: filtered like other tools (SLM_MCP_ALL_TOOLS=1 to show all)
 
 
 # V3.3.21: Eager engine warmup — start initializing BEFORE first tool call.
