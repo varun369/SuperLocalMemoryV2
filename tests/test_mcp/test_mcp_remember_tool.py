@@ -76,22 +76,18 @@ class TestRememberTool:
             result = asyncio.run(remember("Test content about Python"))
 
         assert result["success"] is True
-        assert result["fact_ids"] == ["f-001", "f-002"]
-        assert result["count"] == 2
+        # V3.3.27: MCP remember uses store-first pattern (pending.db)
+        # Returns pending ID, not fact IDs. Background processing creates facts.
+        assert result["count"] >= 1
+        assert len(result["fact_ids"]) >= 1
 
     @patch("superlocalmemory.mcp.tools_core._emit_event")
-    def test_remember_failure_returns_error(self, mock_emit):
-        """When pool.store returns ok=False, tool returns success=False with error."""
-        pool = MagicMock()
-        pool.store.return_value = {"ok": False, "error": "DB locked"}
-
+    def test_remember_returns_pending_id(self, mock_emit):
+        """V3.3.27: Store-first pattern returns pending ID for background processing."""
         remember = _get_remember_tool()
-
-        with patch("superlocalmemory.core.worker_pool.WorkerPool.shared", return_value=pool):
-            result = asyncio.run(remember("some content"))
-
-        assert result["success"] is False
-        assert "DB locked" in result["error"]
+        result = asyncio.run(remember("Test content for pending store"))
+        assert result["success"] is True
+        assert result.get("pending") is True
 
     @patch("superlocalmemory.mcp.tools_core._emit_event")
     def test_remember_calls_worker_pool_store(self, mock_emit):
@@ -172,8 +168,8 @@ class TestRememberEdgeCases:
         assert result["success"] is True
         pool.store.assert_called_once()
 
-    def test_remember_worker_pool_exception(self):
-        """When WorkerPool.shared() raises, tool returns error dict."""
+    def test_remember_worker_pool_exception_still_stores_pending(self):
+        """V3.3.27: When WorkerPool crashes, data is still safe in pending.db."""
         remember = _get_remember_tool()
 
         with patch(
@@ -182,8 +178,9 @@ class TestRememberEdgeCases:
         ):
             result = asyncio.run(remember("boom"))
 
-        assert result["success"] is False
-        assert "worker crashed" in result["error"]
+        # V3.3.27: store-first pattern means data is safe even if worker crashes
+        assert result["success"] is True
+        assert result.get("pending") is True
 
     @patch("superlocalmemory.mcp.tools_core._emit_event")
     def test_remember_agent_id_forwarded(self, mock_emit):
