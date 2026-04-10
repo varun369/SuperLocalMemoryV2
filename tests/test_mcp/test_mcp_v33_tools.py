@@ -175,7 +175,7 @@ class TestForgetTool:
         return srv._tools["forget"], engine
 
     def test_forget_returns_success_with_stats(self):
-        """forget tool (dry_run=False) returns decay cycle stats on success."""
+        """forget dry_run=True returns zone counts from fact_retention."""
         tool, engine = self._get_tool()
 
         mock_result = {
@@ -651,3 +651,4 @@ class TestRunMaintenanceTool:
         init_args = MockCW.call_args[0]
         assert init_args[0] == engine._db.db_path
         assert init_args[1] == engine._db.db_path.parent / "learning.db"
+        MockCW.return_value._generate_patterns.assert_called_once_with(engine.profile_id, False)
