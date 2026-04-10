@@ -42,6 +42,7 @@ class _MockServer:
         def decorator(fn):
             self._tools[fn.__name__] = fn
             return fn
+
         return decorator
 
 
@@ -92,8 +93,7 @@ class TestV33ToolRegistration:
         register_v33_tools(srv, get_engine)
 
         assert len(srv._tools) == 7, (
-            f"Expected 7 V3.3 tools, got {len(srv._tools)}: "
-            f"{sorted(srv._tools.keys())}"
+            f"Expected 7 V3.3 tools, got {len(srv._tools)}: {sorted(srv._tools.keys())}"
         )
 
     def test_expected_tool_names(self):
@@ -104,8 +104,12 @@ class TestV33ToolRegistration:
         register_v33_tools(srv, MagicMock())
 
         expected = {
-            "forget", "quantize", "consolidate_cognitive",
-            "get_soft_prompts", "reap_processes", "get_retention_stats",
+            "forget",
+            "quantize",
+            "consolidate_cognitive",
+            "get_soft_prompts",
+            "reap_processes",
+            "get_retention_stats",
             "run_maintenance",
         }
         assert set(srv._tools.keys()) == expected
@@ -163,6 +167,7 @@ class TestForgetTool:
 
     def _get_tool(self):
         from superlocalmemory.mcp.tools_v33 import register_v33_tools
+
         srv = _MockServer()
         engine = _make_mock_engine()
         get_engine = MagicMock(return_value=engine)
@@ -174,15 +179,20 @@ class TestForgetTool:
         tool, engine = self._get_tool()
 
         mock_result = {
-            "total": 100, "active": 50, "warm": 20,
-            "cold": 15, "archive": 10, "forgotten": 5,
+            "total": 100,
+            "active": 50,
+            "warm": 20,
+            "cold": 15,
+            "archive": 10,
+            "forgotten": 5,
             "transitions": 8,
         }
 
-        with patch(
-            "superlocalmemory.learning.forgetting_scheduler.ForgettingScheduler"
-        ) as MockSched, patch(
-            "superlocalmemory.math.ebbinghaus.EbbinghausCurve"
+        with (
+            patch(
+                "superlocalmemory.learning.forgetting_scheduler.ForgettingScheduler"
+            ) as MockSched,
+            patch("superlocalmemory.math.ebbinghaus.EbbinghausCurve"),
         ):
             MockSched.return_value.run_decay_cycle.return_value = mock_result
             result = _run(tool(dry_run=False))
@@ -197,11 +207,11 @@ class TestForgetTool:
         tool, engine = self._get_tool()
 
         mock_rows = [
-           {"lifecycle_zone": "active", "cnt": 50},
-           {"lifecycle_zone": "warm", "cnt": 20},
-           {"lifecycle_zone": "cold", "cnt": 10},
-           {"lifecycle_zone": "archive", "cnt": 5},
-           {"lifecycle_zone": "forgotten", "cnt": 3},
+            {"lifecycle_zone": "active", "cnt": 50},
+            {"lifecycle_zone": "warm", "cnt": 20},
+            {"lifecycle_zone": "cold", "cnt": 10},
+            {"lifecycle_zone": "archive", "cnt": 5},
+            {"lifecycle_zone": "forgotten", "cnt": 3},
         ]
         engine._db.execute.return_value = mock_rows
 
@@ -217,21 +227,29 @@ class TestForgetTool:
         """forget tool uses provided profile_id."""
         tool, engine = self._get_tool()
 
-        mock_result = {"total": 0, "active": 0, "warm": 0,
-                       "cold": 0, "archive": 0, "forgotten": 0,
-                       "transitions": 0}
+        mock_result = {
+            "total": 0,
+            "active": 0,
+            "warm": 0,
+            "cold": 0,
+            "archive": 0,
+            "forgotten": 0,
+            "transitions": 0,
+        }
 
-        with patch(
-            "superlocalmemory.learning.forgetting_scheduler.ForgettingScheduler"
-        ) as MockSched, patch(
-            "superlocalmemory.math.ebbinghaus.EbbinghausCurve"
+        with (
+            patch(
+                "superlocalmemory.learning.forgetting_scheduler.ForgettingScheduler"
+            ) as MockSched,
+            patch("superlocalmemory.math.ebbinghaus.EbbinghausCurve"),
         ):
             MockSched.return_value.run_decay_cycle.return_value = mock_result
             result = _run(tool(profile_id="custom-profile", dry_run=False))
 
         assert result["success"] is True
         MockSched.return_value.run_decay_cycle.assert_called_once_with(
-            "custom-profile", force=True,
+            "custom-profile",
+            force=True,
         )
 
     def test_forget_handles_error(self):
@@ -258,6 +276,7 @@ class TestQuantizeTool:
 
     def _get_tool(self):
         from superlocalmemory.mcp.tools_v33 import register_v33_tools
+
         srv = _MockServer()
         engine = _make_mock_engine()
         get_engine = MagicMock(return_value=engine)
@@ -269,20 +288,20 @@ class TestQuantizeTool:
         tool, engine = self._get_tool()
 
         mock_result = {
-            "total": 50, "downgrades": 10, "upgrades": 3,
-            "skipped": 35, "deleted": 2, "errors": 0,
+            "total": 50,
+            "downgrades": 10,
+            "upgrades": 3,
+            "skipped": 35,
+            "deleted": 2,
+            "errors": 0,
         }
 
-        with patch(
-            "superlocalmemory.dynamics.eap_scheduler.EAPScheduler"
-        ) as MockEAP, patch(
-            "superlocalmemory.math.ebbinghaus.EbbinghausCurve"
-        ), patch(
-            "superlocalmemory.storage.quantized_store.QuantizedEmbeddingStore"
-        ), patch(
-            "superlocalmemory.math.polar_quant.PolarQuantEncoder"
-        ), patch(
-            "superlocalmemory.math.qjl.QJLEncoder"
+        with (
+            patch("superlocalmemory.dynamics.eap_scheduler.EAPScheduler") as MockEAP,
+            patch("superlocalmemory.math.ebbinghaus.EbbinghausCurve"),
+            patch("superlocalmemory.storage.quantized_store.QuantizedEmbeddingStore"),
+            patch("superlocalmemory.math.polar_quant.PolarQuantEncoder"),
+            patch("superlocalmemory.math.qjl.QJLEncoder"),
         ):
             MockEAP.return_value.run_eap_cycle.return_value = mock_result
             result = _run(tool(dry_run=False))
@@ -314,6 +333,7 @@ class TestQuantizeTool:
 @dataclass
 class _MockCCQResult:
     """Minimal CCQ pipeline result for testing."""
+
     clusters_processed: int = 3
     blocks_created: int = 2
     facts_archived: int = 15
@@ -329,6 +349,7 @@ class TestConsolidateCognitiveTool:
 
     def _get_tool(self):
         from superlocalmemory.mcp.tools_v33 import register_v33_tools
+
         srv = _MockServer()
         engine = _make_mock_engine()
         get_engine = MagicMock(return_value=engine)
@@ -375,6 +396,7 @@ class TestGetSoftPromptsTool:
 
     def _get_tool(self):
         from superlocalmemory.mcp.tools_v33 import register_v33_tools
+
         srv = _MockServer()
         engine = _make_mock_engine()
         get_engine = MagicMock(return_value=engine)
@@ -436,6 +458,7 @@ class TestReapProcessesTool:
 
     def _get_tool(self):
         from superlocalmemory.mcp.tools_v33 import register_v33_tools
+
         srv = _MockServer()
         engine = _make_mock_engine()
         get_engine = MagicMock(return_value=engine)
@@ -447,9 +470,12 @@ class TestReapProcessesTool:
         tool, _ = self._get_tool()
 
         mock_result = {
-            "total_found": 5, "orphans_found": 2,
-            "killed": 0, "skipped": 2,
-            "errors": [], "processes": [],
+            "total_found": 5,
+            "orphans_found": 2,
+            "killed": 0,
+            "skipped": 2,
+            "errors": [],
+            "processes": [],
         }
 
         with patch(
@@ -469,9 +495,12 @@ class TestReapProcessesTool:
         tool, _ = self._get_tool()
 
         mock_result = {
-            "total_found": 5, "orphans_found": 2,
-            "killed": 2, "skipped": 0,
-            "errors": [], "processes": [],
+            "total_found": 5,
+            "orphans_found": 2,
+            "killed": 2,
+            "skipped": 0,
+            "errors": [],
+            "processes": [],
         }
 
         with patch(
@@ -508,6 +537,7 @@ class TestGetRetentionStatsTool:
 
     def _get_tool(self):
         from superlocalmemory.mcp.tools_v33 import register_v33_tools
+
         srv = _MockServer()
         engine = _make_mock_engine()
         get_engine = MagicMock(return_value=engine)
@@ -571,6 +601,7 @@ class TestGetRetentionStatsTool:
         call_args = engine._db.execute.call_args
         assert call_args[0][1] == ("custom",)
 
+
 # ---------------------------------------------------------------------------
 # Maintenance Tools tests
 # ---------------------------------------------------------------------------
@@ -581,6 +612,7 @@ class TestRunMaintenanceTool:
 
     def _get_tool(self):
         from superlocalmemory.mcp.tools_v33 import register_v33_tools
+
         srv = _MockServer()
         engine = _make_mock_engine()
         get_engine = MagicMock(return_value=engine)
@@ -591,19 +623,25 @@ class TestRunMaintenanceTool:
         """run_maintenance behavioral section uses correct ConsolidationWorker args."""
         tool, engine = self._get_tool()
 
-        with patch(
-            "superlocalmemory.learning.consolidation_worker.ConsolidationWorker"
-        ) as MockCW, patch(
-            "superlocalmemory.core.maintenance.run_maintenance",
-            return_value={"updated": 0},
-        ), patch(
-            "superlocalmemory.learning.forgetting_scheduler.ForgettingScheduler"
-        ) as MockSched, patch(
-            "superlocalmemory.math.ebbinghaus.EbbinghausCurve"
+        with (
+            patch("superlocalmemory.learning.consolidation_worker.ConsolidationWorker") as MockCW,
+            patch(
+                "superlocalmemory.core.maintenance.run_maintenance",
+                return_value={"updated": 0},
+            ),
+            patch(
+                "superlocalmemory.learning.forgetting_scheduler.ForgettingScheduler"
+            ) as MockSched,
+            patch("superlocalmemory.math.ebbinghaus.EbbinghausCurve"),
         ):
             MockSched.return_value.run_decay_cycle.return_value = {
-                "total": 0, "active": 0, "warm": 0,
-                "cold": 0, "archive": 0, "forgotten": 0, "transitions": 0,
+                "total": 0,
+                "active": 0,
+                "warm": 0,
+                "cold": 0,
+                "archive": 0,
+                "forgotten": 0,
+                "transitions": 0,
             }
             MockCW.return_value._generate_patterns.return_value = 7
             result = _run(tool())
