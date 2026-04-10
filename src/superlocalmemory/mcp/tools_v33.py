@@ -76,15 +76,19 @@ def register_v33_tools(server, get_engine: Callable) -> None:
             )
 
             if dry_run:
-                # Dry run: compute retention stats without applying changes
-                facts = engine._db.get_all_facts(pid)
+                rows = engine._db.execute(
+                    "SELECT lifecycle_zone, COUNT(*) as cnt "
+                    "FROM fact_retention WHERE profile_id = ? "
+                    "GROUP BY lifecycle_zone",
+                    (pid,),
+                )
                 zones = {"active": 0, "warm": 0, "cold": 0, "archive": 0, "forgotten": 0}
-                for f in facts:
-                    strength = ebbinghaus.memory_strength(f.access_count or 0, f.importance or 0.5, 0, 0.0)
-                    r = ebbinghaus.retention(hours_since_access = 0.0, strength=strength)
-                    zone = ebbinghaus.lifecycle_zone(r)
-                    zones[zone] = zones.get(zone, 0) + 1
-                result = {"total": len(facts), "transitions": 0, "dry_run_zones": zones}
+                total = 0
+                for row in rows:
+                    r = dict(row)
+                    zones[r["lifecycle_zone"]] = int(r["cnt"])
+                    total += int(r["cnt"])
+                result = {"total": total, "transitions": 0, "dry_run_zones": zones}
             else:
                 result = scheduler.run_decay_cycle(pid, force=True)
 
