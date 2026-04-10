@@ -76,15 +76,19 @@ def register_v33_tools(server, get_engine: Callable) -> None:
             )
 
             if dry_run:
-                # Dry run: compute retention stats without applying changes
-                from superlocalmemory.math.ebbinghaus import EbbinghausCurve as _EC
-                facts = engine._db.get_all_facts(pid)
+                rows = engine._db.execute(
+                    "SELECT lifecycle_zone, COUNT(*) as cnt "
+                    "FROM fact_retention WHERE profile_id = ? "
+                    "GROUP BY lifecycle_zone",
+                    (pid,),
+                )
                 zones = {"active": 0, "warm": 0, "cold": 0, "archive": 0, "forgotten": 0}
-                for f in facts:
-                    r = ebbinghaus.compute_retention(f.access_count or 0, f.importance or 0.5, 0, 0.0)
-                    zone = ebbinghaus.classify_zone(r)
-                    zones[zone] = zones.get(zone, 0) + 1
-                result = {"total": len(facts), "transitions": 0, "dry_run_zones": zones}
+                total = 0
+                for row in rows:
+                    r = dict(row)
+                    zones[r["lifecycle_zone"]] = int(r["cnt"])
+                    total += int(r["cnt"])
+                result = {"total": total, "transitions": 0, "dry_run_zones": zones}
             else:
                 result = scheduler.run_decay_cycle(pid, force=True)
 
@@ -399,9 +403,9 @@ def register_v33_tools(server, get_engine: Callable) -> None:
             # 3. Behavioral pattern mining
             try:
                 from superlocalmemory.learning.consolidation_worker import ConsolidationWorker
-                cw = ConsolidationWorker(engine._db, engine._config)
-                patterns = cw._generate_patterns(pid)
-                results["behavioral"] = {"patterns_mined": len(patterns)}
+                cw = ConsolidationWorker(engine._db.db_path, engine._db.db_path.parent / "learning.db",)
+                count = cw._generate_patterns(pid, False)
+                results["behavioral"] = {"patterns_mined": count}
             except Exception as exc:
                 results["behavioral"] = {"error": str(exc)}
 
