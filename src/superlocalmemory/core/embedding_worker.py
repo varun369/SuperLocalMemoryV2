@@ -53,16 +53,26 @@ def _start_parent_watchdog() -> None:
     process crashes, is killed, or exits without cleanup.
 
     V3.3.7: Added after incident where orphaned workers consumed 33 GB.
+    V3.3.22: Enabled for Windows and added errno check.
     """
     parent_pid = os.getppid()
+    if parent_pid <= 1:
+        return
 
     def _watch() -> None:
         import time
+        import errno
         while True:
             time.sleep(5)
             try:
+                # os.kill(pid, 0) checks if process exists. Works on Unix and Windows.
                 os.kill(parent_pid, 0)
-            except OSError:
+            except OSError as e:
+                # ESRCH: No such process. EPERM: Access denied (process exists).
+                if e.errno == errno.ESRCH:
+                    os._exit(0)
+            except Exception:
+                # Safety fallback for any other OS-specific issues
                 os._exit(0)
 
     t = threading.Thread(target=_watch, daemon=True, name="parent-watchdog")
@@ -99,8 +109,7 @@ def _load_embedding_model(name: str) -> tuple:
 
 def _worker_main() -> None:
     """Main loop: read JSON requests from stdin, write responses to stdout."""
-    if sys.platform != "win32":
-        _start_parent_watchdog()  # V3.3.7: self-terminate if parent dies
+    _start_parent_watchdog()  # V3.3.7: self-terminate if parent dies (V3.3.22: all platforms)
 
     import numpy as np
 
