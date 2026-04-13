@@ -282,6 +282,26 @@ def main() -> None:
         help="Subcommand: list, enable, disable, start, stop, status [name]",
     )
 
+    # V3.4.8: External observation ingestion
+    ingest_p = sub.add_parser(
+        "ingest",
+        help="Import external observations (ECC, JSONL) into SLM learning",
+    )
+    ingest_p.add_argument(
+        "--source", default="ecc",
+        choices=["ecc", "jsonl"],
+        help="Source type: ecc (Claude Code sessions), jsonl (generic)",
+    )
+    ingest_p.add_argument(
+        "--file", default="",
+        help="Specific file to ingest (auto-discovers if not set)",
+    )
+    ingest_p.add_argument(
+        "--dry-run", action="store_true", default=False,
+        help="Preview without writing",
+    )
+    ingest_p.add_argument("--json", action="store_true", help="Output structured JSON")
+
     args = parser.parse_args()
 
     if not args.command:

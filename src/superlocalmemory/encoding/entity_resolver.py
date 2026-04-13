@@ -15,7 +15,7 @@ entity resolution ran but results were silently discarded.
   d) LLM disambiguation (Mode B/C only)
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
-License: Elastic-2.0
+License: AGPL-3.0-or-later
 """
 
 from __future__ import annotations
@@ -112,20 +112,59 @@ def jaro_winkler(s1: str, s2: str, prefix_weight: float = 0.1) -> float:
     return jaro + prefix * prefix_weight * (1.0 - jaro)
 
 
+_COMMON_WORDS = frozenset({
+    "april", "may", "june", "march", "august", "phase", "test", "gap",
+    "dashboard", "remaining", "session", "results", "tools", "projects",
+    "prompts", "integration", "cli", "engagement", "mode", "error",
+    "step", "fix", "build", "check", "run", "start", "stop", "config",
+    "status", "version", "query", "data", "file", "path", "node", "edge",
+    "table", "index", "schema", "model", "type", "class", "function",
+    "module", "package", "import", "export", "default", "pattern",
+    "memory", "profile", "context", "pipeline", "worker", "daemon",
+    "server", "client", "route", "endpoint", "handler", "hook",
+})
+
+
 def _guess_entity_type(name: str) -> str:
-    """Heuristic entity type classification from name string."""
+    """Heuristic entity type classification from name string.
+
+    v3.4.8: Fixed false-positive "person" classification. Single capitalized
+    common words (April, Phase, Dashboard) are concepts, not people.
+    Only classify as "person" when it looks like a real human name.
+    """
     if any(m in name for m in _ORG_MARKERS):
         return "organization"
     if any(m in name for m in _PLACE_MARKERS):
         return "place"
     if any(m in name for m in _EVENT_MARKERS):
         return "event"
-    # Two capitalized words = likely a person name
+
+    # Filter out common words that aren't people
+    if name.lower() in _COMMON_WORDS:
+        return "concept"
+
+    # Two capitalized words = likely a person name (e.g. "Varun Bhardwaj")
     if re.match(r"^[A-Z][a-z]+ [A-Z][a-z]+$", name):
-        return "person"
-    # Single capitalized word = likely a person first name
+        # But not if either word is a common term
+        parts = name.lower().split()
+        if not any(p in _COMMON_WORDS for p in parts):
+            return "person"
+
+    # Single short capitalized word with no digits or dots = concept, not person
+    # "person" should only be assigned for real names, not generic terms
     if re.match(r"^[A-Z][a-z]+$", name):
+        if name.lower() in _COMMON_WORDS:
+            return "concept"
+        # Only classify as person if it's a plausible first name
+        # (short word not in common terms — still a heuristic)
+        if len(name) <= 3:
+            return "concept"
         return "person"
+
+    # Contains dots/slashes/hyphens = likely a technical term
+    if re.search(r"[./\-_]", name):
+        return "concept"
+
     return "concept"
 
 

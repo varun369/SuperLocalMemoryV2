@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
-# SPDX-License-Identifier: Elastic-2.0
 # Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
-# Part of Qualixar | Author: Varun Pratap Bhardwaj (qualixar.com | varunpratap.com)
+# Licensed under AGPL-3.0-or-later - see LICENSE file
+# Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
 """
 EngagementTracker -- Local-only engagement metrics for V3 learning.
 

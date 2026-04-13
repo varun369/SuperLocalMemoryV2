@@ -16,7 +16,7 @@ This module contains CLIENT functions used by CLI commands:
 The actual daemon server code is in server/unified_daemon.py.
 
 Part of Qualixar | Author: Varun Pratap Bhardwaj
-License: Elastic-2.0
+License: AGPL-3.0-or-later
 """
 
 from __future__ import annotations

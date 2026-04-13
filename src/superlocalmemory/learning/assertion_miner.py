@@ -28,6 +28,8 @@ logger = logging.getLogger(__name__)
 MIN_EVIDENCE = 3  # Minimum events to create an assertion
 MAX_ASSERTIONS_PER_RUN = 20  # Cap assertions per mining cycle
 REINFORCEMENT_NUDGE = 0.15  # Bayesian confidence increase
+PROMOTION_MIN_PROJECTS = 2  # Minimum projects for cross-project promotion
+PROMOTION_MIN_CONFIDENCE = 0.8  # Minimum avg confidence for promotion
 
 
 class AssertionMiner:
@@ -73,6 +75,11 @@ class AssertionMiner:
             results["strategies"]["temporal"] = s4
             results["created"] += s4.get("created", 0)
             results["reinforced"] += s4.get("reinforced", 0)
+
+            # Strategy 5: Cross-project assertion promotion
+            s5 = self._promote_cross_project(conn, profile_id)
+            results["strategies"]["cross_project"] = s5
+            results["created"] += s5.get("promoted", 0)
 
             conn.commit()
         except Exception as exc:
@@ -260,6 +267,92 @@ class AssertionMiner:
                 confidence=0.6,
             )
             result[r] = result.get(r, 0) + 1
+
+        return result
+
+    # ------------------------------------------------------------------
+    # Strategy 5: Cross-project assertion promotion
+    # ------------------------------------------------------------------
+
+    def _promote_cross_project(
+        self, conn: sqlite3.Connection, profile_id: str,
+    ) -> dict:
+        """Promote assertions that appear in 2+ projects to global scope.
+
+        When the same trigger+action pattern is observed across multiple
+        project_paths with avg confidence >= 0.8, create a global assertion
+        (project_path='') so it applies everywhere.
+        """
+        result = {"promoted": 0, "candidates": 0}
+
+        # Find assertions grouped by trigger+action across projects
+        rows = conn.execute(
+            "SELECT trigger_condition, action, category, "
+            "COUNT(DISTINCT project_path) AS project_count, "
+            "AVG(confidence) AS avg_confidence, "
+            "SUM(evidence_count) AS total_evidence "
+            "FROM behavioral_assertions "
+            "WHERE profile_id = ? AND project_path != '' "
+            "GROUP BY trigger_condition, action "
+            "HAVING COUNT(DISTINCT project_path) >= ?",
+            (profile_id, PROMOTION_MIN_PROJECTS),
+        ).fetchall()
+
+        result["candidates"] = len(rows)
+
+        for row in rows:
+            avg_conf = row["avg_confidence"]
+            if avg_conf < PROMOTION_MIN_CONFIDENCE:
+                continue
+
+            trigger = row["trigger_condition"]
+            action = row["action"]
+            category = row["category"]
+            total_ev = row["total_evidence"]
+            project_count = row["project_count"]
+
+            # Check if global assertion already exists
+            global_id = hashlib.sha256(
+                f"{profile_id}:{trigger}:{action}".encode()
+            ).hexdigest()[:16]
+
+            existing = conn.execute(
+                "SELECT id FROM behavioral_assertions "
+                "WHERE id = ? AND project_path = ''",
+                (global_id,),
+            ).fetchone()
+
+            if existing:
+                # Reinforce existing global assertion
+                now = datetime.now(timezone.utc).isoformat()
+                conn.execute(
+                    "UPDATE behavioral_assertions SET "
+                    "confidence = MIN(0.95, confidence + ?), "
+                    "evidence_count = ?, "
+                    "reinforcement_count = reinforcement_count + 1, "
+                    "last_reinforced_at = ?, updated_at = ? "
+                    "WHERE id = ?",
+                    (REINFORCEMENT_NUDGE, total_ev, now, now, global_id),
+                )
+            else:
+                # Create new global assertion from cross-project evidence
+                now = datetime.now(timezone.utc).isoformat()
+                promoted_conf = min(0.9, avg_conf)
+                conn.execute(
+                    "INSERT INTO behavioral_assertions "
+                    "(id, profile_id, project_path, trigger_condition, action, "
+                    " category, confidence, evidence_count, source, "
+                    " created_at, updated_at) "
+                    "VALUES (?, ?, '', ?, ?, ?, ?, ?, 'cross_project', ?, ?)",
+                    (global_id, profile_id, trigger, action,
+                     category, round(promoted_conf, 4), total_ev, now, now),
+                )
+                result["promoted"] += 1
+                logger.info(
+                    "Promoted assertion to global: '%s' → '%s' "
+                    "(from %d projects, avg_conf=%.2f)",
+                    trigger, action, project_count, avg_conf,
+                )
 
         return result
 

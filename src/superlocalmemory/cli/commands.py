@@ -60,6 +60,8 @@ def dispatch(args: Namespace) -> None:
         "serve": cmd_serve,
         # V3.4.3 ingestion adapters
         "adapters": cmd_adapters,
+        # V3.4.8 external observation ingestion
+        "ingest": cmd_ingest,
     }
     handler = handlers.get(args.command)
     if handler:
@@ -142,6 +144,12 @@ def cmd_serve(args: Namespace) -> None:
 
 
 # -- Ingestion Adapters (V3.4.3) ------------------------------------------
+
+
+def cmd_ingest(args: Namespace) -> None:
+    """Import external observations into SLM learning pipeline."""
+    from superlocalmemory.cli.ingest_cmd import cmd_ingest as _ingest
+    _ingest(args)
 
 
 def cmd_adapters(args: Namespace) -> None:
