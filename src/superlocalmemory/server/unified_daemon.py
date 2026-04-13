@@ -647,6 +647,44 @@ _start_time: float | None = None
 # Server entry point
 # ---------------------------------------------------------------------------
 
+def _start_memory_watchdog() -> None:
+    """v3.4.7: Background watchdog that kills child workers exceeding memory limit.
+
+    Prevents the orphan worker memory explosion that caused 16GB+ RAM usage.
+    Checks every 60 seconds. Kills workers over 2GB RSS. Auto-restarts them
+    on next request (workers are lazy-spawned).
+    """
+    import threading
+
+    MAX_WORKER_MB = 2048  # 2GB per worker — kill if exceeded
+
+    def watchdog_loop():
+        while True:
+            time.sleep(60)
+            try:
+                import psutil
+                parent = psutil.Process(os.getpid())
+                for child in parent.children(recursive=True):
+                    try:
+                        rss_mb = child.memory_info().rss / (1024 * 1024)
+                        if rss_mb > MAX_WORKER_MB:
+                            logger.warning(
+                                "Memory watchdog: killing %s (PID %d, %.0f MB > %d MB limit)",
+                                child.name(), child.pid, rss_mb, MAX_WORKER_MB,
+                            )
+                            child.kill()
+                    except (psutil.NoSuchProcess, psutil.AccessDenied):
+                        pass
+            except ImportError:
+                pass  # psutil not available — watchdog disabled
+            except Exception as exc:
+                logger.debug("Memory watchdog error: %s", exc)
+
+    t = threading.Thread(target=watchdog_loop, daemon=True, name="memory-watchdog")
+    t.start()
+    logger.info("Memory watchdog started (limit: %d MB per worker)", MAX_WORKER_MB)
+
+
 def start_server(port: int = _DEFAULT_PORT) -> None:
     """Start the unified daemon. Blocks until stopped."""
     global _start_time
@@ -656,6 +694,9 @@ def start_server(port: int = _DEFAULT_PORT) -> None:
     _PID_FILE.write_text(str(os.getpid()))
     _PORT_FILE.write_text(str(port))
     _start_time = time.monotonic()
+
+    # v3.4.7: Start memory watchdog to prevent runaway workers
+    _start_memory_watchdog()
 
     log_dir = Path.home() / ".superlocalmemory" / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)

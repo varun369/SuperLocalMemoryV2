@@ -232,39 +232,69 @@ def _wait_for_daemon(timeout: int = 60) -> bool:
 
 
 def stop_daemon() -> bool:
-    """Stop the running daemon gracefully.
+    """Stop ALL SLM daemon processes and their workers.
 
-    v3.4.3: Uses psutil for cross-platform process termination.
-    Falls back to os.kill if psutil unavailable.
+    v3.4.7: Nuclear cleanup — finds and kills ALL processes matching
+    superlocalmemory.server.unified_daemon, embedding_worker, recall_worker,
+    reranker_worker. Not just the PID file daemon. Multiple daemons can
+    accumulate from rapid restarts, MCP warmups, and concurrent sessions.
     """
-    if not _PID_FILE.exists():
-        return True
-    try:
-        pid = int(_PID_FILE.read_text().strip())
+    killed = 0
 
-        # Cross-platform termination via psutil
+    try:
+        import psutil
+        my_pid = os.getpid()
+        targets = [
+            "superlocalmemory.server.unified_daemon",
+            "superlocalmemory.core.embedding_worker",
+            "superlocalmemory.core.recall_worker",
+            "superlocalmemory.core.reranker_worker",
+        ]
+
+        for proc in psutil.process_iter(["pid", "cmdline"]):
+            try:
+                if proc.pid == my_pid:
+                    continue
+                cmdline = " ".join(proc.info.get("cmdline") or [])
+                if any(t in cmdline for t in targets):
+                    # Kill children first, then process
+                    for child in proc.children(recursive=True):
+                        try:
+                            child.kill()
+                            killed += 1
+                        except (psutil.NoSuchProcess, psutil.AccessDenied):
+                            pass
+                    proc.kill()
+                    killed += 1
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+
+    except ImportError:
+        # Fallback: pkill by pattern
         try:
-            import psutil
-            proc = psutil.Process(pid)
-            proc.terminate()  # SIGTERM on Unix, TerminateProcess on Windows
-            proc.wait(timeout=10)
-        except ImportError:
-            # Fallback: direct signal (works on Unix, may fail on Windows)
-            os.kill(pid, signal.SIGTERM)
-            for _ in range(20):
-                time.sleep(0.5)
-                try:
-                    os.kill(pid, 0)
-                except ProcessLookupError:
-                    break
+            import subprocess as _sp
+            for pattern in [
+                "superlocalmemory.server.unified_daemon",
+                "superlocalmemory.core.embedding_worker",
+                "superlocalmemory.core.recall_worker",
+                "superlocalmemory.core.reranker_worker",
+            ]:
+                result = _sp.run(
+                    ["pkill", "-9", "-f", pattern],
+                    capture_output=True, timeout=5,
+                )
+                if result.returncode == 0:
+                    killed += 1
         except Exception:
             pass
 
-        _PID_FILE.unlink(missing_ok=True)
-        _PORT_FILE.unlink(missing_ok=True)
-        return True
-    except Exception:
-        return False
+    # Clean up PID/port files
+    _PID_FILE.unlink(missing_ok=True)
+    _PORT_FILE.unlink(missing_ok=True)
+
+    if killed:
+        logger.info("Stopped %d SLM processes", killed)
+    return True
 
 
 # ---------------------------------------------------------------------------
