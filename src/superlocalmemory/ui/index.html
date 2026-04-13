@@ -9,6 +9,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Inter Variable (Linear's signature typeface with cv01/ss03) — via jsdelivr (CSP-allowed) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/inter-ui@4.1.0/inter-variable.min.css">
+    <!-- Neural Glass Design System v1.0 -->
+    <link rel="stylesheet" href="static/css/neural-glass.css?v=344b">
 
     <style>
         :root {
@@ -1643,6 +1647,115 @@
                 </div>
             </div>
 
+            <!-- Health Monitor (v3.4.3 — Neural Glass) -->
+            <div class="tab-pane fade" id="health-pane">
+                <div class="ng-content-header">
+                    <div>
+                        <div class="ng-content-title"><i class="bi bi-heart-pulse"></i> Health Monitor</div>
+                        <div class="ng-content-subtitle">Process health, RSS budget, worker heartbeat — real-time</div>
+                    </div>
+                    <button class="ng-btn" onclick="loadHealthMonitor()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+                </div>
+                <div id="health-overview"></div>
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="ng-glass" style="padding:20px">
+                            <h6 style="margin-bottom:16px"><i class="bi bi-cpu"></i> Worker Processes</h6>
+                            <div id="health-processes">
+                                <div class="text-center" style="padding:24px;color:var(--ng-text-tertiary)">
+                                    <div class="spinner-border" style="color:var(--ng-accent)"></div>
+                                    <div style="margin-top:8px">Loading processes...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="ng-glass" style="padding:20px">
+                            <h6 style="margin-bottom:16px"><i class="bi bi-sliders"></i> Budget Rules</h6>
+                            <div id="health-budget-rules">
+                                <div style="color:var(--ng-text-tertiary);font-size:0.8125rem">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ingestion Status (v3.4.3 — Neural Glass) -->
+            <div class="tab-pane fade" id="ingestion-pane">
+                <div class="ng-content-header">
+                    <div>
+                        <div class="ng-content-title"><i class="bi bi-cloud-download"></i> Ingestion Status</div>
+                        <div class="ng-content-subtitle">Gmail, Calendar, Transcript adapters — all opt-in</div>
+                    </div>
+                    <button class="ng-btn" onclick="loadIngestionStatus()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+                </div>
+                <div id="ingestion-overview"></div>
+                <div id="ingestion-adapters" style="margin-bottom:24px"></div>
+                <div class="ng-glass" style="padding:20px">
+                    <h6 style="margin-bottom:16px"><i class="bi bi-journal-text"></i> Recent Ingestion Log</h6>
+                    <div id="ingestion-log">
+                        <div style="padding:16px;color:var(--ng-text-tertiary);text-align:center;font-size:0.8125rem">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entity Explorer (v3.4.3 — Neural Glass) -->
+            <div class="tab-pane fade" id="entities-pane">
+                <div class="ng-content-header">
+                    <div>
+                        <div class="ng-content-title"><i class="bi bi-person-badge"></i> Entity Explorer</div>
+                        <div class="ng-content-subtitle">Compiled truth per entity — PageRank + Louvain communities</div>
+                    </div>
+                    <button class="ng-btn" onclick="loadEntityExplorer()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+                </div>
+                <div id="entities-list">
+                    <div class="text-center" style="padding:24px;color:var(--ng-text-tertiary)">
+                        <div class="spinner-border" style="color:var(--ng-accent)"></div>
+                        <div style="margin-top:8px">Loading entities...</div>
+                    </div>
+                </div>
+                <div id="entity-detail-panel" style="display:none;margin-top:24px"></div>
+            </div>
+
+            <!-- Mesh Peers (v3.4.3 — Neural Glass) -->
+            <div class="tab-pane fade" id="mesh-pane">
+                <div class="ng-content-header">
+                    <div>
+                        <div class="ng-content-title"><i class="bi bi-share"></i> Mesh Peers</div>
+                        <div class="ng-content-subtitle">P2P agent communication network — real-time status</div>
+                    </div>
+                    <button class="ng-btn" onclick="loadMeshPeers()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+                </div>
+                <div id="mesh-status-cards"></div>
+                <div style="margin-top:24px">
+                    <h6 style="margin-bottom:16px"><i class="bi bi-people"></i> Connected Peers</h6>
+                    <div id="mesh-peers-list">
+                        <div class="text-center" style="padding:24px;color:var(--ng-text-tertiary)">
+                            <div class="spinner-border" style="color:var(--ng-accent)"></div>
+                            <div style="margin-top:8px">Connecting to mesh broker...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-4" style="margin-top:16px">
+                    <div class="col-lg-6">
+                        <div class="ng-glass" style="padding:20px">
+                            <h6 style="margin-bottom:12px"><i class="bi bi-broadcast"></i> Recent Events</h6>
+                            <div id="mesh-events-list">
+                                <div style="padding:16px;color:var(--ng-text-tertiary);text-align:center;font-size:0.8125rem">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="ng-glass" style="padding:20px">
+                            <h6 style="margin-bottom:12px"><i class="bi bi-database"></i> Shared State</h6>
+                            <div id="mesh-state-list">
+                                <div style="padding:16px;color:var(--ng-text-tertiary);text-align:center;font-size:0.8125rem">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Math Health (V3) -->
             <div class="tab-pane fade" id="math-health-pane">
                 <h5><i class="bi bi-calculator"></i> Mathematical Layer Health</h5>
@@ -1951,7 +2064,7 @@
     <!-- Filter functions (filterByCluster, filterByEntity — used by clusters.js, modal.js) -->
     <script src="static/js/graph-filters.js"></script>
     <!-- v3.4.1: Ask My Memory chat interface -->
-    <script src="static/js/memory-chat.js"></script>
+    <script src="static/js/memory-chat.js?v=344b"></script>
     <!-- v3.4.1: Quick Insight Actions (5 one-click intelligence buttons) -->
     <script src="static/js/quick-actions.js"></script>
     <!-- v3.4.1: Memory Timeline (D3 time axis, zoom, trust colors) -->
@@ -1981,9 +2094,26 @@
     <script src="static/js/ide-status.js"></script>
     <script src="static/js/fact-detail.js"></script>
 
-    <footer>
-        <p>SuperLocalMemory V3 by <a href="https://github.com/varun369">Varun Pratap Bhardwaj</a> · <a href="https://qualixar.com">Qualixar</a></p>
-        <p><a href="https://github.com/qualixar/superlocalmemory">GitHub</a> · AGPL-3.0-or-later · <a href="https://github.com/qualixar/superlocalmemory/stargazers">⭐ Star us on GitHub</a></p>
+    <!-- Neural Glass v3.4.4 — Dashboard V2 -->
+    <script src="static/js/ng-health.js?v=344b"></script>
+    <script src="static/js/ng-ingestion.js?v=344b"></script>
+    <script src="static/js/ng-entities.js?v=344b"></script>
+    <script src="static/js/ng-mesh.js?v=344b"></script>
+    <script src="static/js/ng-shell.js?v=344b"></script>
+
+    <footer style="text-align:center; padding:24px; border-top:1px solid var(--bs-border-color); font-size:0.8125rem;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:8px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; font-size:0.7rem;">&#x2B26;</span>
+            <strong>SuperLocalMemory</strong> by <a href="https://qualixar.com" style="font-weight:600;">Qualixar</a>
+        </div>
+        <p style="margin:4px 0;">Built by <a href="https://github.com/varun369">Varun Pratap Bhardwaj</a> · <a href="https://qualixar.com">qualixar.com</a></p>
+        <p style="margin:4px 0;">
+            <a href="https://github.com/qualixar/superlocalmemory"><i class="bi bi-github"></i> GitHub</a> ·
+            <a href="https://www.npmjs.com/package/superlocalmemory"><i class="bi bi-box-seam"></i> npm</a> ·
+            <a href="https://pypi.org/project/superlocalmemory/"><i class="bi bi-box"></i> PyPI</a> ·
+            AGPL-3.0-or-later ·
+            <a href="https://github.com/qualixar/superlocalmemory/stargazers">⭐ Star us on GitHub</a>
+        </p>
     </footer>
 </body>
 </html>

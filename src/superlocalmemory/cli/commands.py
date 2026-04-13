@@ -96,6 +96,35 @@ def cmd_serve(args: Namespace) -> None:
                 print("Daemon: RUNNING (could not get status)")
         else:
             print("Daemon: NOT RUNNING")
+        # Also show OS service status
+        try:
+            from superlocalmemory.cli.service_installer import service_status
+            svc = service_status()
+            installed = svc.get("installed", False)
+            print(f"OS Service: {'INSTALLED' if installed else 'NOT INSTALLED'} "
+                  f"({svc.get('service_type', svc.get('platform', '?'))})")
+        except Exception:
+            pass
+        return
+
+    if action == 'install':
+        # Install OS-level service for auto-start on boot/login
+        from superlocalmemory.cli.service_installer import install_service
+        print("Installing SLM as OS service (auto-start on login)...")
+        if install_service():
+            print("Service installed \u2713 — SLM will auto-start on login.")
+            print("  slm serve status    — check service status")
+            print("  slm serve uninstall — remove auto-start")
+        else:
+            print("Failed to install service. Check logs.")
+        return
+
+    if action == 'uninstall':
+        from superlocalmemory.cli.service_installer import uninstall_service
+        if uninstall_service():
+            print("OS service removed \u2713 — SLM will no longer auto-start.")
+        else:
+            print("Failed to remove service.")
         return
 
     # Default: start

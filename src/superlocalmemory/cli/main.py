@@ -195,8 +195,8 @@ def main() -> None:
     serve_p = sub.add_parser("serve", help="Start/stop daemon for instant CLI response (~600MB RAM)")
     serve_p.add_argument(
         "action", nargs="?", default="start",
-        choices=["start", "stop", "status"],
-        help="start (default), stop, or status",
+        choices=["start", "stop", "status", "install", "uninstall"],
+        help="start (default), stop, status, install (OS service), uninstall",
     )
 
     # -- Profiles ------------------------------------------------------
@@ -291,6 +291,19 @@ def main() -> None:
     # V3.3.19: Auto-trigger setup wizard on first use
     from superlocalmemory.cli.setup_wizard import check_first_use
     check_first_use(args.command)
+
+    # V3.4.4: Auto-start daemon for all commands that need it.
+    # SLM is always-on — close laptop, reboot, crash: daemon auto-recovers.
+    # Cross-platform: macOS + Windows + Linux.
+    _NO_DAEMON_COMMANDS = {
+        "setup", "mode", "provider", "connect", "migrate", "mcp", "warmup",
+    }
+    if args.command not in _NO_DAEMON_COMMANDS:
+        try:
+            from superlocalmemory.cli.daemon import ensure_daemon
+            ensure_daemon()  # Starts daemon if not running; no-op if already up
+        except Exception:
+            pass  # Don't block CLI if daemon start fails — commands have fallbacks
 
     from superlocalmemory.cli.commands import dispatch
 

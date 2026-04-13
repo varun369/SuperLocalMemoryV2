@@ -332,7 +332,10 @@ function _loadChatMode() {
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Delay init until graph tab is shown (panel must exist in DOM)
+    // v3.4.4: Robust init — works with both Bootstrap tabs AND Neural Glass sidebar.
+    // Strategy: poll for graph-pane visibility instead of relying on tab events.
+
+    // Method 1: Bootstrap tab event (legacy compat)
     var graphTab = document.getElementById('graph-tab');
     if (graphTab) {
         graphTab.addEventListener('shown.bs.tab', function() {
@@ -340,5 +343,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 initMemoryChat();
             }
         });
+    }
+
+    // Method 2: MutationObserver on graph-pane class changes (Neural Glass sidebar)
+    var graphPane = document.getElementById('graph-pane');
+    if (graphPane) {
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(m) {
+                if (m.attributeName === 'class' && graphPane.classList.contains('active')) {
+                    if (!document.getElementById('chat-panel')) {
+                        initMemoryChat();
+                    }
+                }
+            });
+        });
+        observer.observe(graphPane, { attributes: true, attributeFilter: ['class'] });
+
+        // Method 3: If graph-pane is ALREADY active on page load (e.g. hash navigation)
+        if (graphPane.classList.contains('active')) {
+            setTimeout(function() {
+                if (!document.getElementById('chat-panel')) {
+                    initMemoryChat();
+                }
+            }, 500);
+        }
     }
 });

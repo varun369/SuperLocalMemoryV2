@@ -45,67 +45,65 @@ _PORT_FILE = Path.home() / ".superlocalmemory" / "daemon.port"
 # Client: check if daemon running + send requests
 # ---------------------------------------------------------------------------
 
+def _is_pid_alive(pid: int) -> bool:
+    """Cross-platform check if a process with given PID exists."""
+    try:
+        import psutil
+        return psutil.pid_exists(pid)
+    except ImportError:
+        try:
+            os.kill(pid, 0)
+            return True
+        except (ProcessLookupError, PermissionError):
+            return False
+
+
 def is_daemon_running() -> bool:
     """Check if daemon is alive via PID file + HTTP health check.
 
-    v3.4.3: Checks both port 8765 (new) and 8767 (legacy) for upgrade compat.
-    Also checks ports directly if PID file is missing (daemon started by MCP/hook).
-    """
-    if not _PID_FILE.exists():
-        # PID file missing but daemon might still be running (started by MCP/hook)
-        # Try health check on known ports
-        for try_port in (_DEFAULT_PORT, _LEGACY_PORT):
-            try:
-                import urllib.request
-                resp = urllib.request.urlopen(
-                    f"http://127.0.0.1:{try_port}/health", timeout=2,
-                )
-                if resp.status == 200:
-                    # Daemon is running without PID file — write one for future checks
-                    try:
-                        import json as _json
-                        data = _json.loads(resp.read().decode())
-                        pid = data.get("pid")
-                        if pid:
-                            _PID_FILE.parent.mkdir(parents=True, exist_ok=True)
-                            _PID_FILE.write_text(str(pid))
-                            _PORT_FILE.write_text(str(try_port))
-                    except Exception:
-                        pass
-                    return True
-            except Exception:
-                continue
-        return False
-    try:
-        pid = int(_PID_FILE.read_text().strip())
-        # Cross-platform PID check via psutil if available, else os.kill
-        try:
-            import psutil
-            if not psutil.pid_exists(pid):
-                _PID_FILE.unlink(missing_ok=True)
-                return False
-        except ImportError:
-            try:
-                os.kill(pid, 0)
-            except (ProcessLookupError, PermissionError):
-                _PID_FILE.unlink(missing_ok=True)
-                return False
-    except ValueError:
-        _PID_FILE.unlink(missing_ok=True)
-        return False
+    v3.4.4 FIX: If PID is alive, returns True EVEN IF health check fails.
+    This prevents starting duplicate daemons when the existing one is
+    warming up (Ollama processing, model download, embedding init).
 
-    # PID exists — verify HTTP health on primary port
-    port = _get_port()
-    for try_port in (port, _DEFAULT_PORT, _LEGACY_PORT):
+    Priority:
+      1. PID file exists AND process alive → True (daemon warming up or ready)
+      2. No PID file → try health check on known ports (MCP/hook started daemon)
+      3. PID file stale (process dead) → clean up, return False
+    """
+    if _PID_FILE.exists():
+        try:
+            pid = int(_PID_FILE.read_text().strip())
+            if _is_pid_alive(pid):
+                # PID alive = daemon exists. Don't check health — it might be warming up.
+                # This is the critical fix: NEVER start a second daemon if PID is alive.
+                return True
+            else:
+                # Process died — clean up stale PID file
+                _PID_FILE.unlink(missing_ok=True)
+                _PORT_FILE.unlink(missing_ok=True)
+        except (ValueError, OSError):
+            _PID_FILE.unlink(missing_ok=True)
+
+    # No PID file — maybe daemon was started by MCP/hook without PID file.
+    # Try health check on known ports as last resort.
+    for try_port in (_DEFAULT_PORT, _LEGACY_PORT):
         try:
             import urllib.request
             resp = urllib.request.urlopen(
                 f"http://127.0.0.1:{try_port}/health", timeout=2,
             )
             if resp.status == 200:
-                # Update port file if it was stale (upgrade from 8767 → 8765)
-                if try_port != port:
-                    _PORT_FILE.write_text(str(try_port))
+                # Daemon running without PID file — write one for future checks
+                try:
+                    import json as _json
+                    data = _json.loads(resp.read().decode())
+                    pid = data.get("pid")
+                    if pid:
+                        _PID_FILE.parent.mkdir(parents=True, exist_ok=True)
+                        _PID_FILE.write_text(str(pid))
+                        _PORT_FILE.write_text(str(try_port))
+                except Exception:
+                    pass
                 return True
         except Exception:
             continue
@@ -136,38 +134,100 @@ def daemon_request(method: str, path: str, body: dict | None = None) -> dict | N
         return None
 
 
+_LOCK_FILE = Path.home() / ".superlocalmemory" / "daemon.lock"
+
+
 def ensure_daemon() -> bool:
     """Start daemon if not running. Returns True if daemon is ready.
 
-    v3.4.3: Starts unified daemon (server/unified_daemon.py) instead of
-    old stdlib daemon. Cross-platform subprocess flags.
+    v3.4.4 BULLETPROOF:
+      1. If PID alive → return True immediately (even if warming up)
+      2. File lock prevents two callers from starting concurrent daemons
+      3. After starting, waits for PID file (not health check) — fast detection
+      4. Cross-platform: macOS + Windows + Linux
     """
     if is_daemon_running():
         return True
 
-    # Start unified daemon in background
-    import subprocess
-    cmd = [sys.executable, "-m", "superlocalmemory.server.unified_daemon", "--start"]
-    log_dir = Path.home() / ".superlocalmemory" / "logs"
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_file = log_dir / "daemon.log"
+    # File lock — prevent concurrent starts from multiple CLI/MCP calls
+    lock_fd = None
+    try:
+        _LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
+        lock_fd = open(_LOCK_FILE, "w")
 
-    # Cross-platform background process flags
-    kwargs: dict = {}
-    if sys.platform == "win32":
-        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
-    else:
-        kwargs["start_new_session"] = True
+        # Cross-platform file locking
+        if sys.platform == "win32":
+            import msvcrt
+            try:
+                msvcrt.locking(lock_fd.fileno(), msvcrt.LK_NBLCK, 1)
+            except (IOError, OSError):
+                # Another process is starting the daemon — just wait for it
+                lock_fd.close()
+                return _wait_for_daemon(timeout=60)
+        else:
+            import fcntl
+            try:
+                fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except (IOError, OSError):
+                lock_fd.close()
+                return _wait_for_daemon(timeout=60)
 
-    with open(log_file, "a") as lf:
-        subprocess.Popen(cmd, stdout=lf, stderr=lf, **kwargs)
-
-    # Wait for daemon to become ready (max 30s for cold start)
-    for _ in range(60):
-        time.sleep(0.5)
+        # Re-check after acquiring lock (another process may have started it)
         if is_daemon_running():
             return True
 
+        # Start unified daemon in background
+        import subprocess
+        cmd = [sys.executable, "-m", "superlocalmemory.server.unified_daemon", "--start"]
+        log_dir = Path.home() / ".superlocalmemory" / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_file = log_dir / "daemon.log"
+
+        kwargs: dict = {}
+        if sys.platform == "win32":
+            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+        else:
+            kwargs["start_new_session"] = True
+
+        with open(log_file, "a") as lf:
+            proc = subprocess.Popen(cmd, stdout=lf, stderr=lf, **kwargs)
+
+        # Write PID immediately so other callers see it during warmup
+        _PID_FILE.write_text(str(proc.pid))
+        _PORT_FILE.write_text(str(_DEFAULT_PORT))
+
+        return _wait_for_daemon(timeout=60)
+
+    except Exception as exc:
+        logger.debug("ensure_daemon error: %s", exc)
+        return False
+    finally:
+        if lock_fd:
+            try:
+                lock_fd.close()
+            except Exception:
+                pass
+            try:
+                _LOCK_FILE.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+
+def _wait_for_daemon(timeout: int = 60) -> bool:
+    """Wait for daemon to become reachable. Checks PID alive first (fast),
+    then health endpoint (confirms HTTP server is bound)."""
+    for _ in range(timeout * 2):  # check every 0.5s
+        time.sleep(0.5)
+        if is_daemon_running():
+            # PID is alive — now optionally check if HTTP is ready
+            port = _get_port()
+            try:
+                import urllib.request
+                urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=2)
+                return True  # HTTP is ready
+            except Exception:
+                # PID alive but HTTP not ready — daemon is warming up, that's OK
+                return True
     return False
 
 

@@ -2,9 +2,9 @@
   <img src="https://superlocalmemory.com/assets/logo-mark.png" alt="SuperLocalMemory" width="200"/>
 </p>
 
-<h1 align="center">SuperLocalMemory V3.3</h1>
+<h1 align="center">SuperLocalMemory V3.4</h1>
 <p align="center"><strong>Every other AI forgets. Yours won't.</strong><br/><em>Infinite memory for Claude Code, Cursor, Windsurf & 17+ AI tools.</em></p>
-<p align="center"><code>v3.3.26</code> — Install once. Every session remembers the last. Automatically.</p>
+<p align="center"><code>v3.4.4 "Neural Glass"</code> — Install once. Every session remembers the last. Automatically.</p>
 <p align="center"><strong>Backed by 3 peer-reviewed research papers</strong> · <a href="https://arxiv.org/abs/2603.02240">arXiv:2603.02240</a> · <a href="https://arxiv.org/abs/2603.14588">arXiv:2603.14588</a> · <a href="https://arxiv.org/abs/2604.04514">arXiv:2604.04514</a></p>
 
 <p align="center">
@@ -340,20 +340,17 @@ slm dashboard    # Opens at http://localhost:8765
 ```
 
 <details open>
-<summary><strong>Dashboard Screenshots</strong> (click to collapse)</summary>
-<p align="center"><img src="docs/screenshots/01-dashboard-main.png" alt="Dashboard Overview — 3,100+ memories, 430K connections" width="600"/></p>
+<summary><strong>Dashboard Demo — v3.4.4 "Neural Glass"</strong> (click to collapse)</summary>
 <p align="center">
-<img src="docs/screenshots/02-knowledge-graph.png" alt="Knowledge Graph — Sigma.js WebGL with community detection, chat, quick actions, timeline" width="290"/>
-<img src="docs/screenshots/06-graph-communities.png" alt="Graph Communities — Louvain clustering with colored nodes" width="290"/>
-</p>
-<p align="center">
-<img src="docs/screenshots/03-patterns-learning.png" alt="Patterns — 50 learned behavioral patterns with confidence bars" width="190"/>
-<img src="docs/screenshots/04-learning-dashboard.png" alt="Learning — 722 signals, ML Model phase, tech preferences" width="190"/>
-<img src="docs/screenshots/05-behavioral-analysis.png" alt="Behavioral — pattern analysis with confidence distribution" width="190"/>
+  <a href="https://github.com/qualixar/superlocalmemory/issues/15">
+    <video src="https://github.com/user-attachments/assets/c3b54a1d-f62a-4ea7-bba7-900435e7b3ab" width="800" autoplay loop muted playsinline>
+      Your browser does not support the video tag. <a href="https://github.com/qualixar/superlocalmemory/issues/15">Watch the demo</a>.
+    </video>
+  </a>
 </p>
 </details>
 
-**v3.4.1 Visual Intelligence:** Sigma.js WebGL knowledge graph with community detection (Louvain/Leiden), 5 quick insight actions, D3 memory timeline, graph-enhanced retrieval (PageRank bias + community boost + contradiction suppression), and 56 auto-mined behavioral patterns. 23+ tabs. Runs locally — no data leaves your machine.
+**v3.4.4 "Neural Glass":** 21-tab sidebar dashboard with light + dark theme. Knowledge Graph (Sigma.js WebGL, community detection), Health Monitor, Entity Explorer (1,300+ entities), Mesh Peers (P2P agent communication), Ingestion Status (Gmail/Calendar/Transcript management), Privacy blur mode. Always-on daemon with auto-start. 8 mesh MCP tools built-in. Cross-platform: macOS + Windows + Linux. All data stays local.
 
 ---
 

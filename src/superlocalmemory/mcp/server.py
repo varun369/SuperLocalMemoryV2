@@ -65,7 +65,7 @@ def reset_engine():
 
 import os as _os_reg
 
-_ESSENTIAL_TOOLS: frozenset[str] = frozenset({
+_ESSENTIAL_TOOLS: set[str] = {
     # Core memory operations (8)
     "remember", "recall", "search", "fetch",
     "list_recent", "delete_memory", "update_memory", "get_status",
@@ -76,7 +76,25 @@ _ESSENTIAL_TOOLS: frozenset[str] = frozenset({
     # Infinite memory + learning (4)
     "consolidate_cognitive", "get_soft_prompts",
     "set_mode", "report_outcome",
-})
+}
+
+# v3.4.4: Mesh tools — enabled if mesh_enabled in config or SLM_MCP_MESH_TOOLS=1
+_mesh_tools_enabled = _os_reg.environ.get("SLM_MCP_MESH_TOOLS", "").lower() in ("1", "true")
+if not _mesh_tools_enabled:
+    try:
+        from superlocalmemory.core.config import SLMConfig
+        _cfg = SLMConfig.load()
+        _mesh_tools_enabled = getattr(_cfg, "mesh_enabled", True)  # default True in v3.4.3+
+    except Exception:
+        _mesh_tools_enabled = True  # Safe default — mesh broker is always in daemon
+
+if _mesh_tools_enabled:
+    _ESSENTIAL_TOOLS.update({
+        "mesh_summary", "mesh_peers", "mesh_send", "mesh_inbox",
+        "mesh_state", "mesh_lock", "mesh_events", "mesh_status",
+    })
+
+_ESSENTIAL_TOOLS = frozenset(_ESSENTIAL_TOOLS)
 
 _all_tools = _os_reg.environ.get("SLM_MCP_ALL_TOOLS") == "1"
 
@@ -115,6 +133,7 @@ from superlocalmemory.mcp.tools_active import register_active_tools
 from superlocalmemory.mcp.tools_v33 import register_v33_tools
 from superlocalmemory.mcp.resources import register_resources
 from superlocalmemory.mcp.tools_code_graph import register_code_graph_tools
+from superlocalmemory.mcp.tools_mesh import register_mesh_tools
 
 register_core_tools(_target, get_engine)
 register_v28_tools(_target, get_engine)
@@ -123,6 +142,7 @@ register_active_tools(_target, get_engine)
 register_v33_tools(_target, get_engine)
 register_resources(server, get_engine)  # Resources always registered (not tools)
 register_code_graph_tools(_target, get_engine)  # CodeGraph: filtered like other tools (SLM_MCP_ALL_TOOLS=1 to show all)
+register_mesh_tools(_target, get_engine)  # v3.4.4: Mesh P2P tools — ships with SLM, no separate slm-mesh needed
 
 
 # V3.3.21: Eager engine warmup — start initializing BEFORE first tool call.
@@ -132,7 +152,7 @@ register_code_graph_tools(_target, get_engine)  # CodeGraph: filtered like other
 # the first tool call arrives (1-2s later), the engine is already warm.
 # This applies to ALL IDEs: Claude Code, Cursor, Antigravity, Gemini CLI, etc.
 def _eager_warmup() -> None:
-    """Pre-warm engine in background thread."""
+    """Pre-warm engine + ensure daemon is running (background thread)."""
     import logging
     _logger = logging.getLogger(__name__)
     try:
@@ -140,6 +160,15 @@ def _eager_warmup() -> None:
         _logger.info("MCP engine pre-warmed successfully")
     except Exception as exc:
         _logger.debug("MCP engine pre-warmup failed (non-fatal): %s", exc)
+
+    # V3.4.4: Also ensure daemon is running for dashboard/mesh/health features.
+    # This runs in background — doesn't block MCP tool registration.
+    try:
+        from superlocalmemory.cli.daemon import ensure_daemon
+        if ensure_daemon():
+            _logger.info("Daemon auto-started by MCP server")
+    except Exception as exc:
+        _logger.debug("Daemon auto-start failed (non-fatal): %s", exc)
 
 import threading
 _warmup_thread = threading.Thread(target=_eager_warmup, daemon=True, name="mcp-warmup")

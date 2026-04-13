@@ -11,6 +11,62 @@ from fastapi import APIRouter, HTTPException, Request, Query
 router = APIRouter(prefix="/api/entity", tags=["entity"])
 
 
+@router.get("/list")
+async def list_entities(
+    request: Request,
+    profile: str = Query(default="default"),
+    limit: int = Query(default=100, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+):
+    """List all entities with basic info (canonical name, type, fact count)."""
+    engine = request.app.state.engine
+    if engine is None:
+        raise HTTPException(503, detail="Engine not initialized")
+
+    import sqlite3
+    import json
+    conn = sqlite3.connect(str(engine._config.db_path))
+    conn.row_factory = sqlite3.Row
+    try:
+        total = conn.execute(
+            "SELECT COUNT(*) FROM canonical_entities WHERE profile_id = ?",
+            (profile,),
+        ).fetchone()[0]
+
+        rows = conn.execute("""
+            SELECT ce.entity_id, ce.canonical_name, ce.entity_type,
+                   ce.fact_count, ce.first_seen, ce.last_seen,
+                   ep.knowledge_summary, ep.compiled_truth,
+                   ep.compilation_confidence, ep.last_compiled_at
+            FROM canonical_entities ce
+            LEFT JOIN entity_profiles ep
+              ON ce.entity_id = ep.entity_id AND ep.profile_id = ce.profile_id
+            WHERE ce.profile_id = ?
+            ORDER BY ce.fact_count DESC
+            LIMIT ? OFFSET ?
+        """, (profile, limit, offset)).fetchall()
+
+        entities = []
+        for r in rows:
+            summary = r["knowledge_summary"] or ""
+            entities.append({
+                "entity_id": r["entity_id"],
+                "name": r["canonical_name"],
+                "type": r["entity_type"] or "unknown",
+                "fact_count": r["fact_count"] or 0,
+                "first_seen": r["first_seen"],
+                "last_seen": r["last_seen"],
+                "summary_preview": summary[:200] if summary else "",
+                "has_compiled_truth": bool(r["compiled_truth"]),
+                "confidence": r["compilation_confidence"] or 0.5,
+                "last_compiled_at": r["last_compiled_at"],
+            })
+
+        return {"entities": entities, "total": total, "limit": limit, "offset": offset}
+    finally:
+        conn.close()
+
+
 @router.get("/{entity_name}")
 async def get_entity(
     entity_name: str,

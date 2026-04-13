@@ -1,0 +1,1588 @@
+/* ============================================
+   Neural Glass Design System v1.0
+   SuperLocalMemory Dashboard V2 "Neural Glass"
+   Linear darkness + Raycast glass + Claude warmth
+   Brand accent: Qualixar Cyan #00D4AA
+   ============================================ */
+
+/* ============================================
+   1. CUSTOM PROPERTIES (Design Tokens)
+   ============================================ */
+
+:root {
+  /* --- Background Surfaces (Linear luminance stacking) --- */
+  --ng-bg-void: #0a0a0c;
+  --ng-bg-base: #0f1012;
+  --ng-bg-surface: #161719;
+  --ng-bg-elevated: #1c1d20;
+  --ng-bg-hover: #222326;
+
+  /* --- Glass Surfaces (Raycast macOS glass) --- */
+  --ng-bg-glass: rgba(255, 255, 255, 0.03);
+  --ng-bg-glass-hover: rgba(255, 255, 255, 0.06);
+  --ng-bg-glass-active: rgba(255, 255, 255, 0.08);
+  --ng-bg-glass-strong: rgba(255, 255, 255, 0.10);
+
+  /* --- Text (Claude warm neutrals — no cold blue-grays) --- */
+  --ng-text-primary: #f0eeeb;
+  --ng-text-secondary: #b8b5af;
+  --ng-text-tertiary: #7d7a74;
+  --ng-text-quaternary: #545250;
+  --ng-text-on-accent: #ffffff;
+
+  /* --- SLM Purple Accent (original #667eea → #764ba2 gradient) --- */
+  --ng-accent: #7C6AEF;
+  --ng-accent-hover: #9182F3;
+  --ng-accent-muted: rgba(124, 106, 239, 0.10);
+  --ng-accent-glow: rgba(124, 106, 239, 0.18);
+  --ng-accent-strong: rgba(124, 106, 239, 0.28);
+  --ng-accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  /* --- Status Colors --- */
+  --ng-status-success: #10b981;
+  --ng-status-success-bg: rgba(16, 185, 129, 0.10);
+  --ng-status-warning: #f59e0b;
+  --ng-status-warning-bg: rgba(245, 158, 11, 0.10);
+  --ng-status-error: #ef4444;
+  --ng-status-error-bg: rgba(239, 68, 68, 0.10);
+  --ng-status-info: #3b82f6;
+  --ng-status-info-bg: rgba(59, 130, 246, 0.10);
+
+  /* --- Borders (Linear semi-transparent white) --- */
+  --ng-border-subtle: rgba(255, 255, 255, 0.06);
+  --ng-border-default: rgba(255, 255, 255, 0.10);
+  --ng-border-prominent: rgba(255, 255, 255, 0.15);
+  --ng-border-accent: rgba(0, 212, 170, 0.30);
+
+  /* --- Shadows (Raycast macOS glass depth) --- */
+  --ng-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --ng-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --ng-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --ng-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --ng-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.5);
+
+  /* Glass panel shadow (Raycast inset + outer) */
+  --ng-shadow-glass:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+
+  /* Elevated glass shadow */
+  --ng-shadow-glass-elevated:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 12px 40px rgba(0, 0, 0, 0.25);
+
+  /* Accent glow */
+  --ng-shadow-glow: 0 0 20px var(--ng-accent-glow), 0 0 40px rgba(124, 106, 239, 0.06);
+
+  /* --- Typography (Linear: Inter Variable + cv01/ss03) --- */
+  --ng-font-sans: 'Inter Variable', 'Inter', -apple-system, system-ui, 'Segoe UI', sans-serif;
+  --ng-font-mono: 'GeistMono', 'Berkeley Mono', ui-monospace, 'SF Mono', 'Menlo', monospace;
+  --ng-font-feature: "cv01", "ss03";
+
+  /* Weight scale (Linear: 400=read, 510=emphasis, 590=strong) */
+  --ng-weight-normal: 400;
+  --ng-weight-medium: 510;
+  --ng-weight-semibold: 590;
+
+  /* --- Spacing (8px grid) --- */
+  --ng-space-1: 4px;
+  --ng-space-2: 8px;
+  --ng-space-3: 12px;
+  --ng-space-4: 16px;
+  --ng-space-5: 20px;
+  --ng-space-6: 24px;
+  --ng-space-8: 32px;
+  --ng-space-10: 40px;
+  --ng-space-12: 48px;
+
+  /* --- Border Radius --- */
+  --ng-radius-sm: 4px;
+  --ng-radius-md: 8px;
+  --ng-radius-lg: 12px;
+  --ng-radius-xl: 16px;
+  --ng-radius-2xl: 20px;
+  --ng-radius-pill: 9999px;
+
+  /* --- Sidebar --- */
+  --ng-sidebar-width: 240px;
+  --ng-sidebar-collapsed: 56px;
+
+  /* --- Transitions --- */
+  --ng-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ng-transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ng-transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ng-transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* --- Z-Index Scale --- */
+  --ng-z-sidebar: 100;
+  --ng-z-header: 90;
+  --ng-z-overlay: 200;
+  --ng-z-modal: 300;
+  --ng-z-tooltip: 400;
+}
+
+
+/* ============================================
+   2. RESET & BASE
+   ============================================ */
+
+.ng-dark {
+  background: var(--ng-bg-void);
+  color: var(--ng-text-primary);
+  font-family: var(--ng-font-sans);
+  font-feature-settings: var(--ng-font-feature);
+  font-weight: var(--ng-weight-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  line-height: 1.5;
+}
+
+.ng-dark *,
+.ng-dark *::before,
+.ng-dark *::after {
+  border-color: var(--ng-border-subtle);
+}
+
+.ng-dark ::selection {
+  background: var(--ng-accent-strong);
+  color: var(--ng-text-primary);
+}
+
+.ng-dark ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.ng-dark ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ng-dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--ng-radius-pill);
+}
+
+.ng-dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.20);
+}
+
+
+/* ============================================
+   3. TYPOGRAPHY
+   ============================================ */
+
+.ng-dark h1, .ng-dark h2, .ng-dark h3,
+.ng-dark h4, .ng-dark h5, .ng-dark h6 {
+  color: var(--ng-text-primary);
+  font-weight: var(--ng-weight-medium);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.ng-dark h1 { font-size: 2rem; letter-spacing: -0.04em; }
+.ng-dark h2 { font-size: 1.5rem; letter-spacing: -0.03em; }
+.ng-dark h3 { font-size: 1.25rem; }
+.ng-dark h4 { font-size: 1.125rem; }
+.ng-dark h5 { font-size: 1rem; }
+.ng-dark h6 { font-size: 0.875rem; font-weight: var(--ng-weight-semibold); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.ng-dark p { color: var(--ng-text-secondary); }
+.ng-dark small, .ng-dark .text-muted { color: var(--ng-text-tertiary) !important; }
+.ng-dark code, .ng-dark pre { font-family: var(--ng-font-mono); }
+
+.ng-dark code {
+  background: var(--ng-bg-glass-active);
+  padding: 2px 6px;
+  border-radius: var(--ng-radius-sm);
+  font-size: 0.875em;
+  color: var(--ng-accent);
+}
+
+.ng-dark a {
+  color: var(--ng-accent);
+  text-decoration: none;
+  transition: color var(--ng-transition-fast);
+}
+
+.ng-dark a:hover {
+  color: var(--ng-accent-hover);
+}
+
+/* Stat value — Linear-style glow */
+.ng-stat-value {
+  font-size: 2rem;
+  font-weight: var(--ng-weight-semibold);
+  letter-spacing: -0.04em;
+  color: var(--ng-text-primary);
+  line-height: 1;
+}
+
+.ng-stat-label {
+  font-size: 0.75rem;
+  font-weight: var(--ng-weight-medium);
+  color: var(--ng-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+
+/* ============================================
+   4. GLASS EFFECTS
+   ============================================ */
+
+.ng-glass {
+  background: var(--ng-bg-glass);
+  border: 1px solid var(--ng-border-subtle);
+  border-radius: var(--ng-radius-lg);
+  box-shadow: var(--ng-shadow-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ng-glass-elevated {
+  background: var(--ng-bg-glass-hover);
+  border: 1px solid var(--ng-border-default);
+  border-radius: var(--ng-radius-lg);
+  box-shadow: var(--ng-shadow-glass-elevated);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.ng-glass-surface {
+  background: var(--ng-bg-surface);
+  border: 1px solid var(--ng-border-subtle);
+  border-radius: var(--ng-radius-lg);
+  box-shadow: var(--ng-shadow-sm);
+}
+
+.ng-glass-accent {
+  background: var(--ng-accent-muted);
+  border: 1px solid var(--ng-border-accent);
+  border-radius: var(--ng-radius-lg);
+  box-shadow: var(--ng-shadow-glow);
+}
+
+/* Inset glass (Raycast sunken panels) */
+.ng-glass-inset {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--ng-radius-md);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+
+/* ============================================
+   5. LAYOUT: APP SHELL + SIDEBAR
+   ============================================ */
+
+.ng-shell {
+  display: flex;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.ng-sidebar {
+  width: var(--ng-sidebar-width);
+  min-width: var(--ng-sidebar-width);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--ng-z-sidebar);
+  display: flex;
+  flex-direction: column;
+  background: var(--ng-bg-base);
+  border-right: 1px solid var(--ng-border-subtle);
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: width var(--ng-transition-normal), min-width var(--ng-transition-normal);
+}
+
+.ng-sidebar-header {
+  padding: var(--ng-space-4) var(--ng-space-4) var(--ng-space-3);
+  border-bottom: 1px solid var(--ng-border-subtle);
+  flex-shrink: 0;
+}
+
+.ng-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--ng-space-3);
+  text-decoration: none;
+}
+
+.ng-sidebar-brand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ng-radius-md);
+  background: var(--ng-accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--ng-text-on-accent);
+  flex-shrink: 0;
+  box-shadow: var(--ng-shadow-glow);
+}
+
+.ng-sidebar-brand-text {
+  font-size: 0.9375rem;
+  font-weight: var(--ng-weight-semibold);
+  color: var(--ng-text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.ng-sidebar-brand-version {
+  font-size: 0.6875rem;
+  color: var(--ng-text-quaternary);
+  font-weight: var(--ng-weight-normal);
+}
+
+/* Sidebar nav sections */
+.ng-sidebar-nav {
+  flex: 1;
+  padding: var(--ng-space-2) var(--ng-space-2);
+  overflow-y: auto;
+}
+
+.ng-sidebar-section {
+  margin-bottom: var(--ng-space-2);
+}
+
+.ng-sidebar-section-label {
+  font-size: 0.6875rem;
+  font-weight: var(--ng-weight-semibold);
+  color: var(--ng-text-quaternary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: var(--ng-space-3) var(--ng-space-3) var(--ng-space-1);
+}
+
+.ng-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ng-space-3);
+  padding: 7px var(--ng-space-3);
+  border-radius: var(--ng-radius-md);
+  color: var(--ng-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: var(--ng-weight-medium);
+  cursor: pointer;
+  transition:
+    background var(--ng-transition-fast),
+    color var(--ng-transition-fast);
+  text-decoration: none;
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+.ng-sidebar-item:hover {
+  background: var(--ng-bg-glass-hover);
+  color: var(--ng-text-primary);
+}
+
+.ng-sidebar-item.active {
+  background: var(--ng-accent-muted);
+  color: var(--ng-accent);
+  border-color: var(--ng-border-accent);
+  box-shadow: var(--ng-shadow-glow);
+}
+
+.ng-sidebar-item.active .ng-sidebar-icon {
+  color: var(--ng-accent);
+}
+
+.ng-sidebar-icon {
+  font-size: 1rem;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+  color: var(--ng-text-tertiary);
+  transition: color var(--ng-transition-fast);
+}
+
+.ng-sidebar-item:hover .ng-sidebar-icon {
+  color: var(--ng-text-secondary);
+}
+
+.ng-sidebar-badge {
+  margin-left: auto;
+  font-size: 0.625rem;
+  font-weight: var(--ng-weight-semibold);
+  padding: 1px 6px;
+  border-radius: var(--ng-radius-pill);
+  background: var(--ng-accent-muted);
+  color: var(--ng-accent);
+}
+
+/* Sidebar footer */
+.ng-sidebar-footer {
+  padding: var(--ng-space-3) var(--ng-space-4);
+  border-top: 1px solid var(--ng-border-subtle);
+  flex-shrink: 0;
+}
+
+/* Main content area */
+.ng-content {
+  flex: 1;
+  margin-left: var(--ng-sidebar-width);
+  min-height: 100vh;
+  background: var(--ng-bg-void);
+  overflow-x: hidden;
+}
+
+.ng-content-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--ng-space-6);
+}
+
+/* Content header */
+.ng-content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--ng-space-6);
+  padding-bottom: var(--ng-space-4);
+  border-bottom: 1px solid var(--ng-border-subtle);
+}
+
+.ng-content-title {
+  font-size: 1.375rem;
+  font-weight: var(--ng-weight-medium);
+  letter-spacing: -0.03em;
+  color: var(--ng-text-primary);
+}
+
+.ng-content-subtitle {
+  font-size: 0.8125rem;
+  color: var(--ng-text-tertiary);
+  margin-top: 2px;
+}
+
+
+/* ============================================
+   6. CARDS & PANELS
+   ============================================ */
+
+.ng-dark .card,
+.ng-card {
+  background: var(--ng-bg-glass);
+  border: 1px solid var(--ng-border-subtle);
+  border-radius: var(--ng-radius-lg);
+  box-shadow: var(--ng-shadow-glass);
+  color: var(--ng-text-primary);
+  transition: border-color var(--ng-transition-fast), box-shadow var(--ng-transition-fast);
+}
+
+.ng-dark .card:hover,
+.ng-card:hover {
+  border-color: var(--ng-border-default);
+}
+
+.ng-dark .card-header {
+  background: var(--ng-bg-glass-hover) !important;
+  border-bottom: 1px solid var(--ng-border-subtle);
+  color: var(--ng-text-primary) !important;
+}
+
+.ng-dark .card-body {
+  color: var(--ng-text-primary);
+}
+
+/* Stat cards */
+.ng-dark .stat-card {
+  background: var(--ng-bg-glass);
+  border: 1px solid var(--ng-border-subtle);
+  box-shadow: var(--ng-shadow-glass);
+}
+
+.ng-dark .stat-card:hover {
+  border-color: var(--ng-border-default);
+  box-shadow: var(--ng-shadow-glass-elevated);
+  transform: translateY(-2px);
+}
+
+.ng-dark .stat-card .stat-bg {
+  display: none; /* Remove old gradient backgrounds */
+}
+
+.ng-dark .stat-card .stat-icon {
+  color: var(--ng-accent) !important;
+  opacity: 0.7;
+}
+
+.ng-dark .stat-card .stat-value {
+  color: var(--ng-text-primary);
+  font-weight: var(--ng-weight-semibold);
+  letter-spacing: -0.03em;
+}
+
+
+/* ============================================
+   7. BUTTONS
+   ============================================ */
+
+/* Ghost button (Linear default) */
+.ng-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ng-space-2);
+  padding: 6px 12px;
+  border-radius: var(--ng-radius-md);
+  font-size: 0.8125rem;
+  font-weight: var(--ng-weight-medium);
+  font-family: inherit;
+  font-feature-settings: var(--ng-font-feature);
+  cursor: pointer;
+  transition:
+    background var(--ng-transition-fast),
+    border-color var(--ng-transition-fast),
+    opacity var(--ng-transition-fast);
+  border: 1px solid var(--ng-border-default);
+  background: var(--ng-bg-glass);
+  color: var(--ng-text-secondary);
+}
+
+.ng-btn:hover {
+  background: var(--ng-bg-glass-hover);
+  color: var(--ng-text-primary);
+  border-color: var(--ng-border-prominent);
+}
+
+/* Primary accent button */
+.ng-btn-accent {
+  background: var(--ng-accent);
+  color: var(--ng-text-on-accent);
+  border-color: transparent;
+  font-weight: var(--ng-weight-semibold);
+}
+
+.ng-btn-accent:hover {
+  background: var(--ng-accent-hover);
+  color: var(--ng-text-on-accent);
+  border-color: transparent;
+  box-shadow: var(--ng-shadow-glow);
+}
+
+/* Bootstrap button overrides */
+.ng-dark .btn-primary {
+  background: var(--ng-accent) !important;
+  border-color: var(--ng-accent) !important;
+  color: var(--ng-text-on-accent) !important;
+}
+
+.ng-dark .btn-primary:hover {
+  background: var(--ng-accent-hover) !important;
+  border-color: var(--ng-accent-hover) !important;
+  box-shadow: var(--ng-shadow-glow);
+}
+
+.ng-dark .btn-outline-primary {
+  color: var(--ng-accent) !important;
+  border-color: var(--ng-accent) !important;
+}
+
+.ng-dark .btn-outline-primary:hover {
+  background: var(--ng-accent-muted) !important;
+  color: var(--ng-accent) !important;
+  border-color: var(--ng-accent) !important;
+}
+
+.ng-dark .btn-success { background: var(--ng-status-success) !important; border-color: var(--ng-status-success) !important; }
+.ng-dark .btn-outline-success { color: var(--ng-status-success) !important; border-color: var(--ng-status-success) !important; }
+.ng-dark .btn-outline-secondary {
+  color: var(--ng-text-secondary) !important;
+  border-color: var(--ng-border-default) !important;
+  background: var(--ng-bg-glass) !important;
+}
+.ng-dark .btn-outline-secondary:hover {
+  background: var(--ng-bg-glass-hover) !important;
+  color: var(--ng-text-primary) !important;
+}
+.ng-dark .btn-outline-light {
+  color: var(--ng-text-secondary) !important;
+  border-color: var(--ng-border-default) !important;
+}
+.ng-dark .btn-outline-light:hover {
+  background: var(--ng-bg-glass-hover) !important;
+  color: var(--ng-text-primary) !important;
+}
+.ng-dark .btn-outline-danger {
+  color: var(--ng-status-error) !important;
+  border-color: var(--ng-status-error) !important;
+}
+.ng-dark .btn-outline-info {
+  color: var(--ng-status-info) !important;
+  border-color: var(--ng-status-info) !important;
+}
+
+
+/* ============================================
+   8. INPUTS & FORMS
+   ============================================ */
+
+.ng-dark .form-control,
+.ng-dark .form-select {
+  background: var(--ng-bg-glass) !important;
+  border: 1px solid var(--ng-border-default) !important;
+  color: var(--ng-text-primary) !important;
+  border-radius: var(--ng-radius-md);
+  font-feature-settings: var(--ng-font-feature);
+  transition: border-color var(--ng-transition-fast), box-shadow var(--ng-transition-fast);
+}
+
+.ng-dark .form-control:focus,
+.ng-dark .form-select:focus {
+  border-color: var(--ng-accent) !important;
+  box-shadow: 0 0 0 2px var(--ng-accent-glow) !important;
+  outline: none;
+}
+
+.ng-dark .form-control::placeholder {
+  color: var(--ng-text-quaternary) !important;
+}
+
+.ng-dark .input-group-text {
+  background: var(--ng-bg-glass-hover) !important;
+  border: 1px solid var(--ng-border-default) !important;
+  color: var(--ng-text-tertiary) !important;
+}
+
+.ng-dark .form-check-input {
+  background-color: var(--ng-bg-glass-strong) !important;
+  border-color: var(--ng-border-default) !important;
+}
+
+.ng-dark .form-check-input:checked {
+  background-color: var(--ng-accent) !important;
+  border-color: var(--ng-accent) !important;
+}
+
+.ng-dark .form-label {
+  color: var(--ng-text-secondary);
+  font-weight: var(--ng-weight-medium);
+  font-size: 0.8125rem;
+}
+
+.ng-dark .form-range::-webkit-slider-thumb {
+  background: var(--ng-accent);
+}
+
+
+/* ============================================
+   9. TABLES
+   ============================================ */
+
+.ng-dark .table {
+  color: var(--ng-text-primary);
+  --bs-table-bg: transparent;
+  --bs-table-hover-bg: var(--ng-bg-glass-hover);
+  --bs-table-striped-bg: var(--ng-bg-glass);
+  border-color: var(--ng-border-subtle);
+}
+
+.ng-dark .table thead th {
+  color: var(--ng-text-tertiary);
+  font-weight: var(--ng-weight-semibold);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--ng-border-default);
+  padding: var(--ng-space-3) var(--ng-space-3);
+}
+
+.ng-dark .table tbody td {
+  border-bottom: 1px solid var(--ng-border-subtle);
+  padding: var(--ng-space-3) var(--ng-space-3);
+  font-size: 0.8125rem;
+}
+
+.ng-dark .table tbody tr:hover {
+  background: var(--ng-bg-glass-hover) !important;
+}
+
+.ng-dark .table-responsive {
+  border-radius: var(--ng-radius-lg);
+  border: 1px solid var(--ng-border-subtle);
+}
+
+/* Sortable headers */
+.ng-dark .sortable:hover {
+  background: var(--ng-bg-glass-hover);
+}
+
+
+/* ============================================
+   10. STATUS & BADGES
+   ============================================ */
+
+.ng-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--ng-radius-pill);
+  font-size: 0.6875rem;
+  font-weight: var(--ng-weight-semibold);
+  letter-spacing: 0.02em;
+}
+
+.ng-badge-success { background: var(--ng-status-success-bg); color: var(--ng-status-success); }
+.ng-badge-warning { background: var(--ng-status-warning-bg); color: var(--ng-status-warning); }
+.ng-badge-error { background: var(--ng-status-error-bg); color: var(--ng-status-error); }
+.ng-badge-info { background: var(--ng-status-info-bg); color: var(--ng-status-info); }
+.ng-badge-accent { background: var(--ng-accent-muted); color: var(--ng-accent); }
+.ng-badge-neutral { background: var(--ng-bg-glass-active); color: var(--ng-text-secondary); }
+
+/* Status dot */
+.ng-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ng-status-dot-success { background: var(--ng-status-success); box-shadow: 0 0 6px var(--ng-status-success); }
+.ng-status-dot-warning { background: var(--ng-status-warning); box-shadow: 0 0 6px var(--ng-status-warning); }
+.ng-status-dot-error { background: var(--ng-status-error); box-shadow: 0 0 6px var(--ng-status-error); }
+.ng-status-dot-info { background: var(--ng-status-info); box-shadow: 0 0 6px var(--ng-status-info); }
+
+/* Pulse animation for status */
+.ng-pulse {
+  animation: ng-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Bootstrap badge overrides */
+.ng-dark .badge.bg-primary { background: var(--ng-accent-muted) !important; color: var(--ng-accent) !important; }
+.ng-dark .badge.bg-success { background: var(--ng-status-success-bg) !important; color: var(--ng-status-success) !important; }
+.ng-dark .badge.bg-warning { background: var(--ng-status-warning-bg) !important; color: var(--ng-status-warning) !important; }
+.ng-dark .badge.bg-danger { background: var(--ng-status-error-bg) !important; color: var(--ng-status-error) !important; }
+.ng-dark .badge.bg-info { background: var(--ng-status-info-bg) !important; color: var(--ng-status-info) !important; }
+.ng-dark .badge.bg-light { background: var(--ng-bg-glass-active) !important; color: var(--ng-text-primary) !important; }
+.ng-dark .badge.bg-dark { background: var(--ng-bg-glass) !important; color: var(--ng-text-secondary) !important; }
+
+
+/* ============================================
+   11. PROGRESS & GAUGES
+   ============================================ */
+
+.ng-progress-bar {
+  height: 6px;
+  border-radius: var(--ng-radius-pill);
+  background: var(--ng-bg-glass-active);
+  overflow: hidden;
+}
+
+.ng-progress-fill {
+  height: 100%;
+  border-radius: var(--ng-radius-pill);
+  background: var(--ng-accent);
+  transition: width var(--ng-transition-slow);
+}
+
+.ng-progress-fill-success { background: var(--ng-status-success); }
+.ng-progress-fill-warning { background: var(--ng-status-warning); }
+.ng-progress-fill-error { background: var(--ng-status-error); }
+
+/* Score/confidence bars */
+.ng-dark .score-bar { background: var(--ng-bg-glass-active); }
+.ng-dark .confidence-bar { background: var(--ng-bg-glass-active); }
+
+
+/* ============================================
+   12. MODALS & OVERLAYS
+   ============================================ */
+
+.ng-dark .modal-content {
+  background: var(--ng-bg-surface) !important;
+  border: 1px solid var(--ng-border-default) !important;
+  border-radius: var(--ng-radius-xl) !important;
+  box-shadow: var(--ng-shadow-xl) !important;
+  color: var(--ng-text-primary);
+}
+
+.ng-dark .modal-header {
+  border-bottom-color: var(--ng-border-subtle) !important;
+}
+
+.ng-dark .modal-footer {
+  border-top-color: var(--ng-border-subtle) !important;
+}
+
+.ng-dark .modal-backdrop {
+  background: rgba(0, 0, 0, 0.75) !important;
+  backdrop-filter: blur(4px);
+}
+
+.ng-dark .btn-close {
+  filter: invert(1) grayscale(100%) brightness(0.8);
+}
+
+
+/* ============================================
+   13. ALERTS & NOTICES
+   ============================================ */
+
+.ng-dark .alert {
+  border-radius: var(--ng-radius-md);
+}
+
+.ng-dark .alert-info {
+  background: var(--ng-status-info-bg) !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
+  color: var(--ng-text-primary) !important;
+}
+
+.ng-dark .alert-success {
+  background: var(--ng-status-success-bg) !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+  color: var(--ng-text-primary) !important;
+}
+
+.ng-dark .alert-warning {
+  background: var(--ng-status-warning-bg) !important;
+  border-color: rgba(245, 158, 11, 0.2) !important;
+  color: var(--ng-text-primary) !important;
+}
+
+.ng-dark .alert-danger {
+  background: var(--ng-status-error-bg) !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+  color: var(--ng-text-primary) !important;
+}
+
+
+/* ============================================
+   14. ANIMATIONS
+   ============================================ */
+
+@keyframes ng-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes ng-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ng-slide-in-left {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ng-glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px var(--ng-accent-glow); }
+  50% { box-shadow: 0 0 20px var(--ng-accent-glow), 0 0 40px rgba(0, 212, 170, 0.05); }
+}
+
+/* Tab pane entrance */
+.ng-dark .tab-pane.active {
+  animation: ng-fade-in 300ms ease-out;
+}
+
+
+/* ============================================
+   15. ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .ng-dark *,
+  .ng-dark *::before,
+  .ng-dark *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .ng-pulse { animation: none; }
+  .ng-dark .tab-pane.active { animation: none; }
+  .ng-dark .stat-card:hover { transform: none; }
+}
+
+@media (prefers-reduced-transparency) {
+  .ng-glass,
+  .ng-glass-elevated {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--ng-bg-surface);
+  }
+}
+
+/* Focus visible for keyboard navigation */
+.ng-dark :focus-visible {
+  outline: 2px solid var(--ng-accent);
+  outline-offset: 2px;
+}
+
+.ng-sidebar-item:focus-visible {
+  outline: 2px solid var(--ng-accent);
+  outline-offset: -2px;
+}
+
+
+/* ============================================
+   16. BOOTSTRAP DARK OVERRIDES
+   ============================================ */
+
+/* Ensure Bootstrap dark theme uses our colors */
+.ng-dark,
+.ng-dark [data-bs-theme="dark"] {
+  --bs-body-bg: var(--ng-bg-void);
+  --bs-body-color: var(--ng-text-primary);
+  --bs-border-color: var(--ng-border-subtle);
+  --bs-secondary-color: var(--ng-text-tertiary);
+  --bs-tertiary-bg: var(--ng-bg-glass);
+  --bs-emphasis-color: var(--ng-text-primary);
+  --bs-primary: var(--ng-accent);
+  --bs-primary-rgb: 124, 106, 239;
+}
+
+/* Override navbar — we use sidebar now, but keep it in light mode for now */
+.ng-dark .navbar { display: none !important; }
+[data-bs-theme="light"] .navbar { display: none !important; }
+
+/* Override Bootstrap nav tabs — hidden, sidebar drives navigation */
+.ng-dark #mainTabs { display: none !important; }
+[data-bs-theme="light"] #mainTabs { display: none !important; }
+
+/* Override stats container — only show on dashboard */
+.ng-dark #stats-container {
+  margin-bottom: var(--ng-space-6);
+}
+
+/* Dashboard-only elements — hidden via JS data attribute */
+.ng-dark [data-ng-hide="true"] {
+  display: none !important;
+}
+
+/* Override footer */
+.ng-dark footer {
+  border-top-color: var(--ng-border-subtle);
+  color: var(--ng-text-quaternary);
+  padding: var(--ng-space-6);
+  margin-top: var(--ng-space-8);
+}
+
+.ng-dark footer a {
+  color: var(--ng-accent);
+}
+
+/* Memory detail content */
+.ng-dark .memory-detail-content {
+  background: var(--ng-bg-glass);
+  border: 1px solid var(--ng-border-subtle);
+  color: var(--ng-text-secondary);
+}
+
+/* Loading spinner */
+.ng-dark .loading { color: var(--ng-text-tertiary); }
+.ng-dark .spinner-border { color: var(--ng-accent) !important; }
+.ng-dark .empty-state { color: var(--ng-text-tertiary); }
+
+/* Graph container — override inline style with !important + specificity boost */
+.ng-dark #graph-pane #graph-container,
+body.ng-dark #graph-container {
+  background: #0f1012 !important;
+  background-color: #0f1012 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: var(--ng-radius-lg);
+  box-shadow: var(--ng-shadow-glass);
+}
+
+/* Timeline chart in dark mode */
+.ng-dark #memory-timeline-chart,
+body.ng-dark #memory-timeline-chart {
+  background: #0f1012 !important;
+  background-color: #0f1012 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Left/right panels in graph view */
+.ng-dark #graph-left-panel .card,
+.ng-dark #graph-right-panel .card,
+.ng-dark #sigma-detail-panel {
+  background: var(--ng-bg-surface) !important;
+  border-color: var(--ng-border-subtle) !important;
+  color: var(--ng-text-primary);
+}
+
+/* Tab content area */
+.ng-dark .tab-content {
+  min-height: auto;
+}
+
+/* Mode buttons */
+.ng-dark .mode-btn {
+  color: var(--ng-text-secondary) !important;
+  border-color: var(--ng-border-default) !important;
+}
+
+.ng-dark .mode-btn.active,
+.ng-dark .mode-btn:hover {
+  background: var(--ng-accent-muted) !important;
+  color: var(--ng-accent) !important;
+  border-color: var(--ng-accent) !important;
+}
+
+/* Tooltip */
+.ng-dark .tooltip-custom {
+  background: var(--ng-bg-elevated);
+  border: 1px solid var(--ng-border-default);
+  border-radius: var(--ng-radius-md);
+  box-shadow: var(--ng-shadow-lg);
+  color: var(--ng-text-primary);
+}
+
+/* Profile select in sidebar footer */
+.ng-dark .profile-select {
+  background: var(--ng-bg-glass);
+  border-color: var(--ng-border-default);
+  color: var(--ng-text-primary);
+  border-radius: var(--ng-radius-md);
+  font-size: 0.8125rem;
+}
+
+.ng-dark .profile-select option {
+  background: var(--ng-bg-surface);
+  color: var(--ng-text-primary);
+}
+
+/* Cluster cards */
+.ng-dark .cluster-card {
+  background: var(--ng-bg-glass);
+  border: 1px solid var(--ng-border-subtle);
+  border-radius: var(--ng-radius-md);
+}
+
+/* Dropdown menus */
+.ng-dark .dropdown-menu {
+  background: var(--ng-bg-elevated) !important;
+  border: 1px solid var(--ng-border-default) !important;
+  border-radius: var(--ng-radius-lg) !important;
+  box-shadow: var(--ng-shadow-lg) !important;
+}
+
+.ng-dark .dropdown-item {
+  color: var(--ng-text-secondary) !important;
+  border-radius: var(--ng-radius-sm);
+}
+
+.ng-dark .dropdown-item:hover {
+  background: var(--ng-bg-glass-hover) !important;
+  color: var(--ng-text-primary) !important;
+}
+
+
+/* ============================================
+   17. LIGHT MODE OVERRIDES
+   ============================================ */
+
+[data-bs-theme="light"] .ng-sidebar {
+  background: #f7f8fa;
+  border-right-color: #e5e7eb;
+}
+
+[data-bs-theme="light"] .ng-sidebar-brand-text { color: #1a1a2e; }
+[data-bs-theme="light"] .ng-sidebar-section-label { color: #9ca3af; }
+
+[data-bs-theme="light"] .ng-sidebar-item {
+  color: #4b5563;
+}
+
+[data-bs-theme="light"] .ng-sidebar-item:hover {
+  background: rgba(124, 106, 239, 0.06);
+  color: #1a1a2e;
+}
+
+[data-bs-theme="light"] .ng-sidebar-item.active {
+  background: rgba(124, 106, 239, 0.10);
+  color: #667eea;
+  border-color: rgba(124, 106, 239, 0.25);
+}
+
+[data-bs-theme="light"] .ng-sidebar-item.active .ng-sidebar-icon { color: #667eea; }
+[data-bs-theme="light"] .ng-sidebar-icon { color: #9ca3af; }
+[data-bs-theme="light"] .ng-sidebar-footer { border-top-color: #e5e7eb; }
+
+[data-bs-theme="light"] .ng-content {
+  background: #f8f9fa;
+}
+
+[data-bs-theme="light"] .ng-glass {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  backdrop-filter: blur(8px);
+}
+
+[data-bs-theme="light"] .ng-content-title { color: #111827; }
+[data-bs-theme="light"] .ng-content-subtitle { color: #4b5563; }
+[data-bs-theme="light"] .ng-stat-value { color: #111827; }
+[data-bs-theme="light"] .ng-stat-label { color: #6b7280; }
+
+/* Light mode: ensure ALL text is readable (dark text on light bg) */
+[data-bs-theme="light"] h1,
+[data-bs-theme="light"] h2,
+[data-bs-theme="light"] h3,
+[data-bs-theme="light"] h4,
+[data-bs-theme="light"] h5,
+[data-bs-theme="light"] h6 {
+  color: #111827 !important;
+}
+
+[data-bs-theme="light"] p,
+[data-bs-theme="light"] span,
+[data-bs-theme="light"] div,
+[data-bs-theme="light"] label,
+[data-bs-theme="light"] td,
+[data-bs-theme="light"] th {
+  color: inherit;
+}
+
+[data-bs-theme="light"] .text-muted {
+  color: #6b7280 !important;
+}
+
+[data-bs-theme="light"] small {
+  color: #6b7280;
+}
+
+[data-bs-theme="light"] .card {
+  background: #fff;
+  border-color: #e5e7eb;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+[data-bs-theme="light"] .card-body {
+  color: #111827;
+}
+
+[data-bs-theme="light"] .card-subtitle,
+[data-bs-theme="light"] .card h6 {
+  color: #374151 !important;
+}
+
+[data-bs-theme="light"] .stat-card .stat-value {
+  color: #111827 !important;
+}
+
+[data-bs-theme="light"] .stat-card .stat-icon {
+  color: #667eea !important;
+}
+
+[data-bs-theme="light"] .table {
+  color: #111827;
+}
+
+[data-bs-theme="light"] .table thead th {
+  color: #374151;
+}
+
+[data-bs-theme="light"] .form-control,
+[data-bs-theme="light"] .form-select {
+  color: #111827 !important;
+  background: #fff !important;
+  border-color: #d1d5db !important;
+}
+
+[data-bs-theme="light"] .form-control::placeholder {
+  color: #9ca3af !important;
+}
+
+[data-bs-theme="light"] .form-control:focus,
+[data-bs-theme="light"] .form-select:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15) !important;
+}
+
+[data-bs-theme="light"] .input-group-text {
+  background: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  color: #6b7280 !important;
+}
+
+[data-bs-theme="light"] .alert {
+  color: #111827 !important;
+}
+
+[data-bs-theme="light"] .btn-primary {
+  background: #667eea !important;
+  border-color: #667eea !important;
+  color: #fff !important;
+}
+
+[data-bs-theme="light"] .btn-success {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+}
+
+[data-bs-theme="light"] .btn-outline-primary {
+  color: #667eea !important;
+  border-color: #667eea !important;
+}
+
+[data-bs-theme="light"] .btn-outline-secondary {
+  color: #374151 !important;
+  border-color: #d1d5db !important;
+}
+
+[data-bs-theme="light"] .modal-content {
+  background: #fff !important;
+  color: #111827;
+}
+
+[data-bs-theme="light"] .dropdown-menu {
+  background: #fff !important;
+  border-color: #e5e7eb !important;
+}
+
+[data-bs-theme="light"] .dropdown-item {
+  color: #374151 !important;
+}
+
+[data-bs-theme="light"] .badge.bg-light {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+[data-bs-theme="light"] .score-bar { background: #e5e7eb; }
+[data-bs-theme="light"] .confidence-bar { background: #e5e7eb; }
+
+[data-bs-theme="light"] .memory-detail-content {
+  background: #f9fafb;
+  color: #111827;
+}
+
+[data-bs-theme="light"] #graph-container {
+  background: #fff;
+  border-color: #e5e7eb;
+}
+
+[data-bs-theme="light"] #event-stream {
+  background: #f9fafb !important;
+  border-color: #e5e7eb !important;
+  color: #111827;
+}
+
+[data-bs-theme="light"] footer {
+  color: #6b7280;
+  border-top-color: #e5e7eb;
+}
+
+[data-bs-theme="light"] footer a { color: #667eea; }
+
+/* Light mode: sidebar profile select */
+[data-bs-theme="light"] .profile-select {
+  background: #fff;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+[data-bs-theme="light"] .ng-btn {
+  background: #fff;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+[data-bs-theme="light"] .ng-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #111827;
+}
+
+[data-bs-theme="light"] .ng-sidebar-badge {
+  background: rgba(102, 126, 234, 0.12);
+  color: #667eea;
+}
+
+[data-bs-theme="light"] .ng-badge-accent {
+  background: rgba(102, 126, 234, 0.10);
+  color: #667eea;
+}
+
+[data-bs-theme="light"] .ng-progress-bar {
+  background: #e5e7eb;
+}
+
+[data-bs-theme="light"] .ng-glass {
+  background: #fff;
+  border-color: #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  backdrop-filter: none;
+}
+
+/* Light mode scrollbar */
+[data-bs-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+[data-bs-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+/* Light mode text visibility fixes */
+[data-bs-theme="light"] .stat-value,
+[data-bs-theme="light"] .ng-stat-value,
+[data-bs-theme="light"] h3,
+[data-bs-theme="light"] .card-body h3,
+[data-bs-theme="light"] .card-body .stat-value {
+  color: #1a1a2e !important;
+}
+
+[data-bs-theme="light"] .card-body h6,
+[data-bs-theme="light"] .card-subtitle {
+  color: #4b5563 !important;
+}
+
+[data-bs-theme="light"] .card-body p,
+[data-bs-theme="light"] .card-body .text-muted,
+[data-bs-theme="light"] .card-body small {
+  color: #6b7280 !important;
+}
+
+[data-bs-theme="light"] .card,
+[data-bs-theme="light"] .stat-card {
+  color: #1a1a2e;
+}
+
+[data-bs-theme="light"] .stat-icon {
+  color: #667eea !important;
+}
+
+[data-bs-theme="light"] .form-control,
+[data-bs-theme="light"] .form-select {
+  background: #fff !important;
+  border-color: #d1d5db !important;
+  color: #1a1a2e !important;
+}
+
+[data-bs-theme="light"] .form-control::placeholder {
+  color: #9ca3af !important;
+}
+
+[data-bs-theme="light"] .alert-info {
+  background: rgba(124, 106, 239, 0.06) !important;
+  border-color: rgba(124, 106, 239, 0.15) !important;
+  color: #1a1a2e !important;
+}
+
+[data-bs-theme="light"] .btn-primary {
+  background: #667eea !important;
+  border-color: #667eea !important;
+  color: #fff !important;
+}
+
+[data-bs-theme="light"] .btn-success {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+  color: #fff !important;
+}
+
+[data-bs-theme="light"] .badge.bg-light {
+  background: rgba(124, 106, 239, 0.10) !important;
+  color: #667eea !important;
+}
+
+[data-bs-theme="light"] footer {
+  color: #6b7280;
+  border-top-color: #e5e7eb;
+}
+
+[data-bs-theme="light"] footer a {
+  color: #667eea;
+}
+
+
+/* ============================================
+   18. PRIVACY BLUR MODE (Screen Recording)
+   Blurs memory text content while keeping UI structure visible.
+   Toggle via: Privacy button in sidebar footer or URL ?blur=1
+   ============================================ */
+
+body.ng-privacy-blur .memory-content,
+body.ng-privacy-blur .memory-detail-content,
+body.ng-privacy-blur #chat-messages,
+body.ng-privacy-blur #quick-recall-results,
+body.ng-privacy-blur #sigma-detail-content,
+body.ng-privacy-blur #recall-lab-results,
+body.ng-privacy-blur #insight-results,
+body.ng-privacy-blur .cluster-card p,
+body.ng-privacy-blur .cluster-card .badge,
+body.ng-privacy-blur #event-stream,
+body.ng-privacy-blur #compliance-audit-content,
+body.ng-privacy-blur #behavioral-outcomes-content,
+body.ng-privacy-blur #behavioral-patterns-content,
+body.ng-privacy-blur #what-we-learned-content,
+body.ng-privacy-blur #lifecycle-transitions-content,
+body.ng-privacy-blur #ingestion-log,
+body.ng-privacy-blur .ng-glass .summary-preview {
+  filter: blur(5px);
+  user-select: none;
+  transition: filter 0.3s ease;
+}
+
+/* Blur table cell text (memory content columns) */
+body.ng-privacy-blur .memory-table td:nth-child(2),
+body.ng-privacy-blur .memory-table td:nth-child(3),
+body.ng-privacy-blur .table tbody td:first-child,
+body.ng-privacy-blur .table tbody td:nth-child(4) {
+  filter: blur(4px);
+  user-select: none;
+}
+
+/* Blur entity cards content but keep names visible */
+body.ng-privacy-blur .ng-glass > div:nth-child(2) {
+  filter: blur(4px);
+}
+
+/* Blur graph node labels */
+body.ng-privacy-blur #graph-container canvas + div,
+body.ng-privacy-blur .sigma-label {
+  filter: blur(6px);
+}
+
+/* Keep UI chrome sharp — headings, stats, buttons, nav */
+body.ng-privacy-blur h1,
+body.ng-privacy-blur h2,
+body.ng-privacy-blur h3,
+body.ng-privacy-blur h4,
+body.ng-privacy-blur h5,
+body.ng-privacy-blur h6,
+body.ng-privacy-blur .ng-stat-value,
+body.ng-privacy-blur .ng-stat-label,
+body.ng-privacy-blur .ng-sidebar,
+body.ng-privacy-blur .ng-content-header,
+body.ng-privacy-blur .ng-btn,
+body.ng-privacy-blur .btn,
+body.ng-privacy-blur .badge,
+body.ng-privacy-blur .nav-link,
+body.ng-privacy-blur footer,
+body.ng-privacy-blur .form-control,
+body.ng-privacy-blur .form-select {
+  filter: none !important;
+}
+
+/* Privacy blur indicator bar */
+body.ng-privacy-blur::before {
+  content: "PRIVACY BLUR ON — Memory content hidden for recording";
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 240px;
+  right: 0;
+  z-index: 9999;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  text-align: center;
+  padding: 4px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+  body.ng-privacy-blur::before {
+    left: 0;
+  }
+}
+
+
+/* ============================================
+   19. RESPONSIVE
+   ============================================ */
+
+/* Mobile: sidebar collapses to bottom bar */
+@media (max-width: 768px) {
+  .ng-sidebar {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    max-height: 60px;
+    flex-direction: row;
+    border-right: none;
+    border-top: 1px solid var(--ng-border-subtle);
+    overflow-x: auto;
+    overflow-y: hidden;
+    z-index: var(--ng-z-sidebar);
+  }
+
+  .ng-sidebar-header,
+  .ng-sidebar-section-label,
+  .ng-sidebar-footer {
+    display: none;
+  }
+
+  .ng-sidebar-nav {
+    display: flex;
+    flex-direction: row;
+    padding: var(--ng-space-1);
+    gap: 2px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ng-sidebar-section {
+    display: contents;
+    margin: 0;
+  }
+
+  .ng-sidebar-item {
+    flex-direction: column;
+    padding: 6px 10px;
+    font-size: 0.625rem;
+    gap: 2px;
+    min-width: 56px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .ng-sidebar-icon {
+    font-size: 1.125rem;
+  }
+
+  .ng-sidebar-badge { display: none; }
+
+  .ng-content {
+    margin-left: 0;
+    padding-bottom: 68px;
+  }
+
+  .ng-content-inner {
+    padding: var(--ng-space-4);
+  }
+}
+
+/* Tablet: narrower sidebar */
+@media (min-width: 769px) and (max-width: 1024px) {
+  :root {
+    --ng-sidebar-width: 200px;
+  }
+
+  .ng-sidebar-item {
+    font-size: 0.75rem;
+    padding: 6px var(--ng-space-2);
+  }
+
+  .ng-content-inner {
+    padding: var(--ng-space-4);
+  }
+}
+
+/* Large desktop */
+@media (min-width: 1600px) {
+  .ng-content-inner {
+    max-width: 1600px;
+  }
+}

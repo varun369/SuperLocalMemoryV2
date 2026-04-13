@@ -465,6 +465,7 @@ def _register_dashboard_routes(application: FastAPI) -> None:
     from superlocalmemory.server.routes.agents import router as agents_router
     from superlocalmemory.server.routes.ws import router as ws_router, manager as ws_manager
     from superlocalmemory.server.routes.v3_api import router as v3_router
+    from superlocalmemory.server.routes.adapters import router as adapters_router
 
     application.include_router(memories_router)
     application.include_router(stats_router)
@@ -475,6 +476,7 @@ def _register_dashboard_routes(application: FastAPI) -> None:
     application.include_router(agents_router)
     application.include_router(ws_router)
     application.include_router(v3_router)
+    application.include_router(adapters_router)
 
     # v3.4.1 chat SSE
     for _mod_name in ("chat",):

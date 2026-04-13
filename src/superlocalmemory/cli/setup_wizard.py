@@ -549,9 +549,22 @@ def run_wizard(auto: bool = False) -> None:
     print("    slm dashboard              → http://localhost:8765")
     print("    slm adapters enable gmail  → start Gmail ingestion")
     print()
+    # V3.4.4: Auto-install OS service for daemon persistence (survive reboots)
+    try:
+        from superlocalmemory.cli.service_installer import install_service
+        print("  Installing OS service for auto-start...")
+        if install_service():
+            print("  ✓ SLM will auto-start on login — zero friction.")
+        else:
+            print("  ⚠ OS service not installed (run: slm serve install)")
+    except Exception:
+        print("  ⚠ Could not install OS service (run: slm serve install)")
+
+    print()
     print("  Need help?")
     print("    slm doctor     — diagnose issues")
     print("    slm --help     — all commands")
+    print("    slm serve install — install auto-start service")
     print("    https://github.com/qualixar/superlocalmemory")
     print()
 
