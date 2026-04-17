@@ -51,8 +51,10 @@ _live_rerankers: set[weakref.ref] = set()
 
 logger = logging.getLogger(__name__)
 
-_IDLE_TIMEOUT_SECONDS = 120  # 2 min → kill worker
-# V3.3.12: Configurable via SLM_RERANKER_IDLE_TIMEOUT env var
+_IDLE_TIMEOUT_SECONDS = 1800  # 30 min — keep cross-encoder warm for active sessions.
+# V3.3.12: Configurable via SLM_RERANKER_IDLE_TIMEOUT env var.
+# V3.4.19: Bumped from 120 → 1800 in lock-step with the embedding worker.
+# Set ``SLM_RERANKER_IDLE_TIMEOUT=120`` + ``slm restart`` to revert.
 _IDLE_TIMEOUT_SECONDS = int(os.environ.get("SLM_RERANKER_IDLE_TIMEOUT", _IDLE_TIMEOUT_SECONDS))
 _SUBPROCESS_RESPONSE_TIMEOUT = 180  # V3.3.12: 180s (was 120s) for stressed system respawns
 _WORKER_RECYCLE_AFTER = 500  # Recycle after N requests

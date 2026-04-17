@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.19] - 2026-04-17
+
+### Fixed
+- Recall cold-start eliminated. Embedding + reranker workers stay warm for 30 minutes by default instead of 2 minutes, so bursts of recalls no longer pay a 30-60 second model-load tax on every other query.
+
+### New environment variables
+- `SLM_EMBED_IDLE_TIMEOUT` — seconds to keep the embedding worker warm (default 1800). Set to 120 to restore pre-v3.4.19 behavior.
+- `SLM_RERANKER_IDLE_TIMEOUT` — same, for the cross-encoder reranker (default 1800).
+
+---
+
 ## [3.4.18] - 2026-04-17
 
 ### Fixed
