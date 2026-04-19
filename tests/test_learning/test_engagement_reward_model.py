@@ -573,3 +573,104 @@ def test_finalize_outcome_unknown_returns_fallback(model) -> None:
         outcome_id="00000000-0000-0000-0000-000000000001",
     )
     assert reward == 0.5
+
+
+# ---------------------------------------------------------------------------
+# Stage 8 F4.B — H-05 register_signal grace-period TTL check (skeptic-H05)
+# ---------------------------------------------------------------------------
+#
+# Previously register_signal accepted signals on any pending row
+# regardless of ``expires_at_ms``, so a stale row from yesterday could
+# bias today's reward label. The fix rejects signals when
+# ``now_ms > expires_at_ms`` by returning False (never raises).
+
+
+def test_register_signal_rejects_after_expiry(memory_db: Path) -> None:
+    """Stage 8 H-05: signals MUST be rejected once past expires_at_ms.
+
+    Seed a pending row whose grace period has already elapsed; call
+    register_signal; expect False and no mutation to signals_json.
+    """
+    from superlocalmemory.learning.reward import EngagementRewardModel
+
+    # Inject a clock so we can first record (at t=1000) then attempt a
+    # signal attach well after the grace period (t = 1000 + GRACE + 1).
+    clock = {"ms": 1000}
+    model = EngagementRewardModel(memory_db, clock_ms=lambda: clock["ms"])
+
+    outcome_id = model.record_recall(
+        profile_id="default",
+        session_id="s",
+        recall_query_id="q",
+        fact_ids=["f"],
+        query_text="x",
+    )
+    # Jump past the grace period.
+    clock["ms"] = (
+        1000 + EngagementRewardModel.GRACE_PERIOD_MS + 1
+    )
+    ok = model.register_signal(
+        outcome_id=outcome_id,
+        signal_name="cite",
+        signal_value=True,
+    )
+    assert ok is False
+
+    # Pending row's signals_json must remain untouched ('{}' on seed).
+    row = _fetch_pending(memory_db, outcome_id)
+    assert row is not None
+    assert json.loads(row["signals_json"]) == {}
+
+
+def test_register_signal_accepts_within_grace_period_window(
+    memory_db: Path,
+) -> None:
+    """Signals still land when now_ms == expires_at_ms (boundary inclusive).
+
+    Regression guard — the TTL check must be strict ``>``, not ``>=``;
+    the expires_at_ms tick itself is still within the window by design.
+    """
+    from superlocalmemory.learning.reward import EngagementRewardModel
+
+    clock = {"ms": 5000}
+    model = EngagementRewardModel(memory_db, clock_ms=lambda: clock["ms"])
+    outcome_id = model.record_recall(
+        profile_id="default",
+        session_id="s",
+        recall_query_id="q",
+        fact_ids=["f"],
+        query_text="x",
+    )
+    # Advance to exactly expires_at_ms — still inside the window.
+    row_before = _fetch_pending(memory_db, outcome_id)
+    assert row_before is not None
+    clock["ms"] = int(row_before["expires_at_ms"])
+    ok = model.register_signal(
+        outcome_id=outcome_id, signal_name="cite", signal_value=True,
+    )
+    assert ok is True
+    row_after = _fetch_pending(memory_db, outcome_id)
+    assert json.loads(row_after["signals_json"]) == {"cite": True}
+
+
+def test_register_signal_rejects_one_ms_after_expiry(
+    memory_db: Path,
+) -> None:
+    """Exactly one millisecond past expires_at_ms must reject.
+
+    Tightens the boundary on the H-05 fix.
+    """
+    from superlocalmemory.learning.reward import EngagementRewardModel
+
+    clock = {"ms": 7000}
+    model = EngagementRewardModel(memory_db, clock_ms=lambda: clock["ms"])
+    outcome_id = model.record_recall(
+        profile_id="default", session_id="s", recall_query_id="q",
+        fact_ids=["f"], query_text="x",
+    )
+    row = _fetch_pending(memory_db, outcome_id)
+    clock["ms"] = int(row["expires_at_ms"]) + 1
+    ok = model.register_signal(
+        outcome_id=outcome_id, signal_name="requery", signal_value=True,
+    )
+    assert ok is False

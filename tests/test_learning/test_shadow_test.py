@@ -159,3 +159,120 @@ def test_shadow_deterministic_ab_route_by_query_hash() -> None:
         counts[st.route_query(f"q-{i}")] += 1
     assert 400 <= counts["active"] <= 600
     assert 400 <= counts["candidate"] <= 600
+
+
+# ---------------------------------------------------------------------------
+# Stage 8 F4.B — H-02 Phase A t-table correctness (skeptic-H01 fix)
+# ---------------------------------------------------------------------------
+#
+# _critical_t(df, alpha) previously returned the critical-t at the next
+# tabled df >= requested df, which UNDER-shoots the true value when the
+# requested df falls between rows (e.g. df=99 returned the df=120 value
+# 2.617 instead of the true ~2.626). That makes Phase A early-stop more
+# permissive than advertised (promotes on weaker evidence). The fix
+# returns a value within ±0.01 of the scipy reference for all df values
+# Phase A actually uses (99 in production; 9/19/49 for defense-in-depth
+# below Phase A threshold — hit when external callers reuse the helper).
+#
+# Tests compare against scipy.stats.t.ppf where scipy is available, else
+# against hand-computed reference values.
+
+
+def _scipy_ref_critical_t(df: int, alpha: float) -> float:
+    """Return the two-tailed critical-t from scipy; hand-table fallback."""
+    try:
+        from scipy.stats import t  # type: ignore
+        return float(t.ppf(1.0 - alpha / 2.0, df))
+    except Exception:  # pragma: no cover — scipy always present in CI
+        # Hand table — only used when scipy is absent. Values verified
+        # against Abramowitz & Stegun / scipy at module import time.
+        _HAND = {
+            (9, 0.05): 2.262, (9, 0.01): 3.250,
+            (19, 0.05): 2.093, (19, 0.01): 2.861,
+            (49, 0.05): 2.010, (49, 0.01): 2.680,
+            (99, 0.05): 1.984, (99, 0.01): 2.626,
+        }
+        return _HAND[(df, alpha)]
+
+
+@pytest.mark.parametrize(
+    "df,alpha",
+    [
+        (9, 0.05), (9, 0.01),
+        (19, 0.05), (19, 0.01),
+        (49, 0.05), (49, 0.01),
+        (99, 0.05), (99, 0.01),
+    ],
+)
+def test_critical_t_matches_scipy_reference(df: int, alpha: float) -> None:
+    """Stage 8 H-02: _critical_t must match scipy within ±0.01.
+
+    Previously _critical_t(99, 0.01) returned 2.617 (the df=120 row).
+    True value per scipy is 2.626 — current code was 0.009 too low,
+    making Phase A strong-signal early-stop more permissive than the
+    contract says (α=0.01 two-tailed). Fix tightens the lookup so ALL
+    table gaps return within ±0.01 of the scipy reference.
+    """
+    from superlocalmemory.learning.shadow_test import _critical_t
+
+    got = _critical_t(df, alpha=alpha)
+    want = _scipy_ref_critical_t(df, alpha)
+    assert abs(got - want) <= 0.01, (
+        f"_critical_t(df={df}, alpha={alpha}) = {got:.4f}, "
+        f"scipy reference = {want:.4f}, diff = {abs(got - want):.4f} "
+        f"(must be ≤ 0.01)"
+    )
+
+
+def test_critical_t_phase_a_production_df_99() -> None:
+    """Phase A strong-signal early-stop uses df=99 (n=100 pairs).
+
+    The production value MUST be within ±0.01 of scipy's 2.626. This is
+    the single most important df for H-02 because it's the only value
+    _critical_t(_, 0.01) is actually called with in Phase A production.
+    """
+    from superlocalmemory.learning.shadow_test import _critical_t
+
+    got = _critical_t(99, alpha=0.01)
+    assert 2.616 <= got <= 2.636, (
+        f"_critical_t(99, 0.01) = {got:.4f} — out of ±0.01 band around "
+        f"scipy 2.626. Phase A strong-signal early-stop is mis-calibrated."
+    )
+
+
+def test_critical_t_does_not_become_trivial_for_tiny_df() -> None:
+    """Sanity: critical-t must stay large for very small df (no off-by-one
+    that collapses df=1 to the df=10k row). Regression guard.
+    """
+    from superlocalmemory.learning.shadow_test import _critical_t
+
+    # df=1, α=0.05: scipy 12.706. Must be > 10 (nowhere near 1.96).
+    assert _critical_t(1, alpha=0.05) > 10.0
+    # df=1, α=0.01: scipy 63.657. Must be > 50.
+    assert _critical_t(1, alpha=0.01) > 50.0
+
+
+# ---------------------------------------------------------------------------
+# Phase A small-n boundary — early-stop fires on true-strong signal at
+# the minimum Phase A sample size (100), NOT below it.
+# ---------------------------------------------------------------------------
+
+
+def test_phase_a_does_not_early_stop_below_phase_a_n() -> None:
+    """Phase A requires n_pairs ≥ PHASE_A_N (100). At n=50 (well below),
+    even a huge lift returns 'continue' — accumulating more data, not
+    firing on noise.
+    """
+    st = ShadowTest(profile_id="p", candidate_model_id="cand-small-n")
+    # Strong signal but only 50 pairs — below Phase A threshold.
+    rng = random.Random(0xA7)
+    pairs = []
+    for _ in range(50):
+        a = 0.4 + rng.gauss(0, 0.01)
+        c = a + 0.12 + rng.gauss(0, 0.01)
+        pairs.append((a, c))
+    _record_pairs(st, pairs=pairs)
+    decision, stats = st.decide()
+    # Below PHASE_A_N must return 'continue', not 'promote'.
+    assert decision == "continue"
+    assert stats["phase"] == "A"

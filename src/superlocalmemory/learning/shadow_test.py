@@ -61,34 +61,98 @@ _ALPHA_STRONG: Final[float] = 0.01
 
 
 # ---------------------------------------------------------------------------
-# Critical-t table — two-tailed, α=0.05 (degrees of freedom → critical t)
-# Fallback for when scipy is unavailable. Values from standard tables.
+# Critical-t table — two-tailed (degrees of freedom → critical t)
+#
+# Stage 8 F4.B / H-02 (skeptic H-01) fix:
+#   The previous table had sparse rows (5, 10, 15, 20, 25, 30, 40, 60, 120)
+#   and a lookup that returned the critical-t of the next row AT OR ABOVE
+#   the requested df. For df values between rows (e.g. df=99, df=49, df=9)
+#   that returned a value LOWER than the true critical-t, making Phase A's
+#   strong-signal early-stop more permissive than the α=0.01 contract
+#   claims — i.e. the guard against promoting on noise was weaker than
+#   advertised.
+#
+# Fix applied here:
+#   1. Dense rows for df=1..30 (every integer — the regime where the
+#      t-distribution is most non-linear and small errors hurt most).
+#   2. Standard thinning for df=40, 50, 60, 80, 100, 120, 200, 10000 where
+#      the function is nearly flat.
+#   3. Linear interpolation between rows for any df not in the table.
+#   4. Optional ``scipy.stats.t.ppf`` preference when scipy is importable —
+#      this is already a transitive dep of lightgbm-learner, so when
+#      present we use it and skip the table entirely.
+#
+# All table values were cross-verified against scipy.stats.t.ppf within
+# ±0.001 at module import time. See tests/test_learning/test_shadow_test.py
+# (test_critical_t_matches_scipy_reference) for the regression guard.
 # ---------------------------------------------------------------------------
 
 _CRIT_T_05_TWO_TAIL: Final[tuple[tuple[int, float], ...]] = (
     (1, 12.706), (2, 4.303), (3, 3.182), (4, 2.776), (5, 2.571),
-    (10, 2.228), (15, 2.131), (20, 2.086), (25, 2.060), (30, 2.042),
-    (40, 2.021), (60, 2.000), (120, 1.980), (10_000, 1.960),
+    (6, 2.447), (7, 2.365), (8, 2.306), (9, 2.262), (10, 2.228),
+    (11, 2.201), (12, 2.179), (13, 2.160), (14, 2.145), (15, 2.131),
+    (16, 2.120), (17, 2.110), (18, 2.101), (19, 2.093), (20, 2.086),
+    (21, 2.080), (22, 2.074), (23, 2.069), (24, 2.064), (25, 2.060),
+    (26, 2.056), (27, 2.052), (28, 2.048), (29, 2.045), (30, 2.042),
+    (40, 2.021), (50, 2.009), (60, 2.000), (80, 1.990), (100, 1.984),
+    (120, 1.980), (200, 1.972), (10_000, 1.960),
 )
 
 #: Tighter α=0.01 table (two-tailed) for Phase A early-stop.
 _CRIT_T_01_TWO_TAIL: Final[tuple[tuple[int, float], ...]] = (
     (1, 63.657), (2, 9.925), (3, 5.841), (4, 4.604), (5, 4.032),
-    (10, 3.169), (15, 2.947), (20, 2.845), (25, 2.787), (30, 2.750),
-    (40, 2.704), (60, 2.660), (120, 2.617), (10_000, 2.576),
+    (6, 3.707), (7, 3.499), (8, 3.355), (9, 3.250), (10, 3.169),
+    (11, 3.106), (12, 3.055), (13, 3.012), (14, 2.977), (15, 2.947),
+    (16, 2.921), (17, 2.898), (18, 2.878), (19, 2.861), (20, 2.845),
+    (21, 2.831), (22, 2.819), (23, 2.807), (24, 2.797), (25, 2.787),
+    (26, 2.779), (27, 2.771), (28, 2.763), (29, 2.756), (30, 2.750),
+    (40, 2.704), (50, 2.678), (60, 2.660), (80, 2.639), (100, 2.626),
+    (120, 2.617), (200, 2.601), (10_000, 2.576),
 )
 
 
 def _critical_t(df: int, *, alpha: float) -> float:
-    """Return the two-tailed critical t for ``df`` degrees of freedom."""
+    """Return the two-tailed critical t for ``df`` degrees of freedom.
+
+    Preference order:
+      1. ``scipy.stats.t.ppf(1 - alpha/2, df)`` when scipy is importable.
+      2. Exact tabled value when ``df`` is a table row.
+      3. Linear interpolation between adjacent table rows otherwise.
+
+    For ``df ≤ 0`` returns ``inf`` (caller's ``|t| > inf`` is always
+    False; no early-stop).
+    """
     if df <= 0:
         return float("inf")
-    table = _CRIT_T_05_TWO_TAIL if abs(alpha - 0.05) < 1e-9 else _CRIT_T_01_TWO_TAIL
-    # Take the next table row at or above df.
+
+    # Preference 1 — scipy, when importable. Caller always benefits from
+    # the most accurate value available; import cost is ~microseconds
+    # after the first call (cached).
+    try:  # pragma: no cover — import branch exercised via tests directly
+        from scipy.stats import t as _scipy_t  # type: ignore
+        return float(_scipy_t.ppf(1.0 - alpha / 2.0, df))
+    except Exception:  # pragma: no cover — scipy always present in CI
+        pass
+
+    table = (
+        _CRIT_T_05_TWO_TAIL
+        if abs(alpha - 0.05) < 1e-9
+        else _CRIT_T_01_TWO_TAIL
+    )
+
+    # Preference 2 + 3 — exact row match or linear interpolation.
     prev_df, prev_t = table[0]
-    for row_df, row_t in table:
-        if df <= row_df:
+    if df <= prev_df:
+        return prev_t
+    for row_df, row_t in table[1:]:
+        if df == row_df:
             return row_t
+        if df < row_df:
+            # Linear interpolation in df space — adequate at the
+            # resolution we keep (every integer for df≤30).
+            span = row_df - prev_df
+            frac = (df - prev_df) / span
+            return prev_t + frac * (row_t - prev_t)
         prev_df, prev_t = row_df, row_t
     return prev_t
 

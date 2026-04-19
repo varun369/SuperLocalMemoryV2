@@ -340,15 +340,28 @@ class EngagementRewardModel:
             with self._lock:
                 conn = self._get_conn()
                 row = conn.execute(
-                    "SELECT signals_json, status FROM pending_outcomes "
-                    "WHERE outcome_id = ?",
+                    "SELECT signals_json, status, expires_at_ms "
+                    "FROM pending_outcomes WHERE outcome_id = ?",
                     (outcome_id,),
                 ).fetchone()
                 if row is None:
                     return False
-                # We still allow signal updates on 'settled' rows so the
-                # reaper-vs-signal race is harmless (last writer wins on
-                # the audit trail; reward is already computed).
+                # Stage 8 F4.B H-05 (skeptic H-05): reject signals that
+                # arrive AFTER the grace-period TTL. A stale pending row
+                # from yesterday must not accept a signal today and bias
+                # the reward label. We still allow signal updates on the
+                # 'settled' row (last writer wins on the audit trail;
+                # reward is already computed, reaper-vs-signal race is
+                # harmless in that direction).
+                if row["status"] == "pending":
+                    expires = row["expires_at_ms"]
+                    if expires is not None and self._clock_ms() > int(expires):
+                        logger.debug(
+                            "register_signal rejected expired outcome=%s "
+                            "name=%s (now > expires_at_ms)",
+                            outcome_id, signal_name,
+                        )
+                        return False
                 try:
                     signals = json.loads(row[0]) if row[0] else {}
                 except json.JSONDecodeError:  # pragma: no cover — defensive

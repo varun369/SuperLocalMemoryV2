@@ -544,6 +544,141 @@ def test_rollback_fires_on_200_recall_regression(learning_db: Path) -> None:
     assert rb.should_rollback() is True
 
 
+# ---------------------------------------------------------------------------
+# Stage 8 F4.B — H-04 ModelRollback baseline_ndcg ≤ 0 handling (skeptic-H03)
+# ---------------------------------------------------------------------------
+#
+# Previously: should_rollback returned False whenever baseline_ndcg ≤ 0,
+# which silently disarmed the watchdog when the pre-promotion shadow mean
+# was exactly 0 (valid observation on sparse data — every query had zero
+# relevance hits). A freshly-promoted-but-broken model could sit forever
+# with no rollback trigger.
+#
+# Fix: on small / zero / negative baselines, use ABSOLUTE drop against a
+# fixed floor (REGRESSION_THRESHOLD = 0.02). Ratio-based logic is still
+# used when baseline ≥ 0.05 (where division by baseline is numerically
+# safe AND semantically meaningful).
+
+
+def test_rollback_fires_when_baseline_is_zero_and_current_is_negative(
+    learning_db: Path,
+) -> None:
+    """Stage 8 H-04: baseline_ndcg=0 with negative observations must still
+    trigger rollback. Previously the guard silently disarmed.
+    """
+    from superlocalmemory.learning.model_rollback import ModelRollback
+
+    rb = ModelRollback(
+        learning_db_path=str(learning_db),
+        profile_id="p",
+        baseline_ndcg=0.0,
+    )
+    # 200 observations averaging -0.04 — clear regression vs a zero baseline.
+    for i in range(rb.WATCH_WINDOW):
+        rb.record_post_promotion(query_id=f"q{i}", ndcg_at_10=-0.04)
+    assert rb.should_rollback() is True, (
+        "baseline=0, current=-0.04 must trigger rollback "
+        "(absolute drop 0.04 > threshold 0.02)"
+    )
+
+
+def test_rollback_fires_when_baseline_is_zero_and_current_is_worse(
+    learning_db: Path,
+) -> None:
+    """baseline=0, current drops to -0.02 — exactly at threshold, must fire."""
+    from superlocalmemory.learning.model_rollback import ModelRollback
+
+    rb = ModelRollback(
+        learning_db_path=str(learning_db),
+        profile_id="p",
+        baseline_ndcg=0.0,
+    )
+    for i in range(rb.WATCH_WINDOW):
+        rb.record_post_promotion(query_id=f"q{i}", ndcg_at_10=-0.02)
+    assert rb.should_rollback() is True, (
+        "baseline=0 with current=-0.02 (absolute drop = threshold) "
+        "must trigger — the ratio path previously silently disarmed"
+    )
+
+
+def test_rollback_does_not_fire_when_baseline_zero_and_current_matches(
+    learning_db: Path,
+) -> None:
+    """baseline=0, current≈0: no regression, no rollback. Regression guard
+    must not over-fire on the fix path."""
+    from superlocalmemory.learning.model_rollback import ModelRollback
+
+    rb = ModelRollback(
+        learning_db_path=str(learning_db),
+        profile_id="p",
+        baseline_ndcg=0.0,
+    )
+    for i in range(rb.WATCH_WINDOW):
+        rb.record_post_promotion(query_id=f"q{i}", ndcg_at_10=0.0)
+    assert rb.should_rollback() is False
+
+
+def test_rollback_fires_on_tiny_positive_baseline_regression(
+    learning_db: Path,
+) -> None:
+    """baseline=0.01 (below 0.05 ratio-safe floor), current drops by 0.03 —
+    must fire via the absolute-drop fallback.
+    """
+    from superlocalmemory.learning.model_rollback import ModelRollback
+
+    rb = ModelRollback(
+        learning_db_path=str(learning_db),
+        profile_id="p",
+        baseline_ndcg=0.01,
+    )
+    for i in range(rb.WATCH_WINDOW):
+        rb.record_post_promotion(query_id=f"q{i}", ndcg_at_10=-0.02)
+    # Absolute drop = 0.03, above threshold 0.02 → fire.
+    assert rb.should_rollback() is True
+
+
+def test_rollback_respects_watch_window_200_observations(
+    learning_db: Path,
+) -> None:
+    """Even with a visible regression, rollback doesn't fire before
+    WATCH_WINDOW observations are collected. Ensures the fix didn't
+    break the minimum-sample-size guard.
+    """
+    from superlocalmemory.learning.model_rollback import ModelRollback
+
+    rb = ModelRollback(
+        learning_db_path=str(learning_db),
+        profile_id="p",
+        baseline_ndcg=0.5,
+    )
+    # 199 observations — just under window.
+    for i in range(rb.WATCH_WINDOW - 1):
+        rb.record_post_promotion(query_id=f"q{i}", ndcg_at_10=0.1)
+    assert rb.should_rollback() is False
+    # One more → triggers.
+    rb.record_post_promotion(query_id="q-final", ndcg_at_10=0.1)
+    assert rb.should_rollback() is True
+
+
+def test_rollback_fires_when_baseline_positive_ratio_path_unchanged(
+    learning_db: Path,
+) -> None:
+    """When baseline ≥ 0.05, the ratio-based path keeps its existing
+    semantics — 2% relative drop fires. Regression guard on the fix.
+    """
+    from superlocalmemory.learning.model_rollback import ModelRollback
+
+    rb = ModelRollback(
+        learning_db_path=str(learning_db),
+        profile_id="p",
+        baseline_ndcg=0.50,
+    )
+    # 2.1% relative drop = 0.489. Above 2% threshold → fire.
+    for i in range(rb.WATCH_WINDOW):
+        rb.record_post_promotion(query_id=f"q{i}", ndcg_at_10=0.489)
+    assert rb.should_rollback() is True
+
+
 def test_rollback_restores_is_previous(learning_db: Path) -> None:
     """Executing rollback flips current active → is_rollback and
     the is_previous row → is_active=1."""

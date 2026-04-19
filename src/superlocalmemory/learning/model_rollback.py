@@ -41,6 +41,15 @@ _WATCH_WINDOW: Final[int] = 200
 _REGRESSION_THRESHOLD: Final[float] = 0.02
 _RETRAIN_DISABLED_HOURS: Final[int] = 24
 
+#: Baseline floor below which the ratio ``(baseline - current) / baseline``
+#: is numerically meaningless (division explodes; a 1pp drop on a 0.5%
+#: baseline looks like 200% regression). Below this floor we switch to
+#: an ABSOLUTE-drop comparison against ``_REGRESSION_THRESHOLD``. Stage 8
+#: F4.B H-04 fix — previously baseline ≤ 0 silently disarmed the
+#: watchdog, which meant a freshly-promoted-but-broken model with a
+#: sparse-data baseline of 0 would never auto-rollback.
+_BASELINE_RATIO_FLOOR: Final[float] = 0.05
+
 
 def _iso_now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -84,14 +93,37 @@ class ModelRollback:
         self._observations.append(float(ndcg_at_10))
 
     def should_rollback(self) -> bool:
-        """Return True iff ≥ WATCH_WINDOW samples and regression ≥ 2%."""
+        """Return True iff ≥ WATCH_WINDOW samples and regression detected.
+
+        Regression is detected by whichever of these is true:
+          * **Ratio path** (baseline ≥ ``_BASELINE_RATIO_FLOOR``, i.e. 0.05):
+            ``(baseline - current) / baseline ≥ REGRESSION_THRESHOLD``.
+            Existing v3.4.21 pre-fix semantics preserved at normal
+            baselines.
+          * **Absolute path** (baseline below the ratio floor — includes
+            zero and negative baselines which can happen on sparse data):
+            ``(baseline - current) ≥ REGRESSION_THRESHOLD`` in absolute
+            units. Stage 8 F4.B H-04 fix — a zero baseline is a valid
+            observation, not "no baseline".
+
+        Invariants:
+          * Watch window minimum is always enforced — we will NOT fire
+            before ``WATCH_WINDOW`` samples land.
+          * ``REGRESSION_THRESHOLD`` is the same 0.02 for both paths, so
+            the fix is not stricter for typical baselines.
+        """
         if len(self._observations) < self.WATCH_WINDOW:
             return False
-        if self._baseline <= 0:
-            return False
         current = sum(self._observations) / len(self._observations)
-        drop_ratio = (self._baseline - current) / self._baseline
-        return drop_ratio >= self.REGRESSION_THRESHOLD
+        drop_abs = self._baseline - current
+        if self._baseline >= _BASELINE_RATIO_FLOOR:
+            # Ratio path — existing semantics.
+            drop_ratio = drop_abs / self._baseline
+            return drop_ratio >= self.REGRESSION_THRESHOLD
+        # Absolute path — works for zero, negative, or tiny positive
+        # baselines. Previously this branch returned False unconditionally
+        # (silent disarm). Now we fall back to the absolute drop.
+        return drop_abs >= self.REGRESSION_THRESHOLD
 
     # ------------------------------------------------------------------
     # Lineage flip
