@@ -230,7 +230,11 @@ def test_hnsw_respects_entity_jaccard_threshold(memory_db: Path) -> None:
 
 
 def test_hnsw_uses_ram_reservation(memory_db: Path) -> None:
-    from superlocalmemory.learning import hnsw_dedup as mod
+    # v3.4.21 F4.A: HnswDeduplicator now lives in learning.dedup_hnsw.
+    # The shim ``learning.hnsw_dedup`` re-exports; patches must target
+    # the real definition module so HnswDeduplicator.find_merge_candidates
+    # sees the spy.
+    from superlocalmemory.learning import dedup_hnsw as mod
 
     _seed_known_duplicates(memory_db, n_unique=20, n_dup_pairs=5)
 
@@ -256,7 +260,8 @@ def test_hnsw_uses_ram_reservation(memory_db: Path) -> None:
 
 
 def test_hnsw_fallback_to_prefix_when_oom(memory_db: Path) -> None:
-    from superlocalmemory.learning import hnsw_dedup as mod
+    # v3.4.21 F4.A: patch the real module, not the shim.
+    from superlocalmemory.learning import dedup_hnsw as mod
 
     _seed_known_duplicates(memory_db, n_unique=5, n_dup_pairs=2)
 

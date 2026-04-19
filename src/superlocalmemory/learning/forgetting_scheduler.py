@@ -329,19 +329,41 @@ class ForgettingScheduler:
     ) -> bool:
         """True if fact has an outcome_reward > 0.3 in the last 60 days.
 
+        v3.4.21 (Stage 8 H-06): routes through the JSON1-backed
+        ``fact_outcome_joins.has_recent_positive_reward`` helper —
+        eliminates the substring-LIKE false-positive class.
+
         Resilient to schema drift: if ``action_outcomes`` or its columns
         are unavailable we return False (no gating), preserving legacy
         behaviour.
         """
         try:
+            # ``DatabaseManager`` is the owner of a persistent sqlite
+            # connection; the JSON1 helper needs a raw connection. We
+            # fall through to the legacy execute-path if the DB wrapper
+            # does not expose a ``.conn`` handle.
+            raw_conn = getattr(self._db, "conn", None) or getattr(
+                self._db, "_conn", None,
+            )
+            if raw_conn is not None:
+                from superlocalmemory.learning.fact_outcome_joins import (
+                    has_recent_positive_reward,
+                )
+                return has_recent_positive_reward(
+                    raw_conn, profile_id, fact_id,
+                    min_reward=0.3, window_days=60,
+                )
+            # Fallback: use the DB wrapper with JSON1 SQL inline.
             rows = self._db.execute(
                 "SELECT 1 FROM action_outcomes "
                 "WHERE profile_id = ? "
                 "  AND reward IS NOT NULL AND reward > 0.3 "
-                "  AND fact_ids_json LIKE ? "
+                "  AND EXISTS ("
+                "    SELECT 1 FROM json_each(fact_ids_json) WHERE value = ?"
+                "  ) "
                 "  AND COALESCE(settled_at, '') >= datetime('now', '-60 days') "
                 "LIMIT 1",
-                (profile_id, f'%"{fact_id}"%'),
+                (profile_id, fact_id),
             )
             return bool(rows)
         except Exception:
