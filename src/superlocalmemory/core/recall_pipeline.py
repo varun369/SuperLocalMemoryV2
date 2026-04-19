@@ -11,6 +11,8 @@ Part of Qualixar | Author: Varun Pratap Bhardwaj
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -19,9 +21,73 @@ if TYPE_CHECKING:
     from superlocalmemory.core.hooks import HookRegistry
     from superlocalmemory.storage.database import DatabaseManager
 
+from superlocalmemory.core.security_primitives import ensure_install_token
 from superlocalmemory.storage.models import Mode, RecallResponse
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# LLD-00 §3 — HMAC fact-id markers (P0.4, SEC-C-01 fix)
+# ---------------------------------------------------------------------------
+#
+# Every fact surfaced in a recall response is tagged with
+#   slm:fact:<fact_id>:<hmac8>
+# where hmac8 is the first 8 hex chars of HMAC-SHA256(install_token, fact_id).
+#
+# post_tool_outcome_hook (LLD-09) scans only for this prefix and validates
+# the HMAC. Unverified markers are ignored — this closes the tool-output
+# injection attack where attacker-controlled output could forge engagement
+# signals by spelling a known fact_id.
+
+_HMAC_MARKER_PREFIX = "slm:fact:"
+_HMAC_LEN = 8
+
+
+def _emit_marker(fact_id: str) -> str:
+    """Tag ``fact_id`` with its HMAC so downstream hooks can validate.
+
+    Deterministic per install: a given (install_token, fact_id) pair always
+    produces the same marker. Token rotation invalidates old markers.
+    """
+    token = ensure_install_token()
+    digest = hmac.new(
+        token.encode("utf-8"), fact_id.encode("utf-8"), hashlib.sha256
+    ).hexdigest()[:_HMAC_LEN]
+    return f"{_HMAC_MARKER_PREFIX}{fact_id}:{digest}"
+
+
+def _validate_marker(marker: str) -> str | None:
+    """Return ``fact_id`` if ``marker`` is a valid HMAC marker, else None.
+
+    Uses constant-time compare. Never raises.
+    """
+    if not isinstance(marker, str) or not marker.startswith(_HMAC_MARKER_PREFIX):
+        return None
+    rest = marker[len(_HMAC_MARKER_PREFIX):]
+    fact_id, sep, presented = rest.rpartition(":")
+    if not sep or not fact_id or len(presented) != _HMAC_LEN:
+        return None
+    try:
+        token = ensure_install_token()
+    except Exception:  # pragma: no cover — install-token I/O failure
+        return None
+    expected = hmac.new(
+        token.encode("utf-8"), fact_id.encode("utf-8"), hashlib.sha256
+    ).hexdigest()[:_HMAC_LEN]
+    if hmac.compare_digest(presented, expected):
+        return fact_id
+    return None
+
+
+def _apply_markers_to_response(response: RecallResponse) -> None:
+    """Populate ``result.marker`` on every result in ``response``, in place.
+
+    Called as the last step of :func:`run_recall` before returning. Empty
+    responses pass through untouched.
+    """
+    for r in response.results:
+        r.marker = _emit_marker(r.fact.fact_id)
 
 
 # ---------------------------------------------------------------------------
@@ -52,6 +118,80 @@ def _get_forgetting_scheduler(db: Any, config: Any) -> Any:
         ebbinghaus = EbbinghausCurve(config.forgetting)
         _forgetting_scheduler_cache[key] = ForgettingScheduler(db, ebbinghaus, config.forgetting)
     return _forgetting_scheduler_cache[key]
+
+
+# ---------------------------------------------------------------------------
+# S8-ARC-04 (v3.4.22): unified ranking entry point.
+# ---------------------------------------------------------------------------
+
+_RANKING_MODES: frozenset[str] = frozenset({"off", "v1", "v2", "v2-ensemble"})
+
+
+def _resolve_ranking_mode(env: "dict[str, str] | os._Environ[str]") -> str:
+    """Map the ``SLM_RANKING`` env var to a canonical mode.
+
+    Legacy ``SLM_V2_PIPELINE_DISABLED=1`` and ``SLM_BANDIT_DISABLED=1``
+    are honoured for one-release back-compat. Explicit ``SLM_RANKING``
+    wins if both are set.
+    """
+    raw = (env.get("SLM_RANKING", "") or "").strip().lower()
+    if raw in _RANKING_MODES:
+        return raw
+    if (env.get("SLM_V2_PIPELINE_DISABLED", "0") or "0").strip() == "1":
+        # v2 disabled → fall back to v1 adaptive only.
+        return "v1"
+    if (env.get("SLM_BANDIT_DISABLED", "0") or "0").strip() == "1":
+        # Bandit disabled → v2 without ensemble.
+        return "v2"
+    return "v2-ensemble"
+
+
+def apply_ranking(
+    response: "RecallResponse",
+    query: str,
+    profile_id: str,
+    query_id: str,
+    *,
+    config: Any = None,
+    pipeline_version: str = "v2-ensemble",
+) -> "RecallResponse":
+    """Run the ranking pipeline at the requested version.
+
+    Modes:
+      - ``off``: identity — no ranking passes run at all.
+      - ``v1``: v3.1 Active-Memory adaptive rerank only.
+      - ``v2``: v1 + v3.4.21 lambdarank rerank + signal enqueue.
+      - ``v2-ensemble`` (default): v2 + v3.4.21 contextual-bandit ensemble.
+
+    Each underlying pass is already defensive (catches its own exceptions),
+    so this wrapper adds an outer try/except to guarantee the caller
+    always gets a response back. Previously three separate call sites in
+    run_recall chained these; collapsing keeps precedence explicit.
+    """
+    if pipeline_version == "off":
+        return response
+    try:
+        response = apply_adaptive_ranking(response, query, profile_id,
+                                          config=config)
+    except Exception as exc:  # pragma: no cover — defensive
+        logger.debug("apply_ranking v1 step skipped: %s", exc)
+    if pipeline_version == "v1":
+        return response
+    try:
+        response = apply_v2_adaptive_ranking(
+            response, query, profile_id, query_id,
+        )
+    except Exception as exc:  # pragma: no cover — defensive
+        logger.debug("apply_ranking v2 step skipped: %s", exc)
+    if pipeline_version == "v2":
+        return response
+    try:
+        response = apply_v2_bandit_ensemble(
+            response, query, profile_id, query_id,
+        )
+    except Exception as exc:  # pragma: no cover — defensive
+        logger.debug("apply_ranking ensemble step skipped: %s", exc)
+    return response
 
 
 # ---------------------------------------------------------------------------
@@ -116,6 +256,227 @@ def apply_adaptive_ranking(
         total_candidates=response.total_candidates,
         retrieval_time_ms=response.retrieval_time_ms,
     )
+
+
+# ---------------------------------------------------------------------------
+# apply_v2_adaptive_ranking (LLD-02 §4.3)
+# ---------------------------------------------------------------------------
+#
+# Opt-in v3.4.21 path: load active model from learning.db with SHA-256
+# verification, re-rank via native Booster, enqueue signals async. The
+# existing ``apply_adaptive_ranking`` above stays for 3.4.20 callers.
+# ---------------------------------------------------------------------------
+
+
+def apply_v2_adaptive_ranking(
+    response: RecallResponse,
+    query: str,
+    profile_id: str,
+    query_id: str,
+    *,
+    learning_db_path: Any = None,
+) -> RecallResponse:
+    """LLD-02 §4.3 — load verified model, rerank, enqueue signals.
+
+    Never raises. On any error, returns ``response`` unchanged.
+    """
+    try:
+        from pathlib import Path as _P
+
+        from superlocalmemory.learning.database import LearningDatabase
+        from superlocalmemory.learning.model_cache import load_active
+        from superlocalmemory.learning.ranker import AdaptiveRanker
+        from superlocalmemory.learning.signals import (
+            SignalBatch,
+            SignalCandidate,
+            enqueue,
+        )
+
+        db_path = (_P(learning_db_path) if learning_db_path
+                   else _P.home() / ".superlocalmemory" / "learning.db")
+        if not db_path.exists():
+            return response
+
+        db = LearningDatabase(db_path)
+        signal_count = db.count_signals(profile_id)
+        active = load_active(db, profile_id)
+
+        ranker = AdaptiveRanker(
+            signal_count=signal_count,
+            active_model=active,
+        )
+
+        # Build result-dict shape expected by the ranker's rerank() path.
+        result_dicts: list[dict] = []
+        for r in response.results:
+            result_dicts.append({
+                "fact_id": r.fact.fact_id,
+                "score": r.score,
+                "cross_encoder_score": r.score,
+                "trust_score": r.trust_score,
+                "channel_scores": r.channel_scores or {},
+                "fact": {
+                    "age_days": 0,
+                    "access_count": r.fact.access_count,
+                },
+                "_original": r,
+            })
+
+        query_context = {
+            "query_type": response.query_type,
+            "profile_id": profile_id,
+        }
+        reranked_dicts = ranker.rerank(result_dicts, query_context)
+        new_results = [d["_original"] for d in reranked_dicts
+                       if "_original" in d]
+
+        # S8-SK-04 fix: signal enqueue is OWNED by ``apply_v2_bandit_ensemble``
+        # (see below), not this function. Previously both emitted a batch
+        # under the same query_id which doubled ``learning_signals`` and
+        # tripped the phase-transition threshold at half the intended
+        # signal count. This function now just re-ranks; the ensemble path
+        # is the single source of signal events.
+
+        return RecallResponse(
+            query=response.query,
+            mode=response.mode,
+            results=new_results,
+            query_type=response.query_type,
+            channel_weights=response.channel_weights,
+            total_candidates=response.total_candidates,
+            retrieval_time_ms=response.retrieval_time_ms,
+        )
+    except Exception as exc:  # pragma: no cover — defensive
+        logger.debug("apply_v2_adaptive_ranking skipped: %s", exc)
+        return response
+
+
+# ---------------------------------------------------------------------------
+# apply_v2_bandit_ensemble (LLD-03 §5.5)
+# ---------------------------------------------------------------------------
+#
+# Contextual Thompson bandit chooses channel weights. If an LGBM model is
+# active, a D8-blended ensemble re-ranks the reweighted candidates. Never
+# raises; honours ``SLM_BANDIT_DISABLED=1`` as a kill switch.
+# ---------------------------------------------------------------------------
+
+
+def apply_v2_bandit_ensemble(
+    response: RecallResponse,
+    query: str,
+    profile_id: str,
+    query_id: str,
+    *,
+    learning_db_path: Any = None,
+) -> RecallResponse:
+    """Apply contextual bandit + optional LGBM ensemble rerank. Safe on error."""
+    import os as _os
+
+    if _os.environ.get("SLM_BANDIT_DISABLED", "0") == "1":
+        return response
+    if not response.results:
+        return response
+
+    try:
+        from datetime import datetime as _dt
+        from pathlib import Path as _P
+
+        from superlocalmemory.learning.bandit import ContextualBandit
+        from superlocalmemory.learning.ensemble import (
+            choose_ensemble,
+            ensemble_rerank,
+        )
+        from superlocalmemory.learning.signals import (
+            SignalBatch,
+            SignalCandidate,
+            enqueue,
+        )
+        from superlocalmemory.retrieval.engine import apply_channel_weights
+
+        db_path = (_P(learning_db_path) if learning_db_path
+                   else _P.home() / ".superlocalmemory" / "learning.db")
+        if not db_path.exists():
+            return response
+
+        # --- 1. bandit.choose ---------------------------------------------
+        entity_count = 0
+        # Use query_context hints if available on the engine — cheap fallback.
+        bandit = ContextualBandit(db_path, profile_id)
+        choice = bandit.choose(
+            {
+                "query_type": response.query_type,
+                "entity_count": entity_count,
+            },
+            query_id,
+        )
+
+        # --- 2. apply channel weights -------------------------------------
+        weighted = apply_channel_weights(list(response.results), choice.weights)
+
+        # --- 3. choose ensemble + load model (optional) -------------------
+        active_model = None
+        signal_count = 0
+        try:
+            from superlocalmemory.learning.database import LearningDatabase
+            from superlocalmemory.learning.model_cache import load_active
+            db = LearningDatabase(db_path)
+            signal_count = db.count_signals(profile_id)
+            active_model = load_active(db, profile_id)
+        except Exception as exc:
+            logger.debug("v2 bandit: model/signal load skipped: %s", exc)
+
+        weights = choose_ensemble(signal_count, active_model)
+
+        # --- 4. ensemble rerank -------------------------------------------
+        query_context = {
+            "query_type": response.query_type,
+            "profile_id": profile_id,
+            "query_id": query_id,
+            "bandit_play_id": choice.play_id,
+        }
+        try:
+            final_results = ensemble_rerank(
+                weighted, choice, active_model, weights, query_context,
+            )
+        except Exception as exc:
+            logger.debug("v2 bandit ensemble_rerank skipped: %s", exc)
+            final_results = weighted
+
+        # --- 5. enqueue signals (non-blocking) ----------------------------
+        try:
+            top20 = final_results[:20]
+            candidates = tuple(
+                SignalCandidate(
+                    fact_id=r.fact.fact_id,
+                    channel_scores=dict(r.channel_scores or {}),
+                    cross_encoder_score=None,
+                    result_dict={"fact_id": r.fact.fact_id,
+                                 "score": r.score},
+                )
+                for r in top20
+            )
+            enqueue(SignalBatch(
+                profile_id=profile_id,
+                query_id=query_id,
+                query_text=query,
+                candidates=candidates,
+                query_context=query_context,
+            ))
+        except Exception as exc:
+            logger.debug("v2 bandit signal enqueue skipped: %s", exc)
+
+        return RecallResponse(
+            query=response.query,
+            mode=response.mode,
+            results=final_results,
+            query_type=response.query_type,
+            channel_weights=response.channel_weights,
+            total_candidates=response.total_candidates,
+            retrieval_time_ms=response.retrieval_time_ms,
+        )
+    except Exception as exc:  # pragma: no cover — defensive top-level
+        logger.debug("apply_v2_bandit_ensemble skipped: %s", exc)
+        return response
 
 
 # ---------------------------------------------------------------------------
@@ -278,11 +639,21 @@ def run_recall(
         except Exception as exc:
             logger.debug("Hebbian strengthening: %s", exc)
 
-    # Adaptive re-ranking (V3.1 Active Memory)
+    # S8-ARC-04 (v3.4.22): unified ranking entry point. Single env-var
+    # (SLM_RANKING=off|v1|v2|v2-ensemble) controls the pipeline. Legacy
+    # SLM_V2_PIPELINE_DISABLED + SLM_BANDIT_DISABLED still honoured for
+    # one-release back-compat. Identity when no active model.
     try:
-        response = apply_adaptive_ranking(response, query, profile_id, config=config)
+        import os as _os
+        import uuid as _uuid
+        query_id = _uuid.uuid4().hex
+        mode = _resolve_ranking_mode(_os.environ)
+        response = apply_ranking(
+            response, query, profile_id, query_id,
+            config=config, pipeline_version=mode,
+        )
     except Exception as exc:
-        logger.debug("Adaptive ranking skipped: %s", exc)
+        logger.debug("Ranking pipeline skipped: %s", exc)
 
     # Reconsolidation: access updates trust + count (neuroscience principle)
     if trust_scorer:
@@ -320,5 +691,9 @@ def run_recall(
     hook_ctx["result_count"] = len(response.results)
     hook_ctx["query_type"] = response.query_type
     hooks.run_post("recall", hook_ctx)
+
+    # LLD-00 §3 — stamp HMAC markers on every result so post_tool_outcome_hook
+    # can validate fact_ids observed in downstream tool output.
+    _apply_markers_to_response(response)
 
     return response

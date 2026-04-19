@@ -391,6 +391,10 @@ class RetrievalResult:
     confidence: float = 0.0
     evidence_chain: list[str] = field(default_factory=list)
     trust_score: float = 0.5
+    # LLD-00 §3 + P0.4: HMAC marker emitted during recall so post-tool hooks
+    # can validate that a fact_id observed in tool output really came from
+    # this install. Empty string by default preserves backward-compat.
+    marker: str = ""
 
 
 @dataclass
