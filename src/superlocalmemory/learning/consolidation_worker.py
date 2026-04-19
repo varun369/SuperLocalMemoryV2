@@ -157,7 +157,23 @@ class ConsolidationWorker:
         except Exception as exc:
             logger.debug("Graph analysis failed: %s", exc)
 
-        # 5. Check if ranker should retrain
+        # 5. Check if ranker should retrain (LLD-10 + Stage 8 SB-1).
+        #
+        # Two mutually-exclusive paths dispatched from here:
+        #   (a) Online retrain via _run_shadow_cycle — fires when the
+        #       active model has accumulated ≥50 new outcomes OR 24h
+        #       has elapsed since last retrain. Produces a candidate
+        #       row, does NOT auto-promote.
+        #   (b) Legacy cold-start retrain — only fires when there is
+        #       NO active model yet (_should_retrain returns False)
+        #       and the raw signal_count crosses 200. Kept for
+        #       first-ever training of a fresh profile.
+        #
+        # Both paths respect dry_run. The partial unique indexes
+        # idx_model_active_one + idx_model_candidate_one (M009) keep
+        # the two paths from racing: either path flips lineage columns
+        # under BEGIN IMMEDIATE (see _promote_candidate, _execute_rollback,
+        # and persist_model).
         try:
             from superlocalmemory.learning.feedback import FeedbackCollector
             collector = FeedbackCollector(Path(self._learning_db))
@@ -165,10 +181,21 @@ class ConsolidationWorker:
             stats["signal_count"] = signal_count
             stats["ranker_phase"] = 1 if signal_count < 50 else (2 if signal_count < 200 else 3)
 
-            # Auto-retrain at threshold crossings
-            if signal_count >= 200 and not dry_run:
-                retrained = self._retrain_ranker(profile_id, signal_count)
-                stats["retrained"] = retrained
+            if not dry_run:
+                if self._should_retrain(profile_id):
+                    # Online path — LLD-10 Track A.3. Produces a
+                    # candidate model; promotion happens later via
+                    # core.shadow_router.on_recall_settled.
+                    stats["online_retrain"] = _run_shadow_cycle(
+                        memory_db_path=self._memory_db,
+                        learning_db_path=self._learning_db,
+                        profile_id=profile_id,
+                    )
+                elif signal_count >= 200:
+                    # Legacy cold-start path — retained for profiles
+                    # that have signals but no active model yet.
+                    retrained = self._retrain_ranker(profile_id, signal_count)
+                    stats["retrained"] = retrained
         except Exception as exc:
             logger.debug("Retrain check failed: %s", exc)
 

@@ -91,6 +91,55 @@ def _apply_markers_to_response(response: RecallResponse) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Stage 8 SB-1 — feed shadow_router from recall-settled signals.
+#
+# LLD-10 Track A.3 needs live-recall A/B observations to feed ShadowTest
+# (pre-promotion) and ModelRollback (post-promotion). The ndcg_at_10
+# signal materialises when ``EngagementRewardModel.finalize_outcome``
+# settles a row — that is the natural call site for this helper.
+#
+# This is a THIN wrapper over ``core.shadow_router.get_shadow_router``
+# so the finalize-outcome path does not need to import shadow_router
+# directly. Fail-soft on every error — recall pipeline integrity comes
+# first.
+# ---------------------------------------------------------------------------
+
+
+def feed_recall_settled(
+    *,
+    memory_db: str,
+    learning_db: str,
+    profile_id: str,
+    query_id: str,
+    ndcg_at_10: float,
+) -> None:
+    """Route a settled recall's NDCG@10 into the shadow router.
+
+    The arm is recomputed from ``query_id`` so callers don't need to
+    persist arm assignment anywhere — the router's determinism
+    guarantees the same arm decision at settle-time that was used at
+    recall-time.
+
+    Called from ``EngagementRewardModel.finalize_outcome`` (LLD-08 §4.2)
+    after the reward row is committed. Cheap on the hot path: one
+    singleton-cache read + one paired-list append.
+    """
+    try:
+        from superlocalmemory.core import shadow_router as _sr
+        router = _sr.get_shadow_router(
+            memory_db=memory_db,
+            learning_db=learning_db,
+            profile_id=profile_id,
+        )
+        arm = router.route_query(query_id)
+        router.on_recall_settled(
+            query_id=query_id, arm=arm, ndcg_at_10=float(ndcg_at_10),
+        )
+    except Exception as exc:  # pragma: no cover — defence in depth
+        logger.debug("feed_recall_settled error: %s", exc)
+
+
+# ---------------------------------------------------------------------------
 # V3.3.16: Module-level singletons for recall hot-path objects.
 # Prevents creating new BehavioralTracker / ForgettingScheduler per recall
 # (304 recalls = 304 objects that fragment pymalloc arenas → 25GB).
