@@ -62,6 +62,27 @@ def _daemon_post(path: str, body: dict, timeout: float = 3.0) -> bool:
 
 def handle_hook(action: str) -> None:
     """Dispatch to the appropriate hook handler. Called from main() fast path."""
+    # v3.4.21 (LLD-01 §4.7): Active-Brain hot-path handlers are routed here
+    # as a Python fallback when the compiled ``slm-hook`` binary (LLD-06) is
+    # unavailable. They read stdin, write stdout, and exit 0 themselves.
+    if action == "user_prompt_submit":
+        from superlocalmemory.hooks.user_prompt_hook import main as _main
+        sys.exit(_main())
+    if action == "post_tool_async":
+        from superlocalmemory.hooks.post_tool_async_hook import main as _main
+        sys.exit(_main())
+    # LLD-09 Track A.2 — outcome-population hooks (claude_code_hooks.py
+    # wires `slm hook <name>` to each entry).
+    if action == "post_tool_outcome":
+        from superlocalmemory.hooks.post_tool_outcome_hook import main as _main
+        sys.exit(_main())
+    if action == "user_prompt_rehash":
+        from superlocalmemory.hooks.user_prompt_rehash_hook import main as _main
+        sys.exit(_main())
+    if action == "stop_outcome":
+        from superlocalmemory.hooks.stop_outcome_hook import main as _main
+        sys.exit(_main())
+
     handlers = {
         "start": _hook_start,
         "gate": _hook_gate,
@@ -74,6 +95,40 @@ def handle_hook(action: str) -> None:
         print(f"Unknown hook action: {action}", file=sys.stderr)
         sys.exit(1)
     handler()
+
+
+# ---------------------------------------------------------------------------
+# LLD-11 opt-in evolution helpers (post-session trigger)
+# ---------------------------------------------------------------------------
+
+
+def _evolution_enabled() -> bool:
+    """Return True iff opt-in skill evolution is active for this session.
+
+    Reads the ``SLM_EVOLUTION_ENABLED`` env var as the fast-path signal.
+    The daemon / CLI sets this when ``evolution.enabled`` is True in
+    config; a fresh install leaves it unset so the Stop hook is a no-op
+    by default (MASTER-PLAN D3).
+    """
+    flag = os.environ.get("SLM_EVOLUTION_ENABLED", "").strip().lower()
+    return flag in ("1", "true", "yes", "on")
+
+
+def _launch_post_session_evolution(
+    *, session_id: str, profile_id: str = "default",
+) -> None:
+    """Fire-and-forget launcher for ``SkillEvolver.run_post_session``.
+
+    Kept as a module-level function so tests can monkeypatch this single
+    seam without touching the Stop hook body. Production implementation
+    delegates to the daemon's ``/api/v3/evolve-post-session`` endpoint so
+    the actual LLM work happens outside the hook's fast path.
+    """
+    _daemon_post(
+        "/api/v3/evolve-post-session",
+        {"session_id": session_id, "profile_id": profile_id},
+        timeout=2.0,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -320,6 +375,21 @@ def _hook_stop() -> None:
             "session_id": session_id,
             "output_summary": summary[:500],
         })
+
+        # LLD-11 opt-in post-session evolution (MASTER-PLAN D3).
+        # Only fires when the user explicitly enabled evolution. The env
+        # var is set by the daemon / CLI when ``slm config set
+        # evolution.enabled true`` is active, so a fresh install is a no-op.
+        if _evolution_enabled():
+            try:
+                _launch_post_session_evolution(
+                    session_id=session_id,
+                    profile_id=os.environ.get("SLM_PROFILE_ID", "default"),
+                )
+            except Exception as e:  # pragma: no cover — defensive
+                sys.stderr.write(
+                    f"slm-hook stop: evolution trigger failed: {e}\n",
+                )
 
     # --- Auto-consolidation (if >24h since last run) ---
     _maybe_consolidate()

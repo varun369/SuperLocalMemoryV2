@@ -135,8 +135,11 @@ class TestHookDefinitions:
     def test_with_gate(self):
         defs = hooks_mod._hook_definitions(include_gate=True)
         assert "PreToolUse" in defs
-        # PostToolUse should have init-done entry + checkpoint entry
-        assert len(defs["PostToolUse"]) == 2
+        # PostToolUse entries:
+        #   [0] init-done (matcher mcp__superlocalmemory__session_init)
+        #   [1] checkpoint (matcher Write|Edit)
+        #   [2] post_tool_outcome (LLD-09 Track A.2 — all gated tools)
+        assert len(defs["PostToolUse"]) == 3
 
     def test_session_start_has_timeout(self):
         defs = hooks_mod._hook_definitions()

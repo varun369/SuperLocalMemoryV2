@@ -112,6 +112,32 @@ def _hook_definitions(include_gate: bool = False) -> dict[str, list]:
                         "timeout": 5000,
                     }
                 ],
+            },
+            # LLD-09 Track A.2 — outcome-population on every tool use.
+            # Matches all host tools (SLM MCP tools are excluded via
+            # matcher negation below; actual filtering happens in the
+            # hook by checking tool_name against SLM's own prefixes).
+            {
+                "matcher": _GATED_TOOLS,
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": _wrap_python_cmd("post_tool_outcome"),
+                        "timeout": 5000,
+                    }
+                ],
+            },
+        ],
+        "UserPromptSubmit": [
+            # LLD-09 Track A.2 — re-query detection.
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": _wrap_python_cmd("user_prompt_rehash"),
+                        "timeout": 5000,
+                    }
+                ]
             }
         ],
         "Stop": [
@@ -121,7 +147,13 @@ def _hook_definitions(include_gate: bool = False) -> dict[str, list]:
                         "type": "command",
                         "command": _wrap_python_cmd("stop"),
                         "timeout": 10000,
-                    }
+                    },
+                    # LLD-09 Track A.2 — finalize pending outcomes at end.
+                    {
+                        "type": "command",
+                        "command": _wrap_python_cmd("stop_outcome"),
+                        "timeout": 10000,
+                    },
                 ]
             }
         ],
