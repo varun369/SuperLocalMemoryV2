@@ -1,6 +1,6 @@
 [project]
 name = "superlocalmemory"
-version = "3.4.19"
+version = "3.4.21"
 description = "Information-geometric agent memory with mathematical guarantees"
 readme = "README.md"
 license = {text = "AGPL-3.0-or-later"}
@@ -121,10 +121,11 @@ superlocalmemory = ["ui/**/*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "-m 'not slow and not ollama'"
+addopts = "-m 'not slow and not ollama and not benchmark'"
 markers = [
     "slow: marks tests as slow — real engine/model loading (run with: pytest -m slow)",
     "ollama: marks tests that require a running Ollama instance",
+    "benchmark: marks CI-only evo-memory benchmark tests (run with: pytest tests/test_benchmarks/ -m benchmark)",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning:vaderSentiment",
