@@ -1,6 +1,6 @@
 /*
  * Legacy dashboard styles — extracted from index.html inline <style>
- * block in v3.4.22 (Phase F). No rule deletion in this pass; the purge of
+ * block in v3.4.21 (Phase F). No rule deletion in this pass; the purge of
  * unused rules is a separate visual-audit cycle. Moving these 630 lines
  * out of index.html means:
  *   - index.html drops from 1,814 → 1,184 lines (35% leaner)

@@ -448,7 +448,7 @@ def test_power_loss_during_migration_leaves_clean_state(
 
 
 # ---------------------------------------------------------------------------
-# apply_deferred — D.1-apply (v3.4.22): behavioral-post-boot M006 hook
+# apply_deferred — D.1-apply (v3.4.21): behavioral-post-boot M006 hook
 # ---------------------------------------------------------------------------
 
 

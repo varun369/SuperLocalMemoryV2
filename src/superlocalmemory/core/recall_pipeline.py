@@ -170,7 +170,7 @@ def _get_forgetting_scheduler(db: Any, config: Any) -> Any:
 
 
 # ---------------------------------------------------------------------------
-# S8-ARC-04 (v3.4.22): unified ranking entry point.
+# S8-ARC-04 (v3.4.21): unified ranking entry point.
 # ---------------------------------------------------------------------------
 
 _RANKING_MODES: frozenset[str] = frozenset({"off", "v1", "v2", "v2-ensemble"})
@@ -688,7 +688,7 @@ def run_recall(
         except Exception as exc:
             logger.debug("Hebbian strengthening: %s", exc)
 
-    # S8-ARC-04 (v3.4.22): unified ranking entry point. Single env-var
+    # S8-ARC-04 (v3.4.21): unified ranking entry point. Single env-var
     # (SLM_RANKING=off|v1|v2|v2-ensemble) controls the pipeline. Legacy
     # SLM_V2_PIPELINE_DISABLED + SLM_BANDIT_DISABLED still honoured for
     # one-release back-compat. Identity when no active model.

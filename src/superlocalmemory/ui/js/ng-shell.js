@@ -358,9 +358,9 @@
         if (typeof loadTimeline === 'function') loadTimeline();
         break;
       case 'health-pane':
-        // v3.4.21 / v3.4.22 (taxonomy): Health = runtime health ONLY
+        // v3.4.21 / v3.4.21 (taxonomy): Health = runtime health ONLY
         // (Daemon, Events, Agents, IDEs, Math). Governance concerns live
-        // in operations-pane. IDEs folded in v3.4.22 per Varun — they're
+        // in operations-pane. IDEs folded in v3.4.21 per Varun — they're
         // connected-client state, same category as Agents.
         if (typeof loadHealthMonitor === 'function') loadHealthMonitor();
         if (typeof initEventStream === 'function') initEventStream();

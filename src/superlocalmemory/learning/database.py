@@ -91,7 +91,7 @@ class LearningDatabase:
     def path(self) -> str:
         """Read-only path to the learning SQLite database.
 
-        S8-ARC-02 (v3.4.22): public alternative to the underscore-private
+        S8-ARC-02 (v3.4.21): public alternative to the underscore-private
         ``_db_path``. Callers that need a raw connection for specialised
         read patterns should prefer :meth:`ro_connection` over building
         one themselves so WAL + busy_timeout pragmas are consistent.
@@ -520,7 +520,7 @@ class LearningDatabase:
     def _migration_applied(self, name: str) -> bool:
         """Return True if ``name`` is recorded complete in migration_log.
 
-        M006 (action_outcomes.reward) lands in v3.4.22. When absent, we
+        M006 (action_outcomes.reward) lands in v3.4.21. When absent, we
         fall back to the position-only training query.
         """
         conn = self._connect()

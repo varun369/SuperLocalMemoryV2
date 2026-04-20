@@ -11,7 +11,7 @@ Rules:
     - Labels are integers in ``[0, 4]`` (5 relevance tiers).
     - ``label_gain`` length MUST be ``>= max(label) + 1``; we ship
       ``label_gain=[0, 1, 3, 7, 15]`` (length 5).
-    - Prefer ``outcome_reward`` (v3.4.22) if present; else position proxy.
+    - Prefer ``outcome_reward`` (v3.4.21) if present; else position proxy.
     - ``NaN`` reward is treated as missing and falls through to position.
 """
 

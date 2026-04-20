@@ -346,7 +346,7 @@ def _top_query_types(
     ``query_type_od`` (features.py FEATURE_NAMES). We aggregate by the
     active one-hot slot. Missing table or zero rows → empty list.
     """
-    # E.1 (v3.4.22 perf): push the query-type classification into SQL via
+    # E.1 (v3.4.21 perf): push the query-type classification into SQL via
     # json_extract so we don't drag 10k rows' worth of JSON through Python.
     # SQLite's json1 extension treats json_extract as an ordinary scalar
     # function, so the whole aggregation becomes a single COUNT(*)
@@ -838,7 +838,7 @@ def _action_outcomes_count(lrn_db: LearningDatabase,
                            profile_id: str) -> int:
     """Row count in ``action_outcomes`` for ``profile_id``.
 
-    ``action_outcomes`` ships in v3.4.22 (M006). While absent, returns 0.
+    ``action_outcomes`` ships in v3.4.21 (M006). While absent, returns 0.
     """
     try:
         conn = sqlite3.connect(lrn_db.path, timeout=5.0)
@@ -930,7 +930,7 @@ async def get_brain(profile_id: str = "default") -> dict:
         "outcomes_preview": {
             "action_outcomes_rows":
                 0 if isinstance(outcomes_rows, Exception) else outcomes_rows,
-            "ships_in": "3.4.22",
+            "ships_in": "3.4.21",
         },
         "meta": _meta_now(),
     }
