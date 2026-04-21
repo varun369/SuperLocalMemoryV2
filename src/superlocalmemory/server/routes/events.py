@@ -44,7 +44,9 @@ def _event_to_sse_bridge(event: dict):
                 q.put_nowait(event)
             except _queue.Full:
                 dead_queues.add(q)
-        _sse_queues -= dead_queues
+        # In-place mutation — rebinding (`-=`) would make _sse_queues local,
+        # causing UnboundLocalError on the read above.
+        _sse_queues.difference_update(dead_queues)
 
 
 def register_event_listener():

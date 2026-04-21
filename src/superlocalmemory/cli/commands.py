@@ -12,9 +12,12 @@ Part of Qualixar | Author: Varun Pratap Bhardwaj
 
 from __future__ import annotations
 
+import logging
 import os
 import sys
 from argparse import Namespace
+
+logger = logging.getLogger(__name__)
 
 
 def _cmd_db_dispatch(args: Namespace) -> None:
