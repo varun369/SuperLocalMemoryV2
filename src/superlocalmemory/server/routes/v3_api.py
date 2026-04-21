@@ -558,7 +558,6 @@ async def recall_trace(request: Request):
 
 def _record_learning_signals(query: str, results: list) -> None:
     """Record feedback + co-retrieval + confidence boost for any recall."""
-    from pathlib import Path
     from superlocalmemory.core.config import SLMConfig
 
     slm_dir = Path.home() / ".superlocalmemory"

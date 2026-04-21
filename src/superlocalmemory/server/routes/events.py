@@ -44,7 +44,7 @@ def _event_to_sse_bridge(event: dict):
                 q.put_nowait(event)
             except _queue.Full:
                 dead_queues.add(q)
-        _sse_queues -= dead_queues
+        _sse_queues.difference_update(dead_queues)
 
 
 def register_event_listener():
