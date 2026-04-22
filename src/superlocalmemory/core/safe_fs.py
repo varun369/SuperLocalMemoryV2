@@ -98,5 +98,7 @@ def _safe_open_db(path: Path) -> sqlite3.Connection:
                 )
         finally:
             os.close(fd)
-    conn = sqlite3.connect(str(path), isolation_level=None, timeout=5.0)
+    conn = sqlite3.connect(
+        str(path), isolation_level=None, timeout=5.0, check_same_thread=False,
+    )
     return conn
