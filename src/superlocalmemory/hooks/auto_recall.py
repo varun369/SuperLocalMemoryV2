@@ -79,7 +79,7 @@ class AutoRecall:
 
             return "\n".join(lines)
         except Exception as exc:
-            logger.debug("Auto-recall failed: %s", exc)
+            logger.warning("Auto-recall failed: %s", exc)
             return ""
 
     def get_query_context(self, query: str) -> list[dict]:
@@ -106,7 +106,7 @@ class AutoRecall:
                     })
             return results
         except Exception as exc:
-            logger.debug("Auto-recall query failed: %s", exc)
+            logger.warning("Auto-recall query failed: %s", exc)
             return []
 
     @property

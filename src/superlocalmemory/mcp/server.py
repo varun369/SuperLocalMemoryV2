@@ -181,7 +181,7 @@ def _eager_warmup() -> None:
         get_engine()
         _logger.info("MCP engine pre-warmed successfully")
     except Exception as exc:
-        _logger.debug("MCP engine pre-warmup failed (non-fatal): %s", exc)
+        _logger.warning("MCP engine pre-warmup failed: %s", exc)
 
     # Measurement / test harnesses set this to skip daemon-start and
     # mesh-register. The LIGHT engine init above still runs.
@@ -195,7 +195,7 @@ def _eager_warmup() -> None:
         if ensure_daemon():
             _logger.info("Daemon auto-started by MCP server")
     except Exception as exc:
-        _logger.debug("Daemon auto-start failed (non-fatal): %s", exc)
+        _logger.warning("Daemon auto-start failed: %s", exc)
 
     # V3.4.6: Auto-register this MCP session as a mesh peer immediately.
     # Previously, registration was lazy (only on first mesh tool call).
@@ -205,7 +205,7 @@ def _eager_warmup() -> None:
         auto_register_mesh()
         _logger.info("Mesh peer auto-registered at startup")
     except Exception as exc:
-        _logger.debug("Mesh auto-register failed (non-fatal): %s", exc)
+        _logger.warning("Mesh auto-register failed: %s", exc)
 
 import threading
 _warmup_thread = threading.Thread(target=_eager_warmup, daemon=True, name="mcp-warmup")

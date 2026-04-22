@@ -151,35 +151,35 @@ class MemoryEngine:
             from superlocalmemory.storage.schema_v343 import apply_v343_schema
             apply_v343_schema(str(self._db.db_path))
         except Exception as exc:
-            logger.debug("V3.4.3 schema migration: %s", exc)
+            logger.warning("V3.4.3 schema migration failed: %s", exc)
 
         # V3.4.6: Apply "Connected Brain" mesh enhancements (broadcast, project routing, offline queue)
         try:
             from superlocalmemory.storage.schema_v343 import apply_v346_schema
             apply_v346_schema(str(self._db.db_path))
         except Exception as exc:
-            logger.debug("V3.4.6 schema migration: %s", exc)
+            logger.warning("V3.4.6 schema migration failed: %s", exc)
 
         # V3.4.7: Apply "Learning Brain" schema (tool_events, behavioral_assertions)
         try:
             from superlocalmemory.storage.schema_v347 import apply_v347_schema
             apply_v347_schema(str(self._db.db_path))
         except Exception as exc:
-            logger.debug("V3.4.7 schema migration: %s", exc)
+            logger.warning("V3.4.7 schema migration failed: %s", exc)
 
         # V3.4.10: Apply "Fortress" schema (backup_destinations, entity_blacklist)
         try:
             from superlocalmemory.storage.schema_v3410 import apply_v3410_schema
             apply_v3410_schema(str(self._db.db_path))
         except Exception as exc:
-            logger.debug("V3.4.10 schema migration: %s", exc)
+            logger.warning("V3.4.10 schema migration failed: %s", exc)
 
         # V3.4.11: Apply "Scale-Ready" schema (pinned_facts, backend_status, fact_consolidations)
         try:
             from superlocalmemory.storage.schema_v3411 import apply_v3411_schema
             apply_v3411_schema(str(self._db.db_path))
         except Exception as exc:
-            logger.debug("V3.4.11 schema migration: %s", exc)
+            logger.warning("V3.4.11 schema migration failed: %s", exc)
 
         # DB-only learner — no embedder / LLM dependency. Available in
         # LIGHT so MCP report_feedback and session_init phase counters

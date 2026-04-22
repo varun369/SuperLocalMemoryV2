@@ -114,7 +114,7 @@ class AutoCapture:
                 fact_ids = self._engine.store(content, metadata=meta)
             return len(fact_ids) > 0
         except Exception as exc:
-            logger.debug("Auto-capture store failed: %s", exc)
+            logger.warning("Auto-capture store failed: %s", exc)
             return False
 
     def _match_patterns(self, content: str, patterns: list[str]) -> float:
