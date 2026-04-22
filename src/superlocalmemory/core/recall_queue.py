@@ -303,7 +303,7 @@ class RecallQueue:
                 "UPDATE recall_requests "
                 "SET completed = 1, result_json = ? "
                 "WHERE request_id = ? AND received = ? "
-                "AND cancelled = 0 AND dead_letter = 0",
+                "AND completed = 0 AND cancelled = 0 AND dead_letter = 0",
                 (result_json, request_id, received),
             )
             return cur.rowcount
