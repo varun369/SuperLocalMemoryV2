@@ -100,6 +100,45 @@ class TestUpgradeBannerEmission:
             assert forbidden not in captured
 
 
+class TestSecurityHardening:
+    """v3.4.26 Stage 9 security fixes."""
+
+    def test_marker_written_at_0600_perms(self, slm_home):
+        import os, sys
+        if sys.platform == "win32":
+            pytest.skip("POSIX perm check")
+        write_marker_version("3.4.26")
+        mode = os.stat(slm_home / ".version").st_mode & 0o777
+        assert mode == 0o600, f"marker mode {oct(mode)} leaks upgrade timing"
+
+    def test_read_refuses_symlinked_marker(self, slm_home, tmp_path):
+        import os, sys
+        if sys.platform == "win32":
+            pytest.skip("symlink perms differ on Windows")
+        target = tmp_path / "elsewhere.txt"
+        target.write_text("3.4.99")
+        marker = slm_home / ".version"
+        marker.symlink_to(target)
+        assert read_marker_version() is None
+
+    def test_read_refuses_oversized_marker(self, slm_home):
+        marker = slm_home / ".version"
+        marker.write_bytes(b"3.4.26" + b"x" * 200)
+        assert read_marker_version() is None
+
+    def test_read_refuses_garbage_version(self, slm_home):
+        marker = slm_home / ".version"
+        marker.write_text("not a version string!!!!")
+        assert read_marker_version() is None
+
+    def test_write_rejects_non_version_input(self, slm_home):
+        assert write_marker_version("not a version!") is False
+        assert not (slm_home / ".version").exists()
+
+    def test_write_rejects_control_chars(self, slm_home):
+        assert write_marker_version("3.4.26\x1b[31m") is False
+
+
 class TestIdempotencyAndFailureMode:
     def test_read_tolerant_of_corrupt_marker(self, slm_home):
         marker = slm_home / ".version"

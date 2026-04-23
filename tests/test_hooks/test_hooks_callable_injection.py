@@ -131,3 +131,24 @@ class TestAutoCaptureCallable:
     def test_no_fn_no_engine_returns_false(self):
         auto = AutoCapture()
         assert auto.capture("content") is False
+
+    def test_capture_does_not_mutate_caller_metadata(self):
+        """Regression guard for Stage 9 P9-C-02: pool_store ships the
+        metadata dict cross-process; callers often reuse the same dict
+        across captures. Auto-capture must not inject its own keys into
+        the caller's dict."""
+        captured_meta = {}
+
+        def fn(content, metadata=None):
+            captured_meta.clear()
+            captured_meta.update(metadata or {})
+            return ["id1"]
+
+        auto = AutoCapture(store_fn=fn)
+        user_dict = {"user_key": "user_value"}
+        auto.capture("content here", category="bug", metadata=user_dict)
+        assert user_dict == {"user_key": "user_value"}, \
+            f"caller metadata was mutated: {user_dict}"
+        # store_fn still saw the enriched metadata
+        assert captured_meta.get("source") == "auto-capture"
+        assert captured_meta.get("user_key") == "user_value"

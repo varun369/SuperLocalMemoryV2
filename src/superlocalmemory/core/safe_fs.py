@@ -23,6 +23,10 @@ class SafeFsError(RuntimeError):
 _FORBIDDEN_COMPONENTS = (
     "iCloud Drive", "Mobile Documents", "CloudDocs",
     "Dropbox", "Google Drive", "OneDrive", "Box Sync",
+    # macOS 13+ canonical cloud-storage mount point. Every modern
+    # Dropbox / OneDrive / Google Drive / Box install on macOS routes
+    # through here, bypassing the brand-name checks above.
+    "Library/CloudStorage",
 )
 
 

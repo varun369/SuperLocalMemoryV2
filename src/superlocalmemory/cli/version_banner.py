@@ -15,8 +15,16 @@ corrupt marker makes the banner silent, not the CLI broken.
 from __future__ import annotations
 
 import os
+import re
 import sys
 from pathlib import Path
+
+# Strict allowlist: semver-ish only. Anything else in the marker is
+# treated as "unknown" so a tampered or binary marker can't leak into
+# banner strings or downstream consumers.
+_VERSION_PATTERN = re.compile(r"^[0-9A-Za-z.\-+_]{1,32}$")
+
+_MAX_MARKER_BYTES = 64  # a semver string is ≤ 32 chars; 64 is plenty
 
 
 def _data_dir() -> Path:
@@ -28,30 +36,70 @@ def _marker_path() -> Path:
 
 
 def read_marker_version() -> str | None:
-    """Return the marker string or None if missing / unreadable."""
+    """Return the marker string or None if missing / unreadable / invalid."""
+    target = _marker_path()
+    # Refuse to follow symlinks on the marker file — a co-tenant
+    # attacker who can drop a symlink into our data dir must not be
+    # able to redirect us to an arbitrary file.
     try:
-        raw = _marker_path().read_bytes()
+        st = target.lstat()
     except (FileNotFoundError, NotADirectoryError, PermissionError, OSError):
         return None
-    # Marker is a single-line ASCII version — anything outside that is treated
-    # as unknown so we never act on garbage.
+    import stat as _stat
+    if _stat.S_ISLNK(st.st_mode) or not _stat.S_ISREG(st.st_mode):
+        return None
+    try:
+        with open(target, "rb") as f:
+            raw = f.read(_MAX_MARKER_BYTES + 1)
+    except (FileNotFoundError, NotADirectoryError, PermissionError, OSError):
+        return None
+    if len(raw) > _MAX_MARKER_BYTES:
+        return None
     try:
         text = raw.decode("ascii").strip()
     except UnicodeDecodeError:
         return None
-    if not text or any(ord(c) < 0x20 for c in text):
+    if not _VERSION_PATTERN.fullmatch(text):
         return None
     return text
 
 
 def write_marker_version(version: str) -> bool:
-    """Persist the current version to the marker. Returns True on success."""
+    """Persist the current version to the marker with 0600 perms.
+
+    Uses a PID-scoped tmp file + ``os.replace`` for atomicity so
+    concurrent CLI / daemon / npm-postinstall invocations can't corrupt
+    each other's write. The final file is mode 0600 so the upgrade
+    timestamp is not a side-channel for co-tenant attackers.
+    """
+    # Validate input — never write garbage, even on a programmer bug.
+    if not _VERSION_PATTERN.fullmatch(version):
+        return False
     target = _marker_path()
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
-        tmp = target.with_suffix(".version.tmp")
-        tmp.write_text(version + "\n", encoding="ascii")
+        # Parent dir 0700 on POSIX (mirrors safe_fs._ensure_parent_0700)
+        if sys.platform != "win32":
+            try:
+                os.chmod(target.parent, 0o700)
+            except OSError:
+                pass
+        tmp = target.parent / f".version.tmp.{os.getpid()}"
+        # Open with 0600 so the tmp is never world-readable either.
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW
+        fd = os.open(tmp, flags, 0o600)
+        try:
+            os.write(fd, (version + "\n").encode("ascii"))
+        finally:
+            os.close(fd)
         os.replace(tmp, target)
+        if sys.platform != "win32":
+            try:
+                os.chmod(target, 0o600)
+            except OSError:
+                pass
         return True
     except OSError:
         return False

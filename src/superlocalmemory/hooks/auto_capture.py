@@ -100,19 +100,23 @@ class AutoCapture:
         return CaptureDecision(False, 0.0, "none", "no patterns matched")
 
     def capture(self, content: str, category: str = "", metadata: dict | None = None) -> bool:
-        """Store content via engine or store_fn if auto-capture decides to."""
+        """Store content via engine or store_fn if auto-capture decides to.
+
+        Never mutates the caller's metadata dict — we copy before adding
+        our auto-capture bookkeeping keys. This matters because
+        ``pool_store`` ships the dict cross-process and callers often
+        reuse the same dict across captures.
+        """
         if self._store_fn is None and self._engine is None:
             return False
 
         try:
-            meta = metadata or {}
-            meta["source"] = "auto-capture"
-            meta["category"] = category
+            meta = {**(metadata or {}), "source": "auto-capture", "category": category}
             if self._store_fn is not None:
                 fact_ids = self._store_fn(content, metadata=meta)
             else:
                 fact_ids = self._engine.store(content, metadata=meta)
-            return len(fact_ids) > 0
+            return bool(fact_ids) and len(fact_ids) > 0
         except Exception as exc:
             logger.warning("Auto-capture store failed: %s", exc)
             return False

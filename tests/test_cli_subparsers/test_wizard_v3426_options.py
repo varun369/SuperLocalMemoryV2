@@ -106,6 +106,34 @@ class TestPersistence:
         assert out["rate_limit_per_pid"] == 5
 
 
+class TestSecurityHardening:
+    def test_options_written_at_0600(self, slm_home):
+        import os, sys
+        if sys.platform == "win32":
+            pytest.skip("POSIX perm check")
+        persist_v3426_options(V3426Options(True, 30, 10, 100), slm_home)
+        target = slm_home / "v3426_options.json"
+        mode = os.stat(target).st_mode & 0o777
+        assert mode == 0o600
+
+    def test_parent_dir_tightened_to_0700(self, tmp_path):
+        import os, sys
+        if sys.platform == "win32":
+            pytest.skip("POSIX perm check")
+        loose = tmp_path / "loose"
+        loose.mkdir(mode=0o755)
+        persist_v3426_options(V3426Options(True, 30, 10, 100), loose)
+        mode = os.stat(loose).st_mode & 0o777
+        assert mode == 0o700
+
+    def test_cloudstorage_path_rejected(self, tmp_path):
+        faux = tmp_path / "Library" / "CloudStorage" / "Dropbox-Personal" / "slm"
+        faux.mkdir(parents=True)
+        ok, reason = validate_install_data_dir(faux)
+        assert ok is False
+        assert "cloudstorage" in reason.lower() or "cloud" in reason.lower()
+
+
 class TestInteractivePrompt:
     def test_queue_toggle_default_yes(self, slm_home, monkeypatch):
         # Empty input → accept default (Y)
