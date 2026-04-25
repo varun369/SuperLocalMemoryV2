@@ -317,8 +317,13 @@ def settle_stale_plays(
                 memory_conn.close()
             except sqlite3.Error:  # pragma: no cover
                 pass
-        # Don't close a caller-owned bandit instance.
-        _ = owns_bandit
+        # v3.4.33: close the threadlocal bandit connection so pool threads
+        # from asyncio.to_thread don't leak file descriptors to learning.db.
+        try:
+            from superlocalmemory.learning.bandit import close_threadlocal_conn
+            close_threadlocal_conn()
+        except Exception:  # pragma: no cover — defensive
+            pass
 
     return settled
 

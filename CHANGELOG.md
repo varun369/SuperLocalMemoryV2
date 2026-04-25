@@ -10,6 +10,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.33] - 2026-04-25
+
+Fix: daemon leaked SQLite connections to learning.db via bandit threadlocals.
+
+### Fixed
+- **Bandit threadlocal connection leak.** `reward_proxy.settle_stale_plays`
+  creates a `ContextualBandit` that opens a threadlocal connection via
+  `_conn_for`. When called from `asyncio.to_thread` (bandit_loops.py,
+  every 60 s), each thread-pool thread kept its connection open for the
+  process lifetime. Over 24 h this accumulated 12+ leaked file descriptors
+  and ~100 MB of wasted SQLite page-cache RAM. New
+  `bandit.close_threadlocal_conn()` function, called in the
+  `settle_stale_plays` finally block, ensures pool threads release their
+  connections immediately.
+- **Corrected embedding worker memory comment.** The `~200MB footprint`
+  note was written for `all-MiniLM-L6-v2`; the default model
+  `nomic-ai/nomic-embed-text-v1.5` uses ~1.1 GB via ONNX.
+
+---
+
 ## [3.4.32] - 2026-04-24
 
 Fix: concurrent remembers no longer block recalls on the shared embedder.

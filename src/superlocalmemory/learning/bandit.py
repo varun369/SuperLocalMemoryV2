@@ -176,6 +176,23 @@ def _conn_for(db_path: Path) -> sqlite3.Connection:
     return conn
 
 
+def close_threadlocal_conn() -> None:
+    """Close the threadlocal bandit connection on the calling thread.
+
+    v3.4.33: background callers (asyncio.to_thread pool threads) MUST call
+    this after finishing bandit work.  Without it, each pool thread keeps a
+    leaked connection to learning.db for the process lifetime — observed as
+    12+ open file descriptors and ~100 MB wasted page-cache RAM.
+    """
+    if _holder.conn is not None:
+        try:
+            _holder.conn.close()
+        except sqlite3.Error:  # pragma: no cover
+            pass
+        _holder.conn = None
+        _holder.path = None
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -520,6 +537,7 @@ def retention_sweep(
 __all__ = (
     "BanditChoice",
     "ContextualBandit",
+    "close_threadlocal_conn",
     "compute_stratum",
     "current_time_bucket",
     "retention_sweep",

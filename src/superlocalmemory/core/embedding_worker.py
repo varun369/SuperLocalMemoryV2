@@ -63,7 +63,7 @@ def _load_embedding_model(name: str) -> tuple:
     """
     from sentence_transformers import SentenceTransformer
 
-    # Tier 1: ONNX (stable memory, ~200MB footprint)
+    # Tier 1: ONNX (stable memory; ~1.1 GB for nomic-embed-text-v1.5)
     try:
         m = SentenceTransformer(name, backend="onnx", trust_remote_code=True)
         return m, "onnx"
