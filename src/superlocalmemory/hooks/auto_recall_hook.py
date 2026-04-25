@@ -76,6 +76,30 @@ def _get_queue_db_path():
     return slm_dir / "recall_queue.db"
 
 
+def _try_socket_first(prompt: str, session_id: str) -> dict | None:
+    """Try the persistent hook daemon socket. Returns full envelope or None.
+
+    The socket path returns an already-formatted Claude Code envelope.
+    If this returns a non-None dict, the caller writes it to stdout directly
+    (skip _do_recall + _format_envelope). Returns None on any failure,
+    triggering the subprocess fallback.
+    """
+    try:
+        from superlocalmemory.hooks.hook_daemon import try_socket_recall
+        response = try_socket_recall(
+            prompt=prompt,
+            session_id=session_id,
+            timeout=_get_mode_timeout(_detect_mode()),
+        )
+        if response is None or not isinstance(response, dict):
+            return None
+        if not response:
+            return {}
+        return response
+    except Exception:
+        return None
+
+
 def _do_recall(query: str, limit: int = _DEFAULT_LIMIT, session_id: str = "") -> list[dict] | None:
     """Enqueue recall to queue, poll for result. Returns list of dicts or None."""
     try:
@@ -191,6 +215,14 @@ def main() -> int:
     if _is_ack(prompt):
         sys.stdout.write("{}")
         return 0
+
+    try:
+        socket_result = _try_socket_first(prompt, session_id)
+        if socket_result is not None:
+            sys.stdout.write(json.dumps(socket_result) if socket_result else "{}")
+            return 0
+    except Exception:
+        pass
 
     try:
         results = _do_recall(prompt, limit=_DEFAULT_LIMIT, session_id=session_id)

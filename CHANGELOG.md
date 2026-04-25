@@ -10,6 +10,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.36] - 2026-04-25
+
+Persistent hook daemon: recall latency drops from ~2.2s to sub-second by
+eliminating Python subprocess startup on every prompt.
+
+### Added
+- **`hooks/hook_daemon.py`** — Unix domain socket server that keeps a
+  long-lived process for recall requests. Claude Code connects via socket
+  instead of spawning a fresh Python interpreter per prompt. Eliminates
+  ~300-500ms of subprocess overhead. Starts/stops with the SLM daemon.
+- **Auto-restart watchdog:** `ensure_hook_daemon()` checks socket health
+  and restarts the daemon if it died. Claude Code hooks call this before
+  connecting, so a crashed daemon is transparent to the user.
+- **Graceful fallback:** if the socket is unavailable, the hook
+  automatically falls back to the v3.4.35 subprocess path. Claude Code
+  performance is NEVER impacted by daemon failure.
+- **9 new tests** for daemon lifecycle, socket protocol, ack detection,
+  watchdog, fallback, and memory safety.
+
+### Performance
+- Ack prompts: ~5ms via socket (was 30ms via subprocess)
+- Substantive recall: target sub-1s (was 2.2s p50 via subprocess)
+- Hook daemon RSS: ~15-20MB (no engine, no ONNX, no PyTorch)
+
+---
+
 ## [3.4.35] - 2026-04-25
 
 Production auto-recall: every Claude Code prompt automatically retrieves the

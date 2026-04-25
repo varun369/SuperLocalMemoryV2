@@ -438,6 +438,17 @@ async def lifespan(application: FastAPI):
             application.state.queue_consumer = _queue_consumer
             application.state.recall_queue = _recall_queue
             logger.info("QueueConsumer started (recall_queue.db)")
+
+            # v3.4.36: Start persistent hook daemon (Unix socket server).
+            # Eliminates Python subprocess startup for each recall hook call.
+            try:
+                from superlocalmemory.hooks.hook_daemon import HookDaemon
+                _hook_daemon = HookDaemon(queue_db_path=_queue_db)
+                _hook_daemon.start()
+                application.state.hook_daemon = _hook_daemon
+            except Exception as _hd_exc:
+                logger.warning("HookDaemon start failed (non-fatal): %s", _hd_exc)
+                application.state.hook_daemon = None
         except Exception as _qc_exc:
             logger.warning("QueueConsumer start failed (non-fatal): %s", _qc_exc)
             application.state.queue_consumer = None
@@ -591,6 +602,14 @@ async def lifespan(application: FastAPI):
                     pass
         except Exception as exc:  # pragma: no cover — defensive
             logger.warning("bandit_tasks cancel failed: %s", exc)
+
+    # v3.4.36: Stop HookDaemon (Unix socket server).
+    _hd = getattr(application.state, "hook_daemon", None)
+    if _hd is not None:
+        try:
+            _hd.stop()
+        except Exception as exc:  # pragma: no cover — defensive
+            logger.warning("hook_daemon stop failed: %s", exc)
 
     # v3.4.26: Stop QueueConsumer (recall_queue.db drainer).
     _qc = getattr(application.state, "queue_consumer", None)
