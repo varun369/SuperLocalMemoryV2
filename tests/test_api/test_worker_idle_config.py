@@ -66,20 +66,25 @@ def _reload_with_env(module_name: str, env: dict) -> object:
 
 
 class TestEmbeddingIdleTimeout:
-    """Cover both the new 1800 s default and the env kill-switch."""
+    """Cover the v3.4.37 default and the env override."""
 
-    def test_default_is_30_minutes(self):
-        """With no override, idle timeout is 1800 s (not the pre-v3.4.19 120 s)."""
+    def test_default_is_5_minutes(self):
+        """v3.4.37 ships a 5-minute default (300 s) — RAM-balanced for laptops.
+
+        Was 1800 s in v3.4.19 but reduced because holding 1.1 GB for 30 min idle
+        wasted RAM on laptops. 5 min covers bursty session_init+recall while
+        freeing memory between sessions. Override via SLM_EMBED_IDLE_TIMEOUT.
+        """
         mod = _reload_with_env(
             "superlocalmemory.core.embeddings",
             {"SLM_EMBED_IDLE_TIMEOUT": None},
         )
-        assert mod._IDLE_TIMEOUT_SECONDS == 1800, (
-            f"v3.4.19 ships a 30-minute default. Got {mod._IDLE_TIMEOUT_SECONDS}s."
+        assert mod._IDLE_TIMEOUT_SECONDS == 300, (
+            f"v3.4.37 ships a 5-minute default. Got {mod._IDLE_TIMEOUT_SECONDS}s."
         )
 
     def test_env_var_overrides_default(self):
-        """``SLM_EMBED_IDLE_TIMEOUT=120`` must revert to the old aggressive policy."""
+        """``SLM_EMBED_IDLE_TIMEOUT=120`` reverts to the legacy aggressive policy."""
         mod = _reload_with_env(
             "superlocalmemory.core.embeddings",
             {"SLM_EMBED_IDLE_TIMEOUT": "120"},
@@ -87,6 +92,14 @@ class TestEmbeddingIdleTimeout:
         assert mod._IDLE_TIMEOUT_SECONDS == 120, (
             "Kill-switch broken: SLM_EMBED_IDLE_TIMEOUT should restore 120 s."
         )
+
+    def test_env_var_can_set_30_minutes(self):
+        """Power users wanting the old 30-min default can opt in via env."""
+        mod = _reload_with_env(
+            "superlocalmemory.core.embeddings",
+            {"SLM_EMBED_IDLE_TIMEOUT": "1800"},
+        )
+        assert mod._IDLE_TIMEOUT_SECONDS == 1800
 
     def test_env_var_accepts_zero_for_immediate_kill(self):
         """Edge case: ``0`` means 'kill immediately' — useful for CI/stress tests."""
@@ -103,14 +116,15 @@ class TestEmbeddingIdleTimeout:
 
 
 class TestRerankerIdleTimeout:
-    """Same contract for the cross-encoder reranker."""
+    """Same v3.4.37 RAM-balanced contract for the cross-encoder reranker."""
 
-    def test_default_is_30_minutes(self):
+    def test_default_is_5_minutes(self):
+        """v3.4.37: 300 s default (was 1800 s) for laptop RAM hygiene."""
         mod = _reload_with_env(
             "superlocalmemory.retrieval.reranker",
             {"SLM_RERANKER_IDLE_TIMEOUT": None},
         )
-        assert mod._IDLE_TIMEOUT_SECONDS == 1800
+        assert mod._IDLE_TIMEOUT_SECONDS == 300
 
     def test_env_var_overrides_default(self):
         mod = _reload_with_env(

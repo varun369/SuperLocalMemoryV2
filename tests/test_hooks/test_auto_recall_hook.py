@@ -47,12 +47,20 @@ _SUBSTANTIVE_PROMPTS = [
 
 
 def _run_hook(prompt: str, tmp_path: Path, **env_overrides) -> dict:
-    """Invoke auto_recall_hook.main() with a fake stdin payload."""
+    """Invoke auto_recall_hook.main() with a fake stdin payload.
+
+    Always mocks ``_try_socket_first`` to return None so tests are deterministic
+    regardless of whether the hook daemon socket is running on the host. The
+    socket is the primary recall path in production; when it's unavailable the
+    hook falls back to ``_do_recall`` (which individual tests mock as needed).
+    """
     from superlocalmemory.hooks.auto_recall_hook import main
 
     payload = json.dumps({"prompt": prompt, "session_id": "test-session"})
     captured = StringIO()
-    with patch("sys.stdin", StringIO(payload)), \
+    with patch("superlocalmemory.hooks.auto_recall_hook._try_socket_first",
+               return_value=None), \
+         patch("sys.stdin", StringIO(payload)), \
          patch("sys.stdout", captured):
         exit_code = main()
 

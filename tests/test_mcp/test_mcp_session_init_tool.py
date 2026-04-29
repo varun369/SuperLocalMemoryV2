@@ -286,10 +286,12 @@ class TestSessionInitIntegration:
     @patch("superlocalmemory.mcp.tools_active._register_agent")
     @patch("superlocalmemory.hooks.rules_engine.RulesEngine")
     @patch("superlocalmemory.hooks.auto_recall.AutoRecall")
-    def test_session_init_registers_agent(
+    def test_session_init_registers_agent_default(
         self, MockAutoRecall, MockRulesEngine, mock_register, mock_emit,
+        monkeypatch,
     ):
-        """_register_agent is called with 'mcp_client' and the profile id."""
+        """_register_agent uses 'mcp_client' default when SLM_AGENT_ID is unset."""
+        monkeypatch.delenv("SLM_AGENT_ID", raising=False)
         engine = _make_engine_mock(profile_id="varun")
         auto = _make_auto_recall_mock()
         rules = _make_rules_mock()
@@ -308,10 +310,36 @@ class TestSessionInitIntegration:
     @patch("superlocalmemory.mcp.tools_active._register_agent")
     @patch("superlocalmemory.hooks.rules_engine.RulesEngine")
     @patch("superlocalmemory.hooks.auto_recall.AutoRecall")
+    def test_session_init_registers_agent_from_env(
+        self, MockAutoRecall, MockRulesEngine, mock_register, mock_emit,
+        monkeypatch,
+    ):
+        """v3.4.39: SLM_AGENT_ID env overrides default for proper Avenger attribution."""
+        monkeypatch.setenv("SLM_AGENT_ID", "codex")
+        engine = _make_engine_mock(profile_id="varun")
+        auto = _make_auto_recall_mock()
+        rules = _make_rules_mock()
+
+        MockAutoRecall.return_value = auto
+        MockRulesEngine.return_value = rules
+
+        session_init, get_engine = _get_session_init_tool()
+        get_engine.return_value = engine
+
+        asyncio.run(session_init())
+
+        mock_register.assert_called_once_with("codex", "varun")
+
+    @patch("superlocalmemory.mcp.tools_active._emit_event")
+    @patch("superlocalmemory.mcp.tools_active._register_agent")
+    @patch("superlocalmemory.hooks.rules_engine.RulesEngine")
+    @patch("superlocalmemory.hooks.auto_recall.AutoRecall")
     def test_session_init_emits_agent_connected(
         self, MockAutoRecall, MockRulesEngine, mock_register, mock_emit,
+        monkeypatch,
     ):
-        """Event 'agent.connected' is emitted with project_path."""
+        """Event 'agent.connected' is emitted with project_path and resolved agent_id."""
+        monkeypatch.delenv("SLM_AGENT_ID", raising=False)
         engine = _make_engine_mock()
         auto = _make_auto_recall_mock()
         rules = _make_rules_mock()
@@ -330,6 +358,33 @@ class TestSessionInitIntegration:
         payload = args[0][1]
         assert payload["project_path"] == "/slm"
         assert payload["agent_id"] == "mcp_client"
+
+    @patch("superlocalmemory.mcp.tools_active._emit_event")
+    @patch("superlocalmemory.mcp.tools_active._register_agent")
+    @patch("superlocalmemory.hooks.rules_engine.RulesEngine")
+    @patch("superlocalmemory.hooks.auto_recall.AutoRecall")
+    def test_session_init_emits_agent_connected_from_env(
+        self, MockAutoRecall, MockRulesEngine, mock_register, mock_emit,
+        monkeypatch,
+    ):
+        """v3.4.39: 'agent.connected' payload carries SLM_AGENT_ID env value."""
+        monkeypatch.setenv("SLM_AGENT_ID", "gemini")
+        engine = _make_engine_mock()
+        auto = _make_auto_recall_mock()
+        rules = _make_rules_mock()
+
+        MockAutoRecall.return_value = auto
+        MockRulesEngine.return_value = rules
+
+        session_init, get_engine = _get_session_init_tool()
+        get_engine.return_value = engine
+
+        asyncio.run(session_init(project_path="/slm"))
+
+        mock_emit.assert_called_once()
+        args = mock_emit.call_args
+        payload = args[0][1]
+        assert payload["agent_id"] == "gemini"
 
     @patch("superlocalmemory.mcp.tools_active._emit_event")
     @patch("superlocalmemory.mcp.tools_active._register_agent")

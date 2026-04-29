@@ -17,6 +17,7 @@ Part of Qualixar | Author: Varun Pratap Bhardwaj
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Callable
 
@@ -26,17 +27,32 @@ MEMORY_DIR = Path.home() / ".superlocalmemory"
 DB_PATH = MEMORY_DIR / "memory.db"
 
 
+def _get_agent_id(default: str = "mcp_client") -> str:
+    """Resolve the calling agent's ID for attribution.
+
+    Each Avenger (Claude, Codex, Gemini, Kimi, GLM, Qwen, etc.) sets the
+    ``SLM_AGENT_ID`` env var in its MCP server config so that memories,
+    observations, and registry entries are tagged with the actual source
+    agent — not the legacy ``"mcp_client"`` default.
+
+    v3.4.39+: enables proper cross-Avenger attribution in ``session_init``,
+    ``observe``, and event emissions.
+    """
+    return os.environ.get("SLM_AGENT_ID", default)
+
+
 def _emit_event(event_type: str, payload: dict | None = None,
-                source_agent: str = "mcp_client") -> None:  # V3.3.12: see also mcp/shared.py
+                source_agent: str | None = None) -> None:  # V3.3.12: see also mcp/shared.py
     """Emit an event to the EventBus (best-effort, never raises).
 
     Dashboard visibility is load-bearing per the v3.4.26 user contract,
     so we log on failure rather than silently dropping the signal.
     """
+    resolved_agent = source_agent if source_agent is not None else _get_agent_id()
     try:
         from superlocalmemory.infra.event_bus import EventBus
         bus = EventBus.get_instance(str(DB_PATH))
-        bus.emit(event_type, payload=payload, source_agent=source_agent,
+        bus.emit(event_type, payload=payload, source_agent=resolved_agent,
                  source_protocol="mcp")
     except Exception as exc:
         logger.warning("event emit failed: type=%s err=%s", event_type, exc)
@@ -116,10 +132,11 @@ def register_active_tools(server, get_engine: Callable) -> None:
                     "session_init feedback_count read failed: %s", exc,
                 )
 
-            # Register agent + emit event
-            _register_agent("mcp_client", pid)
+            # Register agent + emit event (v3.4.39: SLM_AGENT_ID env support)
+            agent_id = _get_agent_id()
+            _register_agent(agent_id, pid)
             _emit_event("agent.connected", {
-                "agent_id": "mcp_client",
+                "agent_id": agent_id,
                 "project_path": project_path,
                 "memory_count": len(memories),
             })
@@ -145,7 +162,7 @@ def register_active_tools(server, get_engine: Callable) -> None:
     @server.tool()
     async def observe(
         content: str,
-        agent_id: str = "mcp_client",
+        agent_id: str | None = None,
     ) -> dict:
         """Observe conversation content for automatic memory capture.
 
@@ -155,7 +172,13 @@ def register_active_tools(server, get_engine: Callable) -> None:
 
         Call this after making decisions, fixing bugs, or expressing preferences.
         The system will NOT store low-confidence or irrelevant content.
+
+        v3.4.39: ``agent_id`` now defaults to the ``SLM_AGENT_ID`` env var
+        (set by each Avenger's MCP config) so observations carry proper
+        cross-Avenger attribution.
         """
+        if agent_id is None:
+            agent_id = _get_agent_id()
         try:
             from superlocalmemory.hooks.auto_capture import AutoCapture
             from superlocalmemory.hooks.rules_engine import RulesEngine
