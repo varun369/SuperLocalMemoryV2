@@ -381,7 +381,9 @@ async def test_provider(request: Request):
                 resp = c.get(f"{endpoint}/api/tags")
                 resp.raise_for_status()
                 models = [m["name"] for m in resp.json().get("models", [])]
-                found = model in models if model else len(models) > 0
+                # Match either exact name or base name (strip ":tag" suffix on both sides)
+                model_base = model.split(":")[0] if model else ""
+                found = any(m == model or m.split(":")[0] == model_base for m in models) if model else len(models) > 0
                 return {
                     "success": found,
                     "message": f"Ollama OK, {len(models)} models" + (f", '{model}' available" if found and model else ""),
