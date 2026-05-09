@@ -112,9 +112,17 @@ class RetrievalEngine:
     def recall(
         self, query: str, profile_id: str,
         mode: Mode = Mode.A, limit: int = 20,
+        *,
+        extra_disabled_channels: set[str] | None = None,
     ) -> RecallResponse:
-        """Full retrieval pipeline: strategy -> channels -> RRF -> rerank."""
+        """Full retrieval pipeline: strategy -> channels -> RRF -> rerank.
+
+        V3.4.40 (2026-05-09): ``extra_disabled_channels`` allows callers to
+        skip specific channels for a single recall (e.g. SpreadingActivation
+        for the ``--fast`` CLI flag) without mutating shared config.
+        """
         t0 = time.monotonic()
+        self._extra_disabled = set(extra_disabled_channels or ())
 
         # 1. Classify query, get adaptive weights
         strat = self._strategy.classify(query, self._base_weights)
@@ -443,7 +451,8 @@ class RetrievalEngine:
         """Run active retrieval channels. Respects disabled_channels config for ablation."""
         out: dict[str, list[tuple[str, float]]] = {}
         # Skip channels listed in disabled_channels (ablation support)
-        disabled = set(self._config.disabled_channels)
+        # V3.4.40: union with per-recall extra_disabled set (e.g. --fast skip)
+        disabled = set(self._config.disabled_channels) | getattr(self, "_extra_disabled", set())
 
         # V3.3.4: Embed query ONCE, reuse for semantic + hopfield channels
         q_emb: list[float] | None = None

@@ -47,12 +47,18 @@ class SpreadingActivationConfig:
     delta: float = 0.5           # Node retention / self-decay per iteration
     spreading_factor: float = 0.8  # S: energy diffusion rate
     # V3.3.20: Recalibrated for SLM graph density (254K edges, 768d).
+    # V3.4.40 (2026-05-09): graph grew to 960K edges. top_m=20 caused 5.5s recalls.
+    # Reduced to 10 (compromise between SYNAPSE default 7 and the dense-graph 20).
     # SYNAPSE defaults (theta=0.5, top_m=7) were for 384d sparse graphs.
     theta: float = 0.2           # Activation threshold for sigmoid (was 0.5)
-    top_m: int = 20              # Lateral inhibition: max active nodes (was 7)
+    top_m: int = 10              # Lateral inhibition: max active nodes (was 20, then 7 originally)
     max_iterations: int = 3      # T: propagation depth
     tau_gate: float = 0.05       # FOK confidence gate (was 0.12)
     enabled: bool = True         # Ships enabled by default
+    # V3.4.40 (2026-05-09): per-node neighbor fan-out clamp.
+    # Hub nodes in dense graphs (5K+ edges) caused unbounded work per expansion.
+    # 100 top-weighted neighbors keeps signal, drops long-tail noise.
+    max_neighbors_per_node: int = 100
     # v3.4.1: Graph intelligence integration
     use_pagerank_bias: bool = False    # Multiply propagation by target PageRank
     community_boost: float = 0.0       # Boost same-community nodes (0.0 = disabled)
@@ -217,24 +223,35 @@ class SpreadingActivation:
         """Get neighbors from BOTH graph_edges and association_edges.
 
         Uses bidirectional UNION query (Section 4 of LLD).
+
+        V3.4.40 (2026-05-09): clamps fan-out to top
+        ``max_neighbors_per_node`` by weight. Without this clamp, hub nodes
+        with thousands of neighbors caused 5.5s recalls. Bounded fan-out
+        matches SYNAPSE's original sparse-graph assumption while preserving
+        the highest-signal edges.
         """
         try:
             rows = self._db.execute(
                 """
-                SELECT target_id AS neighbor_id, weight FROM graph_edges
-                    WHERE source_id = ? AND profile_id = ?
-                UNION ALL
-                SELECT target_fact_id AS neighbor_id, weight FROM association_edges
-                    WHERE source_fact_id = ? AND profile_id = ?
-                UNION ALL
-                SELECT source_id AS neighbor_id, weight FROM graph_edges
-                    WHERE target_id = ? AND profile_id = ?
-                UNION ALL
-                SELECT source_fact_id AS neighbor_id, weight FROM association_edges
-                    WHERE target_fact_id = ? AND profile_id = ?
+                SELECT neighbor_id, weight FROM (
+                    SELECT target_id AS neighbor_id, weight FROM graph_edges
+                        WHERE source_id = ? AND profile_id = ?
+                    UNION ALL
+                    SELECT target_fact_id AS neighbor_id, weight FROM association_edges
+                        WHERE source_fact_id = ? AND profile_id = ?
+                    UNION ALL
+                    SELECT source_id AS neighbor_id, weight FROM graph_edges
+                        WHERE target_id = ? AND profile_id = ?
+                    UNION ALL
+                    SELECT source_fact_id AS neighbor_id, weight FROM association_edges
+                        WHERE target_fact_id = ? AND profile_id = ?
+                )
+                ORDER BY weight DESC
+                LIMIT ?
                 """,
                 (node_id, profile_id, node_id, profile_id,
-                 node_id, profile_id, node_id, profile_id),
+                 node_id, profile_id, node_id, profile_id,
+                 self._config.max_neighbors_per_node),
             )
             return [
                 (dict(r)["neighbor_id"], dict(r)["weight"]) for r in rows

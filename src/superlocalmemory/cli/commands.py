@@ -905,10 +905,11 @@ def cmd_recall(args: Namespace) -> None:
         if is_daemon_running() or ensure_daemon():
             from urllib.parse import quote
             session_id = f"cli:{os.getppid()}"
+            fast_qs = "&fast=true" if getattr(args, "fast", False) else ""
             result = daemon_request(
                 "GET",
                 f"/recall?q={quote(args.query)}&limit={args.limit}"
-                f"&session_id={quote(session_id)}",
+                f"&session_id={quote(session_id)}{fast_qs}",
             )
             if result and "results" in result:
                 # Format daemon response same as engine response
@@ -937,7 +938,10 @@ def cmd_recall(args: Namespace) -> None:
         engine = MemoryEngine(config)
         engine.initialize()
 
-        response = engine.recall(args.query, limit=args.limit)
+        response = engine.recall(
+            args.query, limit=args.limit,
+            fast=getattr(args, "fast", False),
+        )
     except Exception as exc:
         if use_json:
             from superlocalmemory.cli.json_output import json_print

@@ -187,6 +187,12 @@ def main() -> None:
     recall_p.add_argument("query", help="Search query")
     recall_p.add_argument("--limit", type=int, default=10, help="Max results (default 10)")
     recall_p.add_argument("--json", action="store_true", help="Output structured JSON (agent-native)")
+    recall_p.add_argument(
+        "--fast", action="store_true",
+        help="Skip SpreadingActivation 5th channel for sub-second response. "
+             "Other 4 channels (semantic, lexical, temporal, structural) still run. "
+             "Use when you need recall before a tool call (e.g. before WebSearch).",
+    )
 
     forget_p = sub.add_parser("forget", help="Delete memories matching a query (fuzzy)")
     forget_p.add_argument("query", help="Query to match for deletion")

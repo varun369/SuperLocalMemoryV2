@@ -556,10 +556,15 @@ def run_recall(
     hooks: HookRegistry,
     access_log: Any = None,
     auto_linker: Any = None,
+    fast: bool = False,
 ) -> RecallResponse:
     """Recall relevant facts for a query.
 
     Pipeline: retrieval -> agentic sufficiency (if configured) -> post-recall updates.
+
+    V3.4.40: ``fast=True`` adds spreading_activation to the per-recall
+    extra_disabled_channels set, skipping the 5th channel for sub-second
+    response.
     """
     # Pre-operation hooks
     hook_ctx = {
@@ -572,7 +577,11 @@ def run_recall(
 
     m = mode or config.mode
 
-    response = retrieval_engine.recall(query, profile_id, m, limit)
+    extra_disabled = {"spreading_activation"} if fast else None
+    response = retrieval_engine.recall(
+        query, profile_id, m, limit,
+        extra_disabled_channels=extra_disabled,
+    )
 
     # Agentic sufficiency verification
     # V3.3.19: Only trigger for multi_hop queries in Mode A (rule-based).

@@ -1082,6 +1082,7 @@ def _register_daemon_routes(application: FastAPI) -> None:
         request: Request,
         q: str = "", query: str = "", limit: int = 20,
         session_id: str = "",
+        fast: bool = False,
     ):
         _update_activity()
         search_query = q or query  # Accept both ?q= and ?query= for compatibility
@@ -1103,6 +1104,7 @@ def _register_daemon_routes(application: FastAPI) -> None:
         try:
             response = engine.recall(
                 search_query, limit=limit, session_id=effective_sid,
+                fast=fast,
             )
             # v3.4.26: return the same field shape as recall_worker so
             # MCP processes proxying through the daemon get recall_trace-

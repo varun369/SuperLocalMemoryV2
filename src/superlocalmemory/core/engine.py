@@ -376,6 +376,7 @@ class MemoryEngine:
         mode: Mode | None = None, limit: int = 20,
         agent_id: str = "unknown",
         session_id: str | None = None,
+        fast: bool = False,
     ) -> RecallResponse:
         """Recall relevant facts for a query.
 
@@ -385,6 +386,11 @@ class MemoryEngine:
         Zero additional latency on the hot path — enqueue is a
         ``put_nowait`` and the actual ``pending_outcomes`` INSERT runs
         on a background worker.
+
+        V3.4.40 (2026-05-09): ``fast=True`` skips the SpreadingActivation
+        5th channel for sub-second response. The other 4 channels still
+        run. Use when recall must complete before another tool call (e.g.
+        agent recall before WebSearch).
         """
         self._require_full("recall")
         self._ensure_init()
@@ -402,6 +408,7 @@ class MemoryEngine:
             hooks=self._hooks,
             access_log=self._access_log,
             auto_linker=self._auto_linker,
+            fast=fast,
         )
 
         # S9-DASH-02: enqueue for pending_outcomes. Non-blocking; errors
