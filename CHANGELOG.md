@@ -6,7 +6,53 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### [Unreleased]
-- **License:** Changed from Elastic-2.0 to AGPL-3.0-or-later to protect research IP
+
+---
+
+## [3.4.40] - 2026-05-09
+
+Recall performance and entity-profile hygiene. Two scaling issues surfaced
+on dense graphs: spreading-activation fan-out grew unbounded as graphs
+exceeded the previous calibration target, and `entity_profiles.knowledge_summary`
+grew unbounded via concatenation. This release bounds both, adds an opt-in
+`--fast` recall mode, and increases the query embedding cache.
+
+### Added
+- **`slm recall --fast`** — skips the spreading-activation channel for
+  faster response. The other four channels (semantic, BM25, temporal,
+  hopfield) still run. Use when an agent needs recall before another
+  tool call. Plumbed via a new `extra_disabled_channels` parameter through
+  CLI → daemon `/recall` → `MemoryEngine.recall` → `run_recall` →
+  `RetrievalEngine.recall`.
+
+### Changed
+- **Spreading-activation fan-out is bounded.** `_get_unified_neighbors`
+  now applies `ORDER BY weight DESC LIMIT max_neighbors_per_node`
+  (default 100). High-degree nodes previously expanded every neighbor
+  every iteration. Bounded fan-out matches the SYNAPSE paper's
+  sparse-graph assumption while preserving the highest-weight edges.
+- **`SpreadingActivationConfig.top_m`: 20 → 10.** Compromise between the
+  SYNAPSE default (7) and the prior dense-graph tuning (20).
+- **`ObservationBuilder._build_summary` is now bounded.** Last 10 facts
+  (was 20), 200-char cap per fact, 2048-char total cap. Previously
+  `knowledge_summary` grew via concatenation and could exceed tens of
+  KB on hub entities, polluting recall with stale text.
+- **Query embedding LRU cache: 64 → 512 entries.** Sub-millisecond cache
+  hits versus a 200–2000 ms embedding call. Memory cost is ≈1.5 MB.
+
+### Maintenance
+- `run_maintenance` now consolidates over-bound entity summaries via a
+  single SQL update on the existing scheduler interval.
+
+### Tests
+- 399/399 retrieval + encoding suite passing.
+- 12/12 spreading-activation unit tests passing.
+
+### Upgrade notes
+- Existing deployments with bloated `entity_profiles.knowledge_summary`
+  rows will see them truncated on the next `slm consolidate` or
+  scheduled maintenance run. The truncation is in-place; entity
+  identity and `fact_count` are preserved.
 
 ---
 
