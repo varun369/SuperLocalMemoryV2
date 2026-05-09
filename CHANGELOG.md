@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.41] - 2026-05-09
+
+Hotfix release. Pins `tree-sitter-language-pack` to the `<1` line. The
+upstream 1.x rewrite (Rust-backed) ships an incompatible Parser API — the
+language-pack's bundled `Parser` no longer exposes `.parse()`, breaking the
+code-graph extractor and its test suite. Pinning to the 0.x line restores
+the documented API. A migration to the 1.x API will follow in a later
+release once call-site changes are validated.
+
+### Fixed
+- `code_graph` extractor and tests broken by `tree-sitter-language-pack 1.x`.
+  Constraint changed from `>=0.3,<2` to `>=0.5,<1`.
+
+---
+
 ## [3.4.40] - 2026-05-09
 
 Recall performance and entity-profile hygiene. Two scaling issues surfaced

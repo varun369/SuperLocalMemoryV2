@@ -1,6 +1,6 @@
 [project]
 name = "superlocalmemory"
-version = "3.4.40"
+version = "3.4.41"
 description = "Information-geometric agent memory with mathematical guarantees"
 readme = "README.md"
 license = {text = "AGPL-3.0-or-later"}
@@ -46,7 +46,7 @@ dependencies = [
     "orjson>=3.9.0",
     # CodeGraph — code knowledge graph (v3.4)
     "tree-sitter>=0.23.0,<1",
-    "tree-sitter-language-pack>=0.3,<2",
+    "tree-sitter-language-pack>=0.5,<1",
     "rustworkx>=0.15,<1",
     "watchdog>=4.0,<6",
     # V3.4.3: Unified Brain
