@@ -139,22 +139,39 @@ class ObservationBuilder:
             ),
         )
 
+    # V3.4.40 (2026-05-09): bounded summary to prevent unbounded growth.
+    # Pre-V3.4.40 builds concatenated full fact content. Hubs accumulated
+    # 60+ KB summaries that polluted recall and bloated entity_profiles.
+    _SUMMARY_MAX_FACTS = 10           # Last N facts (was 20)
+    _SUMMARY_MAX_CHARS_PER_FACT = 200  # Truncate each fact (NEW)
+    _SUMMARY_MAX_TOTAL_CHARS = 2048    # Hard cap on full summary (NEW)
+
     def _build_summary(
         self, entity_id: str, fact_ids: list[str], profile_id: str
     ) -> str:
         """Build a knowledge summary from all facts about an entity.
 
-        Simple concatenation for now. Mode B/C could use LLM summarization.
+        V3.4.40: bounded — last 10 facts, 200 chars each, 2048 total.
+        Older builds produced 60KB summaries on hub entities.
+        Mode B/C could use LLM rollup for higher-quality compression.
         """
         facts = []
-        for fid in fact_ids[-20:]:  # Last 20 facts to keep summary manageable
+        for fid in fact_ids[-self._SUMMARY_MAX_FACTS:]:
             rows = self._db.execute(
                 "SELECT content FROM atomic_facts WHERE fact_id = ? AND profile_id = ?",
                 (fid, profile_id),
             )
             if rows:
-                facts.append(dict(rows[0])["content"])
+                content = dict(rows[0])["content"]
+                # Truncate per-fact to bound the join below
+                if len(content) > self._SUMMARY_MAX_CHARS_PER_FACT:
+                    content = content[: self._SUMMARY_MAX_CHARS_PER_FACT - 1] + "…"
+                facts.append(content)
 
         if not facts:
             return ""
-        return " | ".join(facts)
+        joined = " | ".join(facts)
+        # Hard cap as final safety net
+        if len(joined) > self._SUMMARY_MAX_TOTAL_CHARS:
+            joined = joined[: self._SUMMARY_MAX_TOTAL_CHARS - 1] + "…"
+        return joined

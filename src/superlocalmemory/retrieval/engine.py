@@ -86,8 +86,11 @@ class RetrievalEngine:
         self._trust_scorer = trust_scorer
 
         # V3.3.4: LRU cache for query embeddings (avoids redundant Ollama API calls)
+        # V3.4.40 (2026-05-09): bumped 64 -> 512. Each cached embedding is ~3KB
+        # (768 floats × 4 bytes). 512 entries ~1.5MB — trivial memory cost,
+        # massive latency win on repeated queries (sub-ms vs 200-2000ms ollama).
         self._query_embedding_cache: dict[str, list[float]] = {}
-        self._cache_max_size = 64
+        self._cache_max_size = 512
 
         # V3.2: ChannelRegistry for self-registration (Phase 0.5)
         from superlocalmemory.retrieval.channel_registry import ChannelRegistry

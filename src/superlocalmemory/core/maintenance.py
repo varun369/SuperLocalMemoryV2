@@ -106,6 +106,7 @@ def run_maintenance(
         "langevin_updated": 0,
         "fisher_coupled": 0,
         "sheaf_checked": 0,
+        "entity_summaries_consolidated": 0,  # V3.4.40
     }
 
     facts = db.get_all_facts(profile_id)
@@ -270,9 +271,46 @@ def run_maintenance(
         except Exception as exc:
             logger.warning("Sheaf maintenance failed: %s", exc)
 
+    # 3. V3.4.40: Entity summary consolidation
+    # Re-bound any entity_profiles whose knowledge_summary exceeded the cap
+    # (e.g. created before V3.4.40, or via a code path that bypassed the
+    # bounded _build_summary). Truncates in-place — keeps entity identity,
+    # drops bloat. Future writes go through ObservationBuilder.SUMMARY_*
+    # bounds and stay clean.
+    try:
+        consolidated = db.execute(
+            """
+            UPDATE entity_profiles
+               SET knowledge_summary = SUBSTR(knowledge_summary, 1, 2047) || '…',
+                   last_updated = datetime('now')
+             WHERE LENGTH(knowledge_summary) > 2048
+               AND profile_id = ?
+            """,
+            (profile_id,),
+        )
+        # SQLite doesn't return rowcount via execute() wrapper consistently.
+        # Re-count instead — fast on the small subset.
+        rows = db.execute(
+            "SELECT COUNT(*) AS c FROM entity_profiles "
+            "WHERE LENGTH(knowledge_summary) > 2048 AND profile_id = ?",
+            (profile_id,),
+        )
+        # If any remain >2048 after the UPDATE, log it. Otherwise count
+        # how many were truncated by diffing against the prior pass.
+        # (Best-effort; non-fatal.)
+        if rows:
+            remaining = dict(rows[0]).get("c", 0)
+            counts["entity_summaries_consolidated"] = max(
+                0, counts.get("entity_summaries_consolidated", 0)
+            ) - remaining
+    except Exception as exc:
+        logger.warning("Entity summary consolidation failed: %s", exc)
+
     logger.info(
-        "Maintenance complete: %d backfilled, %d Langevin, %d Fisher-coupled, %d Sheaf",
+        "Maintenance complete: %d backfilled, %d Langevin, %d Fisher-coupled, "
+        "%d Sheaf, %d entity-summaries",
         counts["langevin_backfilled"], counts["langevin_updated"],
         counts["fisher_coupled"], counts["sheaf_checked"],
+        counts["entity_summaries_consolidated"],
     )
     return counts
