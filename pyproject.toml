@@ -1,6 +1,6 @@
 [project]
 name = "superlocalmemory"
-version = "3.4.41"
+version = "3.4.42"
 description = "Information-geometric agent memory with mathematical guarantees"
 readme = "README.md"
 license = {text = "AGPL-3.0-or-later"}
@@ -98,6 +98,7 @@ full = [
 dev = [
     "pytest>=8.0",
     "pytest-cov>=4.1",
+    "pytest-asyncio>=0.21",
     "sqlite-vec>=0.1.6",
 ]
 
@@ -124,10 +125,12 @@ superlocalmemory = ["ui/**/*", "skills/**/*"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-m 'not slow and not ollama and not benchmark'"
+asyncio_mode = "auto"
 markers = [
     "slow: marks tests as slow — real engine/model loading (run with: pytest -m slow)",
     "ollama: marks tests that require a running Ollama instance",
     "benchmark: marks CI-only evo-memory benchmark tests (run with: pytest tests/test_benchmarks/ -m benchmark)",
+    "asyncio: marks tests as async — runs via pytest-asyncio (auto-mode in this project)",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning:vaderSentiment",
@@ -167,5 +170,6 @@ select = ["E", "F", "I", "W"]
 dev = [
     "build>=1.4.0",
     "pytest>=9.0.2",
+    "pytest-asyncio>=0.21",
     "twine>=6.2.0",
 ]

@@ -9,6 +9,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.42] - 2026-05-11
+
+Operational reliability release. Three latent bugs in the daemon /
+worker-singleton paths that surfaced together when running on a
+fresh-install machine and produced misleading "failed" output despite
+the system actually working. None of them affected the core recall or
+remember pipelines on a healthy daemon — they only broke `slm restart`,
+`slm warmup`, and `slm health` cosmetically — but the resulting noise
+eroded trust and made real failures harder to diagnose. All three are
+fixed without changing public APIs.
+
+### Fixed
+- **`slm restart` Step 3 false-negative.** Step 2 of `cmd_restart`
+  acquires `daemon.lock` via `fcntl.flock(LOCK_EX | LOCK_NB)` to block
+  other CLI/MCP processes from racing to start a daemon during the
+  restart window. Step 3 then called `ensure_daemon()`, which itself
+  attempts to acquire the same lock from a separate file descriptor in
+  the SAME process. BSD-style flock blocks per-fd even within one
+  process, so the second flock failed with `EWOULDBLOCK`,
+  `ensure_daemon` fell into its "wait for someone else to start it"
+  branch, timed out at 60 s, and reported "failed to start" — even
+  though no actual error occurred and a follow-up CLI call would
+  successfully start the daemon. Fixed by extracting
+  `_start_daemon_subprocess()` from `ensure_daemon()`. The new helper
+  performs the raw `subprocess.Popen` + PID/port file write +
+  `_wait_for_daemon` polling without taking the lock. `cmd_restart`
+  Step 3 now calls the helper directly (it already holds the lock);
+  `ensure_daemon()` itself is unchanged for external callers — it
+  acquires the lock and then delegates to the same helper. (`B1`)
+
+- **`slm warmup` "embedding verification failed" when daemon is up.**
+  `EmbeddingService._ensure_worker` enforces a machine-wide singleton
+  via a PID file (v3.4.13): only one embedding worker can exist per
+  machine, normally owned by the unified daemon. A fresh
+  `EmbeddingService` started by `slm warmup` saw the singleton, set
+  `_available = False`, returned `None` from `_subprocess_embed`, and
+  printed "Model loaded but embedding verification failed" with a
+  diagnostic that incorrectly guessed at a "Node.js wrapper Python-path
+  mismatch" (no Node.js is involved when running `slm warmup` from the
+  shell). Fixed by making `cmd_warmup` daemon-aware: when the daemon
+  is reachable and reports `engine=initialized`, the model is already
+  loaded inside the daemon's worker — print a `[PASS]` summary and
+  return without spawning a redundant local worker. The original
+  local-spawn path is preserved as a fall-through for the daemon-down
+  case. (`B2a`)
+
+- **Reranker false-positive "warmup failed" warning in CLI processes.**
+  Any CLI process that wires a `RetrievalEngine` while the daemon is
+  running (`slm health`, `slm doctor`, `slm recall`) would log
+  `"Cross-encoder reranker warmup failed — recalls will use fallback
+  scoring"` even though the daemon's reranker was healthy and serving
+  fine. The CLI process's own warmup was correctly blocked by the
+  reranker singleton, but the message did not distinguish the benign
+  singleton case from a real model-load failure. Fixed in
+  `engine_wiring.init_engine`: when `warmup_sync` returns `False`,
+  probe `_is_reranker_worker_alive()`. If another process owns the
+  worker, log an `INFO` line describing the singleton ownership;
+  reserve the `WARNING` for the genuine no-owner failure case. The
+  diagnostic value of the warning is preserved — only the false
+  positive is removed. (`B2b`)
+
+### Added
+- 17 new unit tests covering the three fixes (`tests/test_cli/test_v3442_*`,
+  `tests/test_core/test_v3442_reranker_warmup_singleton.py`). Tests are
+  fully mocked (no real subprocess spawn, no DB) and run in <1 s.
+- `pytest-asyncio>=0.21` added to both `[project.optional-dependencies].dev`
+  and `[dependency-groups].dev` in `pyproject.toml`. `asyncio_mode = "auto"`
+  configured in `[tool.pytest.ini_options]`, and the `asyncio` marker is now
+  registered. Resolves a local-vs-CI environment drift where 6 async adapter
+  tests (`tests/test_adapters/test_sync_loop.py`) failed locally for anyone
+  who installed via `pip install -e ".[dev]"` without separately installing
+  `pytest-asyncio` — the CI publish workflow installs the plugin explicitly,
+  so PyPI builds were not blocked, but the failures were noisy and
+  contributor-hostile.
+
+---
+
 ## [3.4.41] - 2026-05-09
 
 Hotfix release. Pins `tree-sitter-language-pack` to the `<1` line. The

@@ -30,12 +30,12 @@ DB_PATH = MEMORY_DIR / "memory.db"
 def _get_agent_id(default: str = "mcp_client") -> str:
     """Resolve the calling agent's ID for attribution.
 
-    Each Avenger (Claude, Codex, Gemini, Kimi, GLM, Qwen, etc.) sets the
-    ``SLM_AGENT_ID`` env var in its MCP server config so that memories,
+    Each MCP client (Claude Code, Codex, Gemini CLI, Kimi, etc.) can set
+    the ``SLM_AGENT_ID`` env var in its MCP server config so that memories,
     observations, and registry entries are tagged with the actual source
     agent — not the legacy ``"mcp_client"`` default.
 
-    v3.4.39+: enables proper cross-Avenger attribution in ``session_init``,
+    v3.4.39+: enables proper per-agent attribution in ``session_init``,
     ``observe``, and event emissions.
     """
     return os.environ.get("SLM_AGENT_ID", default)
@@ -174,8 +174,8 @@ def register_active_tools(server, get_engine: Callable) -> None:
         The system will NOT store low-confidence or irrelevant content.
 
         v3.4.39: ``agent_id`` now defaults to the ``SLM_AGENT_ID`` env var
-        (set by each Avenger's MCP config) so observations carry proper
-        cross-Avenger attribution.
+        (set by each MCP client's config) so observations carry proper
+        per-agent attribution.
         """
         if agent_id is None:
             agent_id = _get_agent_id()

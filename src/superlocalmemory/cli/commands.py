@@ -316,9 +316,16 @@ def cmd_restart(args: Namespace) -> None:
          f"removed: {', '.join(cleaned)}" if cleaned else "already clean")
 
     # Step 3: Start fresh daemon (lock still held — no races)
+    # v3.4.42: Call _start_daemon_subprocess() directly instead of
+    # ensure_daemon(). The latter tries to acquire daemon.lock itself,
+    # which the SAME PROCESS holds via restart_lock_fd above — BSD-style
+    # flock blocks per-fd even within one process, so ensure_daemon would
+    # fall into its lock-fail branch and time out after 60s while the
+    # actual daemon never gets started. Calling the helper directly
+    # bypasses that self-deadlock and starts the daemon as intended.
     time.sleep(1)
-    from superlocalmemory.cli.daemon import ensure_daemon
-    started = ensure_daemon()
+    from superlocalmemory.cli.daemon import _start_daemon_subprocess
+    started = _start_daemon_subprocess()
 
     # Release restart lock — daemon is now running with its own lock
     if restart_lock_fd:
@@ -1662,7 +1669,19 @@ def cmd_mcp(_args: Namespace) -> None:
 
 
 def cmd_warmup(_args: Namespace) -> None:
-    """Pre-download the embedding model so first use is instant."""
+    """Pre-download the embedding model so first use is instant.
+
+    v3.4.42: daemon-aware. The embedding worker is a machine-wide
+    singleton (`_is_embedding_worker_alive` + PID file), so when the
+    unified daemon is running it OWNS the worker. A fresh
+    `EmbeddingService` started here would see the singleton, set
+    `_available = False`, return None from `_subprocess_embed`, and
+    print "embedding verification failed" — even though the daemon's
+    worker is already happily serving the same model. The fix: detect
+    the daemon, verify via its health endpoint, and skip the local
+    spawn. Only fall through to the original local-worker path when
+    the daemon is genuinely unreachable.
+    """
     import superlocalmemory.core.embeddings as _emb_mod
 
     print("SuperLocalMemory V3 — Embedding Model Warmup")
@@ -1671,7 +1690,37 @@ def cmd_warmup(_args: Namespace) -> None:
     print(f"  Model:  nomic-ai/nomic-embed-text-v1.5 (~500MB)")
     print()
 
-    # Increase timeout for first-time download
+    # v3.4.42 — daemon-aware fast path. If the daemon is up and reports
+    # engine=initialized, the embedding model is already loaded inside
+    # the daemon's worker subprocess. No need to spawn a redundant one;
+    # in fact, the machine-wide singleton would refuse to do so anyway.
+    try:
+        from superlocalmemory.cli.daemon import (
+            is_daemon_running, daemon_request,
+        )
+        if is_daemon_running():
+            health = daemon_request("GET", "/health")
+            if health and health.get("engine") == "initialized":
+                from superlocalmemory.core.config import EmbeddingConfig
+                cfg = EmbeddingConfig()
+                print("[PASS] Daemon is running with embedding model loaded.")
+                print(f"       Model: {cfg.model_name} ({cfg.dimension}-dim)")
+                print("Semantic search is fully operational.")
+                return
+            # Daemon up but engine not yet initialized — warn and return
+            # rather than racing the daemon for the singleton lock.
+            engine_state = (health or {}).get("engine", "unknown")
+            print(f"[INFO] Daemon is up but engine state is '{engine_state}'.")
+            print("       Wait ~30s and retry, or run: slm doctor")
+            return
+    except Exception:
+        # Any failure in the daemon path falls through to local warmup —
+        # better to spawn a local worker than block warmup entirely.
+        pass
+
+    # Local-warmup fallback path: daemon is unreachable, so it's safe
+    # to spawn our own embedding worker (no singleton conflict).
+    # Increase timeout for first-time download.
     original_timeout = _emb_mod._SUBPROCESS_RESPONSE_TIMEOUT
     _emb_mod._SUBPROCESS_RESPONSE_TIMEOUT = 180  # 3 min for cold start
 

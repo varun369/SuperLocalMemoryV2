@@ -559,14 +559,39 @@ def init_retrieval(
     # The CrossEncoderReranker constructor starts background warmup, but
     # callers can also call warmup_sync() to block until ready.
     # Here we just log warmup status — benchmark scripts call warmup_sync() explicitly.
+    #
+    # v3.4.42: Distinguish the legitimate "another process owns the
+    # reranker worker" case (machine-wide singleton — usually the unified
+    # daemon) from a real warmup failure. Before this fix, any CLI process
+    # that wired an Engine while the daemon was up would log
+    # "reranker warmup failed — recalls will use fallback scoring" even
+    # though the daemon's reranker was healthy and serving fine. The
+    # warning was a false positive that masked real failures and eroded
+    # trust in slm health / slm doctor output.
     if reranker is not None:
         import threading
         def _log_warmup_status() -> None:
             ready = reranker.warmup_sync(timeout=180)
             if ready:
                 logger.info("Cross-encoder reranker warm and ready")
-            else:
-                logger.warning("Cross-encoder reranker warmup failed — recalls will use fallback scoring")
+                return
+            # warmup_sync returned False. Could be (a) singleton held by
+            # another process (benign), or (b) actual model load failure.
+            # Disambiguate by probing the singleton PID file.
+            try:
+                from superlocalmemory.retrieval.reranker import _is_reranker_worker_alive
+                if _is_reranker_worker_alive():
+                    logger.info(
+                        "Cross-encoder reranker worker held by another process "
+                        "(machine-wide singleton — usually the unified daemon); "
+                        "this process will route reranking through that worker"
+                    )
+                    return
+            except Exception:
+                pass
+            logger.warning(
+                "Cross-encoder reranker warmup failed — recalls will use fallback scoring"
+            )
         t = threading.Thread(target=_log_warmup_status, daemon=True, name="ce-init-warmup")
         t.start()
 

@@ -314,7 +314,7 @@ class TestSessionInitIntegration:
         self, MockAutoRecall, MockRulesEngine, mock_register, mock_emit,
         monkeypatch,
     ):
-        """v3.4.39: SLM_AGENT_ID env overrides default for proper Avenger attribution."""
+        """v3.4.39: SLM_AGENT_ID env overrides default for proper per-agent attribution."""
         monkeypatch.setenv("SLM_AGENT_ID", "codex")
         engine = _make_engine_mock(profile_id="varun")
         auto = _make_auto_recall_mock()

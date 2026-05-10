@@ -137,6 +137,50 @@ def daemon_request(method: str, path: str, body: dict | None = None) -> dict | N
 _LOCK_FILE = Path.home() / ".superlocalmemory" / "daemon.lock"
 
 
+def _start_daemon_subprocess() -> bool:
+    """Spawn the unified daemon subprocess and wait for readiness.
+
+    v3.4.42: Extracted from ensure_daemon() so callers that already hold
+    daemon.lock (e.g. cmd_restart Step 2) can start the daemon WITHOUT
+    triggering a second flock acquisition. BSD-style flock blocks per-fd
+    even within the same process, so the previous code path produced a
+    self-deadlock when called from Step 3 of `slm restart`: the lock held
+    by Step 2 caused ensure_daemon's own flock to fail with EWOULDBLOCK,
+    falling into the wait-for-someone-else branch and timing out at 60s
+    even though the daemon would have started cleanly.
+
+    PRECONDITION: caller has either acquired daemon.lock OR is certain no
+    other CLI/MCP process is racing to start a daemon (e.g. we just killed
+    everything in `slm restart` Step 1).
+
+    Returns True if daemon is reachable on the health endpoint within
+    60 seconds, False otherwise.
+    """
+    if is_daemon_running():
+        return True
+
+    import subprocess
+    cmd = [sys.executable, "-m", "superlocalmemory.server.unified_daemon", "--start"]
+    log_dir = Path.home() / ".superlocalmemory" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "daemon.log"
+
+    kwargs: dict = {}
+    if sys.platform == "win32":
+        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+    else:
+        kwargs["start_new_session"] = True
+
+    with open(log_file, "a") as lf:
+        proc = subprocess.Popen(cmd, stdout=lf, stderr=lf, **kwargs)
+
+    # Write PID immediately so other callers see it during warmup
+    _PID_FILE.write_text(str(proc.pid))
+    _PORT_FILE.write_text(str(_DEFAULT_PORT))
+
+    return _wait_for_daemon(timeout=60)
+
+
 def ensure_daemon() -> bool:
     """Start daemon if not running. Returns True if daemon is ready.
 
@@ -145,6 +189,12 @@ def ensure_daemon() -> bool:
       2. File lock prevents two callers from starting concurrent daemons
       3. After starting, waits for PID file (not health check) — fast detection
       4. Cross-platform: macOS + Windows + Linux
+
+    v3.4.42: Refactored to delegate the actual subprocess start to
+    `_start_daemon_subprocess()`. Callers that already hold daemon.lock
+    (e.g. `slm restart` Step 3) should call that helper directly to avoid
+    the same-process flock self-deadlock that returned a false-negative
+    "failed to start" while the daemon was actually starting cleanly.
     """
     if is_daemon_running():
         return True
@@ -176,27 +226,9 @@ def ensure_daemon() -> bool:
         if is_daemon_running():
             return True
 
-        # Start unified daemon in background
-        import subprocess
-        cmd = [sys.executable, "-m", "superlocalmemory.server.unified_daemon", "--start"]
-        log_dir = Path.home() / ".superlocalmemory" / "logs"
-        log_dir.mkdir(parents=True, exist_ok=True)
-        log_file = log_dir / "daemon.log"
-
-        kwargs: dict = {}
-        if sys.platform == "win32":
-            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
-        else:
-            kwargs["start_new_session"] = True
-
-        with open(log_file, "a") as lf:
-            proc = subprocess.Popen(cmd, stdout=lf, stderr=lf, **kwargs)
-
-        # Write PID immediately so other callers see it during warmup
-        _PID_FILE.write_text(str(proc.pid))
-        _PORT_FILE.write_text(str(_DEFAULT_PORT))
-
-        return _wait_for_daemon(timeout=60)
+        # Start unified daemon in background — delegated to helper so the
+        # same logic can be reused by callers that already hold the lock.
+        return _start_daemon_subprocess()
 
     except Exception as exc:
         # Daemon auto-start is the entry point for dashboard / mesh /
