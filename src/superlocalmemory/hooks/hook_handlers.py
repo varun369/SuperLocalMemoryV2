@@ -85,6 +85,14 @@ def handle_hook(action: str) -> None:
     if action == "auto_recall":
         from superlocalmemory.hooks.auto_recall_hook import main as _main
         sys.exit(_main())
+    # v3.4.43 — event-based mid-session recall signals.
+    # Replace the time-based 15/30-min nag in _hook_checkpoint with these.
+    if action == "topic_shift":
+        from superlocalmemory.hooks.topic_shift_hook import main as _main
+        sys.exit(_main())
+    if action == "before_web":
+        from superlocalmemory.hooks.before_web_hook import main as _main
+        sys.exit(_main())
 
     handlers = {
         "start": _hook_start,
@@ -302,19 +310,17 @@ def _hook_checkpoint() -> None:
                   " — Call mcp__superlocalmemory__observe with a 1-line"
                   " summary of what was changed and why.")
 
-    # --- Periodic recall reminder (every 15 min) ---
-    recall_lock = os.path.join(_TMP, "slm-recall-reminder")
-    if _cooldown_elapsed(recall_lock, _RECALL_INTERVAL, now):
-        _write_timestamp(recall_lock, now)
-        print("[SLM] 15+ min since last context refresh."
-              " Call mcp__superlocalmemory__recall with current work topic.")
-
-    # --- Periodic learn reminder (every 30 min) ---
-    learn_lock = os.path.join(_TMP, "slm-learn-reminder")
-    if _cooldown_elapsed(learn_lock, _LEARN_INTERVAL, now):
-        _write_timestamp(learn_lock, now)
-        print("[SLM] Call mcp__superlocalmemory__get_learned_patterns"
-              " to adapt to learned preferences.")
+    # v3.4.43: Periodic 15/30-min recall/learn nags REMOVED.
+    # Reason: time-based reminders fired regardless of conversational state —
+    # noisy on focused sessions, blind to quick topic pivots within a window.
+    # Replaced by event-based detection:
+    #   - `slm hook topic_shift` (UserPromptSubmit) — fires on real topic pivots.
+    #   - `slm hook before_web` (PreToolUse WebSearch|WebFetch) — fires before
+    #     external research so SLM memories are surfaced first.
+    # The `_RECALL_INTERVAL` and `_LEARN_INTERVAL` constants are retained for
+    # backward import compatibility (tests reference them) but no longer drive
+    # any periodic emission from this hook. Auto-observe-on-file-change (the
+    # real value of _hook_checkpoint) is unchanged below this comment.
 
     sys.exit(0)
 
@@ -435,9 +441,15 @@ def _hook_stop() -> None:
         except OSError:
             pass
 
-    # Clean rate-limit locks
+    # Clean rate-limit locks.
+    # - "slm-obs-*"     : auto-observe per-file cooldown lockfiles (still written).
+    # - "slm-recall-*"  : v3.4.43 removed the periodic recall nag, but legacy
+    #                     /tmp/slm-recall-reminder files from older sessions
+    #                     may still exist — sweep them for cleanliness.
+    # - "slm-learn-*"   : same as above for the 30-min learn nag (removed v3.4.43).
+    _LOCK_PREFIXES = ("slm-obs-", "slm-recall-", "slm-learn-")
     for name in os.listdir(_TMP):
-        if name.startswith("slm-obs-") or name.startswith("slm-recall-") or name.startswith("slm-learn-"):
+        if any(name.startswith(p) for p in _LOCK_PREFIXES):
             try:
                 os.remove(os.path.join(_TMP, name))
             except OSError:

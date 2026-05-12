@@ -1,6 +1,6 @@
 [project]
 name = "superlocalmemory"
-version = "3.4.42"
+version = "3.4.43"
 description = "Information-geometric agent memory with mathematical guarantees"
 readme = "README.md"
 license = {text = "AGPL-3.0-or-later"}
@@ -42,7 +42,6 @@ dependencies = [
     "uvicorn>=0.42.0",
     "websockets>=16.0",
     "lightgbm>=4.0.0",
-    "diskcache>=5.6.0",
     "orjson>=3.9.0",
     # CodeGraph — code knowledge graph (v3.4)
     "tree-sitter>=0.23.0,<1",
@@ -57,7 +56,19 @@ dependencies = [
     # V3.4.18: Semantic search + cross-encoder reranker (npm install parity).
     # Previously under [search] extra — pip users silently lost 30pp of recall
     # quality vs. npm users. Now ships by default for both install paths.
-    "sentence-transformers[onnx]>=5.0.0",
+    # v3.4.43: bumped from >=5.0.0 to >=5.2.0 so the resolver doesn't pick
+    # 5.0.0-5.1.2 which cap transformers<5.0.0 (security headroom for when
+    # optimum-onnx upstream eventually supports transformers 5.x).
+    "sentence-transformers[onnx]>=5.2.0",
+    # NOTE on CVE-2026-1839 (transformers Trainer.torch.load RCE):
+    # SLM does NOT use transformers.Trainer (inference-only path via
+    # sentence-transformers + ONNX backend). The vulnerable method
+    # Trainer._load_rng_state is never called by SLM code, so the CVE is
+    # unreachable through SLM's API surface. We CANNOT pin transformers>=5.0.0
+    # because optimum-onnx 0.1.0 (latest upstream) caps transformers<4.58.0
+    # and SLM's embedding_worker.py:68 hard-codes backend="onnx". Will
+    # tighten this pin in a future release once optimum-onnx ships a
+    # transformers-5.x-compatible build.
     "torch>=2.2.0",
     "scikit-learn>=1.3.0,<2.0.0",
 ]
@@ -67,7 +78,7 @@ dependencies = [
 # moved into core in v3.4.18. ``pip install superlocalmemory[search]`` still
 # works but installs nothing extra.
 search = [
-    "sentence-transformers[onnx]>=5.0.0",
+    "sentence-transformers[onnx]>=5.2.0",
     "einops>=0.8.2",
     "torch>=2.2.0",
     "scikit-learn>=1.3.0,<2.0.0",
@@ -83,7 +94,6 @@ learning = [
     "lightgbm>=4.0.0",
 ]
 performance = [
-    "diskcache>=5.6.0",
     "orjson>=3.9.0",
 ]
 ingestion = [

@@ -31,7 +31,7 @@ CLAUDE_SETTINGS = Path.home() / ".claude" / "settings.json"
 VERSION_DIR = Path.home() / ".superlocalmemory" / "hooks"
 VERSION_FILE = VERSION_DIR / ".version"
 DISABLED_FILE = VERSION_DIR / ".hooks-disabled"
-HOOKS_VERSION = "3.3.6"
+HOOKS_VERSION = "3.4.43"
 
 # Cross-platform temp dir and marker paths
 _TMP = tempfile.gettempdir()
@@ -138,7 +138,22 @@ def _hook_definitions(include_gate: bool = False) -> dict[str, list]:
                         "timeout": 5000,
                     }
                 ]
-            }
+            },
+            # v3.4.43 — event-based topic-shift detection. Fires a one-line
+            # recall reminder ONLY when the current prompt's content-word set
+            # has zero overlap with every prompt in a 5-turn sliding window.
+            # Replaces the time-based 15/30-min recall nag previously emitted
+            # by _hook_checkpoint. Algorithm + state file are documented in
+            # superlocalmemory/hooks/topic_shift_hook.py.
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": _wrap_python_cmd("topic_shift"),
+                        "timeout": 3000,
+                    }
+                ]
+            },
         ],
         "Stop": [
             {
@@ -159,19 +174,35 @@ def _hook_definitions(include_gate: bool = False) -> dict[str, list]:
         ],
     }
 
+    # v3.4.43 — default PreToolUse entry: pre-web recall on WebSearch/WebFetch.
+    # Fires `slm hook before_web` which runs a 4-channel recall on the search
+    # query/URL and injects results as a system-reminder BEFORE the web call.
+    # Encourages Claude to consider local memories before paying for new web
+    # research. Independent of `include_gate` — this is value-add, not gating.
+    defs["PreToolUse"] = [
+        {
+            "matcher": "WebSearch|WebFetch",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": _wrap_python_cmd("before_web"),
+                    "timeout": 5000,
+                }
+            ],
+        }
+    ]
+
     if include_gate:
-        defs["PreToolUse"] = [
-            {
-                "matcher": _GATED_TOOLS,
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": _gate_cmd(),
-                        "timeout": 500,
-                    }
-                ],
-            }
-        ]
+        defs["PreToolUse"].insert(0, {
+            "matcher": _GATED_TOOLS,
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": _gate_cmd(),
+                    "timeout": 500,
+                }
+            ],
+        })
         defs["PostToolUse"].insert(0, {
             "matcher": "mcp__superlocalmemory__session_init",
             "hooks": [
@@ -330,7 +361,18 @@ def check_status() -> dict:
         for hook_type, entries in settings.get("hooks", {}).items():
             if any(_is_slm_hook_entry(e) for e in entries):
                 hook_types_found.append(hook_type)
-        has_gate = "PreToolUse" in hook_types_found
+        # v3.4.43: PreToolUse always has the before_web entry by default.
+        # `has_gate` should be True only when the _GATED_TOOLS firewall
+        # entry is present, NOT merely when any SLM PreToolUse entry exists.
+        for entry in settings.get("hooks", {}).get("PreToolUse", []):
+            if not _is_slm_hook_entry(entry):
+                continue
+            for hook in entry.get("hooks", []):
+                if "Call mcp__superlocalmemory__session_init first" in hook.get("command", ""):
+                    has_gate = True
+                    break
+            if has_gate:
+                break
     except Exception:
         pass
 

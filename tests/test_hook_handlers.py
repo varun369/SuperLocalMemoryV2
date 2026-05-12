@@ -578,8 +578,13 @@ class TestHookCheckpoint:
         assert "logged.py" in content
 
     @patch("superlocalmemory.hooks.hook_handlers._daemon_post")
-    def test_recall_reminder_after_15_min(self, mock_daemon_post, capsys, _clean_rate_locks):
-        """After 15 minutes, should print recall reminder."""
+    def test_recall_reminder_removed_v3_4_43(self, mock_daemon_post, capsys, _clean_rate_locks):
+        """v3.4.43: 15-min periodic recall reminder is REMOVED.
+
+        Regression test — the periodic time-based nag was replaced by the
+        event-based topic_shift hook. _hook_checkpoint no longer emits any
+        "context refresh" / "recall" reminder regardless of cooldown state.
+        """
         recall_lock = os.path.join(tempfile.gettempdir(), "slm-recall-reminder")
         old_ts = int(time.time()) - (_RECALL_INTERVAL + 60)
         with open(recall_lock, "w") as f:
@@ -592,11 +597,17 @@ class TestHookCheckpoint:
                     handle_hook("checkpoint")
 
         out = capsys.readouterr().out
-        assert "context refresh" in out or "recall" in out.lower()
+        # v3.4.43 contract: NO periodic recall nag.
+        assert "context refresh" not in out
+        assert "[SLM] 15+" not in out
 
     @patch("superlocalmemory.hooks.hook_handlers._daemon_post")
-    def test_learn_reminder_after_30_min(self, mock_daemon_post, capsys, _clean_rate_locks):
-        """After 30 minutes, should print learn reminder."""
+    def test_learn_reminder_removed_v3_4_43(self, mock_daemon_post, capsys, _clean_rate_locks):
+        """v3.4.43: 30-min periodic learn reminder is REMOVED.
+
+        Regression test — the get_learned_patterns nag was replaced by
+        on-demand learned-pattern fetches initiated by Claude when needed.
+        """
         learn_lock = os.path.join(tempfile.gettempdir(), "slm-learn-reminder")
         old_ts = int(time.time()) - (_LEARN_INTERVAL + 60)
         with open(learn_lock, "w") as f:
@@ -609,7 +620,9 @@ class TestHookCheckpoint:
                     handle_hook("checkpoint")
 
         out = capsys.readouterr().out
-        assert "learned_patterns" in out or "learn" in out.lower()
+        # v3.4.43 contract: NO periodic learn nag.
+        assert "learned_patterns" not in out
+        assert "[SLM] Call mcp__superlocalmemory__get_learned_patterns" not in out
 
     @patch("superlocalmemory.hooks.hook_handlers._daemon_post")
     def test_no_recall_reminder_within_interval(self, mock_daemon_post, capsys, _clean_rate_locks):

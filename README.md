@@ -234,6 +234,47 @@ All `--json` responses follow a consistent envelope with `success`, `command`, `
 
 ---
 
+## Smart-hook architecture (v3.4.43)
+
+SLM ships a small set of Claude Code hooks that fire memory operations only
+when there's a real signal — not on a timer, not on every keystroke. The
+hooks are perf-budgeted (<10ms p99 for the hot path) and fail-open (any
+crash → silent exit, never blocks your prompt). Install them with one
+command:
+
+```bash
+slm hooks install      # wires hooks into ~/.claude/settings.json
+slm hooks status       # shows what's installed
+slm hooks remove       # cleans up, preserves non-SLM hooks
+```
+
+| Hook | Event | When it fires | Why |
+|---|---|---|---|
+| `slm hook start` | SessionStart | Once at session boot | Injects core memory + recent context + learned patterns. ~80ms. |
+| `slm hook user_prompt_rehash` | UserPromptSubmit | Every prompt | Detects re-queries within 60s (negative signal that prior recall didn't satisfy). <10ms hot path. |
+| **`slm hook topic_shift`** *(new in 3.4.43)* | UserPromptSubmit | When current prompt shares zero content words with every prompt in a 5-turn sliding window | Surfaces a one-line "consider recall" hint on real topic pivots. Replaces the time-based 15-min nag — event-based, not timer-based. <10ms. |
+| **`slm hook before_web`** *(new in 3.4.43)* | PreToolUse on `WebSearch\|WebFetch` | Every web search/fetch | Runs `slm recall <query> --limit 5` and injects local memories as a system-reminder BEFORE the web call. Cost: ~500-800ms per fire, fires 5-20× per session. |
+| `slm hook checkpoint` | PostToolUse on `Write\|Edit` | Every file write/edit | Auto-observes file changes into SLM. No periodic nag (removed in v3.4.43). |
+| `slm hook post_tool_outcome` | PostToolUse (all tools) | Every tool call | Tracks which recalled facts got used (learning signal). |
+| `slm hook stop` | Stop | Session end | Saves rich session summary with git context. |
+
+**What "smart" means here:** the hooks don't interrupt you on a schedule.
+They watch for specific events that indicate memory work would add value —
+a topic pivot, a web call about to fire, a re-asked question, a file edit.
+Otherwise they stay out of your way.
+
+**Observability for the new hooks:**
+`topic_shift` writes one TSV line per decision to
+`~/.superlocalmemory/logs/topic-shift.log`
+(`timestamp | session_hash | current_words_count | window_depth | max_overlap |
+fired | prompt_preview`). Disable with `SLM_TOPIC_SHIFT_LOG=0`.
+
+**Upgrading from v3.4.42 or older:** Run `slm hooks install` once after
+upgrade to pull in the new wiring. `slm hooks status` will flag the
+version mismatch. Merge is idempotent — safe to run twice.
+
+---
+
 ## Three Operating Modes
 
 | Mode | What | Cloud? | EU AI Act | Best For |

@@ -130,16 +130,42 @@ class TestHookDefinitions:
         assert "SessionStart" in defs
         assert "PostToolUse" in defs
         assert "Stop" in defs
-        assert "PreToolUse" not in defs
+        # v3.4.43: PreToolUse now present by default for pre-web recall on
+        # WebSearch/WebFetch. The gate entry is added on top only when
+        # include_gate=True (see test_with_gate).
+        assert "PreToolUse" in defs
+        assert len(defs["PreToolUse"]) == 1
+        assert defs["PreToolUse"][0]["matcher"] == "WebSearch|WebFetch"
 
     def test_with_gate(self):
         defs = hooks_mod._hook_definitions(include_gate=True)
         assert "PreToolUse" in defs
+        # v3.4.43: gate is prepended; pre-web recall stays after it.
+        # PreToolUse entries:
+        #   [0] gate (matcher _GATED_TOOLS)
+        #   [1] before_web (matcher WebSearch|WebFetch)
+        assert len(defs["PreToolUse"]) == 2
         # PostToolUse entries:
         #   [0] init-done (matcher mcp__superlocalmemory__session_init)
         #   [1] checkpoint (matcher Write|Edit)
         #   [2] post_tool_outcome (LLD-09 Track A.2 — all gated tools)
         assert len(defs["PostToolUse"]) == 3
+
+    def test_default_userpromptsubmit_includes_topic_shift(self):
+        """v3.4.43: UserPromptSubmit should fire user_prompt_rehash AND topic_shift."""
+        defs = hooks_mod._hook_definitions(include_gate=False)
+        ups = defs["UserPromptSubmit"]
+        assert len(ups) == 2
+        cmds = [m["hooks"][0]["command"] for m in ups]
+        assert any("user_prompt_rehash" in c for c in cmds)
+        assert any("topic_shift" in c for c in cmds)
+
+    def test_default_pretooluse_includes_before_web(self):
+        """v3.4.43: PreToolUse should include before_web for WebSearch/WebFetch."""
+        defs = hooks_mod._hook_definitions(include_gate=False)
+        pre = defs["PreToolUse"]
+        assert pre[0]["matcher"] == "WebSearch|WebFetch"
+        assert "before_web" in pre[0]["hooks"][0]["command"]
 
     def test_session_start_has_timeout(self):
         defs = hooks_mod._hook_definitions()
@@ -182,9 +208,14 @@ class TestHookDefinitions:
         assert "|| true" in start_cmd or "|| exit /b 0" in start_cmd
 
     def test_default_gate_is_false(self):
-        """Calling without arguments defaults to gate=False."""
+        """Calling without arguments defaults to gate=False (only before_web in PreToolUse)."""
         defs = hooks_mod._hook_definitions()
-        assert "PreToolUse" not in defs
+        # v3.4.43: PreToolUse now present by default for pre-web recall.
+        # The gate-specific entry (matcher _GATED_TOOLS) is NOT added unless
+        # include_gate=True. Verify only the before_web entry is present.
+        assert "PreToolUse" in defs
+        assert len(defs["PreToolUse"]) == 1
+        assert defs["PreToolUse"][0]["matcher"] == "WebSearch|WebFetch"
 
 
 # ---------------------------------------------------------------------------
@@ -271,7 +302,10 @@ class TestInstallHooks:
     def test_install_default_no_gate(self):
         result = hooks_mod.install_hooks()
         assert result["gate_enabled"] is False
-        assert "PreToolUse" not in result["hooks_added"]
+        # v3.4.43: PreToolUse IS now in hooks_added (pre-web recall is the
+        # default entry). Gate=False just means the _GATED_TOOLS firewall
+        # entry isn't added on top.
+        assert "PreToolUse" in result["hooks_added"]
 
     def test_install_with_gate(self, settings_path):
         result = hooks_mod.install_hooks(include_gate=True)
@@ -497,12 +531,20 @@ class TestAutoInstallIfNeeded:
         assert version_file.read_text().strip() == hooks_mod.HOOKS_VERSION
 
     def test_auto_install_uses_no_gate(self, settings_path):
-        """Auto-install always uses include_gate=False."""
+        """Auto-install always uses include_gate=False.
+
+        v3.4.43: PreToolUse is now populated by default (pre-web recall).
+        The gate-specific PreToolUse entry (matcher _GATED_TOOLS) is NOT
+        added. Verify only the WebSearch|WebFetch entry exists.
+        """
         result = hooks_mod.auto_install_if_needed()
         assert result is not None
         assert result["gate_enabled"] is False
         data = _read_settings(settings_path)
-        assert "PreToolUse" not in data.get("hooks", {})
+        pre = data.get("hooks", {}).get("PreToolUse", [])
+        # Exactly 1 entry (pre-web recall), no gate.
+        assert len(pre) == 1
+        assert pre[0]["matcher"] == "WebSearch|WebFetch"
 
     def test_auto_install_clears_disabled_on_install(self, disabled_file):
         """install_hooks clears .hooks-disabled, but auto_install never

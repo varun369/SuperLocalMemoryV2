@@ -9,6 +9,108 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.43] - 2026-05-12
+
+Smart-hook architecture release. Replaces the time-based 15-minute recall
+reminder with event-based detection that only fires when there's a real
+signal to recall against. Adds a pre-web-search recall hook so SLM's local
+memories are always surfaced before paying for external research.
+
+Both additions are perf-budgeted, fail-open, and idempotent. They activate
+on the next `slm hooks install` (or `slm init`); existing installations
+keep working unchanged until upgraded.
+
+### Added
+- **`slm hook topic_shift`** — UserPromptSubmit handler that keeps a 5-prompt
+  sliding window of content-word lists per session and emits a single-line
+  recall reminder ONLY when the current prompt's content-word set has zero
+  overlap with EVERY recent prompt (the strictest defensible signal for a
+  genuine topic pivot). Per-prompt max-overlap algorithm; not jaccard-vs-union
+  which over-fires on natural conversational drift. Stdlib-only, latency
+  <10ms p99. State file at `/tmp/slm-topicstate-{sha256(session_id)[:16]}.json`,
+  auto-purged after 24h. Observability log at `~/.superlocalmemory/logs/
+  topic-shift.log` (TSV: timestamp, session_hash, current_words_count,
+  window_depth, max_overlap, fired, prompt_preview). Disable with
+  `SLM_TOPIC_SHIFT_LOG=0`. Module: `superlocalmemory/hooks/topic_shift_hook.py`.
+- **`slm hook before_web`** — PreToolUse handler wired on
+  `matcher="WebSearch|WebFetch"`. Extracts the search query / URL / prompt
+  from Claude Code stdin, runs `slm recall <query> --limit 5`, injects
+  results as a `<system-reminder>` with the standard untrusted-boundary
+  markers so Claude reads local memory BEFORE the web call fires. Cost:
+  ~500-800ms warm per fire, but only on web tool calls (5-20x per typical
+  session). Fail-open on SLM-down / timeout / empty results. Module:
+  `superlocalmemory/hooks/before_web_hook.py`.
+- **`HOOKS_VERSION = "3.4.43"`** — bumped so `slm hooks status` flags
+  pre-3.4.43 wirings as outdated. Run `slm hooks install` to upgrade
+  to the new wiring.
+
+### Changed
+- **`_hook_checkpoint` periodic nag REMOVED.** The 15-minute "[SLM] 15+ min
+  since last context refresh" and 30-minute "[SLM] Call
+  mcp__superlocalmemory__get_learned_patterns" reminders previously emitted
+  by `slm hook checkpoint` are gone. Time-based reminders were noisy on
+  focused sessions and blind to quick topic pivots within a window. The
+  event-based topic_shift hook is the replacement; on-demand
+  `get_learned_patterns` MCP calls cover the learning side.
+  `_hook_checkpoint`'s real value — auto-observe on file-change events —
+  is unchanged. The `_RECALL_INTERVAL` and `_LEARN_INTERVAL` constants
+  are retained for backward import compatibility.
+
+### Fixed
+- **`slm mode <X>` CLI no longer clobbers embedding / retrieval / evolution /
+  forgetting / math settings.** Before this release the CLI handler called
+  `SLMConfig.for_mode(...)` passing only `llm_*` kwargs — silently
+  re-deriving every other field from mode defaults. A user with a tuned
+  cross-encoder (`cross-encoder/ms-marco-MiniLM-L-12-v2`) or a custom
+  embedding endpoint would lose their settings on every `slm mode b`.
+  The v3.4.34 `mode_change=True` guard only protected the `mode` field
+  itself; surrounding fields were lost. v3.4.43 reworks `cmd_mode` to
+  mutate only `config.mode` and save — preserving all other config
+  byte-for-byte. Mode-appropriate LLM defaults are populated ONLY when
+  the user has no provider set (so the daemon can still come up on a
+  fresh install). Tests: `tests/test_mode_switch_preservation.py` (7 new
+  regression tests covering A↔B, B↔A, anchor preservation, JSON path,
+  no-write-on-read, and the "Embedding model changed" warning that
+  used to fire on every benign mode switch).
+- **Default `PreToolUse` entry added on `slm hooks install`**. Previously
+  PreToolUse was empty unless `include_gate=True`. Now it contains one
+  entry (`before_web` on `WebSearch|WebFetch`) by default; gating users
+  get that PLUS the firewall entry. Existing settings are merged
+  idempotently — `_is_slm_hook_entry` recognises the new wiring so
+  `slm hooks remove` cleans it up properly.
+
+### Security
+- **CVE-2025-69872 closed (diskcache pickle deserialization RCE).** `diskcache`
+  was declared in `pyproject.toml` but never imported anywhere in `src/` or
+  `tests/` — a phantom dependency. Removed entirely. The `slm doctor`
+  performance-deps check no longer references it. Zero behavior change for
+  users; lower attack surface; smaller install.
+- **CVE-2026-1839 (transformers Trainer torch.load RCE) — UNREACHABLE in SLM,
+  upstream-pinned.** The vulnerable method `Trainer._load_rng_state` is in
+  training code paths. SLM is inference-only (uses `sentence-transformers`
+  with ONNX backend; never instantiates `Trainer`). pip-audit flags the dep
+  version because the vulnerable bytes are installed, but the code path is
+  never executed by SLM. We CANNOT pin `transformers>=5.0.0` (the upstream
+  fix) yet because `optimum-onnx 0.1.0` (the latest upstream release as of
+  v3.4.43) caps `transformers<4.58.0` — and `embedding_worker.py` requires
+  the ONNX backend. Will tighten the pin when optimum-onnx ships a
+  transformers-5.x-compatible build. Tracking issue: see project changelog
+  for v3.4.44+. Sentence-transformers minimum bumped to `>=5.2.0` to lock
+  out 5.0.0-5.1.2 (which capped transformers `<5.0.0` even more strictly)
+  and give the resolver maximum headroom for when the upstream pin lifts.
+
+### Migration
+- Existing v3.4.42 users: run `slm hooks install` (or `slm init`) once
+  after upgrading to pull in the new UserPromptSubmit and PreToolUse
+  entries. `slm hooks status` will flag the version mismatch.
+- The settings.json merge is idempotent; running install twice is safe.
+- Topic-shift detection works immediately on first new session — no DB
+  or state migration required.
+- `pip install -U superlocalmemory` will pull `transformers>=5.0.0` and
+  drop the unused `diskcache` dep automatically.
+
+---
+
 ## [3.4.42] - 2026-05-11
 
 Operational reliability release. Three latent bugs in the daemon /

@@ -629,24 +629,53 @@ def cmd_setup(args: Namespace) -> None:
 
 
 def cmd_mode(args: Namespace) -> None:
-    """Get or set the operating mode."""
+    """Get or set the operating mode.
+
+    v3.4.43 behavior change: switching modes via this CLI now PRESERVES the
+    user's existing embedding, retrieval, evolution, forgetting, and math
+    settings. Previously the CLI called ``SLMConfig.for_mode(...)`` which
+    re-derived every field from mode defaults — silently clobbering user
+    customizations (e.g. a tuned cross-encoder model, a custom embedding
+    endpoint, or custom forgetting half-lives). The v3.4.34 ``mode_change=True``
+    guard only protected the ``mode`` field itself; everything else was lost.
+
+    New rules:
+      - Only ``config.mode`` changes.
+      - If the user has NO LLM provider configured AND is switching to a mode
+        that typically needs one (B or C), mode-appropriate LLM defaults are
+        populated to avoid the daemon coming up dead. Existing LLM config
+        is preserved as-is.
+      - Embedding / retrieval / evolution / forgetting / math: untouched.
+    """
     from superlocalmemory.core.config import SLMConfig
     from superlocalmemory.storage.models import Mode
 
     config = SLMConfig.load()
 
+    def _apply_mode_change(new_value: str) -> tuple[SLMConfig, bool]:
+        """Mutate-in-place mode switch. Returns (updated_config, llm_was_set).
+
+        Only changes ``config.mode``. If the user has no LLM provider
+        configured AND is moving to Mode B or C, populates the mode's
+        default LLM block so the daemon has something to talk to.
+        Everything else (embedding, retrieval, evolution, forgetting,
+        math, profile) is preserved byte-for-byte.
+        """
+        new_mode = Mode(new_value)
+        llm_was_set = False
+        if new_mode != Mode.A and not config.llm.provider:
+            defaults = SLMConfig.for_mode(new_mode)
+            config.llm = defaults.llm
+            llm_was_set = True
+        config.mode = new_mode
+        config.save(mode_change=True)
+        return config, llm_was_set
+
     if getattr(args, 'json', False):
         from superlocalmemory.cli.json_output import json_print
         if args.value:
             old_mode = config.mode.value.upper()
-            updated = SLMConfig.for_mode(
-                Mode(args.value),
-                llm_provider=config.llm.provider,
-                llm_model=config.llm.model,
-                llm_api_key=config.llm.api_key,
-                llm_api_base=config.llm.api_base,
-            )
-            updated.save(mode_change=True)
+            updated, _ = _apply_mode_change(args.value)
             json_print("mode", data={
                 "previous_mode": old_mode, "current_mode": args.value.upper(),
             }, next_actions=[
@@ -661,20 +690,18 @@ def cmd_mode(args: Namespace) -> None:
         return
 
     if args.value:
-        updated = SLMConfig.for_mode(
-            Mode(args.value),
-            llm_provider=config.llm.provider,
-            llm_model=config.llm.model,
-            llm_api_key=config.llm.api_key,
-            llm_api_base=config.llm.api_base,
-        )
-        updated.save(mode_change=True)
+        updated, llm_was_set = _apply_mode_change(args.value)
         print(f"Mode set to: {args.value.upper()}")
 
-        # V3.3: Check if embedding model changed — inform about re-indexing
-        if (config.embedding.provider != updated.embedding.provider
-                or config.embedding.model_name != updated.embedding.model_name):
-            print("  ⚠ Embedding model changed. Re-indexing will run on next recall.")
+        # v3.4.43: embedding/retrieval are now preserved, so the old
+        # "Embedding model changed. Re-indexing will run on next recall."
+        # warning no longer fires from a CLI mode switch — that was the
+        # symptom of the bug. The warning is retained ONLY as an
+        # informational note when LLM defaults were freshly populated.
+        if llm_was_set:
+            print(f"  ℹ LLM provider populated from mode defaults: "
+                  f"{updated.llm.provider}/{updated.llm.model}. "
+                  f"Run `slm provider set` to customize.")
 
         # V3.3.4: Warn if Mode C lacks cloud API key
         if args.value == "c" and not updated.llm.api_key:
@@ -1422,19 +1449,22 @@ def cmd_doctor(args: Namespace) -> None:
                "brew install libomp && pip install --force-reinstall lightgbm")
 
     # 6. Performance deps
+    # v3.4.43: diskcache removed from this check — it was a phantom dependency
+    # (declared in pyproject.toml but never imported anywhere in src/ or tests/).
+    # Dropping it closes CVE-2025-69872 (pickle deserialization RCE) without any
+    # behavior change. orjson remains a real performance dep.
     perf_ok = []
-    for mod in ["diskcache", "orjson"]:
+    for mod in ["orjson"]:
         try:
             __import__(mod)
             perf_ok.append(mod)
         except ImportError:
             pass
-    if len(perf_ok) == 2:
-        _check("Performance deps", "PASS", "diskcache, orjson")
+    if perf_ok:
+        _check("Performance deps", "PASS", "orjson")
     else:
-        missing = {"diskcache", "orjson"} - set(perf_ok)
-        _check("Performance deps", "WARN", f"Missing: {', '.join(missing)}",
-               "pip install diskcache orjson")
+        _check("Performance deps", "WARN", "Missing: orjson",
+               "pip install orjson")
 
     # 7. Embedding worker functional test — skipped under --quick.
     if quick:
