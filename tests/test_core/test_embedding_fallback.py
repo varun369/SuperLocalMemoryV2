@@ -170,14 +170,18 @@ class TestEngineEmbedderAutoDetect:
         assert embedder is mock_instance
 
     @patch("superlocalmemory.core.ollama_embedder.OllamaEmbedder.is_available", new_callable=lambda: property(lambda self: True))
-    def test_explicit_ollama_provider_mode_a_uses_ollama(self, _mock, tmp_path: Path) -> None:
-        """Mode A with explicit ollama → still uses OllamaEmbedder (no hybrid)."""
-        from superlocalmemory.core.ollama_embedder import OllamaEmbedder
+    def test_explicit_ollama_provider_mode_a_prefers_st(self, tmp_path: Path) -> None:
+        """Mode A with provider=ollama prefers sentence-transformers subprocess
+        for consistent embedding space with stored vectors."""
         engine = self._make_engine(
             mode=Mode.A, llm_provider="", emb_provider="ollama", tmp_path=tmp_path,
         )
-        embedder = init_embedder(engine._config)
-        assert isinstance(embedder, OllamaEmbedder)
+        with patch("superlocalmemory.core.embeddings.EmbeddingService") as MockES:
+            mock_instance = MagicMock()
+            mock_instance.is_available = True
+            MockES.return_value = mock_instance
+            embedder = init_embedder(engine._config)
+        assert embedder is mock_instance
 
     def test_explicit_st_provider_skips_ollama(self, tmp_path: Path) -> None:
         """When provider=sentence-transformers → skip Ollama detection."""
