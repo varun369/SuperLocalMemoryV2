@@ -97,83 +97,15 @@ function pipInstall(packages, label) {
     return false;
 }
 
-// Core dependencies (REQUIRED — product won't work without these)
-const coreDeps = [
-    'numpy>=1.26.0', 'scipy>=1.12.0', 'networkx>=3.0',
-    'httpx>=0.24.0', 'python-dateutil>=2.9.0',
-    'rank-bm25>=0.2.2', 'vaderSentiment>=3.3.2',
-    'einops>=0.8.2', 'mcp>=1.0.0',
-];
-
-if (pipInstall(coreDeps, 'core')) {
-    console.log('✓ Core dependencies installed (math, search, NLP)');
-} else {
-    console.log('⚠ Core dependency installation failed.');
-    console.log('  Run manually: pip install ' + coreDeps.join(' '));
-}
-
-// Search + ONNX reranking (V3.3.2 — enables 6-channel retrieval + cross-encoder)
-const searchDeps = [
-    'sentence-transformers[onnx]>=4.0.0',
-    'einops>=0.7.0', 'geoopt>=0.5.0',
-    'onnxruntime>=1.17.0',
-];
-
-console.log('\nInstalling semantic search + ONNX reranking engine...');
-console.log('  (sentence-transformers 4+, ONNX Runtime, Fisher-Rao geometry)');
-if (pipInstall(searchDeps, 'search')) {
-    console.log('✓ Search engine installed (sentence-transformers + ONNX + Fisher-Rao)');
-    console.log('  Cross-encoder reranking enabled for ALL modes (+30pp quality)');
-    console.log('');
-    console.log('  Models auto-download on first use:');
-    console.log('    - Embedding: nomic-ai/nomic-embed-text-v1.5 (~500MB)');
-    console.log('    - Reranker: cross-encoder/ms-marco-MiniLM-L-6-v2 (~90MB)');
-    console.log('  To pre-download now, run: slm warmup');
-} else {
-    console.log('⚠ Search engine installation failed (BM25 keyword search still works).');
-    console.log('  For full 6-channel retrieval + reranking, run:');
-    console.log('  pip install "sentence-transformers[onnx]>=4.0.0" einops geoopt onnxruntime');
-}
-
-// Dashboard dependencies (IMPORTANT — enables web dashboard + MCP server)
-const dashboardDeps = ['fastapi[all]>=0.135.1', 'uvicorn>=0.42.0', 'websockets>=16.0'];
-console.log('\nInstalling dashboard & server dependencies...');
-if (pipInstall(dashboardDeps, 'dashboard')) {
-    console.log('✓ Dashboard & MCP server dependencies installed (fastapi + uvicorn)');
-} else {
-    console.log('⚠ Dashboard installation failed.');
-    console.log('  Run manually: pip install \'fastapi[all]\' uvicorn websockets');
-}
-
-// Learning dependencies (enables adaptive retrieval after 200+ signals)
-const learningDeps = ['lightgbm>=4.0.0'];
-console.log('\nInstalling learning engine...');
-if (pipInstall(learningDeps, 'learning')) {
-    console.log('✓ Learning engine installed (lightgbm — adaptive ranking)');
-} else {
-    console.log('⚠ Learning installation failed (retrieval still works without it).');
-    console.log('  Run manually: pip install lightgbm');
-}
-
-// Performance dependencies (optional — improves caching and JSON speed)
-const perfDeps = ['diskcache>=5.6.0', 'orjson>=3.9.0'];
-console.log('\nInstalling performance optimizations...');
-if (pipInstall(perfDeps, 'performance')) {
-    console.log('✓ Performance optimizations installed (diskcache + orjson)');
-} else {
-    console.log('⚠ Performance deps skipped (system works fine without them).');
-}
-
-// V3.4.3: Unified Brain dependencies (health monitor, structured logging, file watching)
-const brainDeps = ['psutil>=5.9.0', 'structlog>=24.0.0', 'watchdog>=4.0.0'];
-console.log('\nInstalling Unified Brain dependencies (health monitor, file watcher)...');
-if (pipInstall(brainDeps, 'brain')) {
-    console.log('✓ Unified Brain deps installed (psutil + structlog + watchdog)');
-    console.log('  Health monitoring, structured logging, and file watching enabled');
-} else {
-    console.log('⚠ Unified Brain deps partially installed (health monitoring may be limited).');
-    console.log('  Run manually: pip install psutil structlog watchdog');
-}
+// Install the superlocalmemory package and all its pinned dependencies
+// in one shot. pyproject.toml is the single source of truth for versions,
+// so users via npm get exactly the same dep set as users via pip.
+console.log('\nInstalling SuperLocalMemory and all dependencies...');
+console.log('  (Single pip install — versions pinned in pyproject.toml)');
+console.log('  This may take 1-3 minutes (downloads ~500MB of models on first use).');
+console.log('');
+console.log('  Includes: numpy, scipy, fastapi, sentence-transformers, onnxruntime,');
+console.log('           torch, transformers, sqlite-vec, lightgbm, mcp, and more.');
 
 // --- Step 3b: Install the superlocalmemory package itself ---
 // This ensures `python -m superlocalmemory.cli.main` always resolves the

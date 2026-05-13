@@ -233,22 +233,31 @@ print('Database ready')
     Write-Host "WARNING: setup_validator.py not found, skipping database init" -ForegroundColor Yellow
 }
 
-# Install core dependencies (required for graph & dashboard)
+# Install SuperLocalMemory and all dependencies via pyproject.toml (single source of truth)
 Write-Host ""
-Write-Host "Installing core dependencies..."
-Write-Host "INFO: This ensures graph visualization and patterns work out-of-box" -ForegroundColor Yellow
+Write-Host "Installing SuperLocalMemory and all dependencies..."
+Write-Host "INFO: Versions are pinned in pyproject.toml -- same versions for every install path" -ForegroundColor Yellow
 
-$coreRequirements = Join-Path $REPO_DIR "requirements-core.txt"
-if (Test-Path $coreRequirements) {
+# Find pyproject.toml (parent of scripts/ or scripts/ itself)
+$ParentDir = Split-Path -Parent $REPO_DIR
+if (Test-Path (Join-Path $ParentDir "pyproject.toml")) {
+    $ProjRoot = $ParentDir
+} elseif (Test-Path (Join-Path $REPO_DIR "pyproject.toml")) {
+    $ProjRoot = $REPO_DIR
+} else {
+    $ProjRoot = $null
+}
+
+if ($ProjRoot) {
     try {
-        & python -m pip install -q -r $coreRequirements 2>$null
-        Write-Host "OK Core dependencies installed (graph, dashboard, patterns)" -ForegroundColor Green
+        & python -m pip install -q -e $ProjRoot 2>$null
+        Write-Host "OK SuperLocalMemory and all dependencies installed (pinned versions)" -ForegroundColor Green
     } catch {
-        Write-Host "WARNING: Core dependency installation failed. Some features may not work." -ForegroundColor Yellow
-        Write-Host "   Install manually: python -m pip install -r $coreRequirements" -ForegroundColor Yellow
+        Write-Host "WARNING: Dependency installation failed." -ForegroundColor Yellow
+        Write-Host "   Install manually: python -m pip install -e $ProjRoot" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "WARNING: requirements-core.txt not found, skipping dependency installation" -ForegroundColor Yellow
+    Write-Host "WARNING: pyproject.toml not found, cannot install dependencies" -ForegroundColor Yellow
 }
 
 # Initialize knowledge graph and pattern learning

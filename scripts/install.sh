@@ -358,8 +358,8 @@ except Exception as e:
 
 # Install core dependencies (required for graph & dashboard)
 echo ""
-echo "Installing core dependencies..."
-echo "⏳ This ensures graph visualization and patterns work out-of-box"
+echo "Installing SuperLocalMemory and all dependencies..."
+echo "⏳ Versions are pinned in pyproject.toml — same versions for every install path"
 
 # Detect pip installation method
 if pip3 install --help | grep -q "break-system-packages"; then
@@ -368,31 +368,25 @@ else
     PIP_FLAGS=""
 fi
 
-if [ -f "${REPO_DIR}/requirements-core.txt" ]; then
-    if pip3 install $PIP_FLAGS -q -r "${REPO_DIR}/requirements-core.txt"; then
-        echo "✓ Core dependencies installed (graph, dashboard, patterns)"
-    else
-        echo "⚠️  Core dependency installation failed. Some features may not work."
-        echo "   Install manually: pip3 install -r ${REPO_DIR}/requirements-core.txt"
-    fi
+# Find the repo root (parent of scripts/)
+PKG_ROOT="$(cd "${REPO_DIR}/.." && pwd)"
+if [ -f "${PKG_ROOT}/pyproject.toml" ]; then
+    PROJ_ROOT="${PKG_ROOT}"
+elif [ -f "${REPO_DIR}/pyproject.toml" ]; then
+    PROJ_ROOT="${REPO_DIR}"
 else
-    echo "⚠️  requirements-core.txt not found, skipping dependency installation"
+    PROJ_ROOT=""
 fi
 
-# Install learning dependencies (v2.7+)
-echo ""
-echo "Installing learning dependencies..."
-echo "  Enables intelligent pattern learning and personalized recall"
-
-if [ -f "${REPO_DIR}/requirements-learning.txt" ]; then
-    if pip3 install $PIP_FLAGS -q -r "${REPO_DIR}/requirements-learning.txt" 2>/dev/null; then
-        echo "✓ Learning dependencies installed (personalized ranking enabled)"
+if [ -n "${PROJ_ROOT}" ]; then
+    if pip3 install $PIP_FLAGS -q -e "${PROJ_ROOT}"; then
+        echo "✓ SuperLocalMemory and all dependencies installed (pinned versions)"
     else
-        echo "○ Learning dependencies skipped (core features unaffected)"
-        echo "  To install later: pip3 install lightgbm scipy"
+        echo "⚠️  Dependency installation failed."
+        echo "   Install manually: pip3 install -e ${PROJ_ROOT}"
     fi
 else
-    echo "○ requirements-learning.txt not found (learning features will use rule-based ranking)"
+    echo "⚠️  pyproject.toml not found, cannot install dependencies"
 fi
 
 # Initialize knowledge graph and pattern learning
