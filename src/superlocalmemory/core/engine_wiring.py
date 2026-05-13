@@ -78,38 +78,19 @@ def init_embedder(config: SLMConfig) -> Any | None:
     emb_cfg = config.embedding
     provider = emb_cfg.provider
 
-    # --- Explicit ollama provider ---
-    # V3.3.27: HYBRID MODE B — use sentence-transformers subprocess for
-    # embeddings (fast, batched, ~2s) instead of Ollama HTTP per-call (~30s).
-    # Ollama is still used for LLM operations (fact extraction, context
-    # generation) via llm/backbone.py — that path is unchanged.
-    #
-    # Why: The store pipeline calls embed() 200+ times per remember
-    # (scene_builder, type_router, consolidator, entropy_gate, etc.).
-    # Ollama HTTP: 200 * 45ms = 9s minimum + cold starts.
-    # sentence-transformers subprocess: 200 embeds batched = ~1s.
-    #
-    # The embedding model is the SAME (nomic-embed-text-v1.5, 768d) —
-    # identical vectors, zero quality difference. Only the transport changes.
+    # All modes use sentence-transformers subprocess as primary so the
+    # embedding space matches stored vectors. Ollama is fallback only —
+    # Ollama's nomic-embed-text and sentence-transformers nomic-embed-text-v1.5
+    # produce different vectors, so mixing them against an ST-indexed
+    # corpus degrades semantic recall quality.
     if provider == "ollama":
-        if config.mode == Mode.B:
-            # Mode B hybrid: prefer subprocess embedder (fast, batched)
-            st_emb = _try_service_embedder(EmbeddingService, emb_cfg)
-            if st_emb is not None:
-                logger.info(
-                    "Mode B hybrid: using sentence-transformers subprocess "
-                    "for embeddings (fast batched). Ollama used for LLM only."
-                )
-                return st_emb
-            # Fallback: if subprocess unavailable, use Ollama embeddings
-            logger.info("Mode B: sentence-transformers unavailable, using Ollama embeddings")
-            result = _try_ollama_embedder(emb_cfg)
-            if result is not None:
-                return result
-            return None
-        # Mode A/C with explicit ollama: use Ollama embeddings
+        st_emb = _try_service_embedder(EmbeddingService, emb_cfg)
+        if st_emb is not None:
+            logger.info("Using sentence-transformers subprocess (matches stored embedding space)")
+            return st_emb
         result = _try_ollama_embedder(emb_cfg)
         if result is not None:
+            logger.warning("sentence-transformers unavailable; falling back to Ollama (semantic quality may degrade)")
             return result
         return None
 

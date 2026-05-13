@@ -1342,7 +1342,7 @@ def _start_memory_watchdog() -> None:
     """
     import threading
 
-    MAX_WORKER_MB = 1800  # V3.4.37: 1.8GB — ONNX nomic-embed is ~1.7GB loaded
+    MAX_WORKER_MB = int(os.environ.get("SLM_MAX_WORKER_MB", "2500"))
 
     def watchdog_loop():
         while True:

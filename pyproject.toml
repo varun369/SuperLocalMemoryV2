@@ -29,48 +29,42 @@ classifiers = [
 ]
 
 dependencies = [
-    "httpx>=0.24.0",
-    "numpy>=1.26.0,<3.0.0",
-    "scipy>=1.12.0,<2.0.0",
-    "networkx>=3.0",
-    "mcp>=1.0.0",
-    "python-dateutil>=2.9.0.post0",
-    "rank-bm25>=0.2.2",
-    "vadersentiment>=3.3.2",
-    "einops>=0.8.2",
-    "fastapi[all]>=0.135.1",
-    "uvicorn>=0.42.0",
-    "websockets>=16.0",
-    "lightgbm>=4.0.0",
-    "orjson>=3.9.0",
-    # CodeGraph — code knowledge graph (v3.4)
-    "tree-sitter>=0.23.0,<1",
-    "tree-sitter-language-pack>=0.5,<1",
-    "rustworkx>=0.15,<1",
-    "watchdog>=4.0,<6",
-    # V3.4.3: Unified Brain
-    "psutil>=5.9.0",
-    "structlog>=24.0.0,<27.0.0",
-    # Cross-platform file locking for single-daemon enforcement.
-    "portalocker>=2.7.0,<4.0.0",
-    # V3.4.18: Semantic search + cross-encoder reranker (npm install parity).
-    # Previously under [search] extra — pip users silently lost 30pp of recall
-    # quality vs. npm users. Now ships by default for both install paths.
-    # v3.4.43: bumped from >=5.0.0 to >=5.2.0 so the resolver doesn't pick
-    # 5.0.0-5.1.2 which cap transformers<5.0.0 (security headroom for when
-    # optimum-onnx upstream eventually supports transformers 5.x).
-    "sentence-transformers[onnx]>=5.2.0",
-    # NOTE on CVE-2026-1839 (transformers Trainer.torch.load RCE):
-    # SLM does NOT use transformers.Trainer (inference-only path via
-    # sentence-transformers + ONNX backend). The vulnerable method
-    # Trainer._load_rng_state is never called by SLM code, so the CVE is
-    # unreachable through SLM's API surface. We CANNOT pin transformers>=5.0.0
-    # because optimum-onnx 0.1.0 (latest upstream) caps transformers<4.58.0
-    # and SLM's embedding_worker.py:68 hard-codes backend="onnx". Will
-    # tighten this pin in a future release once optimum-onnx ships a
-    # transformers-5.x-compatible build.
-    "torch>=2.2.0",
-    "scikit-learn>=1.3.0,<2.0.0",
+    # All versions hard-pinned to the verified-good combination.
+    # Mixing versions outside these pins triggers per-batch memory
+    # blow-up in the embedding worker on Apple Silicon and breaks
+    # recall/remember latency targets. Update only after benchmarking.
+    "httpx==0.28.1",
+    "numpy==2.4.4",
+    "scipy==1.17.1",
+    "networkx==3.6.1",
+    "mcp==1.27.1",
+    "python-dateutil==2.9.0.post0",
+    "rank-bm25==0.2.2",
+    "vadersentiment==3.3.2",
+    "einops==0.8.2",
+    "fastapi[all]==0.136.1",
+    "uvicorn==0.46.0",
+    "websockets==16.0",
+    "lightgbm==4.6.0",
+    "orjson==3.11.9",
+    "tree-sitter==0.25.2",
+    "tree-sitter-language-pack==0.13.0",
+    "rustworkx==0.17.1",
+    "watchdog==5.0.3",
+    "psutil==7.2.2",
+    "structlog==25.5.0",
+    "portalocker==3.2.0",
+    # Semantic search + cross-encoder reranker. Embedding stack is
+    # extremely sensitive to version drift on Apple Silicon — newer
+    # versions allocate dramatically more per-batch memory.
+    "sentence-transformers[onnx]==5.3.0",
+    "onnxruntime==1.24.4",
+    "transformers==4.57.6",
+    "huggingface_hub==0.36.2",
+    "torch==2.11.0",
+    "scikit-learn==1.8.0",
+    # Vector KNN extension for the semantic channel.
+    "sqlite-vec==0.1.9",
 ]
 
 [project.optional-dependencies]
@@ -78,12 +72,13 @@ dependencies = [
 # moved into core in v3.4.18. ``pip install superlocalmemory[search]`` still
 # works but installs nothing extra.
 search = [
-    "sentence-transformers[onnx]>=5.2.0",
-    "einops>=0.8.2",
-    "torch>=2.2.0",
-    "scikit-learn>=1.3.0,<2.0.0",
+    # Same hard pin as core deps — see comment above.
+    "sentence-transformers[onnx]==5.3.0",
+    "einops==0.8.2",
+    "torch==2.11.0",
+    "scikit-learn==1.8.0",
     "geoopt>=0.5.0",
-    "onnxruntime>=1.17.0",
+    "onnxruntime==1.24.4",
 ]
 ui = [
     "fastapi[all]>=0.135.1",

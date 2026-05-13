@@ -53,24 +53,25 @@ def _start_parent_watchdog() -> None:
 
 
 def _load_embedding_model(name: str) -> tuple:
-    """Load embedding model. ONNX first (no memory leak), PyTorch fallback.
-
-    V3.3.17: PyTorch SentenceTransformer on ARM64 Mac leaks memory —
-    grows from 300MB to 17GB after ~200 encode calls. ONNX Runtime
-    has no such issue. Same approach as CrossEncoder ONNX migration.
+    """Load embedding model. ONNX CPU-only first, PyTorch fallback.
 
     Returns (model, backend_name) or (None, "").
     """
     from sentence_transformers import SentenceTransformer
 
-    # Tier 1: ONNX (stable memory; ~1.1 GB for nomic-embed-text-v1.5)
+    # ONNX with explicit CPU provider — avoids CoreML EP memory overhead.
     try:
-        m = SentenceTransformer(name, backend="onnx", trust_remote_code=True)
+        m = SentenceTransformer(
+            name,
+            backend="onnx",
+            trust_remote_code=True,
+            model_kwargs={"provider": "CPUExecutionProvider"},
+        )
         return m, "onnx"
     except Exception:
         pass
 
-    # Tier 2: PyTorch CPU (stable at ~1.4GB after 100+ calls, verified)
+    # PyTorch CPU fallback.
     try:
         import torch
         with torch.inference_mode():
