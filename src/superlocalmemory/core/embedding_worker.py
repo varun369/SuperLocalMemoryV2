@@ -53,57 +53,29 @@ def _start_parent_watchdog() -> None:
 
 
 def _load_embedding_model(name: str) -> tuple:
-    """Load embedding model. PyTorch first (bounded RSS), ONNX optional.
+    """Load embedding model. ONNX first (no memory leak), PyTorch fallback.
 
-    V3.4.44 (2026-05-13): reversed the original ONNX-first preference.
-    On Python 3.14 + onnxruntime, ONNX session.run allocates per-batch
-    intermediate tensors that BLOW UP under batch encode:
-      - 1 text   → 1.8 GB RSS
-      - 20 texts → 10.6 GB RSS  ← daemon watchdog kills here
-      - 50 texts → 11.2 GB RSS
-    Reproduced standalone (no daemon involved). The blow-up is per-batch
-    transient allocation, not a steady-state leak, so the V3.3.17 reason
-    for ONNX-first (avoid PyTorch memory creep) is moot — workers recycle
-    every _WORKER_RECYCLE_AFTER (5000) requests anyway.
-
-    PyTorch on ARM64 CPU: stable at ~1.4 GB after 100+ calls, verified.
-
-    Set SLM_FORCE_ONNX=1 to revert to legacy ONNX-first behavior.
+    V3.3.17: PyTorch SentenceTransformer on ARM64 Mac leaks memory —
+    grows from 300MB to 17GB after ~200 encode calls. ONNX Runtime
+    has no such issue. Same approach as CrossEncoder ONNX migration.
 
     Returns (model, backend_name) or (None, "").
     """
     from sentence_transformers import SentenceTransformer
 
-    force_onnx = os.environ.get("SLM_FORCE_ONNX", "").strip().lower() in ("1", "true", "yes")
+    # Tier 1: ONNX (stable memory; ~1.1 GB for nomic-embed-text-v1.5)
+    try:
+        m = SentenceTransformer(name, backend="onnx", trust_remote_code=True)
+        return m, "onnx"
+    except Exception:
+        pass
 
-    if force_onnx:
-        # Legacy path: ONNX first, PyTorch fallback.
-        try:
-            m = SentenceTransformer(name, backend="onnx", trust_remote_code=True)
-            return m, "onnx"
-        except Exception:
-            pass
-        try:
-            import torch
-            with torch.inference_mode():
-                m = SentenceTransformer(name, trust_remote_code=True, device="cpu")
-            return m, "pytorch"
-        except Exception:
-            return None, ""
-
-    # Default: PyTorch CPU (bounded RSS, batch-safe on Python 3.14).
+    # Tier 2: PyTorch CPU (stable at ~1.4GB after 100+ calls, verified)
     try:
         import torch
         with torch.inference_mode():
             m = SentenceTransformer(name, trust_remote_code=True, device="cpu")
         return m, "pytorch"
-    except Exception:
-        pass
-
-    # ONNX fallback only if PyTorch import/load fails.
-    try:
-        m = SentenceTransformer(name, backend="onnx", trust_remote_code=True)
-        return m, "onnx"
     except Exception:
         return None, ""
 
