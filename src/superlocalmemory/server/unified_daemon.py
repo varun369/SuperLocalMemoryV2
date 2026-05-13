@@ -1342,7 +1342,12 @@ def _start_memory_watchdog() -> None:
     """
     import threading
 
-    MAX_WORKER_MB = 1800  # V3.4.37: 1.8GB — ONNX nomic-embed is ~1.7GB loaded
+    # V3.4.44: make limit env-overridable + raise default to handle ONNX warmup
+    # transient spikes (Python 3.14 + onnxruntime briefly hits ~2.3 GB during
+    # model load, then settles to ~1.7 GB). 1800 MB killed every fresh worker
+    # during init on M5 → infinite respawn loop → port unbind. Override via
+    # SLM_MAX_WORKER_MB env var; default raised to 3000 MB for safe headroom.
+    MAX_WORKER_MB = int(os.environ.get("SLM_MAX_WORKER_MB", "3000"))
 
     def watchdog_loop():
         while True:
