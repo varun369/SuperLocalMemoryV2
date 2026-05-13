@@ -170,7 +170,7 @@ class TestEngineEmbedderAutoDetect:
         assert embedder is mock_instance
 
     @patch("superlocalmemory.core.ollama_embedder.OllamaEmbedder.is_available", new_callable=lambda: property(lambda self: True))
-    def test_explicit_ollama_provider_mode_a_prefers_st(self, tmp_path: Path) -> None:
+    def test_explicit_ollama_provider_mode_a_prefers_st(self, _mock, tmp_path: Path) -> None:
         """Mode A with provider=ollama prefers sentence-transformers subprocess
         for consistent embedding space with stored vectors."""
         engine = self._make_engine(
