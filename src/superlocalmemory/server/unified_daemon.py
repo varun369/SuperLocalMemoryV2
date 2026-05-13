@@ -547,7 +547,7 @@ async def lifespan(application: FastAPI):
         from superlocalmemory.core.health_monitor import HealthMonitor
         health_config = getattr(config, 'health', None)
         monitor = HealthMonitor(
-            global_rss_budget_mb=int(os.environ.get("SLM_GLOBAL_RSS_BUDGET_MB", str(getattr(health_config, 'global_rss_budget_mb', 3500) if health_config else 3500))),
+            global_rss_budget_mb=getattr(health_config, 'global_rss_budget_mb', 2500) if health_config else 2500,
             heartbeat_timeout_sec=getattr(health_config, 'heartbeat_timeout_sec', 60) if health_config else 60,
             check_interval_sec=getattr(health_config, 'health_check_interval_sec', 15) if health_config else 15,
             enable_structured_logging=getattr(health_config, 'enable_structured_logging', True) if health_config else True,
