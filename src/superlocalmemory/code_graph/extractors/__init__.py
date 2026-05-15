@@ -35,6 +35,7 @@ class BaseExtractor(ABC):
         self._source = source_bytes
         self._file_path = file_path
         self._config = config
+        self._import_maps: dict[str, dict[str, str]] = {}
 
     @abstractmethod
     def extract_functions(self) -> list[GraphNode]:
@@ -70,9 +71,20 @@ class BaseExtractor(ABC):
         Step 3: import_edges, import_map = extract_imports()
         Step 4: call_edges = extract_calls(import_map)
         Step 5: Return (classes + functions, import_edges + call_edges)
+
+        Stores import_map in self._import_maps for downstream use.
         """
         classes = self.extract_classes()
         functions = self.extract_functions()
         import_edges, import_map = self.extract_imports()
         call_edges = self.extract_calls(import_map)
+
+        self._import_maps[self._file_path] = {}
+        for local_name, (module_path, imported_name) in import_map.items():
+            self._import_maps[self._file_path][local_name] = module_path
+
         return (classes + functions, import_edges + call_edges)
+
+    @property
+    def import_maps(self) -> dict[str, dict[str, str]]:
+        return self._import_maps

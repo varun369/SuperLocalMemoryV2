@@ -17,7 +17,7 @@ import json
 import logging
 from typing import Any
 
-from superlocalmemory.code_graph.config import CodeGraphConfig
+from superlocalmemory.code_graph.config import CodeGraphConfig, CALL_PLACEHOLDER_PREFIX, UNRESOLVED_PLACEHOLDER
 from superlocalmemory.code_graph.extractors import BaseExtractor
 from superlocalmemory.code_graph.models import (
     EdgeKind,
@@ -344,8 +344,8 @@ class TypeScriptExtractor(BaseExtractor):
                 edges.append(GraphEdge(
                     edge_id=_new_id(),
                     kind=EdgeKind.IMPORTS,
-                    source_node_id="__unresolved__",
-                    target_node_id="__unresolved__",
+                    source_node_id=UNRESOLVED_PLACEHOLDER,
+                    target_node_id=UNRESOLVED_PLACEHOLDER,
                     file_path=self._file_path,
                     line=stmt.start_point[0],
                     extra_json=json.dumps({"module": module_path}),
@@ -368,8 +368,8 @@ class TypeScriptExtractor(BaseExtractor):
                 edges.append(GraphEdge(
                     edge_id=_new_id(),
                     kind=EdgeKind.CALLS,
-                    source_node_id="__unresolved__",
-                    target_node_id=f"__call__{call_name}",
+                    source_node_id=UNRESOLVED_PLACEHOLDER,
+                    target_node_id=f"{CALL_PLACEHOLDER_PREFIX}{call_name}",
                     file_path=self._file_path,
                     line=name_node.start_point[0],
                     confidence=confidence,
@@ -384,8 +384,8 @@ class TypeScriptExtractor(BaseExtractor):
                 edges.append(GraphEdge(
                     edge_id=_new_id(),
                     kind=EdgeKind.CALLS,
-                    source_node_id="__unresolved__",
-                    target_node_id=f"__call__{method_name}",
+                    source_node_id=UNRESOLVED_PLACEHOLDER,
+                    target_node_id=f"{CALL_PLACEHOLDER_PREFIX}{method_name}",
                     file_path=self._file_path,
                     line=name_node.start_point[0],
                     confidence=self._config.heuristic_confidence,
@@ -401,8 +401,8 @@ class TypeScriptExtractor(BaseExtractor):
                 edges.append(GraphEdge(
                     edge_id=_new_id(),
                     kind=EdgeKind.CALLS,
-                    source_node_id="__unresolved__",
-                    target_node_id=f"__call__{call_name}",
+                    source_node_id=UNRESOLVED_PLACEHOLDER,
+                    target_node_id=f"{CALL_PLACEHOLDER_PREFIX}{call_name}",
                     file_path=self._file_path,
                     line=name_node.start_point[0],
                     confidence=confidence,
@@ -502,8 +502,8 @@ class TypeScriptExtractor(BaseExtractor):
                         edges.append(GraphEdge(
                             edge_id=_new_id(),
                             kind=EdgeKind.CALLS,
-                            source_node_id="__unresolved__",
-                            target_node_id=f"__call__{comp_name}",
+                            source_node_id=UNRESOLVED_PLACEHOLDER,
+                            target_node_id=f"{CALL_PLACEHOLDER_PREFIX}{comp_name}",
                             file_path=self._file_path,
                             line=name_node.start_point[0],
                             confidence=confidence,

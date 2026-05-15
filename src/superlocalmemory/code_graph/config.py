@@ -27,6 +27,10 @@ DEFAULT_EXTENSION_MAP: dict[str, str] = {
     ".jsx": "jsx",
 }
 
+# Placeholder constants for unresolved/call references
+UNRESOLVED_PLACEHOLDER = "__unresolved__"
+CALL_PLACEHOLDER_PREFIX = "__call__"
+
 # Directories to always skip
 DEFAULT_EXCLUDE_DIRS: frozenset[str] = frozenset({
     "node_modules", ".git", "__pycache__", ".venv", "venv",

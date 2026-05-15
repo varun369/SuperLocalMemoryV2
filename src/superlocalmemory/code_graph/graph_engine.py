@@ -86,12 +86,16 @@ class GraphEngine:
         """Load all nodes and edges from SQLite into a rustworkx PyDiGraph.
 
         Returns the cached graph if the store version hasn't changed.
+        Cleans up orphaned edges (incremental graph without FK) before loading.
         """
         if (
             self._graph is not None
             and self._graph_version == self._store.version
         ):
             return self._graph
+
+        # Clean up orphaned edges before loading
+        self._store._db.cleanup_orphaned_edges()
 
         nodes, edges = self._store.get_all_nodes_and_edges()
 

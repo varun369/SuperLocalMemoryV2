@@ -54,12 +54,14 @@ _DDL_STATEMENTS: tuple[str, ...] = (
     """,
 
     # ── Table 2: graph_edges ──────────────────────────────────────────
+    # FK intentionally omitted — incremental graph may reference nodes
+    # from files not yet indexed. GraphEngine filters dangling edges at load.
     """
     CREATE TABLE IF NOT EXISTS graph_edges (
         edge_id         TEXT PRIMARY KEY,
         kind            TEXT NOT NULL CHECK (kind IN ('calls', 'imports', 'inherits', 'contains', 'tested_by', 'depends_on')),
-        source_node_id  TEXT NOT NULL REFERENCES graph_nodes(node_id) ON DELETE CASCADE,
-        target_node_id  TEXT NOT NULL REFERENCES graph_nodes(node_id) ON DELETE CASCADE,
+        source_node_id  TEXT NOT NULL,
+        target_node_id  TEXT NOT NULL,
         file_path       TEXT NOT NULL,
         line            INTEGER NOT NULL DEFAULT 0,
         confidence      REAL NOT NULL DEFAULT 1.0 CHECK (confidence >= 0.0 AND confidence <= 1.0),
@@ -108,6 +110,13 @@ _DDL_STATEMENTS: tuple[str, ...] = (
     )
     """,
 )
+
+# Orphaned edge cleanup (for incremental graph without FK)
+CLEANUP_ORPHANED_EDGES_SQL = """
+    DELETE FROM graph_edges
+    WHERE source_node_id NOT IN (SELECT node_id FROM graph_nodes)
+       OR target_node_id NOT IN (SELECT node_id FROM graph_nodes)
+"""
 
 # Indexes (separate from tables for clarity)
 _INDEX_STATEMENTS: tuple[str, ...] = (

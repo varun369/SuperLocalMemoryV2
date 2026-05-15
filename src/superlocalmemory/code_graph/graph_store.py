@@ -86,13 +86,15 @@ class GraphStore:
     def remove_file(self, file_path: str) -> None:
         """Remove all graph data for *file_path*.
 
-        Deletes nodes (cascade → edges via FK), edges sourced from this
-        file, and the file record.  All within a transaction.
+        Deletes nodes, edges sourced from this file, and the file record.
+        Also cleans up orphaned edges (FK removed — incremental graph may
+        have edges referencing unindexed nodes).
         """
         with self._db.transaction():
             self._db.delete_edges_by_file(file_path)
             self._db.delete_nodes_by_file(file_path)
             self._db.delete_file_record(file_path)
+            self._db.cleanup_orphaned_edges()
         logger.debug("Removed all data for %s", file_path)
 
     # ------------------------------------------------------------------

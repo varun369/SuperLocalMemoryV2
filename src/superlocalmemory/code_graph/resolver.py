@@ -15,7 +15,7 @@ import json
 import logging
 from pathlib import Path
 
-from superlocalmemory.code_graph.config import CodeGraphConfig
+from superlocalmemory.code_graph.config import CodeGraphConfig, CALL_PLACEHOLDER_PREFIX
 from superlocalmemory.code_graph.models import (
     EdgeKind,
     GraphEdge,
@@ -36,11 +36,20 @@ class ImportResolver:
     def __init__(self, repo_root: Path, config: CodeGraphConfig) -> None:
         self._repo_root = repo_root
         self._config = config
+        self._resolve_cache: dict[str, str | None] = {}
 
-    def resolve(
+    def _resolve_with_cache(
         self, import_path: str, importer_file: str, language: str
     ) -> str | None:
-        """Resolve an import path to a relative file path.
+        cache_key = f"{language}:{import_path}:{importer_file}"
+        if cache_key not in self._resolve_cache:
+            self._resolve_cache[cache_key] = self._resolve(import_path, importer_file, language)
+        return self._resolve_cache[cache_key]
+
+    def _resolve(
+        self, import_path: str, importer_file: str, language: str
+    ) -> str | None:
+        """Resolve an import path to a relative file path without caching.
 
         Returns None for external packages.
         Raises UnsupportedLanguageError for unknown languages.
@@ -91,18 +100,18 @@ class ImportResolver:
                 resolved.append(edge)
                 continue
 
-            if not edge.target_node_id.startswith("__call__"):
+            if not edge.target_node_id.startswith(CALL_PLACEHOLDER_PREFIX):
                 resolved.append(edge)
                 continue
 
-            call_name = edge.target_node_id.replace("__call__", "")
+            call_name = edge.target_node_id.replace(CALL_PLACEHOLDER_PREFIX, "")
             source_file = edge.file_path
             file_import_map = import_maps.get(source_file, {})
 
             # Strategy 1: Import-resolved
             if call_name in file_import_map:
                 module_path, imported_name = file_import_map[call_name]
-                resolved_file = self.resolve(
+                resolved_file = self._resolve_with_cache(
                     module_path, source_file,
                     self._guess_language(source_file)
                 )

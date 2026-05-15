@@ -112,11 +112,13 @@ def _parse_file_standalone(
             return {"nodes": [], "edges": [], "errors": [f"Unsupported language: {language}"]}
 
         nodes, edges = extractor.extract()
+        import_map = extractor.import_maps.get(file_path_str, {})
 
         return {
             "nodes": nodes,
             "edges": edges,
             "errors": [],
+            "import_map": import_map,
         }
     except Exception as exc:
         return {
@@ -281,18 +283,20 @@ class CodeParser:
 
     def parse_all(
         self, repo_root: Path
-    ) -> tuple[list[GraphNode], list[GraphEdge], list[FileRecord]]:
+    ) -> tuple[list[GraphNode], list[GraphEdge], list[FileRecord], dict[str, dict[str, str]]]:
         """Parse entire project in parallel.
 
-        Returns (all_nodes, all_edges, all_file_records).
+        Returns (all_nodes, all_edges, all_file_records, all_import_maps).
+        import_maps: {file_path: {local_name: imported_module_path}}
         """
         files = self.discover_files(repo_root)
         if not files:
-            return [], [], []
+            return [], [], [], {}
 
         all_nodes: list[GraphNode] = []
         all_edges: list[GraphEdge] = []
         all_file_records: list[FileRecord] = []
+        all_import_maps: dict[str, dict[str, str]] = {}
 
         # Read files and prepare tasks
         tasks: list[tuple[Path, bytes, str]] = []
@@ -328,9 +332,12 @@ class CodeParser:
                         edge_count=len(edges),
                         last_indexed=time.time(),
                     ))
+                    # Sequential path doesn't use _parse_file_standalone,
+                    # so import_map is not available here. That's OK —
+                    # the full build uses ProcessPoolExecutor.
                 except Exception as exc:
                     logger.warning("Failed to parse %s: %s", rel_path, exc)
-            return all_nodes, all_edges, all_file_records
+            return all_nodes, all_edges, all_file_records, all_import_maps
 
         # Parallel execution
         config_dict = {
@@ -370,6 +377,10 @@ class CodeParser:
 
                 file_nodes = result["nodes"]
                 file_edges = result["edges"]
+                file_import_map = result.get("import_map", {})
+                rel_str = str(rel_path)
+                if file_import_map:
+                    all_import_maps[rel_str] = file_import_map
 
                 # Build the full parse result with file node and CONTAINS edges
                 file_path_str = str(rel_path)
@@ -430,7 +441,7 @@ class CodeParser:
                     last_indexed=time.time(),
                 ))
 
-        return all_nodes, all_edges, all_file_records
+        return all_nodes, all_edges, all_file_records, all_import_maps
 
     # ------------------------------------------------------------------
     # Private helpers

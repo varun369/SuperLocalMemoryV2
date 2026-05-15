@@ -13,6 +13,7 @@ All tools return {"success": bool, ...} envelope. Never raise.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from pathlib import Path
@@ -117,112 +118,129 @@ def register_code_graph_tools(server, get_engine: Callable) -> None:
             languages: Comma-separated language filter (e.g. "python,typescript"). Empty = all.
             exclude_patterns: Comma-separated glob patterns to exclude.
         """
+        repo = Path(repo_path)
+        if not repo.exists():
+            return _error_response(
+                f"Repository path does not exist: {repo_path}"
+            )
+
+        from superlocalmemory.code_graph.config import CodeGraphConfig
+
+        config_kwargs: dict[str, Any] = {
+            "enabled": True,
+            "repo_root": repo,
+        }
+        if languages:
+            config_kwargs["languages"] = frozenset(
+                l.strip() for l in languages.split(",") if l.strip()
+            )
+        if exclude_patterns:
+            config_kwargs["exclude_patterns"] = tuple(
+                p.strip() for p in exclude_patterns.split(",") if p.strip()
+            )
+
+        config = CodeGraphConfig(**config_kwargs)
+
+        loop = asyncio.get_running_loop()
         try:
-            repo = Path(repo_path)
-            if not repo.exists():
-                return _error_response(
-                    f"Repository path does not exist: {repo_path}"
-                )
-
-            from superlocalmemory.code_graph.config import CodeGraphConfig
-            from superlocalmemory.code_graph.service import CodeGraphService
-            from superlocalmemory.code_graph.parser import CodeParser
-            from superlocalmemory.code_graph.graph_store import GraphStore
-            from superlocalmemory.code_graph.graph_engine import GraphEngine
-            from superlocalmemory.code_graph.search import HybridSearch
-            from superlocalmemory.code_graph.flows import FlowDetector
-            from superlocalmemory.code_graph.communities import CommunityDetector
-
-            t0 = time.time()
-
-            # Build config
-            config_kwargs: dict[str, Any] = {
-                "enabled": True,
-                "repo_root": repo,
-            }
-            if languages:
-                config_kwargs["languages"] = frozenset(
-                    l.strip() for l in languages.split(",") if l.strip()
-                )
-            if exclude_patterns:
-                config_kwargs["exclude_patterns"] = tuple(
-                    p.strip() for p in exclude_patterns.split(",") if p.strip()
-                )
-
-            config = CodeGraphConfig(**config_kwargs)
-            global _service
-            _service = CodeGraphService(config)
-
-            # Parse
-            parser = CodeParser(config)
-            nodes, edges, file_records = parser.parse_all(repo)
-
-            if not nodes:
-                return {
-                    "success": True,
-                    "files_parsed": 0,
-                    "nodes": 0,
-                    "edges": 0,
-                    "flows": 0,
-                    "communities": 0,
-                    "duration_ms": int((time.time() - t0) * 1000),
-                    "message": f"No supported source files found in {repo_path}.",
-                }
-
-            # Store in DB
-            db = _service.db
-            store = GraphStore(db)
-
-            # Group by file for atomic replacement
-            file_groups: dict[str, tuple[list, list, Any]] = {}
-            for fr in file_records:
-                file_groups[fr.file_path] = ([], [], fr)
-            for n in nodes:
-                fp = n.file_path
-                if fp in file_groups:
-                    file_groups[fp][0].append(n)
-            for e in edges:
-                fp = e.file_path
-                if fp in file_groups:
-                    file_groups[fp][1].append(e)
-
-            for fp, (ns, es, fr) in file_groups.items():
-                store.store_file_nodes_edges(fp, ns, es, fr)
-
-            # Build in-memory graph
-            engine = GraphEngine(store)
-            engine.build_graph()
-
-            # Detect flows
-            flow_detector = FlowDetector(db)
-            entry_points = flow_detector.detect_entry_points()
-            flows = []
-            for ep in entry_points[:50]:
-                try:
-                    flow = flow_detector.trace_flow(ep)
-                    if flow is not None:
-                        flows.append(flow)
-                except Exception:
-                    pass
-
-            # Detect communities
-            comm_detector = CommunityDetector(db)
-            communities = comm_detector.detect_communities()
-
-            duration_ms = int((time.time() - t0) * 1000)
-
-            return {
-                "success": True,
-                "files_parsed": len(file_records),
-                "nodes": db.get_node_count(),
-                "edges": db.get_edge_count(),
-                "flows": len(flows),
-                "communities": len(communities),
-                "duration_ms": duration_ms,
-            }
+            result = await loop.run_in_executor(None, _build_graph_sync, config, repo)
+            return result
         except Exception as exc:
             logger.exception("build_code_graph failed")
             return _error_response(str(exc))
+
+    def _build_graph_sync(config, repo: Path) -> dict:
+        """CPU-bound: parse, store, build graph, detect flows and communities.
+
+        Runs in a thread executor to avoid blocking the asyncio event loop.
+        """
+        from superlocalmemory.code_graph.service import CodeGraphService
+        from superlocalmemory.code_graph.parser import CodeParser
+        from superlocalmemory.code_graph.graph_store import GraphStore
+        from superlocalmemory.code_graph.graph_engine import GraphEngine
+        from superlocalmemory.code_graph.flows import FlowDetector
+        from superlocalmemory.code_graph.communities import CommunityDetector
+        from superlocalmemory.code_graph.resolver import ImportResolver
+        from superlocalmemory.code_graph.config import UNRESOLVED_PLACEHOLDER, CALL_PLACEHOLDER_PREFIX
+
+        t0 = time.time()
+        global _service
+        _service = CodeGraphService(config)
+
+        parser = CodeParser(config)
+        nodes, edges, file_records, import_maps = parser.parse_all(repo)
+
+        # Resolve call targets: replace __call__* with real node_ids using import maps
+        resolver = ImportResolver(config.repo_root, config)
+        edges = resolver.resolve_call_targets(nodes, edges, import_maps)
+
+        # Filter: remove any remaining placeholder edges (unresolved calls)
+        edges = [
+            e for e in edges
+            if not (
+                e.source_node_id.startswith("__")
+                or e.target_node_id.startswith("__")
+            )
+        ]
+
+        if not nodes:
+            return {
+                "success": True,
+                "files_parsed": 0,
+                "nodes": 0,
+                "edges": 0,
+                "flows": 0,
+                "communities": 0,
+                "duration_ms": int((time.time() - t0) * 1000),
+                "message": f"No supported source files found in {config.repo_root}.",
+            }
+
+        db = _service.db
+        store = GraphStore(db)
+
+        file_groups: dict[str, tuple[list, list, Any]] = {}
+        for fr in file_records:
+            file_groups[fr.file_path] = ([], [], fr)
+        for n in nodes:
+            fp = n.file_path
+            if fp in file_groups:
+                file_groups[fp][0].append(n)
+        for e in edges:
+            fp = e.file_path
+            if fp in file_groups:
+                file_groups[fp][1].append(e)
+
+        for fp, (ns, es, fr) in file_groups.items():
+            store.store_file_nodes_edges(fp, ns, es, fr)
+
+        engine = GraphEngine(store)
+        engine.build_graph()
+
+        flow_detector = FlowDetector(db)
+        entry_points = flow_detector.detect_entry_points()
+        flows = []
+        for ep in entry_points[:50]:
+            try:
+                flow = flow_detector.trace_flow(ep)
+                if flow is not None:
+                    flows.append(flow)
+            except Exception:
+                pass
+
+        comm_detector = CommunityDetector(db)
+        communities = comm_detector.detect_communities()
+
+        duration_ms = int((time.time() - t0) * 1000)
+
+        return {
+            "success": True,
+            "files_parsed": len(file_records),
+            "nodes": db.get_node_count(),
+            "edges": db.get_edge_count(),
+            "flows": len(flows),
+            "communities": len(communities),
+            "duration_ms": duration_ms,
+        }
 
     # ==================================================================
     # Tool 2: update_code_graph
@@ -285,6 +303,7 @@ def register_code_graph_tools(server, get_engine: Callable) -> None:
             # Re-parse changed files
             from superlocalmemory.code_graph.parser import CodeParser
             from superlocalmemory.code_graph.graph_store import GraphStore
+            from superlocalmemory.code_graph.config import UNRESOLVED_PLACEHOLDER, CALL_PLACEHOLDER_PREFIX
 
             config = svc.config
             parser = CodeParser(config)
@@ -308,6 +327,14 @@ def register_code_graph_tools(server, get_engine: Callable) -> None:
                     file_nodes, file_edges = parser.parse_file(
                         Path(fp), source, lang
                     )
+                    # Filter placeholder edges for incremental update
+                    file_edges = [
+                        e for e in file_edges
+                        if not (
+                            e.source_node_id.startswith("__")
+                            or e.target_node_id.startswith("__")
+                        )
+                    ]
                     import hashlib
                     from superlocalmemory.code_graph.models import FileRecord
                     fr = FileRecord(

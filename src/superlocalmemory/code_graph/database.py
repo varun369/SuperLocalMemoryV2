@@ -263,6 +263,16 @@ class CodeGraphDatabase:
             "DELETE FROM graph_edges WHERE file_path = ?", (file_path,)
         )
 
+    def cleanup_orphaned_edges(self) -> int:
+        """Remove edges whose source or target node no longer exists.
+
+        With FK constraints removed from graph_edges (incremental graph
+        may reference unindexed files), this cleanup prevents orphaned
+        rows from accumulating in the database.
+        """
+        sql = schema_code_graph.CLEANUP_ORPHANED_EDGES_SQL
+        return self.execute_write(sql, ())
+
     # ------------------------------------------------------------------
     # File record CRUD
     # ------------------------------------------------------------------
