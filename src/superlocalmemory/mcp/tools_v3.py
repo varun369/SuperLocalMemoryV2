@@ -285,8 +285,8 @@ def register_v3_tools(server, get_engine: Callable) -> None:
             limit: Maximum results (default 10).
         """
         try:
-            from superlocalmemory.core.worker_pool import WorkerPool
-            raw = WorkerPool.shared().recall(query=query, limit=limit)
+            from superlocalmemory.mcp._daemon_proxy import choose_pool
+            raw = choose_pool().recall(query=query, limit=limit)
             items = raw.get("results", []) if isinstance(raw, dict) else []
             results = []
             for item in items[:limit]:

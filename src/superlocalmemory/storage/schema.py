@@ -252,7 +252,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS atomic_facts_fts
 -- left by V2 migration.
 
 -- INSERT trigger
-CREATE TRIGGER atomic_facts_fts_insert
+CREATE TRIGGER IF NOT EXISTS atomic_facts_fts_insert
     AFTER INSERT ON atomic_facts
 BEGIN
     INSERT INTO atomic_facts_fts (rowid, fact_id, content)
@@ -260,7 +260,7 @@ BEGIN
 END;
 
 -- DELETE trigger
-CREATE TRIGGER atomic_facts_fts_delete
+CREATE TRIGGER IF NOT EXISTS atomic_facts_fts_delete
     AFTER DELETE ON atomic_facts
 BEGIN
     INSERT INTO atomic_facts_fts (atomic_facts_fts, rowid, fact_id, content)
@@ -268,7 +268,7 @@ BEGIN
 END;
 
 -- UPDATE trigger
-CREATE TRIGGER atomic_facts_fts_update
+CREATE TRIGGER IF NOT EXISTS atomic_facts_fts_update
     AFTER UPDATE OF content ON atomic_facts
 BEGIN
     INSERT INTO atomic_facts_fts (atomic_facts_fts, rowid, fact_id, content)

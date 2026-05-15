@@ -13,10 +13,9 @@ Part of Qualixar | Author: Varun Pratap Bhardwaj
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
-from typing import Any, Callable
+from typing import Callable
 
 from mcp.types import ToolAnnotations
 
@@ -111,7 +110,6 @@ def register_core_tools(server, get_engine: Callable) -> None:
         Extracts atomic facts, resolves entities, builds graph edges,
         and indexes for 4-channel retrieval.
         """
-        import asyncio
         try:
             # v3.4.32: Store-first pattern. Write to pending.db and return
             # immediately. The daemon's pending-materializer thread drains
@@ -141,7 +139,7 @@ def register_core_tools(server, get_engine: Callable) -> None:
     @server.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def recall(
         query: str, limit: int = 10, agent_id: str = "mcp_client",
-        session_id: str = "",
+        session_id: str = "", fast: bool = False,
     ) -> dict:
         """Search memories by semantic query with 4-channel retrieval, RRF fusion, and reranking.
 
@@ -153,8 +151,8 @@ def register_core_tools(server, get_engine: Callable) -> None:
         """
         import asyncio
         try:
-            from superlocalmemory.core.worker_pool import WorkerPool
-            pool = WorkerPool.shared()
+            from superlocalmemory.mcp._daemon_proxy import choose_pool
+            pool = choose_pool()
             # S9-DASH-10: priority for session_id, so engagement
             # signals land on the right pending_outcome:
             #   1. Explicit ``session_id`` tool-call argument.
@@ -199,6 +197,7 @@ def register_core_tools(server, get_engine: Callable) -> None:
             # block behind a single threading.Lock. See worker_pool.py.
             result = await asyncio.to_thread(
                 pool.recall, query, limit=limit, session_id=effective_sid,
+                fast=bool(fast),
             )
             if result.get("ok"):
                 # Record implicit feedback: every returned result is a recall_hit

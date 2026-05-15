@@ -45,10 +45,14 @@ class DaemonPoolProxy:
 
     def recall(
         self, query: str, limit: int = 10, session_id: str = "",
+        fast: bool = False,
     ) -> dict[str, Any]:
-        params = urllib.parse.urlencode(
-            {"q": query, "limit": limit, "session_id": session_id or ""}
-        )
+        params = urllib.parse.urlencode({
+            "q": query,
+            "limit": limit,
+            "session_id": session_id or "",
+            "fast": "true" if fast else "false",
+        })
         try:
             with urllib.request.urlopen(
                 self._url(f"/recall?{params}"), timeout=self._timeout,

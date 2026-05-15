@@ -7,7 +7,7 @@
 Covers:
     - Success path: recall returns results list
     - Failure path: pool error propagated
-    - WorkerPool.shared().recall() called with query + limit
+    - choose_pool().recall() called with query + limit + fast
     - Event emission on success
     - Implicit feedback recording (_record_recall_hits)
     - Edge cases: empty query, limit forwarded, feedback failure non-blocking
@@ -21,6 +21,15 @@ import asyncio
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+
+@pytest.fixture(autouse=True)
+def _inline_to_thread(monkeypatch):
+    """Run asyncio.to_thread inline so these unit tests never spawn threads."""
+    async def _run_inline(fn, *args, **kwargs):
+        return fn(*args, **kwargs)
+
+    monkeypatch.setattr(asyncio, "to_thread", _run_inline)
 
 
 # ---------------------------------------------------------------------------
@@ -76,7 +85,7 @@ class TestRecallTool:
 
         recall, _ = _get_recall_tool()
 
-        with patch("superlocalmemory.core.worker_pool.WorkerPool.shared", return_value=pool):
+        with patch("superlocalmemory.mcp._daemon_proxy.choose_pool", return_value=pool):
             result = asyncio.run(recall("tell me about Python"))
 
         assert result["success"] is True
@@ -93,7 +102,7 @@ class TestRecallTool:
 
         recall, _ = _get_recall_tool()
 
-        with patch("superlocalmemory.core.worker_pool.WorkerPool.shared", return_value=pool):
+        with patch("superlocalmemory.mcp._daemon_proxy.choose_pool", return_value=pool):
             result = asyncio.run(recall("any query"))
 
         assert result["success"] is False
@@ -101,7 +110,7 @@ class TestRecallTool:
 
     @patch("superlocalmemory.mcp.tools_core._record_recall_hits")
     @patch("superlocalmemory.mcp.tools_core._emit_event")
-    def test_recall_calls_worker_pool_recall(self, mock_emit, mock_record):
+    def test_recall_calls_pool_recall(self, mock_emit, mock_record):
         """pool.recall() is called with the query and limit."""
         pool = MagicMock()
         pool.recall.return_value = {
@@ -113,7 +122,7 @@ class TestRecallTool:
         # S9-DASH-10: registry lookup must return None in tests so the
         # final fallback ``mcp:<agent_id>`` is used. Without the patch
         # the test picks up a real live session from the CI/dev registry.
-        with patch("superlocalmemory.core.worker_pool.WorkerPool.shared", return_value=pool), \
+        with patch("superlocalmemory.mcp._daemon_proxy.choose_pool", return_value=pool), \
              patch("superlocalmemory.hooks.session_registry.lookup_by_parent", return_value=None), \
              patch("superlocalmemory.hooks.session_registry.most_recent_active", return_value=None):
             asyncio.run(recall("architecture patterns", limit=5))
@@ -123,6 +132,28 @@ class TestRecallTool:
         # session_id when the caller doesn't supply one is ``mcp:<agent_id>``.
         pool.recall.assert_called_once_with(
             "architecture patterns", limit=5, session_id="mcp:mcp_client",
+            fast=False,
+        )
+
+    @patch("superlocalmemory.mcp.tools_core._record_recall_hits")
+    @patch("superlocalmemory.mcp.tools_core._emit_event")
+    def test_recall_forwards_fast_flag(self, mock_emit, mock_record):
+        """fast=True is forwarded to the selected pool implementation."""
+        pool = MagicMock()
+        pool.recall.return_value = {
+            "ok": True, "results": [], "result_count": 0, "query_type": "semantic",
+        }
+
+        recall, _ = _get_recall_tool()
+
+        with patch("superlocalmemory.mcp._daemon_proxy.choose_pool", return_value=pool), \
+             patch("superlocalmemory.hooks.session_registry.lookup_by_parent", return_value=None), \
+             patch("superlocalmemory.hooks.session_registry.most_recent_active", return_value=None):
+            asyncio.run(recall("architecture patterns", limit=5, fast=True))
+
+        pool.recall.assert_called_once_with(
+            "architecture patterns", limit=5, session_id="mcp:mcp_client",
+            fast=True,
         )
 
     @patch("superlocalmemory.mcp.tools_core._record_recall_hits")
@@ -136,7 +167,7 @@ class TestRecallTool:
 
         recall, _ = _get_recall_tool()
 
-        with patch("superlocalmemory.core.worker_pool.WorkerPool.shared", return_value=pool):
+        with patch("superlocalmemory.mcp._daemon_proxy.choose_pool", return_value=pool):
             asyncio.run(recall("event check"))
 
         mock_emit.assert_called_once()
@@ -159,7 +190,7 @@ class TestRecallTool:
 
         recall, get_engine = _get_recall_tool()
 
-        with patch("superlocalmemory.core.worker_pool.WorkerPool.shared", return_value=pool), \
+        with patch("superlocalmemory.mcp._daemon_proxy.choose_pool", return_value=pool), \
              patch("superlocalmemory.mcp.tools_core._record_recall_hits") as mock_record:
             asyncio.run(recall("feedback query"))
 
@@ -184,14 +215,14 @@ class TestRecallEdgeCases:
 
         recall, _ = _get_recall_tool()
 
-        with patch("superlocalmemory.core.worker_pool.WorkerPool.shared", return_value=pool), \
+        with patch("superlocalmemory.mcp._daemon_proxy.choose_pool", return_value=pool), \
              patch("superlocalmemory.hooks.session_registry.lookup_by_parent", return_value=None), \
              patch("superlocalmemory.hooks.session_registry.most_recent_active", return_value=None):
             result = asyncio.run(recall(""))
 
         assert result["success"] is True
         pool.recall.assert_called_once_with(
-            "", limit=10, session_id="mcp:mcp_client",
+            "", limit=10, session_id="mcp:mcp_client", fast=False,
         )
 
     @patch("superlocalmemory.mcp.tools_core._record_recall_hits")
@@ -205,13 +236,13 @@ class TestRecallEdgeCases:
 
         recall, _ = _get_recall_tool()
 
-        with patch("superlocalmemory.core.worker_pool.WorkerPool.shared", return_value=pool), \
+        with patch("superlocalmemory.mcp._daemon_proxy.choose_pool", return_value=pool), \
              patch("superlocalmemory.hooks.session_registry.lookup_by_parent", return_value=None), \
              patch("superlocalmemory.hooks.session_registry.most_recent_active", return_value=None):
             asyncio.run(recall("limit test", limit=5))
 
         pool.recall.assert_called_once_with(
-            "limit test", limit=5, session_id="mcp:mcp_client",
+            "limit test", limit=5, session_id="mcp:mcp_client", fast=False,
         )
 
     @patch("superlocalmemory.mcp.tools_core._emit_event")
@@ -227,7 +258,7 @@ class TestRecallEdgeCases:
 
         recall, _ = _get_recall_tool()
 
-        with patch("superlocalmemory.core.worker_pool.WorkerPool.shared", return_value=pool), \
+        with patch("superlocalmemory.mcp._daemon_proxy.choose_pool", return_value=pool), \
              patch(
                  "superlocalmemory.mcp.tools_core._record_recall_hits",
                  side_effect=RuntimeError("feedback DB broken"),

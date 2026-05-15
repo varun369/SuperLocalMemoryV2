@@ -17,8 +17,11 @@ class _FakePool:
         self.recall_calls = []
         self.store_calls = []
 
-    def recall(self, query: str, limit: int = 10, session_id: str = ""):
-        self.recall_calls.append((query, limit))
+    def recall(
+        self, query: str, limit: int = 10, session_id: str = "",
+        fast: bool = False,
+    ):
+        self.recall_calls.append((query, limit, session_id, fast))
         return {
             "ok": True,
             "query": query,
@@ -59,7 +62,16 @@ class TestPoolAdapter:
         assert resp.results[0].fact.fact_id == "f1"
         assert resp.results[0].fact.content == "first memory content"
         assert resp.results[0].score == 0.91
-        assert fake.recall_calls == [("hello", 5)]
+        assert fake.recall_calls == [("hello", 5, "", False)]
+
+    def test_pool_recall_forwards_session_id_and_fast(self, monkeypatch):
+        from superlocalmemory.mcp import _pool_adapter
+        fake = _FakePool()
+        monkeypatch.setattr(_pool_adapter, "_pool", lambda: fake)
+
+        _pool_adapter.pool_recall("hello", limit=5, session_id="s-1", fast=True)
+
+        assert fake.recall_calls == [("hello", 5, "s-1", True)]
 
     def test_pool_store_returns_fact_ids(self, monkeypatch):
         from superlocalmemory.mcp import _pool_adapter
@@ -75,7 +87,7 @@ class TestPoolAdapter:
         from superlocalmemory.mcp import _pool_adapter
 
         class _Empty:
-            def recall(self, query, limit=10, session_id=""):
+            def recall(self, query, limit=10, session_id="", fast=False):
                 return {"ok": True, "results": []}
 
         monkeypatch.setattr(_pool_adapter, "_pool", lambda: _Empty())
@@ -89,7 +101,7 @@ class TestPoolAdapter:
         from superlocalmemory.mcp._pool_adapter import PoolError
 
         class _Dead:
-            def recall(self, query, limit=10, session_id=""):
+            def recall(self, query, limit=10, session_id="", fast=False):
                 return {"ok": False, "error": "worker died"}
 
         monkeypatch.setattr(_pool_adapter, "_pool", lambda: _Dead())
@@ -170,9 +182,9 @@ class TestToolsActiveUsesPool:
         result = asyncio.run(registered["session_init"](project_path="/tmp/p"))
 
         assert result["success"] is True
-        # At least one recall landed through the pool adapter
-        assert fake_pool.recall_calls, \
-            "session_init did not route through pool_recall"
+        assert fake_pool.recall_calls == [
+            ("project context /tmp/p", 10, "", True),
+        ], "session_init should perform one fast recall through pool_recall"
 
     def test_observe_uses_pool_adapter_not_engine_store(self, monkeypatch):
         import asyncio

@@ -77,6 +77,20 @@ class TestCreateAllTables:
         conn.commit()
         # If we get here without error, the IF NOT EXISTS works.
 
+    def test_fts_triggers_are_idempotent(self) -> None:
+        """FTS trigger DDL must tolerate concurrent/repeated schema init."""
+        from superlocalmemory.storage import schema
+
+        assert "CREATE TRIGGER IF NOT EXISTS atomic_facts_fts_insert" in (
+            schema._SQL_ATOMIC_FACTS_FTS
+        )
+        assert "CREATE TRIGGER IF NOT EXISTS atomic_facts_fts_delete" in (
+            schema._SQL_ATOMIC_FACTS_FTS
+        )
+        assert "CREATE TRIGGER IF NOT EXISTS atomic_facts_fts_update" in (
+            schema._SQL_ATOMIC_FACTS_FTS
+        )
+
     def test_schema_version_seeded(self, conn: sqlite3.Connection) -> None:
         row = conn.execute("SELECT version FROM schema_version").fetchone()
         assert row is not None

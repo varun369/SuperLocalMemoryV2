@@ -8,11 +8,10 @@ envelope) surfaces as PoolError, not silent empty results.
 from __future__ import annotations
 
 import json
-from types import SimpleNamespace
 
 import pytest
 
-from superlocalmemory.mcp._daemon_proxy import DaemonPoolProxy, choose_pool
+from superlocalmemory.mcp._daemon_proxy import DaemonPoolProxy
 from superlocalmemory.mcp._pool_adapter import (
     PoolError, pool_recall, pool_store,
 )
@@ -21,7 +20,7 @@ from superlocalmemory.mcp._pool_adapter import (
 class TestPoolErrorSurfacing:
     def test_pool_recall_raises_on_ok_false(self, monkeypatch):
         class _Dead:
-            def recall(self, query, limit=10, session_id=""):
+            def recall(self, query, limit=10, session_id="", fast=False):
                 return {"ok": False, "error": "worker died"}
         from superlocalmemory.mcp import _pool_adapter
         monkeypatch.setattr(_pool_adapter, "_pool", lambda: _Dead())
@@ -41,7 +40,7 @@ class TestPoolErrorSurfacing:
 
     def test_pool_recall_success_does_not_raise(self, monkeypatch):
         class _Ok:
-            def recall(self, query, limit=10, session_id=""):
+            def recall(self, query, limit=10, session_id="", fast=False):
                 return {"ok": True, "results": [], "query_type": "x"}
         from superlocalmemory.mcp import _pool_adapter
         monkeypatch.setattr(_pool_adapter, "_pool", lambda: _Ok())
@@ -72,6 +71,23 @@ class TestDaemonPoolProxy:
             or "q=what%20did%20we%20ship" in captured["url"]
         assert "limit=3" in captured["url"]
         assert "session_id=s-1" in captured["url"]
+
+    def test_recall_forwards_fast_flag(self, monkeypatch):
+        captured = {}
+
+        def _fake_urlopen(req, timeout=30):
+            captured["url"] = getattr(req, "full_url", req)
+            return _FakeResp(json.dumps({
+                "ok": True, "results": [], "query_type": "semantic",
+            }).encode())
+
+        import superlocalmemory.mcp._daemon_proxy as mod
+        monkeypatch.setattr(mod.urllib.request, "urlopen", _fake_urlopen)
+
+        proxy = DaemonPoolProxy(port=9999)
+        out = proxy.recall("fast path", fast=True)
+        assert out["ok"] is True
+        assert "fast=true" in captured["url"]
 
     def test_store_forwards_http_post(self, monkeypatch):
         captured = {}

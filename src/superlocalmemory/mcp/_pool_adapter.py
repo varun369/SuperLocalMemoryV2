@@ -74,12 +74,17 @@ def _unwrap_error(raw: Any, op: str) -> None:
         raise PoolError(f"pool.{op} failed: {reason}")
 
 
-def pool_recall(query: str, limit: int = 10, **_: Any) -> PoolRecallResponse:
+def pool_recall(query: str, limit: int = 10, **kwargs: Any) -> PoolRecallResponse:
     """Call pool.recall and reshape its dict into a typed response.
 
     Raises :class:`PoolError` on worker death or any non-ok envelope.
     """
-    raw = _pool().recall(query=query, limit=limit)
+    raw = _pool().recall(
+        query=query,
+        limit=limit,
+        session_id=str(kwargs.get("session_id") or ""),
+        fast=bool(kwargs.get("fast", False)),
+    )
     _unwrap_error(raw, "recall")
     items = raw.get("results", []) if isinstance(raw, dict) else []
     results = [
