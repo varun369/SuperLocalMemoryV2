@@ -3,7 +3,7 @@
 import os
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
-__version__ = "3.4.45"
+__version__ = "3.4.46"
 
 _REQUIRED_VERSIONS = {
     "sentence_transformers": "5.3.0",

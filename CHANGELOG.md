@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.46] - 2026-05-18
+
+### Added
+- **`SLM_MCP_TOOLS` env var** — Fine-grained MCP tool allowlist. Users can now
+  set `SLM_MCP_TOOLS=remember,recall,search,session_init` to expose exactly
+  the tools they need, reducing MCP context budget. Falls back to 25-tool
+  essential set when unset; `SLM_MCP_ALL_TOOLS=1` still wins for power users.
+- **`KMP_DUPLICATE_LIB_OK=TRUE`** — Set at package init to prevent OpenMP
+  multi-library crashes when PyTorch, ONNX Runtime, and NumPy-MKL all load
+  their own runtimes simultaneously.
+
+### Fixed
+- **WAL busy_timeout ordering** (PR #24, @kenyonxu) — `_enable_wal()` now
+  sets `busy_timeout` before `journal_mode=WAL`, ensuring the 10s configured
+  timeout is used instead of SQLite's default 5s during WAL initialization.
+- **Engine init traceback logging** (PR #25, @kenyonxu) — `logger.exception()`
+  replaces `logger.warning()` on daemon engine init failure, capturing the
+  full traceback for root-cause diagnosis.
+- **MCP `fast` recall wiring** (PR #22, @VikingOwl91) — `fast=True` recall
+  parameter now threads through the full MCP→daemon→worker stack.
+  `session_init` performs one `pool_recall(fast=True)` instead of two
+  redundant recalls. Tools switch from `WorkerPool.shared()` to `choose_pool()`
+  for daemon-first routing (avoids N×1.6 GB ONNX duplication across IDEs).
+- **FTS trigger idempotency** — `CREATE TRIGGER IF NOT EXISTS` prevents race
+  crashes on repeated schema init.
+
+---
+
 ## [3.4.43] - 2026-05-12
 
 Smart-hook architecture release. Replaces the time-based 15-minute recall
