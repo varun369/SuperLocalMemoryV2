@@ -29,4 +29,12 @@ def _check_critical_deps() -> None:
             pass
 
 
-_check_critical_deps()
+# Only run the dep check when a full (non-LIGHT) engine is in use.
+# The MCP server runs in LIGHT mode — importing onnxruntime here
+# breaks the LIGHT engine contract (ONNX_LOADED must stay False).
+# Skip when SLM_SKIP_DEP_CHECK=1 or SLM_DISABLE_WARMUP_SIDE_EFFECTS=1.
+if not (
+    os.environ.get("SLM_SKIP_DEP_CHECK") == "1"
+    or os.environ.get("SLM_DISABLE_WARMUP_SIDE_EFFECTS") == "1"
+):
+    _check_critical_deps()

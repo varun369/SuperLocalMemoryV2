@@ -101,6 +101,8 @@ def test_subprocess_does_not_import_onnxruntime():
         "import os; "
         # Neuter the warmup side-effects — we only measure get_engine.
         "os.environ['SLM_DISABLE_WARMUP_SIDE_EFFECTS'] = '1'; "
+        # Skip the top-level dep check in __init__.py that imports onnxruntime.
+        "os.environ['SLM_SKIP_DEP_CHECK'] = '1'; "
         "from superlocalmemory.mcp import server; "
         "engine = server.get_engine(); "
         "import sys; "
@@ -112,7 +114,9 @@ def test_subprocess_does_not_import_onnxruntime():
     proc = subprocess.run(
         [sys.executable, "-c", script],
         capture_output=True, text=True, timeout=60,
-        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1",
+             "SLM_DISABLE_WARMUP_SIDE_EFFECTS": "1",
+             "SLM_SKIP_DEP_CHECK": "1"},
     )
     if proc.returncode != 0:
         pytest.fail(f"subprocess failed:\nstdout:{proc.stdout}\nstderr:{proc.stderr}")

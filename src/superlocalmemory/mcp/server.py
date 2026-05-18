@@ -19,6 +19,10 @@ _os.environ.setdefault('PYTORCH_MPS_MEM_LIMIT', '0')
 _os.environ.setdefault('PYTORCH_ENABLE_MPS_FALLBACK', '1')
 _os.environ.setdefault('TOKENIZERS_PARALLELISM', 'false')
 _os.environ.setdefault('TORCH_DEVICE', 'cpu')
+# LIGHT engine contract: suppress the top-level dep check in __init__.py
+# that unconditionally imports onnxruntime. MCP runs LIGHT-only — ONNX
+# must never load in this process.
+_os.environ.setdefault('SLM_SKIP_DEP_CHECK', '1')
 
 import logging
 import sys
