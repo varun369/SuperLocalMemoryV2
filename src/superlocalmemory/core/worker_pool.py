@@ -67,6 +67,7 @@ class WorkerPool:
 
     def recall(
         self, query: str, limit: int = 10, session_id: str = "",
+        fast: bool = False,
     ) -> dict:
         """Run recall in worker subprocess. Returns result dict.
 
@@ -77,7 +78,7 @@ class WorkerPool:
         """
         return self._send({
             "cmd": "recall", "query": query, "limit": limit,
-            "session_id": session_id or "",
+            "session_id": session_id or "", "fast": bool(fast),
         })
 
     def store(self, content: str, metadata: dict | None = None) -> dict:

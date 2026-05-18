@@ -93,7 +93,6 @@ def register_active_tools(server, get_engine: Callable) -> None:
         The AI should call this automatically before any other work.
         """
         try:
-            from superlocalmemory.hooks.auto_recall import AutoRecall
             from superlocalmemory.hooks.rules_engine import RulesEngine
             from superlocalmemory.mcp._pool_adapter import pool_recall
 
@@ -104,21 +103,37 @@ def register_active_tools(server, get_engine: Callable) -> None:
                 return {"success": True, "context": "", "memories": [], "message": "Auto-recall disabled"}
 
             recall_config = rules.get_recall_config()
-            auto = AutoRecall(
-                recall_fn=pool_recall,
-                config={
-                    "enabled": True,
-                    "max_memories_injected": max_results,
-                    "relevance_threshold": recall_config.get("relevance_threshold", 0.3),
-                },
-            )
+            relevance_threshold = recall_config.get("relevance_threshold", 0.3)
+            if query:
+                search_query = query
+            elif project_path:
+                search_query = f"project context {project_path}"
+            else:
+                search_query = "recent important decisions"
 
-            # Get formatted context for system prompt injection
-            context = auto.get_session_context(project_path=project_path, query=query)
+            response = pool_recall(search_query, limit=max_results, fast=True)
+            relevant = [
+                r for r in response.results
+                if r.score >= relevance_threshold
+            ]
 
-            # Get structured results for tool response
-            search_query = query or f"project context {project_path}" if project_path else "recent important decisions"
-            memories = auto.get_query_context(search_query)
+            # Build both return shapes from one recall. Calling recall twice
+            # doubles session startup latency and can return duplicate snippets.
+            context = ""
+            if relevant:
+                lines = ["# Relevant Memory Context", ""]
+                for r in relevant[:max_results]:
+                    lines.append(f"- {r.fact.content[:200]}")
+                context = "\n".join(lines)
+
+            memories = [
+                {
+                    "fact_id": r.fact.fact_id,
+                    "content": r.fact.content[:300],
+                    "score": round(r.score, 3),
+                }
+                for r in relevant[:max_results]
+            ]
 
             # Get learning status
             pid = engine.profile_id
@@ -184,7 +199,6 @@ def register_active_tools(server, get_engine: Callable) -> None:
             from superlocalmemory.hooks.rules_engine import RulesEngine
             from superlocalmemory.mcp._pool_adapter import pool_store
 
-            engine = get_engine()
             rules = RulesEngine()
 
             auto = AutoCapture(
@@ -305,7 +319,6 @@ def register_active_tools(server, get_engine: Callable) -> None:
         """
         try:
             engine = get_engine()
-            pid = engine.profile_id
             sid = session_id or getattr(engine, '_last_session_id', '')
             if not sid:
                 return {"success": False, "error": "No session_id provided"}

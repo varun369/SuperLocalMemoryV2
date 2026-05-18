@@ -59,10 +59,12 @@ def _get_engine():
     return _engine
 
 
-def _handle_recall(query: str, limit: int, session_id: str = "") -> dict:
+def _handle_recall(
+    query: str, limit: int, session_id: str = "", fast: bool = False,
+) -> dict:
     engine = _get_engine()
     response = engine.recall(
-        query, limit=limit, session_id=session_id or None,
+        query, limit=limit, session_id=session_id or None, fast=bool(fast),
     )
 
     # Batch-fetch original memory text for all results
@@ -290,7 +292,7 @@ def _worker_main() -> None:
             if cmd == "recall":
                 result = _handle_recall(
                     req.get("query", ""), req.get("limit", 10),
-                    req.get("session_id", ""),
+                    req.get("session_id", ""), bool(req.get("fast", False)),
                 )
                 _respond(result)
             elif cmd == "store":
