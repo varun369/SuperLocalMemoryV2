@@ -52,13 +52,19 @@ def test_second_process_cannot_acquire(tmp_path: Path) -> None:
     fl = _imports()
     lock_file = tmp_path / "d.lock"
     ctx = multiprocessing.get_context("spawn")
+    # 30s timeout: CI runners cold-import the full dep tree (torch, onnxruntime)
+    # which takes ~5-15s before the child logic even starts.
+    _JOIN_TIMEOUT = 30.0
     with fl.exclusive_lock(lock_file):
         q: multiprocessing.Queue = ctx.Queue()
         p = ctx.Process(target=_child_tries_lock, args=(str(lock_file), q))
         p.start()
-        p.join(timeout=5.0)
-        assert p.exitcode == 0
-        result = q.get(timeout=1.0)
+        p.join(timeout=_JOIN_TIMEOUT)
+        assert p.exitcode == 0, (
+            f"Child process did not finish within {_JOIN_TIMEOUT}s "
+            f"(exitcode={p.exitcode}). CI cold-start too slow?"
+        )
+        result = q.get(timeout=2.0)
     assert result == "held", f"Expected 'held', got {result}"
 
 
@@ -68,9 +74,13 @@ def test_released_lock_allows_second_process(tmp_path: Path) -> None:
     with fl.exclusive_lock(lock_file):
         pass  # release
     ctx = multiprocessing.get_context("spawn")
+    _JOIN_TIMEOUT = 30.0
     q: multiprocessing.Queue = ctx.Queue()
     p = ctx.Process(target=_child_tries_lock, args=(str(lock_file), q))
     p.start()
-    p.join(timeout=5.0)
-    assert p.exitcode == 0
-    assert q.get(timeout=1.0) == "acquired"
+    p.join(timeout=_JOIN_TIMEOUT)
+    assert p.exitcode == 0, (
+        f"Child process did not finish within {_JOIN_TIMEOUT}s "
+        f"(exitcode={p.exitcode}). CI cold-start too slow?"
+    )
+    assert q.get(timeout=2.0) == "acquired"
