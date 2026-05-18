@@ -535,8 +535,8 @@ async def lifespan(application: FastAPI):
             application.state.queue_consumer = None
             application.state.recall_queue = None
 
-    except Exception as exc:
-        logger.warning("Engine init failed: %s", exc)
+    except Exception:
+        logger.exception("Engine init failed")  # auto-includes traceback
         application.state.engine = None
         application.state.config = None
 
