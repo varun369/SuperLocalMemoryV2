@@ -4,7 +4,7 @@
 
 <h1 align="center">SuperLocalMemory V3.4</h1>
 <p align="center"><strong>Every other AI forgets. Yours won't.</strong><br/><em>Infinite memory for Claude Code, Cursor, Windsurf, and any MCP-compatible AI client.</em></p>
-<p align="center"><code>v3.4.25</code> — Install once. Every session remembers the last. Automatically.</p>
+<p align="center"><code>v3.4.48</code> — Install once. Every session remembers the last. Automatically.<br><strong>Now with multi-machine agent mesh — M4 and M5 coordinate as one.</strong></p>
 <p align="center"><strong>Backed by 3 published research papers</strong> (arXiv preprints + Zenodo-archived) · <a href="https://arxiv.org/abs/2603.02240">arXiv:2603.02240</a> · <a href="https://arxiv.org/abs/2603.14588">arXiv:2603.14588</a> · <a href="https://arxiv.org/abs/2604.04514">arXiv:2604.04514</a></p>
 
 <p align="center">
@@ -413,6 +413,67 @@ Auto-capture hooks: `slm hooks install` + `slm observe` + `slm session-context`.
 **No competitor learns at zero token cost.**
 
 </details>
+
+---
+
+## Multi-Machine Mesh Coordination (New in v3.4.48)
+
+Run SLM on multiple machines (M4 + M5) and have your agents coordinate as one team without any disruption.
+
+### Setup
+
+**M4 (broker):**
+```bash
+export SLM_MESH_HOST=192.168.1.100
+export SLM_MESH_SHARED_SECRET=my-secret-key
+slm init  # Starts SLM at http://192.168.1.100:8765
+```
+
+**M5 (client):**
+```bash
+export SLM_MESH_PEER_URL=http://192.168.1.100:8765
+export SLM_MESH_SHARED_SECRET=my-secret-key
+slm init  # Syncs M4's agents every 30s, proxies messages to M4
+```
+
+### How It Works
+
+- **HTTP-based sync** — M5 queries M4's `/mesh/peers` endpoint every 30 seconds
+- **Message proxying** — When M5's agent sends a message to an M4 agent, it's routed automatically
+- **mDNS discovery (optional)** — M5 can auto-discover M4 on the LAN via `_slm-mesh._tcp` (enable with `SLM_MESH_DISCOVERY=on`, default)
+- **Graceful fallback** — Network errors logged but don't crash; offline agents queue messages for delivery
+- **Shared secret** — `SLM_MESH_SHARED_SECRET` gates remote peer discovery (required for remote mode)
+
+### Environment Variables
+
+| Variable | Default | Purpose |
+|:---------|:--------|:--------|
+| `SLM_MESH_HOST` | `127.0.0.1` | Host this SLM listens on (set to IP for remote) |
+| `SLM_MESH_PEER_URL` | unset | Full URL of remote SLM (e.g., `http://192.168.1.100:8765`) |
+| `SLM_MESH_SHARED_SECRET` | unset | Auth secret (required when remote) |
+| `SLM_MESH_DISCOVERY` | `on` | mDNS discovery (`on`/`off`) |
+| `SLM_MESH_WS_PORT` | `7900` | WebSocket port for mesh (internal use) |
+
+### Dependencies
+
+- `zeroconf>=0.140` (new in v3.4.48, optional, pure Python, auto-installed)
+- `httpx==0.28.1` (already in core deps)
+- No Docker. No external broker. Works on WiFi + LAN.
+
+### MCP Tools
+
+All 8 mesh tools work seamlessly across machines:
+
+| Tool | Description |
+|:-----|:------------|
+| `mesh_peers` | List local + remote peers merged |
+| `mesh_send` | Send message to any peer (local or remote) |
+| `mesh_broadcast` | Send to all agents (across machines) |
+| `mesh_project` | Send to all agents in a project (across machines) |
+| `mesh_inbox` | Get messages for this agent |
+| `mesh_pending` | Get offline messages (broadcast/project) |
+| `mesh_state` | Get/set shared state (replicated) |
+| `mesh_lock` | Acquire/release distributed file locks |
 
 ---
 

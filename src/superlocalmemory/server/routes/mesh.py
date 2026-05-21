@@ -80,6 +80,18 @@ def _get_broker(request: Request):
     return broker
 
 
+def _validate_remote_auth(request: Request, broker) -> None:
+    """Validate bearer token for cross-machine requests."""
+    if not broker._is_remote:
+        return  # local mode — no auth needed
+    secret = broker._shared_secret
+    if not secret:
+        return
+    auth = request.headers.get("Authorization", "")
+    if auth != f"Bearer {secret}":
+        raise HTTPException(401, detail="Unauthorized")
+
+
 # -- Routes --
 
 @router.post("/register")
@@ -105,6 +117,7 @@ async def deregister(req: DeregisterRequest, request: Request):
 @router.get("/peers")
 async def peers(request: Request):
     broker = _get_broker(request)
+    _validate_remote_auth(request, broker)
     return {"peers": broker.list_all_peers()}
 
 

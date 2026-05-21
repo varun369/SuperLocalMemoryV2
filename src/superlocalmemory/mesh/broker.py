@@ -19,9 +19,16 @@ import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger("superlocalmemory.mesh")
 import os as _os
+
+# Remote sync support (optional, try/except to avoid import issues)
+try:
+    from .remote_sync import RemoteSyncClient
+except ImportError:
+    RemoteSyncClient = None  # type: ignore
 
 LOCAL_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
 
@@ -52,6 +59,8 @@ class MeshBroker:
         self._ws_port = int(_os.environ.get("SLM_MESH_WS_PORT", "7900"))
         self._discovery_enabled = self._is_remote and _os.environ.get("SLM_MESH_DISCOVERY", "on") != "off"
         self._remote_peers: dict[str, dict] = {}
+        self._peer_url: str | None = _os.environ.get("SLM_MESH_PEER_URL", "") or None
+        self._sync_client: Any = None
         if self._is_remote and not self._shared_secret:
             raise RuntimeError(
                 "SLM_MESH_SHARED_SECRET is required when SLM_MESH_HOST is not localhost"
@@ -85,8 +94,17 @@ class MeshBroker:
         )
         self._cleanup_thread.start()
 
+        # Start remote sync client if peer URL configured or remote mode
+        if RemoteSyncClient and (
+            self._peer_url or (self._is_remote and self._host not in LOCAL_HOSTS)
+        ):
+            self._sync_client = RemoteSyncClient(self)
+            self._sync_client.start()
+
     def stop(self) -> None:
         self._stop_event.set()
+        if self._sync_client:
+            self._sync_client.stop()
 
     # -- Connection helper --
 
@@ -215,6 +233,14 @@ class MeshBroker:
                 to_peer = "project"
             else:
                 target_type = "peer"
+                # Check if this is a remote peer — proxy to remote SLM
+                if to_peer in self._remote_peers and self._sync_client:
+                    return self._sync_client.send_to_remote(to_peer, {
+                        "from_peer": from_peer,
+                        "to": to_peer,
+                        "content": content,
+                        "type": msg_type,
+                    })
                 # Verify recipient exists for direct messages
                 if not conn.execute("SELECT 1 FROM mesh_peers WHERE peer_id=?", (to_peer,)).fetchone():
                     return {"ok": False, "error": "recipient peer not found"}

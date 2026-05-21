@@ -179,4 +179,18 @@ export SLM_DATA_DIR="/path/to/your/data"
 
 ---
 
+## Multi-Machine Mesh (v3.4.48+)
+
+| Variable | Default | Description |
+|---|---|---|
+| `SLM_MESH_PEER_URL` | unset | Full URL of remote SLM instance (e.g., `http://192.168.1.100:8765`) |
+| `SLM_MESH_SHARED_SECRET` | unset | Shared bearer token — same on both machines. Required when `SLM_MESH_HOST` is not localhost. |
+| `SLM_MESH_HOST` | `127.0.0.1` | IP to bind this machine's mesh listener |
+| `SLM_MESH_WS_PORT` | `7900` | Port used for mDNS service announcement |
+| `SLM_MESH_DISCOVERY` | `on` | Set to `off` to disable mDNS auto-discovery |
+
+See [Multi-Machine Setup](./multi-machine.md) for full setup guide.
+
+---
+
 *SuperLocalMemory V3 — Copyright 2026 Varun Pratap Bhardwaj. AGPL-3.0-or-later. Part of Qualixar.*

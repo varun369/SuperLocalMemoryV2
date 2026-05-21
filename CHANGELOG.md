@@ -5,7 +5,39 @@ All notable changes to SuperLocalMemory V3 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### [Unreleased]
+## [3.4.48] - 2026-05-21
+
+**Multi-Machine Mesh Coordination — M4 & M5 now work as one.**
+
+### Added
+- **`RemoteSyncClient` — cross-machine peer sync** (NEW in v3.4.48)
+  - HTTP-based sync with remote SLM instances
+  - Populates `broker._remote_peers` from remote `/mesh/peers` endpoint every 30s
+  - Environment variables:
+    - `SLM_MESH_PEER_URL`: Full URL of remote SLM (e.g. `http://192.168.1.100:8765`)
+    - `SLM_MESH_SHARED_SECRET`: Shared auth secret (required for remote mode)
+    - `SLM_MESH_DISCOVERY`: `'on'` (default) or `'off'` for mDNS discovery
+  - **mDNS discovery (optional)**: Auto-discovers remote SLM on LAN via `_slm-mesh._tcp` service
+  - **Message proxying**: `broker.send_message()` now proxies direct messages to remote peers
+  - **Graceful fallback**: Network errors logged but don't crash; optional `zeroconf` dependency
+  - Uses `httpx` (already in core deps) + `zeroconf>=0.140` (new, pure Python, cross-platform)
+
+- **Auth guard on `/mesh/peers`** — Remote queries must include `Authorization: Bearer {SLM_MESH_SHARED_SECRET}`
+
+### Changed
+- `MeshBroker` now instantiates `RemoteSyncClient` when `SLM_MESH_PEER_URL` is set or in remote mode
+- `broker.send_message()` checks `to_peer in broker._remote_peers` before DB lookup
+  - If remote, proxies via `sync_client.send_to_remote()`
+  - If local or not found, uses existing DB logic
+- `broker.list_all_peers()` returns local + remote peers merged
+
+### Tests
+- 13 new tests in `tests/integration/test_remote_sync.py`
+  - Init, peer sync, stale peer removal, send proxy, error handling
+  - mDNS discovery callback stubs
+  - Integration: broker routes sends to remote peers
+
+All existing tests pass. No breaking changes.
 
 ---
 

@@ -1,6 +1,6 @@
 [project]
 name = "superlocalmemory"
-version = "3.4.47"
+version = "3.4.48"
 description = "Information-geometric agent memory with mathematical guarantees"
 readme = "README.md"
 license = {text = "AGPL-3.0-or-later"}
@@ -45,6 +45,7 @@ dependencies = [
     "fastapi[all]==0.136.1",
     "uvicorn==0.46.0",
     "websockets==16.0",
+    "zeroconf>=0.140",
     "lightgbm==4.6.0",
     "orjson==3.11.9",
     "tree-sitter==0.25.2",
