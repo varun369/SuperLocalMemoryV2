@@ -5,6 +5,11 @@ All notable changes to SuperLocalMemory V3 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.49] - 2026-05-22
+
+### Added
+- **`SLM_DAEMON_HOST` env var** — Configurable host binding for the unified daemon. Previously hardcoded to `127.0.0.1`; now reads `SLM_DAEMON_HOST` (default `127.0.0.1`). Set to `0.0.0.0` to expose the SLM API on all LAN interfaces for cross-machine mesh use.
+
 ## [3.4.48] - 2026-05-21
 
 **Multi-Machine Mesh Coordination — M4 & M5 now work as one.**
