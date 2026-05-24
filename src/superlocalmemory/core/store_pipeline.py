@@ -498,6 +498,8 @@ def run_store_fact_direct(
         )
         fact.canonical_entities = list(canonical.values())
     db.store_fact(fact)
+    # v3.4.5: Incremental sync to CozoDB/LanceDB (F-04)
+    _sync_to_graph_backends(fact)
     if fact.embedding and ann_index:
         ann_index.add(fact.fact_id, fact.embedding)
     # V3.2: VectorStore upsert (dual-write)
@@ -567,3 +569,22 @@ def run_close_session(
         session_id, count, len(session_facts),
     )
     return count
+
+
+# ---------------------------------------------------------------------------
+# v3.4.5: Incremental sync to CozoDB/LanceDB (F-04)
+# ---------------------------------------------------------------------------
+
+def _sync_to_graph_backends(fact: Any) -> None:
+    """Sync a newly stored fact to CozoDB/LanceDB.
+
+    Non-blocking, best-effort. Called after SQLite write.
+    Failures are logged, not raised — SQLite is already committed.
+    """
+    try:
+        from superlocalmemory.core.backend_orchestrator import get_orchestrator
+        orch = get_orchestrator()
+        if orch is not None:
+            orch.sync_new_fact(fact)
+    except Exception:
+        pass  # Best-effort — daemon may not have initialized yet

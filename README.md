@@ -4,7 +4,7 @@
 
 <h1 align="center">SuperLocalMemory V3.4</h1>
 <p align="center"><strong>Every other AI forgets. Yours won't.</strong><br/><em>Infinite memory for Claude Code, Cursor, Windsurf, and any MCP-compatible AI client.</em></p>
-<p align="center"><code>v3.4.48</code> — Install once. Every session remembers the last. Automatically.<br><strong>Now with multi-machine agent mesh — M4 and M5 coordinate as one.</strong></p>
+<p align="center"><code>v3.4.5 "Scale-Ready"</code> — <strong>Five years of daily AI use. Your system won't feel it.</strong><br>1 million memories. Zero slowdown. Tiered storage. Auto-migration. One command: <code>pip install -U superlocalmemory && slm restart</code></p>
 <p align="center"><strong>Backed by 3 published research papers</strong> (arXiv preprints + Zenodo-archived) · <a href="https://arxiv.org/abs/2603.02240">arXiv:2603.02240</a> · <a href="https://arxiv.org/abs/2603.14588">arXiv:2603.14588</a> · <a href="https://arxiv.org/abs/2604.04514">arXiv:2604.04514</a></p>
 
 <p align="center">
@@ -182,6 +182,30 @@ slm warmup    # Pre-download embedding model (~500MB, optional)
 ```bash
 pip install superlocalmemory
 ```
+
+### Upgrading to v3.4.5 "Scale-Ready"
+
+**Migration is automatic.** Upgrade your package, restart the daemon, and your database migrates silently.
+
+```bash
+# pip users
+pip install -U superlocalmemory
+slm restart
+
+# npm users  
+npm update -g superlocalmemory
+slm restart
+
+# Verify migration
+slm doctor
+```
+
+No manual commands. No data loss. Your database upgrades in-place with zero downtime. The daemon auto-detects the old version and applies the migration on first start.
+
+**New capabilities after upgrade:**
+- Tiered storage: memories auto-classified as active/warm/cold/archived
+- Graph pruning: redundant edges removed, queries stay fast at 1M+ connections
+- Optional: `pip install superlocalmemory[cozo,lancedb]` for graph + vector acceleration
 
 ### First Use
 

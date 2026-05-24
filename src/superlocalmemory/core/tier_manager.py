@@ -323,3 +323,127 @@ def _demote_tier(
             )
 
     return len(demoted_ids)
+
+
+# ---------------------------------------------------------------------------
+# Hot-path access recording (v3.4.5 — Sprint 1)
+# ---------------------------------------------------------------------------
+
+# In-memory counter for batch-flush access recording.
+# Thread-safe. Flushed to SQLite every _ACCESS_FLUSH_THRESHOLD records
+# or _ACCESS_FLUSH_SECONDS, whichever comes first.
+import threading as _threading
+from datetime import datetime as _datetime, timedelta as _timedelta
+
+_pending_accesses: dict[str, int] = {}
+_access_lock = _threading.Lock()
+_last_access_flush = _datetime.now()
+
+_ACCESS_FLUSH_THRESHOLD = 100
+_ACCESS_FLUSH_SECONDS = 60
+
+
+def record_access_batch(db: DatabaseManager, fact_ids: list[str]) -> None:
+    """Hot-path access recording for recall. Must be < 1ms average.
+
+    Uses in-memory counter, batch-flushes to SQLite every
+    _ACCESS_FLUSH_THRESHOLD accesses or _ACCESS_FLUSH_SECONDS.
+    Promotes cold/archived facts on access.
+
+    Thread-safe — called from multiple MCP connections.
+    """
+    global _last_access_flush
+    if not fact_ids:
+        return
+
+    with _access_lock:
+        for fid in fact_ids:
+            _pending_accesses[fid] = _pending_accesses.get(fid, 0) + 1
+
+        now = _datetime.now()
+        should_flush = (
+            len(_pending_accesses) >= _ACCESS_FLUSH_THRESHOLD
+            or (now - _last_access_flush).total_seconds() > _ACCESS_FLUSH_SECONDS
+        )
+        if should_flush:
+            _flush_access_batch(db)
+            _last_access_flush = now
+
+    # Promote cold/archived facts on access (F-13: promote to warm)
+    try:
+        promote_on_access_batch(db, fact_ids)
+    except Exception:
+        pass
+
+
+def _flush_access_batch(db: DatabaseManager) -> None:
+    """Batch UPDATE access_count_30d and access_count in SQLite."""
+    if not _pending_accesses:
+        return
+    try:
+        for fid, count in list(_pending_accesses.items()):
+            db.execute(
+                "UPDATE atomic_facts SET access_count_30d = access_count_30d + ?, "
+                "access_count = access_count + ? WHERE fact_id = ?",
+                (count, count, fid),
+            )
+        _pending_accesses.clear()
+    except Exception as exc:
+        logger.warning("Failed to flush access counts: %s", exc)
+
+
+# ---------------------------------------------------------------------------
+# 30-day access window reset (F-14)
+# ---------------------------------------------------------------------------
+
+def reset_access_count_30d(db: DatabaseManager, profile_id: str = "default") -> int:
+    """Reset access_count_30d using actual 30-day window from fact_access_log.
+
+    Called during nightly rebalance. Returns number of facts updated.
+    """
+    try:
+        db.execute(
+            "UPDATE atomic_facts SET access_count_30d = COALESCE(("
+            "  SELECT COUNT(*) FROM fact_access_log "
+            "  WHERE fact_id = atomic_facts.fact_id "
+            "  AND accessed_at >= datetime('now', '-30 days')"
+            "), 0) WHERE profile_id = ?",
+            (profile_id,),
+        )
+        # Can't get rowcount reliably after subquery UPDATE
+        return -1
+    except Exception as exc:
+        logger.warning("Failed to reset access_count_30d: %s", exc)
+        return 0
+
+
+# ---------------------------------------------------------------------------
+# Backend sync stubs (v3.4.5 — Sprint 2+)
+# ---------------------------------------------------------------------------
+
+_cozo_backend: object | None = None
+_lancedb_backend: object | None = None
+
+
+def set_backends(cozo: object | None = None, lancedb: object | None = None) -> None:
+    """Register CozoDB/LanceDB backends for tier sync. Called by BackendOrchestrator."""
+    global _cozo_backend, _lancedb_backend
+    _cozo_backend = cozo
+    _lancedb_backend = lancedb
+
+
+def _sync_tiers_to_backends(
+    added: list[str], removed: list[str], db: DatabaseManager,
+) -> None:
+    """Sync tier changes to CozoDB/LanceDB. Non-fatal on failure."""
+    if _cozo_backend and hasattr(_cozo_backend, "sync_tier_changes"):
+        try:
+            _cozo_backend.sync_tier_changes(added=added, removed=removed)
+        except Exception as exc:
+            logger.warning("CozoDB tier sync failed: %s", exc)
+
+    if _lancedb_backend and hasattr(_lancedb_backend, "bulk_update_tiers_from_sqlite"):
+        try:
+            _lancedb_backend.bulk_update_tiers_from_sqlite(db.conn)
+        except Exception as exc:
+            logger.warning("LanceDB tier sync failed: %s", exc)

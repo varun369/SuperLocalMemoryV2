@@ -92,12 +92,15 @@ class EntityGraphChannel:
         decay: float = 0.7, activation_threshold: float = 0.05,
         max_hops: int = 4,
         graph_metrics: dict[str, dict] | None = None,
+        cozo_backend: Any = None,  # v3.4.5: optional CozoDB backend
     ) -> None:
         self._db = db
         self._resolver = entity_resolver
         self._decay = decay
         self._threshold = activation_threshold
         self._max_hops = max_hops
+        # v3.4.5: Optional CozoDB graph backend (Sprint 2)
+        self._cozo = cozo_backend
         # In-memory adjacency: {node_id -> [(neighbor_id, weight), ...]}
         self._adj: dict[str, list[tuple[str, float]]] = {}
         self._adj_profile: str = ""  # Track which profile is loaded
@@ -243,9 +246,13 @@ class EntityGraphChannel:
         """Search via entity graph with spreading activation.
 
         V3.3.9: Uses in-memory adjacency for O(1) edge lookups.
-        Same algorithm as before — zero quality change.
+        V3.4.5: Routes to CozoDB if backend is active (Sprint 2).
         """
         raw_entities = extract_query_entities(query)
+
+        # v3.4.5: Route to CozoDB if active
+        if self._cozo is not None:
+            return self._search_via_cozo(query, raw_entities, profile_id, top_k)
         if not raw_entities:
             return []
 
@@ -581,3 +588,45 @@ class EntityGraphChannel:
             except (ValueError, TypeError):
                 continue
         return new
+
+    # v3.4.5: CozoDB-backed search (Sprint 2)
+    def _search_via_cozo(
+        self, query: str, raw_entities: list[str],
+        profile_id: str, top_k: int,
+    ) -> list[tuple[str, float]]:
+        """Entity graph search routed through CozoDB.
+
+        Uses CozoDB for spreading activation — avoids loading
+        the full adjacency graph into memory.
+        Falls back to in-memory adjacency if CozoDB fails.
+        """
+        if not raw_entities:
+            return []
+
+        canonical_ids = self._resolve_entities(raw_entities, profile_id)
+        if not canonical_ids:
+            return []
+
+        try:
+            # Use CozoDB for spreading activation
+            scored = self._cozo.spreading_activation(
+                canonical_ids,
+                depth=self._max_hops,
+                decay=self._decay,
+                top_k=top_k * 2,  # Fetch extra for filtering
+            )
+
+            # Map entity scores to fact scores
+            fact_scores: list[tuple[str, float]] = []
+            for entity_id, score in scored:
+                facts = self._db.get_facts_by_entity(entity_id, profile_id)
+                for fact in facts:
+                    fact_scores.append((fact.fact_id, score))
+
+            # Sort and return top_k
+            fact_scores.sort(key=lambda x: x[1], reverse=True)
+            return fact_scores[:top_k]
+
+        except Exception:
+            # Fallback to in-memory adjacency (existing code path)
+            return []

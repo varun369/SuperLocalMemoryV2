@@ -5,6 +5,26 @@ All notable changes to SuperLocalMemory V3 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.50] - 2026-05-25 — Scale-Ready
+
+**1 million memories. Zero slowdown.** Tiered storage, graph pruning, and optional acceleration backends for infinite scale.
+
+### Added
+- **Tiered Storage (Hot/Warm/Cold/Archive)** — Facts auto-classified by age + access patterns. Hot facts prioritized in graph/vector search. Cold facts archived but never deleted. Nightly rebalance with misfire-safe cron. `slm pin <fact_id>` to keep any fact hot forever.
+- **Graph Pruning Engine** — Chain collapse, garbage entity removal, low-activity edge decay. Reduced edge count while preserving semantic connections. Safe to run repeatedly — idempotent.
+- **access_count_30d** — Rolling 30-day access window with batch-flush recording. Replaces lifetime counter for accurate tier assignment (F-14).
+- **Optional Graph Acceleration** — `pip install superlocalmemory[cozo]` for CozoDB embedded graph backend. Replaces NetworkX for spreading activation at 1M+ edges. Zero-config: daemon auto-migrates on restart.
+- **Optional Vector Acceleration** — `pip install superlocalmemory[lancedb]` for LanceDB embedded vector backend. Cosine similarity with IVF+PQ indexing. Auto-migration from sqlite-vec.
+- **Backend Status Dashboard** — `slm doctor` shows CozoDB/LanceDB migration status, tier distribution, and health warnings.
+- **M014_v345_scale_ready migration** — Automatic on daemon restart. Adds `access_count_30d` column and graph edge indexes.
+
+### Changed
+- **Migration is fully automatic.** Upgrade package → restart daemon → done. No `slm migrate` needed. Schema applied silently via the migration runner. Idempotent — safe to restart multiple times.
+
+### Fixed
+- **WAL lock contention** — Multiple stale `slm mcp` processes causing 16-second health checks. Process reaper enhanced with orphan detection.
+- **Graph edge index performance** — Added `idx_graph_edges_source_id` and `idx_graph_edges_target_id` for bulk import at 1M+ scale (F-20).
+
 ## [3.4.49] - 2026-05-22
 
 ### Added

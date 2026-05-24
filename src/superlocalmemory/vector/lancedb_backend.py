@@ -1,0 +1,299 @@
+# Copyright (c) 2026 Varun Pratap Bhardwaj / Qualixar
+# Licensed under AGPL-3.0-or-later - see LICENSE file
+# Part of SuperLocalMemory V3 | https://qualixar.com | https://varunpratap.com
+
+"""SuperLocalMemory v3.4.5 — LanceDB Vector Backend.
+
+Embedded vector database backend powered by LanceDB (Apache-2.0).
+Replaces sqlite-vec for embedding storage and similarity search.
+
+Verified API: lancedb v0.30.2, connect(path), create_table, search().metric('cosine')
+
+Part of Qualixar | Author: Varun Pratap Bhardwaj
+"""
+
+from __future__ import annotations
+
+import logging
+import sqlite3
+import struct
+from pathlib import Path
+from typing import Any
+
+logger = logging.getLogger(__name__)
+
+# Optional import
+try:
+    import lancedb
+    _LANCEDB_AVAILABLE = True
+except ImportError:
+    lancedb = None  # type: ignore[assignment]
+    _LANCEDB_AVAILABLE = False
+
+
+class LanceDBError(Exception):
+    """Base exception for LanceDB backend failures."""
+
+
+class LanceDBNotAvailable(LanceDBError):
+    """LanceDB not installed. Install with: pip install superlocalmemory[lancedb]"""
+
+
+# ---------------------------------------------------------------------------
+# LanceDBVectorBackend
+# ---------------------------------------------------------------------------
+
+class LanceDBVectorBackend:
+    """Embedded vector backend powered by LanceDB.
+
+    Columnar storage (Lance format). Cosine similarity search.
+    Tier-aware: hot+warm vectors searched by default.
+    """
+
+    # Valid tier values (F-27: validated before interpolation)
+    VALID_TIERS: frozenset[str] = frozenset({"active", "warm", "cold", "archived"})
+
+    def __init__(self, db_path: str) -> None:
+        if not _LANCEDB_AVAILABLE:
+            raise LanceDBNotAvailable(
+                "LanceDB not installed. Run: pip install superlocalmemory[lancedb]"
+            )
+        path = Path(db_path)
+        path.mkdir(parents=True, exist_ok=True)
+        self._db_path = str(path)
+        self._db = lancedb.connect(self._db_path)  # type: ignore[union-attr]
+        self._table = self._open_or_create_table()
+
+    def _open_or_create_table(self):
+        """Open existing table or create empty one."""
+        try:
+            return self._db.open_table("embeddings")
+        except Exception:
+            import pyarrow as pa
+            schema = pa.schema([
+                pa.field("fact_id", pa.string(), nullable=False),
+                pa.field("vector", pa.list_(pa.float32(), list_size=768), nullable=False),
+                pa.field("tier", pa.string(), nullable=False),
+                pa.field("profile_id", pa.string(), nullable=False),
+            ])
+            return self._db.create_table("embeddings", schema=schema)
+
+    def close(self) -> None:
+        """LanceDB is file-based — no explicit close needed."""
+
+    # ------------------------------------------------------------------
+    # Write Path
+    # ------------------------------------------------------------------
+
+    def add_vectors(
+        self,
+        fact_ids: list[str],
+        embeddings: list[list[float]],
+        tiers: list[str],
+        profile_id: str = "default",
+    ) -> int:
+        """Batch insert vectors."""
+        if not fact_ids:
+            return 0
+        data = [
+            {"fact_id": fid, "vector": emb, "tier": tier, "profile_id": profile_id}
+            for fid, emb, tier in zip(fact_ids, embeddings, tiers)
+        ]
+        self._table.add(data)
+        return len(data)
+
+    # ------------------------------------------------------------------
+    # Read Path
+    # ------------------------------------------------------------------
+
+    def similarity_search(
+        self,
+        query_vector: list[float],
+        top_k: int = 50,
+        tier_filter: list[str] | None = None,
+    ) -> list[tuple[str, float]]:
+        """ANN search with optional tier filter.
+
+        Returns [(fact_id, similarity_score), ...] where 1.0 = identical.
+        Uses cosine metric — _distance is (1 - cosine_similarity)
+        so we return (1.0 - _distance).
+        """
+        if tier_filter is None:
+            tier_filter = ["active", "warm"]
+
+        # F-27: Validate tiers
+        assert all(t in self.VALID_TIERS for t in tier_filter), (
+            f"Invalid tier filter: {set(tier_filter) - self.VALID_TIERS}"
+        )
+
+        try:
+            search = self._table.search(query_vector).metric("cosine").limit(top_k)
+
+            # Build tier filter string for LanceDB SQL-like where clause
+            tier_str = ", ".join(f"'{t}'" for t in tier_filter)
+            results = search.where(f"tier IN ({tier_str})").to_list()
+
+            # Convert distance → similarity (F-08)
+            return [(r["fact_id"], 1.0 - r["_distance"]) for r in results]
+        except Exception as exc:
+            logger.warning("LanceDB similarity search failed: %s", exc)
+            return []
+
+    # ------------------------------------------------------------------
+    # Bulk Import (sqlite-vec → LanceDB)
+    # ------------------------------------------------------------------
+
+    def bulk_import_from_sqlite(self, conn: sqlite3.Connection) -> int:
+        """Export embeddings from sqlite-vec → LanceDB.
+
+        sqlite-vec stores vectors as raw float32 little-endian blobs
+        in fact_embeddings_vector_chunks00, with rowid mapping in
+        fact_embeddings_rowids.
+
+        Returns number of vectors imported.
+        """
+        # Get rowid → fact_id mapping
+        row_map: dict[int, str] = {}
+        try:
+            for row in conn.execute("SELECT rowid, fact_id FROM fact_embeddings_rowids"):
+                row_map[row[0]] = row[1]
+        except sqlite3.OperationalError:
+            logger.warning("fact_embeddings_rowids not found — no vectors to import")
+            return 0
+
+        # Get tiers
+        tier_map: dict[str, str] = {}
+        try:
+            for row in conn.execute(
+                "SELECT fact_id, COALESCE(lifecycle, 'active') FROM atomic_facts"
+            ):
+                tier_map[row[0]] = row[1]
+        except sqlite3.OperationalError:
+            pass
+
+        # Read vectors from sqlite-vec
+        try:
+            rows = conn.execute(
+                "SELECT rowid, vector FROM fact_embeddings_vector_chunks00"
+            ).fetchall()
+        except sqlite3.OperationalError:
+            logger.warning("fact_embeddings_vector_chunks00 not found")
+            return 0
+
+        # Reconstruct and batch import
+        data = []
+        for rowid, blob in rows:
+            fact_id = row_map.get(rowid)
+            if fact_id is None:
+                continue
+            try:
+                vector = self._decode_vector_blob(blob)
+            except Exception as exc:
+                logger.warning("Failed to decode vector for rowid %d: %s", rowid, exc)
+                continue
+            tier = tier_map.get(fact_id, "active")
+            data.append({
+                "fact_id": fact_id,
+                "vector": vector,
+                "tier": tier,
+                "profile_id": "default",
+            })
+
+        if data:
+            self._table.add(data)
+
+        logger.info("LanceDB: imported %d vectors from sqlite-vec", len(data))
+        return len(data)
+
+    def _decode_vector_blob(self, blob: bytes) -> list[float]:
+        """Decode sqlite-vec BLOB to list of floats.
+
+        F-33: Validates dimension and L2 norm.
+        sqlite-vec stores vectors as raw float32 little-endian bytes.
+        """
+        expected_bytes = 768 * 4  # 3072
+        if len(blob) != expected_bytes:
+            raise ValueError(
+                f"Unexpected vector blob size: {len(blob)} (expected {expected_bytes})"
+            )
+
+        vec = list(struct.unpack(f"{768}f", blob))
+
+        # F-33: Validate non-zero
+        norm = sum(v * v for v in vec) ** 0.5
+        if norm < 1e-10:
+            raise ValueError(f"Near-zero L2 norm ({norm}) — verify sqlite-vec format")
+
+        return vec
+
+    # ------------------------------------------------------------------
+    # Tier Update
+    # ------------------------------------------------------------------
+
+    def update_tier(self, fact_id: str, new_tier: str) -> None:
+        """Update tier for a single fact."""
+        try:
+            self._table.update(
+                where=f"fact_id = '{fact_id}'",
+                values={"tier": new_tier},
+            )
+        except Exception as exc:
+            logger.warning("LanceDB tier update failed for %s: %s", fact_id, exc)
+
+    def bulk_update_tiers_from_sqlite(self, conn: sqlite3.Connection) -> int:
+        """Batch update tiers by rebuilding from SQLite.
+
+        More efficient than per-row updates for nightly rebalance (F-19).
+        """
+        try:
+            rows = conn.execute(
+                "SELECT fact_id, lifecycle FROM atomic_facts WHERE profile_id = 'default'"
+            ).fetchall()
+
+            updated = 0
+            for fact_id, tier in rows:
+                try:
+                    self._table.update(
+                        where=f"fact_id = '{fact_id}'",
+                        values={"tier": tier},
+                    )
+                    updated += 1
+                except Exception:
+                    pass  # Fact may not be in LanceDB yet
+            return updated
+        except Exception as exc:
+            logger.warning("LanceDB bulk tier update failed: %s", exc)
+            return 0
+
+    # ------------------------------------------------------------------
+    # Rebuild
+    # ------------------------------------------------------------------
+
+    def rebuild_from_sqlite(self, conn: sqlite3.Connection) -> int:
+        """Drop and rebuild from SQLite."""
+        try:
+            self._db.drop_table("embeddings")
+        except Exception:
+            pass
+        self._table = self._open_or_create_table()
+        return self.bulk_import_from_sqlite(conn)
+
+    # ------------------------------------------------------------------
+    # Health Check
+    # ------------------------------------------------------------------
+
+    def health_check(self) -> dict[str, Any]:
+        """Return health status."""
+        try:
+            count = self._table.count_rows()
+            return {
+                "status": "active",
+                "vectors": count,
+                "db_path": self._db_path,
+            }
+        except Exception as exc:
+            return {
+                "status": "error",
+                "error": str(exc),
+                "db_path": self._db_path,
+            }
