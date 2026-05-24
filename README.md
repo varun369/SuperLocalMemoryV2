@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/qualixar-superlocalmemory-badge.png)](https://mseep.ai/app/qualixar-superlocalmemory)
+
 <p align="center">
   <img src="https://superlocalmemory.com/assets/logo-mark.png" alt="SuperLocalMemory" width="200"/>
 </p>
