@@ -102,8 +102,8 @@ class EngineRecallAdapter:
             results.append({
                 "fact_id": r.fact.fact_id,
                 "memory_id": r.fact.memory_id,
-                "content": r.fact.content[:300],
-                "source_content": memory_map.get(r.fact.memory_id, ""),
+                "content": _sanitize_json_text(r.fact.content[:300]),
+                "source_content": _sanitize_json_text(memory_map.get(r.fact.memory_id, "")),
                 "score": round(r.score, 4),
                 "confidence": round(r.confidence, 4),
                 "trust_score": round(r.trust_score, 4),
@@ -160,6 +160,27 @@ _engine = None
 # thread once Ollama has loaded the embedding model. /health reports this
 # so MCP clients can wait for warm state before issuing recall calls.
 _embedding_warm: bool = False
+
+
+def _sanitize_json_text(text: str) -> str:
+    """Strip control characters that break JSON serialization.
+
+    Facts ingested from agent conversations can contain raw \\n, \\r, \\t,
+    null bytes, and other ASCII control chars (0x00-0x1F) that survive
+    database round-trips but cause ``json.JSONDecodeError: Invalid control
+    character`` when FastAPI serialises the /recall response payload.
+
+    We replace them with spaces rather than dropping them so the byte
+    length is preserved and :300 truncation semantics stay predictable.
+    Python's ``str.isprintable()`` is too aggressive (it also drops
+    Unicode line separators), so we target only the ASCII control range.
+    """
+    if not text:
+        return text
+    # Fast path: most facts are clean JSON text. Check in C before allocating.
+    if all(c >= " " or c in "\n\r\t" for c in text):
+        return text
+    return "".join(c if c >= " " or c in "\n\r\t" else " " for c in text)
 
 
 # ---------------------------------------------------------------------------
@@ -481,6 +502,36 @@ async def lifespan(application: FastAPI):
 
         # Set up observe buffer
         _observe_buffer.set_engine(engine)
+
+        # v3.4.52: Ensure covering indexes for SpreadingActivation queries.
+        # SQLite 3.45+ streaming merge (UNION ALL + ORDER BY + LIMIT) uses
+        # these to seek directly to top-K rows per subquery, avoiding a
+        # full sort.  Without them full 6-channel recall takes 7-10s on
+        # >1M edges (the SpreadingActivation 4-UNION query disk-sorts every
+        # node's neighbor list on each call).  With them: sub-second.
+        try:
+            import sqlite3 as _sqlite3
+            _idx_conn = _sqlite3.connect(str(_memory_db))
+            _idx_conn.execute("PRAGMA journal_mode=WAL")
+            _idx_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_edges_source_weight "
+                "ON graph_edges(profile_id, source_id, weight DESC)"
+            )
+            _idx_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_edges_target_weight "
+                "ON graph_edges(profile_id, target_id, weight DESC)"
+            )
+            _idx_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_assoc_source_weight "
+                "ON association_edges(profile_id, source_fact_id, weight DESC)"
+            )
+            _idx_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_assoc_target_weight "
+                "ON association_edges(profile_id, target_fact_id, weight DESC)"
+            )
+            _idx_conn.close()
+        except Exception as _idx_exc:
+            logger.debug("SpreadingActivation covering indexes skipped: %s", _idx_exc)
 
         # V3.4.37: Removed WorkerPool.warmup() — the recall_worker subprocess
         # duplicated the daemon's MemoryEngine (800+ MB). QueueConsumer now
@@ -1140,8 +1191,8 @@ def _register_daemon_routes(application: FastAPI) -> None:
                 results.append({
                     "fact_id": r.fact.fact_id,
                     "memory_id": r.fact.memory_id,
-                    "content": r.fact.content,
-                    "source_content": memory_map.get(r.fact.memory_id, ""),
+                    "content": _sanitize_json_text(r.fact.content),
+                    "source_content": _sanitize_json_text(memory_map.get(r.fact.memory_id, "")),
                     "score": round(r.score, 4),
                     "confidence": round(r.confidence, 4),
                     "trust_score": round(r.trust_score, 4),
