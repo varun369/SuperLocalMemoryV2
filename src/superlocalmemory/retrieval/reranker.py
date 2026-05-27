@@ -211,6 +211,21 @@ class CrossEncoderReranker:
             logger.info(
                 "Reranker worker spawned (PID %d)", self._worker_proc.pid,
             )
+            # v3.4.51: Detect immediate subprocess crash (e.g. ONNX segfault on
+            # Python 3.14 before official ONNX Runtime support). Poll after 1s;
+            # if the process already exited, disable reranking rather than
+            # letting the broken worker linger and corrupt scores.
+            time.sleep(1.0)
+            if self._worker_proc.poll() is not None:
+                rc = self._worker_proc.returncode
+                logger.warning(
+                    "Reranker worker exited immediately (returncode=%d). "
+                    "ONNX Runtime may be unsupported on this Python version (%s). "
+                    "Reranking disabled — recall will use fusion scores only.",
+                    rc, sys.version,
+                )
+                self._worker_proc = None
+                return
             self._worker_ready = True
         except Exception as exc:
             logger.warning("Failed to spawn reranker worker: %s", exc)

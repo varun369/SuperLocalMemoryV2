@@ -284,15 +284,27 @@ def apply_adaptive_ranking(
     from superlocalmemory.learning.ranker import AdaptiveRanker
     ranker = AdaptiveRanker(signal_count=signal_count)
 
+    from datetime import UTC, datetime as _dt
+    _now = _dt.now(UTC)
+
     result_dicts = []
     for r in response.results:
+        _age = 0.0
+        _created = getattr(r.fact, "created_at", None)
+        if _created:
+            try:
+                _age = max(0.0, (_now - _dt.fromisoformat(
+                    _created.replace("Z", "+00:00")
+                )).total_seconds() / 86400.0)
+            except (ValueError, TypeError):
+                pass
         result_dicts.append({
             "score": r.score,
             "cross_encoder_score": r.score,
             "trust_score": r.trust_score,
             "channel_scores": r.channel_scores or {},
             "fact": {
-                "age_days": 0,
+                "age_days": _age,
                 "access_count": r.fact.access_count,
             },
             "_original": r,
@@ -364,8 +376,20 @@ def apply_v2_adaptive_ranking(
         )
 
         # Build result-dict shape expected by the ranker's rerank() path.
+        from datetime import UTC, datetime as _dt
+        _now_v2 = _dt.now(UTC)
+
         result_dicts: list[dict] = []
         for r in response.results:
+            _age_v2 = 0.0
+            _created_v2 = getattr(r.fact, "created_at", None)
+            if _created_v2:
+                try:
+                    _age_v2 = max(0.0, (_now_v2 - _dt.fromisoformat(
+                        _created_v2.replace("Z", "+00:00")
+                    )).total_seconds() / 86400.0)
+                except (ValueError, TypeError):
+                    pass
             result_dicts.append({
                 "fact_id": r.fact.fact_id,
                 "score": r.score,
@@ -373,7 +397,7 @@ def apply_v2_adaptive_ranking(
                 "trust_score": r.trust_score,
                 "channel_scores": r.channel_scores or {},
                 "fact": {
-                    "age_days": 0,
+                    "age_days": _age_v2,
                     "access_count": r.fact.access_count,
                 },
                 "_original": r,

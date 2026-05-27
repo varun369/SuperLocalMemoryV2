@@ -683,7 +683,18 @@ class RetrievalEngine:
                 for ch, rk in sorted(fr.channel_ranks.items(), key=lambda x: x[1])
                 if rk < 1000
             ]
-            # Recency boost: recent facts get up to 1.1x, old facts 0.9x
+            # Recency decay: Ebbinghaus exponential + FSRS stability strengthening (v3.4.51).
+            #
+            # Base: R = e^(-λt),  λ = ln(2)/S,  S = effective half-life in days.
+            # FSRS v5 (Dae & Jarrett 2024): S grows with successful recall frequency.
+            #   S_effective = S_base × min(2.0, 1 + 0.1 × access_count)
+            #   → 0 recalls: S=30d  5 recalls: S=45d  10+ recalls: S=60d (max)
+            # Effect: frequently-recalled architectural decisions resist decay naturally;
+            # one-off session handoffs and debug notes decay at full rate.
+            #
+            # Boost range: [0.80×, 1.10×]
+            #   0d, 0acc → 1.10×   45d, 0acc → 0.91×   90d, 0acc → 0.84×
+            #   45d, 5acc → 0.95×  90d, 10acc → 0.90×  (frequently used memories stay relevant)
             age_days = 0.0
             if fact.created_at:
                 try:
@@ -691,8 +702,9 @@ class RetrievalEngine:
                     age_days = max(0.0, (now - created).total_seconds() / 86400.0)
                 except (ValueError, TypeError):
                     pass
-            recency = max(0.1, 1.0 - age_days / 365.0)
-            recency_boost = 1.0 + 0.2 * (recency - 0.5)
+            _access = max(0, getattr(fact, "access_count", 0) or 0)
+            _S = 30.0 * min(2.0, 1.0 + 0.1 * _access)
+            recency_boost = 0.8 + 0.3 * math.exp(-(math.log(2) / _S) * age_days)
 
             # Content quality: penalize short/low-info facts that rank high
             # due to BM25 name-matching (greetings like "Hey Caroline!" score high

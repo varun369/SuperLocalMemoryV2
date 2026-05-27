@@ -5,6 +5,27 @@ All notable changes to SuperLocalMemory V3 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.51] - 2026-05-28 — Recency Intelligence
+
+**Session context is now time-aware.** Stale memories from completed projects and old debugging sessions no longer surface at session start. Frequently-recalled architectural decisions resist decay automatically.
+
+### Fixed
+- **Exponential recency decay + FSRS stability strengthening** (`retrieval/engine.py`) — Replaced the nearly-flat linear formula (range `[0.92×, 1.1×]`, 2.3% spread) with an Ebbinghaus exponential decay enhanced by FSRS v5 access-count stabilization. Formula: `boost = 0.8 + 0.3 × e^(-(ln2/S) × age_days)` where `S = 30d × min(2.0, 1 + 0.1 × access_count)`. Effect: a 45-day-old session handoff recalled 0 times → 0.91× (was 1.075×). Same memory recalled 10 times → 0.95× — frequently-used architectural decisions naturally resist decay without any category labeling. Reference: Dae & Jarrett (2024) FSRS v5; Ebbinghaus (1885) retention curve.
+- **`age_days` hardcoded to 0 in adaptive ranker** (`core/recall_pipeline.py`) — Both `apply_adaptive_ranking` and `apply_v2_adaptive_ranking` were passing `"age_days": 0` to the LightGBM ranker, making it permanently blind to memory age. Now computes real age from `fact.created_at`. The ranker can now learn age-preference signals.
+- **`created_at` missing from pool recall protocol** (`server/unified_daemon.py`, `mcp/_pool_adapter.py`) — The daemon's `/recall` response omitted `created_at`. Added to both recall response serialisation paths and to `PoolFact` dataclass. All MCP-layer tools now receive real memory timestamps.
+- **`session_init` age gate** (`mcp/tools_active.py`) — Added `max_age_days: int = 30` parameter. Memories older than 30 days are suppressed unless their relevance score ≥ 0.70 (architectural decisions always surface). `max_age_days=0` disables the gate. Removed `fast=True` — session context deserves full 6-channel recall.
+- **`slm session-context` age gate** (`cli/commands.py`) — Fast-path SQLite query now respects `--max-age-days` (default: 30). Previously hardcoded to 7 days. CLI and MCP now apply identical age semantics.
+
+### Added
+- **`slm session-context --max-age-days N`** (`cli/main.py`) — New flag to control how far back session context reaches. Default 30. Set to 0 to disable. Consistent with MCP `session_init(max_age_days=N)`.
+- **`slm session-context --full`** — Explicit flag to use the full engine path (was implicit via code). Documented.
+- **`slm session-context --json`** — Agent-native JSON output, consistent with all other commands.
+
+### Changed
+- `session_init` MCP tool schema gains optional `max_age_days` parameter (default: 30). Backward-compatible.
+- `PoolFact` gains `created_at: str = ""` field. Backward-compatible — defaults to empty string.
+- `slm session-context` fast path changed from hardcoded 7-day window to `--max-age-days` controlled window (default 30).
+
 ## [3.4.50] - 2026-05-25 — Scale-Ready
 
 **1 million memories. Zero slowdown.** Tiered storage, graph pruning, and optional acceleration backends for infinite scale.

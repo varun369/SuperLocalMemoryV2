@@ -182,9 +182,11 @@ class TestToolsActiveUsesPool:
         result = asyncio.run(registered["session_init"](project_path="/tmp/p"))
 
         assert result["success"] is True
+        # v3.4.51: fast=False — session_init uses full 6-channel recall for accuracy.
+        # Spreading-activation is no longer skipped at session start.
         assert fake_pool.recall_calls == [
-            ("project context /tmp/p", 10, "", True),
-        ], "session_init should perform one fast recall through pool_recall"
+            ("project context /tmp/p", 10, "", False),
+        ], "session_init should perform one full (non-fast) recall through pool_recall"
 
     def test_observe_uses_pool_adapter_not_engine_store(self, monkeypatch):
         import asyncio

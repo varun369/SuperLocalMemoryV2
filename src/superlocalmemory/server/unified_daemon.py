@@ -116,6 +116,7 @@ class EngineRecallAdapter:
                 "lifecycle": lifecycle.value
                     if lifecycle and hasattr(lifecycle, "value") else "",
                 "access_count": getattr(r.fact, "access_count", 0),
+                "created_at": getattr(r.fact, "created_at", "") or "",
                 "evidence_chain": list(
                     getattr(r, "evidence_chain", []) or []
                 ),
@@ -1139,6 +1140,7 @@ def _register_daemon_routes(application: FastAPI) -> None:
                     "lifecycle": lifecycle.value
                         if lifecycle and hasattr(lifecycle, "value") else "",
                     "access_count": getattr(r.fact, "access_count", 0),
+                    "created_at": getattr(r.fact, "created_at", "") or "",
                     "evidence_chain": list(
                         getattr(r, "evidence_chain", []) or []
                     ),

@@ -82,6 +82,7 @@ def register_active_tools(server, get_engine: Callable) -> None:
         project_path: str = "",
         query: str = "",
         max_results: int = 10,
+        max_age_days: int = 30,
     ) -> dict:
         """Initialize session with relevant memory context.
 
@@ -91,6 +92,21 @@ def register_active_tools(server, get_engine: Callable) -> None:
         - Learning status (signal count, ranking phase)
 
         The AI should call this automatically before any other work.
+
+        Parameters:
+            project_path: Working directory path. Used to build the search query
+                when no explicit query is provided.
+            query: Override the search query. If omitted, derived from project_path
+                or falls back to "recent important decisions".
+            max_results: Maximum memories to return (default: 10).
+            max_age_days: Suppress memories older than this many days unless their
+                relevance score is ≥ 0.70 (architectural decisions that remain
+                permanently relevant still surface). Default: 30.
+                Set to 0 to disable the age gate entirely.
+
+        Scoring: Uses 6-channel fusion (semantic + BM25 + entity_graph + temporal +
+        spreading_activation + hopfield) with Ebbinghaus exponential recency decay
+        and FSRS stability strengthening by access frequency.
         """
         try:
             from superlocalmemory.hooks.rules_engine import RulesEngine
@@ -111,10 +127,34 @@ def register_active_tools(server, get_engine: Callable) -> None:
             else:
                 search_query = "recent important decisions"
 
-            response = pool_recall(search_query, limit=max_results, fast=True)
+            response = pool_recall(search_query, limit=max_results)
+
+            # Age gate: suppress stale memories at session start.
+            # Memories older than max_age_days are excluded unless their score
+            # exceeds 0.7 (high-relevance architectural decisions always surface).
+            # max_age_days=0 disables the gate entirely.
+            from datetime import UTC, datetime as _dt
+            _now = _dt.now(UTC)
+
+            def _age_days(created_at_str: str) -> float:
+                if not created_at_str:
+                    return 0.0
+                try:
+                    created = _dt.fromisoformat(
+                        created_at_str.replace("Z", "+00:00")
+                    )
+                    return max(0.0, (_now - created).total_seconds() / 86400.0)
+                except (ValueError, TypeError):
+                    return 0.0
+
             relevant = [
                 r for r in response.results
                 if r.score >= relevance_threshold
+                and (
+                    max_age_days <= 0
+                    or _age_days(r.fact.created_at) <= max_age_days
+                    or r.score >= 0.7
+                )
             ]
 
             # Build both return shapes from one recall. Calling recall twice

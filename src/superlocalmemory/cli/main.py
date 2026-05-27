@@ -289,6 +289,16 @@ def main() -> None:
 
     ctx_p = sub.add_parser("session-context", help="Print session context (for hooks)")
     ctx_p.add_argument("query", nargs="?", default="", help="Optional context query")
+    ctx_p.add_argument(
+        "--max-age-days", type=int, default=30,
+        help="Suppress memories older than N days unless score ≥ 0.7 (default: 30). "
+             "Set 0 to disable age filter.",
+    )
+    ctx_p.add_argument(
+        "--full", action="store_true",
+        help="Use full engine path (slower, requires Ollama). Default is fast SQLite path.",
+    )
+    ctx_p.add_argument("--json", action="store_true", help="Output structured JSON (agent-native)")
 
     obs_p = sub.add_parser("observe", help="Auto-capture content (pipe or argument)")
     obs_p.add_argument("content", nargs="?", default="", help="Content to evaluate")

@@ -4,7 +4,7 @@
 
 <h1 align="center">SuperLocalMemory V3.4</h1>
 <p align="center"><strong>Every other AI forgets. Yours won't.</strong><br/><em>Infinite memory for Claude Code, Cursor, Windsurf, and any MCP-compatible AI client.</em></p>
-<p align="center"><code>v3.4.5 "Scale-Ready"</code> — <strong>Five years of daily AI use. Your system won't feel it.</strong><br>1 million memories. Zero slowdown. Tiered storage. Auto-migration. One command: <code>pip install -U superlocalmemory && slm restart</code></p>
+<p align="center"><code>v3.4.51 "Recency Intelligence"</code> — <strong>Session context is now time-aware.</strong><br>Stale memories from old projects no longer surface. Ebbinghaus decay + FSRS stability. One command: <code>pip install -U superlocalmemory && slm restart</code></p>
 <p align="center"><strong>Backed by 3 published research papers</strong> (arXiv preprints + Zenodo-archived) · <a href="https://arxiv.org/abs/2603.02240">arXiv:2603.02240</a> · <a href="https://arxiv.org/abs/2603.14588">arXiv:2603.14588</a> · <a href="https://arxiv.org/abs/2604.04514">arXiv:2604.04514</a></p>
 
 <p align="center">
@@ -434,6 +434,23 @@ Every recall generates learning signals. Over time, the system adapts to your pa
 
 Auto-capture hooks: `slm hooks install` + `slm observe` + `slm session-context`. MCP tools: `session_init`, `observe`, `report_feedback`.
 
+**`session_init` MCP parameters:**
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `project_path` | string | `""` | Working directory — used to derive search query |
+| `query` | string | `""` | Override search query |
+| `max_results` | int | `10` | Max memories to return |
+| `max_age_days` | int | `30` | Suppress memories older than N days (0 = disabled). Memories with score ≥ 0.70 always surface regardless of age. |
+
+**`slm session-context` CLI flags** (consistent with MCP):
+```bash
+slm session-context                          # fast path, 30-day window (default)
+slm session-context --max-age-days 7         # only last 7 days
+slm session-context --max-age-days 0         # no age filter
+slm session-context "my query" --full        # full engine path (slow, requires Ollama)
+slm session-context --json                   # agent-native JSON output
+```
+
 **No competitor learns at zero token cost.**
 
 </details>
@@ -572,6 +589,7 @@ All 8 mesh tools work seamlessly across machines:
 | `slm hooks install` | Wire auto-memory into Claude Code hooks |
 | `slm profile list/create/switch` | Profile management |
 | `slm decay` | Run memory lifecycle review |
+| `slm session-context [query]` | Print session context (for hooks). Flags: `--max-age-days N` (default 30), `--full`, `--json` |
 | `slm quantize` | Run smart compression cycle |
 | `slm consolidate --cognitive` | Extract patterns from memory clusters |
 | `slm soft-prompts` | View auto-learned patterns |

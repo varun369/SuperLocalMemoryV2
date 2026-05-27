@@ -26,6 +26,7 @@ class PoolFact:
     fact_id: str = ""
     content: str = ""
     memory_id: str = ""
+    created_at: str = ""
 
 
 @dataclass(frozen=True)
@@ -93,6 +94,7 @@ def pool_recall(query: str, limit: int = 10, **kwargs: Any) -> PoolRecallRespons
                 fact_id=item.get("fact_id", ""),
                 content=item.get("content", ""),
                 memory_id=item.get("memory_id", ""),
+                created_at=item.get("created_at", "") or "",
             ),
             score=float(item.get("score", 0.0)),
             confidence=float(item.get("confidence", 0.0)),

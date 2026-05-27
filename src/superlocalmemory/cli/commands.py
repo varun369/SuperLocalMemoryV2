@@ -2147,12 +2147,17 @@ def cmd_session_context(args: Namespace) -> None:
         except sqlite3.OperationalError:
             pass
 
-        # 2. Recent important memories (last 7 days, top 10 by importance)
+        # 2. Recent important memories — age gate from --max-age-days (default 30)
+        max_age = getattr(args, "max_age_days", 30)
+        age_clause = (
+            f"AND created_at >= datetime('now', '-{int(max_age)} days') "
+            if max_age > 0 else ""
+        )
         try:
             rows = conn.execute(
                 "SELECT content, fact_type, created_at FROM atomic_facts "
                 "WHERE profile_id = ? "
-                "AND created_at >= datetime('now', '-7 days') "
+                f"{age_clause}"
                 "AND lifecycle = 'active' "
                 "ORDER BY importance DESC, created_at DESC LIMIT 10",
                 (pid,),
