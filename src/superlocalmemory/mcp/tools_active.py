@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sqlite3
 from pathlib import Path
 from typing import Callable
 
@@ -25,6 +26,81 @@ logger = logging.getLogger(__name__)
 
 MEMORY_DIR = Path.home() / ".superlocalmemory"
 DB_PATH = MEMORY_DIR / "memory.db"
+
+
+def _sqlite_emergency_recall(
+    query: str, limit: int, profile_id: str = "default",
+    max_age_days: int = 30,
+) -> "PoolRecallResponse":
+    """Emergency fallback: direct SQLite FTS5 BM25 when daemon is unreachable.
+
+    Uses the same ``atomic_facts_fts`` virtual table the daemon uses, with
+    native BM25 ranking via ``ORDER BY fts.rank``. This is the Mem0 / Letta
+    industry pattern — multi-process safe via SQLite WAL mode.
+
+    Quality degraded vs full 6-channel (no semantic, no entity graph, no
+    temporal/spreading-activation/Hopfield) but still provides real BM25
+    math + age gate. Returns ``degraded_mode=True`` via the caller's flag.
+
+    Used ONLY when Tier-1 (full daemon recall) fails completely. Normal
+    path is full 6-channel; this is the fire-alarm.
+    """
+    from superlocalmemory.mcp._pool_adapter import PoolFact, PoolRecallItem, PoolRecallResponse
+    import re
+    try:
+        # FTS5 MATCH syntax: tokenize the query, drop special characters
+        # that confuse the parser (/, :, ., etc), and join with OR for
+        # broadest matching. Wrap each term in quotes to escape any
+        # remaining special-meaning chars.
+        tokens = re.findall(r"[A-Za-z0-9]+", query)
+        tokens = [t for t in tokens if len(t) >= 2]
+        if not tokens:
+            return PoolRecallResponse()
+        safe_query = " OR ".join(f'"{t}"' for t in tokens)
+        age_clause = (
+            f"AND f.created_at >= datetime('now', '-{int(max_age_days)} days') "
+            if max_age_days > 0 else ""
+        )
+        conn = sqlite3.connect(str(DB_PATH), timeout=5.0)
+        try:
+            rows = conn.execute(
+                f"""SELECT f.fact_id, f.content, f.memory_id, f.created_at,
+                           fts.rank AS bm25_rank
+                    FROM atomic_facts_fts AS fts
+                    JOIN atomic_facts AS f ON f.fact_id = fts.fact_id
+                    WHERE fts.atomic_facts_fts MATCH ?
+                      AND f.profile_id = ?
+                      {age_clause}
+                    ORDER BY fts.rank
+                    LIMIT ?""",
+                (safe_query, profile_id, limit * 2),
+            ).fetchall()
+        finally:
+            conn.close()
+        # FTS5 rank is negative (lower = better). Normalize to [0.3, 0.9].
+        if not rows:
+            return PoolRecallResponse()
+        ranks = [r[4] for r in rows]
+        rmin, rmax = min(ranks), max(ranks)
+        rng = (rmax - rmin) or 1.0
+        items = [
+            PoolRecallItem(
+                fact=PoolFact(
+                    fact_id=r[0] or "", content=r[1] or "",
+                    memory_id=r[2] or "", created_at=r[3] or "",
+                ),
+                score=round(0.3 + 0.6 * (1.0 - (r[4] - rmin) / rng), 3),
+            )
+            for r in rows
+        ]
+        logger.warning(
+            "session_init: EMERGENCY FTS5 fallback (%d results). "
+            "Daemon unreachable — semantic/graph channels disabled.", len(items),
+        )
+        return PoolRecallResponse(results=items[:limit])
+    except Exception as exc:
+        logger.warning("Emergency FTS5 fallback failed: %s", exc)
+        return PoolRecallResponse()
 
 
 def _get_agent_id(default: str = "mcp_client") -> str:
@@ -127,10 +203,29 @@ def register_active_tools(server, get_engine: Callable) -> None:
             else:
                 search_query = "recent important decisions"
 
-            # fast=True: use SQLite/BM25 path — avoids 20-30s Ollama cold-start
-            # on daemon restart. Age gate (below) is the primary stale-memory
-            # filter; FSRS recency formula runs on all other recall paths.
-            response = pool_recall(search_query, limit=max_results, fast=True)
+            # 2-tier recall (industry pattern: Hindsight / Zep / Supermemory):
+            # PRIMARY: full 6-channel via daemon (semantic + BM25 + entity + temporal
+            #          + Hopfield + spreading-activation, Fisher-Rao fusion, FSRS decay).
+            #          Fast because Ollama embed model is kept warm (keep_alive=-1
+            #          + eager pre-warm at daemon boot).
+            # EMERGENCY: direct FTS5 BM25 (Mem0 / Letta pattern). Used ONLY when
+            #            daemon is completely unreachable. Returns degraded_mode=True.
+            from superlocalmemory.mcp._pool_adapter import PoolError
+            degraded_mode = False
+            try:
+                response = pool_recall(search_query, limit=max_results, fast=False)
+            except (PoolError, Exception) as exc:
+                logger.warning(
+                    "session_init: daemon recall failed (%s) — using FTS5 emergency fallback. "
+                    "Memory system is in DEGRADED MODE: semantic/graph channels unavailable.",
+                    exc,
+                )
+                response = _sqlite_emergency_recall(
+                    search_query, max_results,
+                    profile_id=engine.profile_id,
+                    max_age_days=max_age_days,
+                )
+                degraded_mode = True
 
             # Age gate: suppress stale memories at session start.
             # Memories older than max_age_days are excluded unless their score
@@ -204,6 +299,8 @@ def register_active_tools(server, get_engine: Callable) -> None:
                 "context": context,
                 "memories": memories[:max_results],
                 "memory_count": len(memories),
+                "degraded_mode": degraded_mode,
+                "retrieval_mode": "emergency_fts5_bm25" if degraded_mode else "full_6_channel",
                 "learning": {
                     "feedback_signals": feedback_count,
                     "phase": 1 if feedback_count < 50 else (2 if feedback_count < 200 else 3),

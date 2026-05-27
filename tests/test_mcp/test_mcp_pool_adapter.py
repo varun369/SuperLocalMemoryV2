@@ -182,11 +182,12 @@ class TestToolsActiveUsesPool:
         result = asyncio.run(registered["session_init"](project_path="/tmp/p"))
 
         assert result["success"] is True
-        # fast=True: avoids 20-30s Ollama cold-start on daemon restart.
-        # Age gate in tools_active.py is the primary stale-memory filter.
+        # v3.4.52: full 6-channel recall (fast=False). Ollama is kept warm
+        # via keep_alive=-1 + eager pre-warm at daemon boot, so no cold-start
+        # penalty. FTS5 fallback only triggers when daemon is completely down.
         assert fake_pool.recall_calls == [
-            ("project context /tmp/p", 10, "", True),
-        ], "session_init should use fast=True to avoid Ollama cold-start timeout"
+            ("project context /tmp/p", 10, "", False),
+        ], "session_init should use full 6-channel recall (fast=False)"
 
     def test_observe_uses_pool_adapter_not_engine_store(self, monkeypatch):
         import asyncio

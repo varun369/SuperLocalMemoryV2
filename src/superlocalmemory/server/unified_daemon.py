@@ -156,6 +156,11 @@ from superlocalmemory.core.recall_gate import (
 # daemon startup via engine._process_pending_memories().
 _engine = None
 
+# v3.4.52: Embedding model warm state. Set to True by the async pre-warm
+# thread once Ollama has loaded the embedding model. /health reports this
+# so MCP clients can wait for warm state before issuing recall calls.
+_embedding_warm: bool = False
+
 
 # ---------------------------------------------------------------------------
 # Observation debounce buffer (migrated from daemon.py)
@@ -492,13 +497,20 @@ async def lifespan(application: FastAPI):
         # V3.4.11: Pre-warm embedding worker (load ONNX model on startup)
         # Without this, first recall takes 60-90s for model load.
         # Same pattern as reranker warmup above.
+        # v3.4.52: Sets module-level _embedding_warm flag so /health can
+        # report readiness. Combined with keep_alive=-1 in ollama_embedder.py
+        # this keeps the embedding model resident forever after first warm-up.
         import threading
+        global _embedding_warm
+        _embedding_warm = False
         def _warmup_embedder():
+            global _embedding_warm
             try:
                 embedder = getattr(retrieval_eng, '_embedder', None) if retrieval_eng else None
                 if embedder and hasattr(embedder, 'embed'):
                     embedder.embed("warmup")
-                    logger.info("Embedding worker pre-warmed (ONNX model loaded)")
+                    _embedding_warm = True
+                    logger.info("Embedding worker pre-warmed (model resident, keep_alive=-1)")
             except Exception as exc:
                 logger.warning("Embedding warmup failed: %s", exc)
         threading.Thread(target=_warmup_embedder, daemon=True, name="embed-warmup").start()
@@ -1076,6 +1088,9 @@ def _register_daemon_routes(application: FastAPI) -> None:
             "pid": os.getpid(),
             "engine": "initialized" if engine else "unavailable",
             "version": getattr(application, 'version', 'unknown'),
+            # v3.4.52: clients can poll this to wait for embedding model
+            # readiness before issuing recall calls.
+            "embedding_warm": _embedding_warm,
         }
 
     @application.get("/recall")

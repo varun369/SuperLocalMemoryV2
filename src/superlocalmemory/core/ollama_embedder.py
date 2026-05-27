@@ -204,12 +204,18 @@ class OllamaEmbedder:
             return False
 
     def _call_ollama_embed(self, text: str) -> list[float]:
-        """Call Ollama embed endpoint for a single text."""
+        """Call Ollama embed endpoint for a single text.
+
+        v3.4.52: ``keep_alive: -1`` pins the embedding model in VRAM
+        forever so subsequent calls have no cold-start latency. Industry
+        pattern (Hindsight, Zep, Supermemory) — without this, Ollama
+        unloads after 5min idle and the next call takes 20-30s.
+        """
         import httpx
 
         resp = httpx.post(
             f"{self._base_url}/api/embed",
-            json={"model": self._model, "input": [text]},
+            json={"model": self._model, "input": [text], "keep_alive": -1},
             timeout=httpx.Timeout(_RESPONSE_TIMEOUT, connect=_CONNECT_TIMEOUT),
         )
         resp.raise_for_status()
@@ -219,12 +225,16 @@ class OllamaEmbedder:
         return self._normalize(vec)
 
     def _call_ollama_embed_batch(self, texts: list[str]) -> list[list[float] | None]:
-        """Call Ollama embed endpoint with batch input."""
+        """Call Ollama embed endpoint with batch input.
+
+        v3.4.52: ``keep_alive: -1`` pins the embedding model — see
+        ``_call_ollama_embed`` docstring for rationale.
+        """
         import httpx
 
         resp = httpx.post(
             f"{self._base_url}/api/embed",
-            json={"model": self._model, "input": texts},
+            json={"model": self._model, "input": texts, "keep_alive": -1},
             timeout=httpx.Timeout(_RESPONSE_TIMEOUT, connect=_CONNECT_TIMEOUT),
         )
         resp.raise_for_status()

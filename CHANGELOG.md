@@ -5,6 +5,24 @@ All notable changes to SuperLocalMemory V3 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.52] - 2026-05-28 — Warm Memory, No Cold Starts
+
+**Production resilience for session_init.** No quality degradation as the primary path: full 6-channel recall (semantic + BM25 + entity + temporal + Hopfield + spreading-activation, Fisher-Rao fusion) is preserved. The cold-start problem is fixed at the infrastructure layer, not by downgrading retrieval.
+
+### Fixed
+- **Ollama embedding model unloads after 5 min idle** (`core/ollama_embedder.py`) — `_call_ollama_embed` and `_call_ollama_embed_batch` did not pass `keep_alive` to Ollama, so the embedder defaulted to 5-minute residency. After idle, next call required a 20-30s model reload from disk → DaemonPoolProxy's 30s HTTP timeout occasionally aborted → MCP clients (Hermes, CommandCode) saw `session init failed (connection error)`. Now both calls pass `keep_alive: -1`, pinning `nomic-embed-text` (~274 MB) in VRAM forever. Industry-standard pattern used by Hindsight, Zep, Supermemory.
+- **DaemonPoolProxy HTTP timeout increased 30s → 60s** (`mcp/_daemon_proxy.py`) — Safety net for unexpected slowness during daemon restart windows. With keep_alive=-1 in place, this almost never matters, but it removes the cliff edge.
+
+### Added
+- **Emergency FTS5 BM25 fallback in `session_init`** (`mcp/tools_active.py`) — When the daemon is completely unreachable (truly dead, not just slow), `session_init` falls back to a direct SQLite query against the existing `atomic_facts_fts` virtual table with native BM25 ranking via `ORDER BY fts.rank`. Multi-process safe via WAL mode. Response includes explicit `degraded_mode: true` and `retrieval_mode: "emergency_fts5_bm25"` flags (Zep "Memory Unavailable" pattern) so agents can surface the degraded state to the user. This is the Mem0 / Letta industry-standard fallback — real BM25 math, not keyword LIKE.
+- **`/health` reports `embedding_warm` flag** (`server/unified_daemon.py`) — MCP clients can poll the daemon's health endpoint to wait for the embedding model to finish loading before issuing recall calls. Set to `true` once the async pre-warm thread completes its first `embedder.embed("warmup")` call.
+
+### Changed
+- **`session_init` reverted to full 6-channel recall** (`mcp/tools_active.py`) — v3.4.51 had downgraded `session_init` to `fast=True` (BM25 only) as a timeout workaround. v3.4.52 restores full 6-channel recall as the primary path — quality is no longer compromised. Cold-start is prevented at the Ollama layer instead.
+
+### Why this matters
+A memory system's value is its retrieval quality. Degrading to BM25-only at session start would mean every agent session begins with degraded memory — exactly the opposite of what users expect. v3.4.52 fixes the actual root cause (Ollama cold-start) and reserves the BM25 fallback for true catastrophic failures (daemon completely dead). The agent is told explicitly via `degraded_mode` when this happens.
+
 ## [3.4.51] - 2026-05-28 — Recency Intelligence
 
 **Session context is now time-aware.** Stale memories from completed projects and old debugging sessions no longer surface at session start. Frequently-recalled architectural decisions resist decay automatically.
