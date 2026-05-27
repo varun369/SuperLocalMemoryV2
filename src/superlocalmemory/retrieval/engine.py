@@ -451,7 +451,17 @@ class RetrievalEngine:
     def _run_channels(
         self, query: str, profile_id: str, strat: QueryStrategy,
     ) -> dict[str, list[tuple[str, float]]]:
-        """Run active retrieval channels. Respects disabled_channels config for ablation."""
+        """Run active retrieval channels.
+
+        v3.4.53: channels run in PARALLEL via ThreadPoolExecutor. Industry
+        standard (EverMemOS, szl-recall, ContentPilot 2026): all channels
+        are independent after embedding; running them serially wastes time
+        equal to the sum of all channel latencies. Parallel execution brings
+        total channel time from sum(semantic+bm25+entity+temporal+hopfield+sa)
+        down to max(semantic,bm25,entity,temporal,hopfield,sa) — roughly a
+        3-5x speedup for the channel phase.
+        """
+        import concurrent.futures
         out: dict[str, list[tuple[str, float]]] = {}
         # Skip channels listed in disabled_channels (ablation support)
         # V3.4.40: union with per-recall extra_disabled set (e.g. --fast skip)
@@ -475,51 +485,55 @@ class RetrievalEngine:
             except Exception as exc:
                 logger.warning("Query embedding failed: %s", exc)
 
-        if self._semantic is not None and q_emb is not None and "semantic" not in disabled:
-            try:
-                r = self._semantic.search(q_emb, profile_id, self._config.semantic_top_k)
-                if r:
-                    out["semantic"] = r
-            except Exception as exc:
-                logger.warning("Semantic channel: %s", exc)
+        # v3.4.53: collect channel callables and run in parallel.
+        # Each channel is a standalone search — no shared mutable state,
+        # no ordering dependencies. SQLite WAL mode permits concurrent reads.
+        futures: dict[str, concurrent.futures.Future] = {}
 
-        if self._bm25 is not None and "bm25" not in disabled:
+        def _safe_channel(name: str, fn, *args):
+            """Run a single channel, returning (name, result_or_None)."""
             try:
-                r = self._bm25.search(query, profile_id, self._config.bm25_top_k)
-                if r:
-                    out["bm25"] = r
+                res = fn(*args)
+                return (name, res if res else None)
             except Exception as exc:
-                logger.warning("BM25 channel: %s", exc)
+                logger.warning("%s channel: %s", name, exc)
+                return (name, None)
 
-        # V3.4.12: entity_graph is now a signal enhancer (post-RRF boost),
-        # not an independent channel. Removed from channel execution to avoid
-        # running spreading activation twice. See score_candidates() in engine.recall().
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+            if self._semantic is not None and q_emb is not None and "semantic" not in disabled:
+                futures["semantic"] = executor.submit(
+                    _safe_channel, "semantic",
+                    self._semantic.search, q_emb, profile_id, self._config.semantic_top_k,
+                )
+            if self._bm25 is not None and "bm25" not in disabled:
+                futures["bm25"] = executor.submit(
+                    _safe_channel, "bm25",
+                    self._bm25.search, query, profile_id, self._config.bm25_top_k,
+                )
+            if self._temporal is not None and "temporal" not in disabled:
+                futures["temporal"] = executor.submit(
+                    _safe_channel, "temporal",
+                    self._temporal.search, query, profile_id, self._config.bm25_top_k,
+                )
+            if self._hopfield is not None and q_emb is not None and "hopfield" not in disabled:
+                futures["hopfield"] = executor.submit(
+                    _safe_channel, "hopfield",
+                    self._hopfield.search, q_emb, profile_id, self._config.hopfield_top_k,
+                )
+            if self._spreading_activation is not None and q_emb is not None and "spreading_activation" not in disabled:
+                futures["spreading_activation"] = executor.submit(
+                    _safe_channel, "spreading_activation",
+                    self._spreading_activation.search, q_emb, profile_id, self._config.bm25_top_k,
+                )
 
-        if self._temporal is not None and "temporal" not in disabled:
-            try:
-                r = self._temporal.search(query, profile_id, top_k=self._config.bm25_top_k)
-                if r:
-                    out["temporal"] = r
-            except Exception as exc:
-                logger.warning("Temporal channel: %s", exc)
-
-        # Phase G: Hopfield channel (6th) — energy-based pattern completion
-        if self._hopfield is not None and q_emb is not None and "hopfield" not in disabled:
-            try:
-                r = self._hopfield.search(q_emb, profile_id, self._config.hopfield_top_k)
-                if r:
-                    out["hopfield"] = r
-            except Exception as exc:
-                logger.warning("Hopfield channel: %s", exc)
-
-        # Phase 3: Spreading Activation channel (5th) — graph-based associative recall
-        if self._spreading_activation is not None and q_emb is not None and "spreading_activation" not in disabled:
-            try:
-                r = self._spreading_activation.search(q_emb, profile_id, self._config.bm25_top_k)
-                if r:
-                    out["spreading_activation"] = r
-            except Exception as exc:
-                logger.warning("Spreading activation channel: %s", exc)
+            # Collect results as channels complete
+            for name, fut in futures.items():
+                try:
+                    ch_name, result = fut.result(timeout=30)
+                    if result:
+                        out[ch_name] = result
+                except Exception as exc:
+                    logger.warning("Channel %s timed out or failed: %s", name, exc)
 
         # Apply registered post-retrieval filters (forgetting filter, etc.)
         if hasattr(self, '_registry') and self._registry._filters:

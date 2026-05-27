@@ -56,7 +56,11 @@ _IDLE_TIMEOUT_SECONDS = 300  # V3.4.37: 5 min (was 30) — balance cold-start vs
 # V3.4.19: Bumped from 120 → 1800 in lock-step with the embedding worker.
 # Set ``SLM_RERANKER_IDLE_TIMEOUT=120`` + ``slm restart`` to revert.
 _IDLE_TIMEOUT_SECONDS = int(os.environ.get("SLM_RERANKER_IDLE_TIMEOUT", _IDLE_TIMEOUT_SECONDS))
-_SUBPROCESS_RESPONSE_TIMEOUT = 180  # V3.3.12: 180s (was 120s) for stressed system respawns
+_SUBPROCESS_RESPONSE_TIMEOUT = 15  # v3.4.52: 15s (was 180s). Long timeout blocked the
+# entire FastAPI event loop — a dead reranker subprocess held ALL
+# endpoints hostage for 3 minutes. 15s is enough for ONNX inference
+# cold start; if the worker can't respond, we fall back to fusion
+# scores without reranking.
 _WORKER_RECYCLE_AFTER = 500  # Recycle after N requests
 
 
@@ -231,16 +235,26 @@ class CrossEncoderReranker:
             logger.warning("Failed to spawn reranker worker: %s", exc)
             self._worker_proc = None
 
-    def _send_request(self, req: dict, timeout: float | None = None) -> dict | None:
+    def _send_request(self, req: dict, timeout: float | None = None,
+                      block: bool = True) -> dict | None:
         """Send JSON request to worker, get response. Thread-safe.
 
         Uses a short timeout (10s) for rerank requests since the model
         should already be loaded by the background warmup. Uses the full
         timeout only for explicit load/ping commands.
+
+        v3.4.52: when ``block=False``, uses ``try_lock`` instead of
+        ``lock.acquire()``. If another thread is already using the
+        reranker subprocess, returns ``None`` immediately (the caller
+        falls back to fusion scores without reranking). This prevents
+        concurrent recall requests from serialising on the lock.
         """
         effective_timeout = timeout or _SUBPROCESS_RESPONSE_TIMEOUT
 
-        with self._lock:
+        acquired = self._lock.acquire(blocking=block)
+        if not acquired:
+            return None  # another request is using the subprocess
+        try:
             if self._request_count >= _WORKER_RECYCLE_AFTER and self._worker_proc is not None:
                 logger.info("Recycling reranker worker after %d requests", self._request_count)
                 self._kill_worker()
@@ -253,30 +267,31 @@ class CrossEncoderReranker:
             if self._worker_proc is None:
                 return None
 
-            try:
-                msg = json.dumps(req) + "\n"
-                self._worker_proc.stdin.write(msg)
-                self._worker_proc.stdin.flush()
+            msg = json.dumps(req) + "\n"
+            self._worker_proc.stdin.write(msg)
+            self._worker_proc.stdin.flush()
 
-                resp_line = self._readline_with_timeout(
-                    self._worker_proc.stdout,
-                    effective_timeout,
-                )
-                if not resp_line:
-                    logger.warning("Reranker worker timed out after %ds", effective_timeout)
-                    self._kill_worker()
-                    self._model_loaded = False
-                    return None
-
-                resp = json.loads(resp_line)
-                self._reset_idle_timer()
-                self._request_count += 1
-                return resp
-            except (BrokenPipeError, OSError, json.JSONDecodeError) as exc:
-                logger.warning("Reranker worker communication failed: %s", exc)
+            resp_line = self._readline_with_timeout(
+                self._worker_proc.stdout,
+                effective_timeout,
+            )
+            if not resp_line:
+                logger.warning("Reranker worker timed out after %ds", effective_timeout)
                 self._kill_worker()
                 self._model_loaded = False
                 return None
+
+            resp = json.loads(resp_line)
+            self._reset_idle_timer()
+            self._request_count += 1
+            return resp
+        except (BrokenPipeError, OSError, json.JSONDecodeError) as exc:
+            logger.warning("Reranker worker communication failed: %s", exc)
+            self._kill_worker()
+            self._model_loaded = False
+            return None
+        finally:
+            self._lock.release()
 
     @staticmethod
     def _readline_with_timeout(stream: Any, timeout_seconds: float) -> str:
@@ -363,14 +378,16 @@ class CrossEncoderReranker:
 
         documents = [fact.content for fact, _ in candidates]
 
-        # V3.3.16: Timeout 180s — ONNX CoreML compilation can take 30-60s on
-        # first inference even after model load. The warmup_inference in the
-        # worker should prevent this, but 180s is a safety net.
+        # v3.4.53: block=False — if another recall is using the reranker
+        # subprocess, skip reranking and return fusion scores directly.
+        # This prevents concurrent recalls from serialising on the lock.
+        # 15s timeout (was 180s) — warm ONNX inference takes ~100ms; if
+        # the worker can't respond in 15s it's dead and we fall back.
         resp = self._send_request({
             "cmd": "rerank",
             "query": query,
             "documents": documents,
-        }, timeout=180.0)
+        }, timeout=15.0, block=False)
 
         if resp is None or not resp.get("ok"):
             # Fallback: return by existing score

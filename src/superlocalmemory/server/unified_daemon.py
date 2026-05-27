@@ -156,6 +156,13 @@ from superlocalmemory.core.recall_gate import (
 # daemon startup via engine._process_pending_memories().
 _engine = None
 
+# v3.4.53: Limit concurrent full (non-fast) recalls. Without this, N parallel
+# /recall calls spawn N × 6-channel threads → Ollama serialises, reranker
+# lock queues, and total wall time is N × single-recall-time. 3 concurrent
+# full recalls gives parallelism benefit without resource oversaturation.
+import asyncio as _asyncio
+_recall_semaphore = _asyncio.Semaphore(3)
+
 # v3.4.52: Embedding model warm state. Set to True by the async pre-warm
 # thread once Ollama has loaded the embedding model. /health reports this
 # so MCP clients can wait for warm state before issuing recall calls.
@@ -1167,9 +1174,22 @@ def _register_daemon_routes(application: FastAPI) -> None:
             import time as _t
             effective_sid = f"http:{int(_t.time() * 1000)}"
         # v3.4.32: mark recall in-flight so the pending materializer pauses
+        # v3.4.52: run engine.recall() in a thread-pool executor so the
+        # FastAPI event loop stays responsive for /health, /remember, and
+        # concurrent /recall requests. Without this, a single slow full
+        # recall (reranker timeout, cold embedder) blocks ALL endpoints.
+        import asyncio
         _begin_recall()
+        # v3.4.53: Full (non-fast) recalls are gated by a semaphore to
+        # prevent resource oversaturation. Ollama serialises concurrent
+        # embedding calls and the reranker subprocess has a single lock —
+        # queuing more than ~3 concurrent full recalls just adds latency.
+        # Fast recalls (SQLite/BM25 only) skip the semaphore.
+        if not fast:
+            await _recall_semaphore.acquire()
         try:
-            response = engine.recall(
+            response = await asyncio.to_thread(
+                engine.recall,
                 search_query, limit=limit, session_id=effective_sid,
                 fast=fast,
             )
@@ -1228,6 +1248,8 @@ def _register_daemon_routes(application: FastAPI) -> None:
         except Exception as exc:
             raise HTTPException(500, detail=str(exc))
         finally:
+            if not fast:
+                _recall_semaphore.release()
             _end_recall()
 
     @application.post("/remember")
