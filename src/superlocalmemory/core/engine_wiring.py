@@ -78,20 +78,21 @@ def init_embedder(config: SLMConfig) -> Any | None:
     emb_cfg = config.embedding
     provider = emb_cfg.provider
 
-    # All modes use sentence-transformers subprocess as primary so the
-    # embedding space matches stored vectors. Ollama is fallback only —
-    # Ollama's nomic-embed-text and sentence-transformers nomic-embed-text-v1.5
-    # produce different vectors, so mixing them against an ST-indexed
-    # corpus degrades semantic recall quality.
+    # v3.4.55: When provider is ollama, use Ollama's embedding API as
+    # PRIMARY. The stored vectors were created by Ollama's nomic-embed-text;
+    # sentence-transformers' nomic-embed-text-v1.5 produces different vectors.
+    # Mixing them degrades semantic recall. ST subprocess is the fallback,
+    # not the primary — this also eliminates the 2-3 minute cold-start
+    # where the ST model loads from disk (~2.1 GB) on every daemon restart.
     if provider == "ollama":
-        st_emb = _try_service_embedder(EmbeddingService, emb_cfg)
-        if st_emb is not None:
-            logger.info("Using sentence-transformers subprocess (matches stored embedding space)")
-            return st_emb
         result = _try_ollama_embedder(emb_cfg)
         if result is not None:
-            logger.warning("sentence-transformers unavailable; falling back to Ollama (semantic quality may degrade)")
+            logger.info("Using Ollama embeddings (nomic-embed-text, local)")
             return result
+        st_emb = _try_service_embedder(EmbeddingService, emb_cfg)
+        if st_emb is not None:
+            logger.warning("Ollama unavailable; falling back to sentence-transformers subprocess")
+            return st_emb
         return None
 
     # --- V3.4.24: Explicit OpenAI-compatible provider ---
