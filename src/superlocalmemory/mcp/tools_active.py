@@ -127,7 +127,10 @@ def register_active_tools(server, get_engine: Callable) -> None:
             else:
                 search_query = "recent important decisions"
 
-            response = pool_recall(search_query, limit=max_results)
+            # fast=True: use SQLite/BM25 path — avoids 20-30s Ollama cold-start
+            # on daemon restart. Age gate (below) is the primary stale-memory
+            # filter; FSRS recency formula runs on all other recall paths.
+            response = pool_recall(search_query, limit=max_results, fast=True)
 
             # Age gate: suppress stale memories at session start.
             # Memories older than max_age_days are excluded unless their score
