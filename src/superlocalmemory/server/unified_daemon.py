@@ -446,6 +446,9 @@ async def lifespan(application: FastAPI):
         from superlocalmemory.core.config import SLMConfig
         from superlocalmemory.core.engine import MemoryEngine
 
+        # v3.4.54: one-time migration config.json → 3-mode system
+        SLMConfig.migrate_to_3mode()
+
         config = SLMConfig.load()
         engine = MemoryEngine(config)
         engine.initialize()

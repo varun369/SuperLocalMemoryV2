@@ -652,30 +652,11 @@ def cmd_mode(args: Namespace) -> None:
 
     config = SLMConfig.load()
 
-    def _apply_mode_change(new_value: str) -> tuple[SLMConfig, bool]:
-        """Mutate-in-place mode switch. Returns (updated_config, llm_was_set).
-
-        Only changes ``config.mode``. If the user has no LLM provider
-        configured AND is moving to Mode B or C, populates the mode's
-        default LLM block so the daemon has something to talk to.
-        Everything else (embedding, retrieval, evolution, forgetting,
-        math, profile) is preserved byte-for-byte.
-        """
-        new_mode = Mode(new_value)
-        llm_was_set = False
-        if new_mode != Mode.A and not config.llm.provider:
-            defaults = SLMConfig.for_mode(new_mode)
-            config.llm = defaults.llm
-            llm_was_set = True
-        config.mode = new_mode
-        config.save(mode_change=True)
-        return config, llm_was_set
-
     if getattr(args, 'json', False):
         from superlocalmemory.cli.json_output import json_print
         if args.value:
             old_mode = config.mode.value.upper()
-            updated, _ = _apply_mode_change(args.value)
+            updated = SLMConfig.switch_mode(args.value)
             json_print("mode", data={
                 "previous_mode": old_mode, "current_mode": args.value.upper(),
             }, next_actions=[
@@ -690,22 +671,17 @@ def cmd_mode(args: Namespace) -> None:
         return
 
     if args.value:
-        updated, llm_was_set = _apply_mode_change(args.value)
+        updated = SLMConfig.switch_mode(args.value)
         print(f"Mode set to: {args.value.upper()}")
-
-        # v3.4.43: embedding/retrieval are now preserved, so the old
-        # "Embedding model changed. Re-indexing will run on next recall."
-        # warning no longer fires from a CLI mode switch — that was the
-        # symptom of the bug. The warning is retained ONLY as an
-        # informational note when LLM defaults were freshly populated.
-        if llm_was_set:
-            print(f"  ℹ LLM provider populated from mode defaults: "
-                  f"{updated.llm.provider}/{updated.llm.model}. "
-                  f"Run `slm provider set` to customize.")
+        print(f"  Embedding: {updated.embedding.provider}/{updated.embedding.model_name}")
+        if args.value.lower() != "a":
+            print(f"  LLM: {updated.llm.provider}/{updated.llm.model}")
+        print(f"  Reranker: ONNX cross-encoder (enabled)")
 
         # V3.3.4: Warn if Mode C lacks cloud API key
         if args.value == "c" and not updated.llm.api_key:
             print("  ⚠ Mode C requires a cloud API key. Run: slm provider set")
+        print("  ℹ Run `slm restart` to apply the new mode.")
     else:
         print(f"Current mode: {config.mode.value.upper()}")
 

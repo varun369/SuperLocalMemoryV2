@@ -12,8 +12,11 @@ Part of Qualixar | Author: Varun Pratap Bhardwaj
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from superlocalmemory.storage.models import Mode
 
@@ -25,6 +28,9 @@ from superlocalmemory.storage.models import Mode
 DEFAULT_BASE_DIR = Path.home() / ".superlocalmemory"
 DEFAULT_DB_NAME = "memory.db"
 DEFAULT_PROFILES_FILE = "profiles.json"
+CURRENT_MODE_FILE = "current_mode"
+# Populated lazily in _get_mode_config_path() to avoid circular imports
+_MODE_CONFIG_NAMES: dict | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -950,3 +956,180 @@ class SLMConfig:
                 sheaf_contradiction_threshold=0.65,  # Higher for 3072d embeddings
             ),
         )
+
+    # ------------------------------------------------------------------
+    # 3-Mode config system (v3.4.54)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _mode_config_path(base_dir: Path, mode: "Mode") -> Path:
+        """Return the per-mode config file path."""
+        from superlocalmemory.storage.models import Mode as _M
+        _names = {
+            _M.A: "mode_a.json",
+            _M.B: "mode_b.json",
+            _M.C: "mode_c.json",
+        }
+        return base_dir / _names.get(mode, "mode_a.json")
+
+    @staticmethod
+    def read_current_mode(base_dir: Path | None = None) -> str:
+        """Read the current mode from the ``current_mode`` file.
+
+        Returns ``\"b\"`` (the default) if the file doesn't exist.
+        """
+        _base = base_dir or DEFAULT_BASE_DIR
+        _f = _base / CURRENT_MODE_FILE
+        try:
+            return _f.read_text(encoding="utf-8").strip().lower() or "b"
+        except (OSError, FileNotFoundError):
+            return "b"
+
+    @staticmethod
+    def write_current_mode(mode: str, base_dir: Path | None = None) -> None:
+        """Write the current mode letter to ``current_mode``."""
+        _base = base_dir or DEFAULT_BASE_DIR
+        _base.mkdir(parents=True, exist_ok=True)
+        (_base / CURRENT_MODE_FILE).write_text(
+            mode.lower().strip(), encoding="utf-8",
+        )
+
+    @classmethod
+    def switch_mode(
+        cls,
+        new_mode: str,
+        base_dir: Path | None = None,
+    ) -> "SLMConfig":
+        """Switch to a different mode, preserving the old mode's config.
+
+        v3.4.54: Saves the current config as ``mode_{old}.json``, then
+        loads ``mode_{new}.json`` (or creates it from defaults if it
+        doesn't exist). Writes ``current_mode`` and persists the new
+        active config as ``config.json`` for backward compatibility
+        with tooling that reads it directly.
+
+        Returns the new active config.
+        """
+        from superlocalmemory.storage.models import Mode as _M
+        _base = base_dir or DEFAULT_BASE_DIR
+        _base.mkdir(parents=True, exist_ok=True)
+
+        old_config = cls.load(_base / "config.json")
+        old_mode = old_config.mode.value.lower()
+
+        new_mode_val = _M(new_mode.lower())
+
+        # 1. Save current config to its per-mode file (unless already
+        #    matched — prevents overwriting user customizations)
+        if old_mode != new_mode.lower():
+            old_path = cls._mode_config_path(_base, old_config.mode)
+            old_config.save(old_path)
+
+        # 2. Try to load the target mode's saved config.
+        new_path = cls._mode_config_path(_base, new_mode_val)
+        need_migration = False
+        if new_path.exists():
+            try:
+                new_config = cls.load(new_path)
+                # Ensure the loaded config actually has the right mode
+                if new_config.mode != new_mode_val:
+                    new_config = cls.for_mode(new_mode_val, base_dir=_base)
+            except Exception:
+                new_config = cls.for_mode(new_mode_val, base_dir=_base)
+        else:
+            # First time switching to this mode: try migrating from
+            # legacy config.json if it was already in this mode
+            legacy = _base / "config.json"
+            if legacy.exists():
+                try:
+                    import json
+                    _data = json.loads(legacy.read_text(encoding="utf-8"))
+                    _legacy_mode = _data.get("mode", "").lower()
+                    if _legacy_mode == new_mode.lower():
+                        # config.json IS this mode — use it directly
+                        new_config = cls.load(legacy)
+                        need_migration = True
+                    else:
+                        new_config = cls.for_mode(new_mode_val, base_dir=_base)
+                except Exception:
+                    new_config = cls.for_mode(new_mode_val, base_dir=_base)
+            else:
+                new_config = cls.for_mode(new_mode_val, base_dir=_base)
+
+        # 3. Save as active config.json (backward compat)
+        new_config.save(_base / "config.json", mode_change=True)
+
+        # 4. Write current_mode
+        cls.write_current_mode(new_mode, _base)
+
+        # 5. On first migration, also save mode_a.json and mode_c.json
+        #    so users have a complete set
+        if need_migration:
+            for _m in (_M.A, _M.B, _M.C):
+                _mp = cls._mode_config_path(_base, _m)
+                if not _mp.exists():
+                    try:
+                        _mc = cls.for_mode(_m, base_dir=_base)
+                        _mc.save(_mp)
+                    except Exception:
+                        pass
+
+        return new_config
+
+    @classmethod
+    def migrate_to_3mode(cls, base_dir: Path | None = None) -> bool:
+        """One-time migration: config.json → 3-mode system.
+
+        Called on daemon boot. Idempotent — if ``current_mode`` already
+        exists, this is a no-op. Returns True if migration was performed.
+        """
+        _base = base_dir or DEFAULT_BASE_DIR
+        _current = _base / CURRENT_MODE_FILE
+        if _current.exists():
+            return False  # already migrated
+
+        legacy = _base / "config.json"
+        if not legacy.exists():
+            # No config at all — write defaults and current_mode
+            from superlocalmemory.storage.models import Mode as _M
+            _def = cls.for_mode(_M.B, base_dir=_base)
+            _def.save(legacy)
+            cls.write_current_mode("b", _base)
+            for _m in (_M.A, _M.B, _M.C):
+                _mp = cls._mode_config_path(_base, _m)
+                if not _mp.exists():
+                    try:
+                        _mc = cls.for_mode(_m, base_dir=_base)
+                        _mc.save(_mp)
+                    except Exception:
+                        pass
+            return True
+
+        # Migrate existing config.json → mode_{current}.json
+        try:
+            config = cls.load(legacy)
+            current = config.mode.value.lower()
+            cls.write_current_mode(current, _base)
+
+            # Save current config to its mode file
+            mode_path = cls._mode_config_path(_base, config.mode)
+            config.save(mode_path)
+
+            # Generate other mode files from defaults
+            from superlocalmemory.storage.models import Mode as _M
+            for _m in (_M.A, _M.B, _M.C):
+                _mp = cls._mode_config_path(_base, _m)
+                if not _mp.exists():
+                    try:
+                        _mc = cls.for_mode(_m, base_dir=_base)
+                        _mc.save(_mp)
+                    except Exception:
+                        pass
+
+            logger.info(
+                "3-mode config system migrated: config.json → mode_%s.json. "
+                "All three mode configs generated.", current,
+            )
+            return True
+        except Exception:
+            return False
