@@ -195,7 +195,17 @@ def _train_booster(
     params = dict(RETRAIN_HYPERPARAM_CAPS)
     params["objective"] = objective
     params["label_gain"] = gain
-    params["num_threads"] = max(1, (os.cpu_count() or 2) - 1)
+    # SAFE THREAD CAP — v3.4.58 permanent fix for OpenMP multi-library SIGSEGV.
+    # Using os.cpu_count()-1 (e.g. 9 on M4 Mac) triggers a race in LightGBM's
+    # DatasetLoader::ConstructFromSampleData when PyTorch's libomp and
+    # LightGBM's libomp are both loaded. The parallel OpenMP fork crosses
+    # libomp runtime boundaries → SIGSEGV in __kmp_suspend_initialize_thread.
+    # 2 threads avoids the crash path and is sufficient for SLM's small datasets.
+    # Override with SLM_LGBM_THREADS env var if you need more (and have a
+    # single-runtime environment with libomp unified).
+    _lgbm_threads_env = os.environ.get("SLM_LGBM_THREADS", "").strip()
+    params["num_threads"] = int(_lgbm_threads_env) if _lgbm_threads_env.isdigit() else 2
+
     num_boost_round = int(params.pop("num_boost_round"))
 
     start = time.monotonic()

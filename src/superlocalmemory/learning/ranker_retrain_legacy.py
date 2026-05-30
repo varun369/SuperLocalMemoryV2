@@ -147,6 +147,13 @@ def _retrain_ranker_impl(
             objective, sorted(_allowed_objectives),
         )
         objective = "lambdarank"
+    # SAFE THREAD CAP — v3.4.58 permanent fix for OpenMP multi-library SIGSEGV.
+    # See ranker_retrain_online.py for full explanation. Same cap applies here:
+    # the legacy path hits the identical LGBM_DatasetCreateFromMat → OpenMP
+    # parallel fork. On macOS ARM with torch+sklearn+lightgbm, >2 threads
+    # triggers the libomp multi-runtime SIGSEGV in __kmp_suspend_initialize_thread.
+    _lgbm_threads_env = os.environ.get("SLM_LGBM_THREADS", "").strip()
+    _lgbm_num_threads = int(_lgbm_threads_env) if _lgbm_threads_env.isdigit() else 2
     params = {
         "objective": objective,
         "metric": "ndcg",
@@ -156,8 +163,9 @@ def _retrain_ranker_impl(
         "num_leaves": 31,
         "min_data_in_leaf": 20,
         "verbosity": -1,
-        "num_threads": max(1, (os.cpu_count() or 2) - 1),
+        "num_threads": _lgbm_num_threads,
     }
+
     try:
         booster_new = lgb.train(params, ds_train, num_boost_round=50)
     except lgb.basic.LightGBMError as exc:

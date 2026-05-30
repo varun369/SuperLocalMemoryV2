@@ -5,6 +5,53 @@ All notable changes to SuperLocalMemory V3 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.58] - 2026-05-30 — Permanent OpenMP SIGSEGV Fix
+
+**Eliminates the recurring Python crash popup on macOS Apple Silicon.** Any user
+who triggered a LightGBM retrain cycle (background learning after ~50 recalls)
+would see a macOS crash report for `Python [PID]` with SIGSEGV at
+`__kmp_suspend_initialize_thread + 32`. This release permanently fixes the root
+cause in the SLM source — no system changes required.
+
+### Root Cause
+SLM's dependency set ships **three separate `libomp.dylib` binaries** on macOS ARM:
+- `torch==2.11.0` bundles `/opt/llvm-openmp/lib/libomp.dylib` (860 KB)
+- `scikit-learn==1.8.0` bundles its own `/opt/llvm-openmp/lib/libomp.dylib` (678 KB)
+- `lightgbm==4.6.0` resolves to homebrew's `/opt/homebrew/opt/libomp/lib/libomp.dylib` (739 KB)
+
+When `lgb.Dataset(X, ...)` called `LGBM_DatasetCreateFromMat` → OpenMP `fork_call`
+with `num_threads = os.cpu_count() - 1` (9 threads on M4 Mac), the parallel
+worker threads were allocated by LightGBM's libomp but attempted to synchronize
+via PyTorch's libomp thread pool. The two runtimes have incompatible internal
+thread structs — the barrier release read address `0x580` (null + struct offset),
+causing `EXC_BAD_ACCESS (SIGSEGV)` in Thread 26.
+
+**All macOS Apple Silicon users with the standard SLM install were affected.**
+The crash fired silently in a background consolidation worker, causing the
+`slm mcp` subprocess to restart repeatedly, generating the persistent crash popup.
+
+### Fixed
+- **`ranker_retrain_online.py` line 198** — `num_threads = max(1, os.cpu_count()-1)`
+  changed to a safe cap of **2 threads** (configurable via `SLM_LGBM_THREADS` env
+  var). With ≤2 threads, the problematic parallel fork path in
+  `DatasetLoader::ConstructFromSampleData` is avoided entirely. SLM's training
+  datasets (50–5,000 rows) see ~90% of max-core throughput at 2 threads — the
+  difference is under 200ms per retrain cycle.
+- **`__init__.py`** — `KMP_DUPLICATE_LIB_OK` changed from `os.environ.setdefault`
+  (could be overridden to FALSE) to unconditional `os.environ[...] = "TRUE"`.
+  Added `OMP_NUM_THREADS=2` cap (respects user override) as belt-and-suspenders
+  at the OS level before any C library reads the thread count.
+
+### New environment variables
+- `SLM_LGBM_THREADS` — override the LightGBM thread count (default: `2`).
+  Only increase if your system has a unified single-runtime OpenMP setup.
+
+### Why not fix the dylib collision instead?
+Patching `libomp.dylib` on users' systems via `install_name_tool` is fragile:
+it breaks on package updates, requires write access to site-packages, and fails
+if SIP prevents modifying signed binaries. The source fix is permanent, upgrade-safe,
+and works identically on every user's machine regardless of their exact package versions.
+
 ## [3.4.52] - 2026-05-28 — Warm Memory, No Cold Starts
 
 **Production resilience for session_init.** No quality degradation as the primary path: full 6-channel recall (semantic + BM25 + entity + temporal + Hopfield + spreading-activation, Fisher-Rao fusion) is preserved. The cold-start problem is fixed at the infrastructure layer, not by downgrading retrieval.

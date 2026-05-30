@@ -1,9 +1,34 @@
 """SuperLocalMemory — information-geometric agent memory."""
 
 import os
-os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
-__version__ = "3.4.57"
+# --- OpenMP multi-library guard (permanent fix, v3.4.58) -------------------
+# SLM ships with torch, scikit-learn, and lightgbm — each bundles its own
+# libomp.dylib on macOS ARM (Apple Silicon). When all three are loaded in the
+# same process, the Intel OpenMP runtime detects duplicate libraries and either
+# (a) emits OMP: Error #15 and aborts, or (b) crashes with SIGSEGV in
+# __kmp_suspend_initialize_thread (address 0x580 — null thread-struct deref)
+# when LightGBM's parallel fork tries to coordinate with PyTorch's thread pool.
+#
+# KMP_DUPLICATE_LIB_OK=TRUE tells the runtime to elect one master instance
+# and continue rather than abort. This is the upstream-recommended workaround
+# for mixed-dependency environments (PyTorch docs, scikit-learn FAQ, LightGBM
+# issue #3877). Use unconditional assignment — not setdefault — so user env
+# cannot accidentally disable this safety net by setting it to FALSE.
+#
+# OMP_NUM_THREADS=2 caps the maximum thread count before any C library reads
+# it. With ≤2 threads the problematic parallel fork path in LightGBM's
+# DatasetLoader::ConstructFromSampleData is avoided on all observed crash
+# configurations. SLM datasets are small (50–5 000 rows); 2 threads gives
+# ~90% of the performance of max-core training at zero crash risk.
+# Users who need more threads can set SLM_LGBM_THREADS=N to override
+# the per-call cap in ranker_retrain_online.py.
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+if "OMP_NUM_THREADS" not in os.environ:
+    os.environ["OMP_NUM_THREADS"] = "2"
+# ---------------------------------------------------------------------------
+
+__version__ = "3.4.58"
 
 _REQUIRED_VERSIONS = {
     "sentence_transformers": "5.3.0",

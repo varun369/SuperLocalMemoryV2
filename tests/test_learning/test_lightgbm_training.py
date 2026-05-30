@@ -189,7 +189,9 @@ def _make_fake_active(feature_names: tuple[str, ...]) -> ActiveModel:
         "objective": "lambdarank", "metric": "ndcg",
         "label_gain": label_gain(), "verbosity": -1,
         "min_data_in_leaf": 1,
+        "num_threads": 2,  # v3.4.58: prevent OpenMP multi-runtime SIGSEGV on macOS ARM
     }
+
     booster = lgb.train(params, ds, num_boost_round=3)
     return ActiveModel(
         profile_id="fake",
