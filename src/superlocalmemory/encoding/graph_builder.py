@@ -76,11 +76,12 @@ class GraphBuilder:
 
     def build_edges(self, new_fact: AtomicFact, profile_id: str) -> list[GraphEdge]:
         """Create ALL relevant edges for *new_fact*. Persists and returns them."""
+        hub_cache: dict[str, int] = {}  # shared across edge types to avoid redundant queries
         edges: list[GraphEdge] = []
-        edges.extend(self._build_entity_edges(new_fact, profile_id))
+        edges.extend(self._build_entity_edges(new_fact, profile_id, hub_cache))
         edges.extend(self._build_temporal_edges(new_fact, profile_id))
         edges.extend(self._build_semantic_edges(new_fact, profile_id))
-        edges.extend(self._build_causal_edges(new_fact, profile_id))
+        edges.extend(self._build_causal_edges(new_fact, profile_id, hub_cache))
 
         for edge in edges:
             self._db.store_edge(edge)
@@ -142,17 +143,33 @@ class GraphBuilder:
 
     # -- Edge builders (private) -------------------------------------------
 
-    # V3.3.12: Cap entity edges per entity to prevent O(n²) explosion.
-    # With 500+ facts sharing a popular entity, creating an edge to each
-    # produced 44K+ edges and 22-min ingestion. Cap to 20 most recent per entity.
-    _MAX_ENTITY_EDGES_PER_ENTITY: int = 20
+    # v3.4.59: Lowered from 20→5. At 17K facts, 20 edges × many entities per fact
+    # produces 1.4M+ entity edges and 13s recalls. 5 is sufficient graph signal.
+    _MAX_ENTITY_EDGES_PER_ENTITY: int = 5
+    # v3.4.59: Hub filter — nodes with > 200 total edges are "gravity wells"
+    # (e.g. every fact mentions "SLM"). Skip adding more edges to them.
+    _MAX_HUB_DEGREE: int = 200
+
+    def _node_degree(self, fact_id: str, profile_id: str, cache: dict[str, int]) -> int:
+        """Cached total degree (in + out) for a node."""
+        if fact_id not in cache:
+            rows = self._db.execute(
+                "SELECT COUNT(*) as cnt FROM graph_edges "
+                "WHERE profile_id = ? AND (source_id = ? OR target_id = ?)",
+                (profile_id, fact_id, fact_id),
+            )
+            cache[fact_id] = int(dict(rows[0])["cnt"]) if rows else 0
+        return cache[fact_id]
 
     def _build_entity_edges(
         self, new_fact: AtomicFact, profile_id: str,
+        hub_cache: dict[str, int] | None = None,
     ) -> list[GraphEdge]:
         """ENTITY edges: shared canonical entity — capped to most recent per entity."""
         if not new_fact.canonical_entities:
             return []
+        if hub_cache is None:
+            hub_cache = {}
         edges: list[GraphEdge] = []
         seen: set[str] = set()
 
@@ -163,6 +180,8 @@ class GraphBuilder:
                     break
                 if other.fact_id == new_fact.fact_id or other.fact_id in seen:
                     continue
+                if self._node_degree(other.fact_id, profile_id, hub_cache) >= self._MAX_HUB_DEGREE:
+                    continue  # skip hub nodes — they link everything to everything
                 if self._edge_exists(new_fact.fact_id, other.fact_id, EdgeType.ENTITY, profile_id):
                     continue
                 seen.add(other.fact_id)
@@ -261,17 +280,20 @@ class GraphBuilder:
                 break
         return edges
 
-    # V3.3.13: Cap causal edges per entity to prevent O(n²) explosion (same as entity/temporal).
-    _MAX_CAUSAL_EDGES_PER_ENTITY: int = 20
+    # v3.4.59: Lowered from 20→5, same reasoning as entity cap.
+    _MAX_CAUSAL_EDGES_PER_ENTITY: int = 5
 
     def _build_causal_edges(
         self, new_fact: AtomicFact, profile_id: str,
+        hub_cache: dict[str, int] | None = None,
     ) -> list[GraphEdge]:
         """CAUSAL edges: causal markers + shared entity. Direction: cause -> effect."""
         if not any(p.search(new_fact.content) for p in _CAUSAL_CUES):
             return []
         if not new_fact.canonical_entities:
             return []
+        if hub_cache is None:
+            hub_cache = {}
 
         edges: list[GraphEdge] = []
         seen: set[str] = set()
@@ -281,6 +303,8 @@ class GraphBuilder:
                 if causal_edge_count >= self._MAX_CAUSAL_EDGES_PER_ENTITY:
                     break
                 if other.fact_id == new_fact.fact_id or other.fact_id in seen:
+                    continue
+                if self._node_degree(other.fact_id, profile_id, hub_cache) >= self._MAX_HUB_DEGREE:
                     continue
                 if self._edge_exists(other.fact_id, new_fact.fact_id, EdgeType.CAUSAL, profile_id):
                     continue

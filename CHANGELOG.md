@@ -5,6 +5,66 @@ All notable changes to SuperLocalMemory V3 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.59] - 2026-05-31 — Graph Edge Cap + Recall Reliability
+
+**Fixes SLM falling into degraded FTS5 mode on every session start**, and stops
+the knowledge graph from growing into an O(n²) edge explosion that made recall
+slow as the fact corpus scaled beyond 10K facts.
+
+### Root Causes Fixed
+
+**1. MCP timeout too aggressive for dense graphs (degraded mode bug)**
+The v3.4.57 timeout reduction (60s→8s) was correct for small graphs but
+backfired at scale. With a 17K-fact corpus and 2.1M graph edges, full 6-channel
+recall (including spreading activation + Hopfield) takes 13–15s. The 8s timeout
+always expired → `pool_recall` raised `PoolError` → session_init fell back to
+emergency FTS5 BM25. Every session started in degraded mode silently.
+
+**Fix:** `DaemonPoolProxy.timeout_s` raised from 8s to 30s. Covers the current
+worst-case (13.4s full recall) with 2× headroom. The orphan-flood concern from
+v3.4.57 is mitigated by the ingest cap reductions below, which stop the graph
+from growing further.
+
+**2. Knowledge graph edge explosion (O(n²) growth)**
+At 17K facts, the corpus hit 2.1M graph edges (avg 121 per node). Root cause:
+`_MAX_ENTITY_EDGES_PER_ENTITY = 20` was designed for ~500-fact graphs. At scale,
+hub entities (appearing in 1000s of facts) accumulated 5000+ edges per node.
+Spreading activation must fan out across all edges per node, causing 9s SA time.
+
+**Fixes:**
+- `_MAX_ENTITY_EDGES_PER_ENTITY` lowered from 20 → 5
+- `_MAX_CAUSAL_EDGES_PER_ENTITY` lowered from 20 → 5
+- **Hub node filter added:** nodes already at ≥ 200 total edges are skipped
+  during ingest. High-frequency hub nodes (e.g. a term appearing in every fact)
+  link everything to everything — they are graph noise, not graph signal.
+- Hub cache shared across entity/causal edge builders per `build_edges` call to
+  avoid redundant DB queries.
+
+**3. Spreading activation UNION query not using indexes (SA slow path)**
+The `_get_unified_neighbors` UNION ALL query fetched all edges for a node then
+sorted them, preventing the `idx_edges_source_weight` and `idx_edges_target_weight`
+covering indexes from terminating early. Fix: push `ORDER BY weight DESC LIMIT ?`
+inside each UNION branch (wrapped in `SELECT * FROM (...)` per SQLite compound
+SELECT syntax). SQLite now stops after `max_neighbors_per_node` rows per branch
+using the covering index instead of materialising the full edge set.
+
+**4. Degree-cap pruner added to graph_pruner.py**
+New `_cap_node_degree()` function using `ROW_NUMBER() OVER (PARTITION BY source_id
+ORDER BY weight DESC)` — single-pass window function, no Python loops. Integrated
+into `prune_graph()` as `cap_degree=True` (default). Automatically runs during
+scheduled maintenance cycles to keep hub nodes bounded.
+
+### Changed
+- `mcp/_daemon_proxy.py`: `timeout_s` default 8.0 → 30.0
+- `encoding/graph_builder.py`: entity + causal caps 20 → 5; hub filter at 200 edges
+- `core/graph_pruner.py`: `_cap_node_degree()` added; `prune_graph()` gains `cap_degree` param
+- `retrieval/spreading_activation.py`: UNION LIMIT pushed inside each branch
+
+### Tests
+4053 passed, 15 skipped — no regressions.
+
+---
+
 ## [3.4.58] - 2026-05-30 — Permanent OpenMP SIGSEGV Fix
 
 **Eliminates the recurring Python crash popup on macOS Apple Silicon.** Any user

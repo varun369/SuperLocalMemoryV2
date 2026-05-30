@@ -234,27 +234,47 @@ class SpreadingActivation:
         the highest-signal edges.
         """
         try:
+            # v3.4.59: LIMIT pushed inside each UNION branch so SQLite can use
+            # idx_edges_source_weight / idx_edges_target_weight and stop after
+            # max_neighbors_per_node rows per branch instead of materializing
+            # all 2.1M edges then sorting. Each branch wrapped in SELECT * FROM (...)
+            # because SQLite requires parentheses for ORDER BY+LIMIT in compound SELECTs.
+            lim = self._config.max_neighbors_per_node
             rows = self._db.execute(
                 """
                 SELECT neighbor_id, weight FROM (
-                    SELECT target_id AS neighbor_id, weight FROM graph_edges
+                    SELECT * FROM (
+                        SELECT target_id AS neighbor_id, weight FROM graph_edges
                         WHERE source_id = ? AND profile_id = ?
+                        ORDER BY weight DESC LIMIT ?
+                    )
                     UNION ALL
-                    SELECT target_fact_id AS neighbor_id, weight FROM association_edges
+                    SELECT * FROM (
+                        SELECT target_fact_id AS neighbor_id, weight FROM association_edges
                         WHERE source_fact_id = ? AND profile_id = ?
+                        ORDER BY weight DESC LIMIT ?
+                    )
                     UNION ALL
-                    SELECT source_id AS neighbor_id, weight FROM graph_edges
+                    SELECT * FROM (
+                        SELECT source_id AS neighbor_id, weight FROM graph_edges
                         WHERE target_id = ? AND profile_id = ?
+                        ORDER BY weight DESC LIMIT ?
+                    )
                     UNION ALL
-                    SELECT source_fact_id AS neighbor_id, weight FROM association_edges
+                    SELECT * FROM (
+                        SELECT source_fact_id AS neighbor_id, weight FROM association_edges
                         WHERE target_fact_id = ? AND profile_id = ?
+                        ORDER BY weight DESC LIMIT ?
+                    )
                 )
                 ORDER BY weight DESC
                 LIMIT ?
                 """,
-                (node_id, profile_id, node_id, profile_id,
-                 node_id, profile_id, node_id, profile_id,
-                 self._config.max_neighbors_per_node),
+                (node_id, profile_id, lim,
+                 node_id, profile_id, lim,
+                 node_id, profile_id, lim,
+                 node_id, profile_id, lim,
+                 lim),
             )
             return [
                 (dict(r)["neighbor_id"], dict(r)["weight"]) for r in rows

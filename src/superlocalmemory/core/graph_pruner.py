@@ -28,12 +28,18 @@ from pathlib import Path
 logger = logging.getLogger("superlocalmemory.graph_pruner")
 
 _CHAIN_BATCH_LIMIT = 10_000
+# v3.4.59: Nodes with more than this many total edges (in+out) are hub nodes.
+# SA and entity_graph channels cap fan-out at 30/node, so edges beyond this
+# threshold provide zero additional recall signal while bloating the graph.
+_MAX_DEGREE_PER_NODE: int = 100
+_HUB_PRUNE_BATCH: int = 500  # delete edges in batches to avoid giant IN clauses
 
 
 def prune_graph(
     db_path: str | Path,
     profile_id: str = "default",
     dry_run: bool = False,
+    cap_degree: bool = True,
 ) -> dict:
     """Run all graph pruning strategies for a specific profile.
 
@@ -41,7 +47,7 @@ def prune_graph(
     """
     conn = sqlite3.connect(str(db_path))
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA busy_timeout=10000")
+    conn.execute("PRAGMA busy_timeout=30000")
     conn.row_factory = sqlite3.Row
 
     stats = {
@@ -49,6 +55,7 @@ def prune_graph(
         "supersedes_collapsed": 0,
         "self_loops_removed": 0,
         "duplicates_removed": 0,
+        "hub_edges_removed": 0,
         "total_before": 0,
         "total_after": 0,
     }
@@ -72,6 +79,10 @@ def prune_graph(
         stats["supersedes_collapsed"] = _collapse_supersedes_chains(
             c, profile_id, dry_run,
         )
+        if cap_degree:
+            stats["hub_edges_removed"] = _cap_node_degree(
+                c, profile_id, _MAX_DEGREE_PER_NODE, dry_run,
+            )
 
         if dry_run:
             c.execute("ROLLBACK")
@@ -91,10 +102,11 @@ def prune_graph(
         prefix = "(dry-run) " if dry_run else ""
         logger.info(
             "%sGraph pruning: removed %d edges (%.1f%%) in %.1fs — "
-            "orphans=%d, supersedes=%d, self_loops=%d, duplicates=%d",
+            "orphans=%d, supersedes=%d, self_loops=%d, duplicates=%d, hub_cap=%d",
             prefix, total_removed, pct, elapsed,
             stats["orphans_removed"], stats["supersedes_collapsed"],
             stats["self_loops_removed"], stats["duplicates_removed"],
+            stats["hub_edges_removed"],
         )
 
     except Exception as exc:
@@ -288,3 +300,81 @@ def _collapse_supersedes_chains(
     )
 
     return len(delete_ids)
+
+
+def _cap_node_degree(
+    c: sqlite3.Cursor,
+    profile_id: str,
+    max_degree: int,
+    dry_run: bool,
+) -> int:
+    """Remove low-weight edges from hub nodes (nodes with degree > max_degree).
+
+    v3.4.59: At 17K facts, popular entities (SLM, Claude, AgentAssert) caused
+    1.4M+ entity edges — avg 121 per node, some nodes with 5000+. SA fan-out
+    is capped at 30/node during traversal, so edges beyond max_degree add zero
+    recall signal while making every graph query scan millions of rows.
+
+    Algorithm (single-pass window function — no Python loops):
+      1. ROW_NUMBER() OVER (PARTITION BY source_id ORDER BY weight DESC) ranks
+         every edge per node in one full table scan.
+      2. Edges with rn > max_degree are deleted in a single DELETE statement.
+      Requires SQLite 3.25+ (window functions). System is on 3.53.1.
+    """
+    if dry_run:
+        c.execute(
+            """
+            SELECT COUNT(*) as cnt FROM (
+                SELECT edge_id,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY source_id ORDER BY weight DESC
+                       ) as rn
+                FROM graph_edges
+                WHERE profile_id = ?
+            ) WHERE rn > ?
+            """,
+            (profile_id, max_degree),
+        )
+        excess = c.fetchone()["cnt"]
+        logger.info(
+            "(dry-run) _cap_node_degree: ~%d edges would be removed (max_degree=%d)",
+            excess, max_degree,
+        )
+        return excess
+
+    # Step 1: build temp keep-list in one pass (ROW_NUMBER ranks by weight DESC)
+    c.execute("CREATE TEMP TABLE IF NOT EXISTS _slm_keep_edges (edge_id TEXT PRIMARY KEY)")
+    c.execute("DELETE FROM _slm_keep_edges")  # idempotent if called twice
+    c.execute(
+        """
+        INSERT INTO _slm_keep_edges (edge_id)
+        SELECT edge_id FROM (
+            SELECT edge_id,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY source_id ORDER BY weight DESC
+                   ) as rn
+            FROM graph_edges
+            WHERE profile_id = ?
+        ) WHERE rn <= ?
+        """,
+        (profile_id, max_degree),
+    )
+
+    # Step 2: delete everything not in keep-list (single DELETE)
+    c.execute(
+        """
+        DELETE FROM graph_edges
+        WHERE profile_id = ?
+          AND edge_id NOT IN (SELECT edge_id FROM _slm_keep_edges)
+        """,
+        (profile_id,),
+    )
+    deleted = c.rowcount
+
+    c.execute("DROP TABLE IF EXISTS _slm_keep_edges")
+
+    logger.info(
+        "_cap_node_degree: deleted %d low-weight edges (max_degree=%d)",
+        deleted, max_degree,
+    )
+    return deleted
