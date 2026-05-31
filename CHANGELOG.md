@@ -5,6 +5,35 @@ All notable changes to SuperLocalMemory V3 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.63] - 2026-05-31 — Dashboard search: fix async blocking + fast mode
+
+Fixes "signal is aborted without reason" in dashboard search (second root cause,
+different from v3.4.61's WorkerPool fix).
+
+### Root Cause
+`engine.recall()` is a synchronous blocking Python call (~2-10s). Calling it
+directly inside an `async` FastAPI route blocks the ASGI event loop for the
+full duration. Chrome detects a stalled HTTP connection (no response headers
+being sent) and fires `controller.abort()` with no reason — producing the
+"signal is aborted without reason" browser error, regardless of fetch timeout.
+
+### Fix
+1. `await loop.run_in_executor(None, lambda: engine.recall(...))` — offloads
+   the blocking call to a thread pool. Event loop stays alive to send HTTP
+   keepalive frames, preventing Chrome from aborting the connection.
+2. `fast=True` — skips spreading_activation + Hopfield channels, reducing
+   recall from 9.5s to <2s. These channels add precision for MCP/session_init
+   but are unnecessary for dashboard search results.
+
+### Result
+Dashboard search: 919ms cold, 1.7s warm. Zero browser aborts.
+Works immediately after `slm restart` — no wait needed.
+
+### Changed
+- `server/routes/memories.py`: `search_memories` uses `run_in_executor` + `fast=True`
+
+---
+
 ## [3.4.62] - 2026-05-31 — Recall engine pre-warm on startup
 
 Adds a `recall-warmup` background thread that fires one full 6-channel recall
