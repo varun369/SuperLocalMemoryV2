@@ -5,6 +5,45 @@ All notable changes to SuperLocalMemory V3 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2026-05-31 — Backend Migration + Recall Performance + Context Injection
+
+### Perf (recall 13.6s → <1s warm)
+- **BM25 → SQLite FTS5**: replaces pure-Python rank_bm25 (11.2s rebuild) with
+  C-level FTS5 index (atomic_facts_fts, 20ms). Scales to millions of memories.
+- **Hopfield ANN prefilter**: routes via VectorStore KNN instead of loading all
+  17.5k embeddings (~6s). Now bounded to ~1000 candidates.
+- **Temporal**: datetime.fromisoformat (C-level) before dateutil (~2.6s → 0.25s)
+- **Scene expansion**: batch lookup replaces 20 individual LIKE scans (5.7s → 0.7s)
+- **Vector store backfill**: automatic, idempotent, indexes all facts with embeddings
+  on daemon startup (5.8k → 17.4k indexed)
+
+### Feat (Context Injection v2 / v3.4.65)
+- Unified formatter (`core/injection.py`) for all 5 injection surfaces
+- Token-budgeted injection (mode-aware 2K/4K/8K), full-fidelity content
+- Core Memory Block: auto-derived + explicit pins (M015 migration)
+- Edge-placement ordering (lost-in-the-middle mitigation)
+- `core_memory` MCP tool (pin/unpin/list)
+
+### Feat (CozoDB + LanceDB Backend Migration)
+- BackendOrchestrator wired on daemon startup; auto-migration in background
+- CozoDB graph backend → entity_graph channel (config: graph_backend=auto)
+- LanceDB vector backend → available for semantic channel (config: vector_backend=auto)
+- Config-driven (auto/sqlite/cozo/lancedb/sqlite-vec), sqlite dual-read fallback
+
+### Fix (Parity + Quality)
+- All surfaces (MCP/CLI/Dashboard) now use full 6-channel recall by default
+- Daemon /recall honors ?fast= query param; CLI --fast works via daemon
+- Score normalization: soft-sigmoid maps to [0, 1]
+- Content quality filter: drops placeholders, template leaks, duplicates before injection
+- Session_init memories[] bound to per_memory_max_tokens (was unclamped at 124K tokens)
+
+### Migration on Upgrade
+- M015: additive `pinned` column on atomic_facts (core memory pins)
+- VS backfill: idempotent, non-blocking, skips when complete
+- CozoDB/LanceDB: auto-detected, background migration when libraries installed
+- Backward compatible: all storage backends have SQLite fallback; legacy escape hatch
+  (SLM_INJECTION_LEGACY=1)
+
 ## [3.4.65] - 2026-05-31 — Context Injection v2 ("Widen the Optic Nerve")
 
 The store pipeline and 6-channel recall are world-class. The bottleneck was the
