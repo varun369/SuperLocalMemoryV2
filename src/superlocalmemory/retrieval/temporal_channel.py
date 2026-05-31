@@ -32,9 +32,18 @@ _MAX_PROXIMITY_DAYS: float = 365.0
 def _parse_iso(s: str | None) -> datetime | None:
     if not s:
         return None
+    # v3.5.0 perf: stored dates are ISO-8601, so try the C-level
+    # datetime.fromisoformat (~1µs) FIRST. dateutil.parser.parse is ~100x
+    # slower (~100µs) and the temporal channel parses up to 4 dates per event
+    # across thousands of events — that was ~2.6s of the recall. dateutil is
+    # now only the fallback for non-ISO strings.
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        pass
     try:
         return dateutil_parse(s)
-    except (ParserError, ValueError, OverflowError):
+    except (ParserError, ValueError, OverflowError, TypeError):
         return None
 
 
