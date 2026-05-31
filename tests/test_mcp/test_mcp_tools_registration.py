@@ -79,11 +79,11 @@ class TestToolRegistration:
         get_engine = MagicMock()
         register_active_tools(srv, get_engine)
 
-        assert len(srv._tools) == 4, (
-            f"Expected 4 active tools, got {len(srv._tools)}: "
+        assert len(srv._tools) == 5, (
+            f"Expected 5 active tools (v3.4.65: +core_memory), got {len(srv._tools)}: "
             f"{sorted(srv._tools.keys())}"
         )
-        for name in ("session_init", "observe", "report_feedback", "close_session"):
+        for name in ("session_init", "observe", "report_feedback", "close_session", "core_memory"):
             assert name in srv._tools, f"Missing active tool: {name}"
 
     def test_tool_names_unique(self):

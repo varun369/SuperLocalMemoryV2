@@ -257,24 +257,88 @@ def register_active_tools(server, get_engine: Callable) -> None:
 
             # Build both return shapes from one recall. Calling recall twice
             # doubles session startup latency and can return duplicate snippets.
-            context = ""
-            if relevant:
+
+            # v3.4.65: use shared injection formatter for full-fidelity context.
+            from superlocalmemory.core.injection import (
+                InjectableMemory,
+                clamp_content,
+                is_low_quality,
+                render_context,
+            )
+
+            pid = engine.profile_id
+
+            # Merge pinned facts (Q3: Core Memory explicit pins).
+            # Pinned facts surface even if the query didn't retrieve them.
+            try:
+                pinned_facts = engine.db.get_pinned(pid)
+            except Exception:
+                pinned_facts = []
+            pinned_ids = {f.fact_id for f in pinned_facts}
+            pinned_seen = set()
+
+            cfg_inj = getattr(getattr(engine, "config", None), "injection", None)
+            # Defend against MagicMock / non-config objects in tests.
+            try:
+                from superlocalmemory.core.config import InjectionConfig
+                if not isinstance(cfg_inj, InjectionConfig):
+                    cfg_inj = None
+            except Exception:
+                cfg_inj = None
+
+            inj_mems: list[InjectableMemory] = []
+            # Pinned facts first (they always head the core block).
+            for pf in pinned_facts[:20]:  # safety cap
+                inj_mems.append(InjectableMemory(
+                    content=pf.content,
+                    score=0.0,
+                    fact_id=pf.fact_id,
+                    importance=getattr(pf, "importance", 0.0) or 0.0,
+                    access_count=getattr(pf, "access_count", 0) or 0,
+                    pinned=True,
+                ))
+                pinned_seen.add(pf.fact_id)
+
+            # Then recall results (skip duplicates of pinned).
+            for r in relevant[:max_results]:
+                if r.fact.fact_id in pinned_seen:
+                    continue
+                inj_mems.append(InjectableMemory(
+                    content=r.fact.content,
+                    score=round(r.score, 3),
+                    fact_id=r.fact.fact_id,
+                    importance=getattr(r.fact, "importance", 0.0) or 0.0,
+                    access_count=getattr(r.fact, "access_count", 0) or 0,
+                ))
+
+            mode_str = str(getattr(engine, "mode", "B")).upper()
+            try:
+                context = render_context(inj_mems, mode=mode_str, cfg=cfg_inj, wrap=False)
+            except Exception:
+                # Fall back to legacy content building on any formatter failure
                 lines = ["# Relevant Memory Context", ""]
-                for r in relevant[:max_results]:
-                    lines.append(f"- {r.fact.content[:200]}")
+                for m in inj_mems[:max_results]:
+                    lines.append(f"- {m.content[:200]}")
                 context = "\n".join(lines)
 
+            # GAP-FIX (v3.4.65 delivery-lead): the memories[] array is part of
+            # the MCP response Claude Code ingests — it MUST be bounded too, not
+            # just the rendered `context` string. Previously full unclamped
+            # content shipped here (one fact was 131K chars → ~124K-token
+            # response, defeating the whole token budget). Clamp each content
+            # to per_memory_max_tokens, drop junk, and honour max_results.
             memories = [
                 {
-                    "fact_id": r.fact.fact_id,
-                    "content": r.fact.content[:300],
-                    "score": round(r.score, 3),
+                    "fact_id": m.fact_id,
+                    "content": clamp_content(m.content, cfg_inj),
+                    "score": m.score,
+                    "is_core": m.is_core,
                 }
-                for r in relevant[:max_results]
+                for m in inj_mems[:max_results]
+                if not is_low_quality(m.content)
             ]
 
             # Get learning status
-            pid = engine.profile_id
             feedback_count = 0
             try:
                 feedback_count = engine._adaptive_learner.get_feedback_count(pid)
@@ -299,6 +363,7 @@ def register_active_tools(server, get_engine: Callable) -> None:
                 "context": context,
                 "memories": memories[:max_results],
                 "memory_count": len(memories),
+                "core_memory": [m["content"] for m in memories if m.get("is_core")],
                 "degraded_mode": degraded_mode,
                 "retrieval_mode": "emergency_fts5_bm25" if degraded_mode else "full_6_channel",
                 "learning": {
@@ -470,4 +535,60 @@ def register_active_tools(server, get_engine: Callable) -> None:
             }
         except Exception as exc:
             logger.exception("close_session failed")
+            return {"success": False, "error": str(exc)}
+
+    # ------------------------------------------------------------------
+    # core_memory — v3.4.65: explicit Core Memory pin management
+    # ------------------------------------------------------------------
+
+    @server.tool()
+    async def core_memory(
+        action: str,
+        fact_id: str = "",
+        profile_id: str = "default",
+    ) -> dict:
+        """Manage the explicit Core Memory pin set (v3.4.65).
+
+        - pin:   mark a fact as always-injected
+        - unpin: clear the pin
+        - list:  return currently pinned facts
+        """
+        try:
+            engine = get_engine()
+            db = engine.db
+            pid = profile_id or engine.profile_id
+
+            if action == "pin":
+                if not fact_id:
+                    return {"success": False, "error": "fact_id required for pin"}
+                db.set_pinned(fact_id, True)
+                return {"success": True, "action": "pin", "fact_id": fact_id}
+
+            if action == "unpin":
+                if not fact_id:
+                    return {"success": False, "error": "fact_id required for unpin"}
+                db.set_pinned(fact_id, False)
+                return {"success": True, "action": "unpin", "fact_id": fact_id}
+
+            if action == "list":
+                pinned = db.get_pinned(pid)
+                cfg_inj = getattr(engine.config, "injection", None)
+                max_tok = getattr(cfg_inj, "per_memory_max_tokens", 600) if cfg_inj else 600
+                return {
+                    "success": True,
+                    "pinned": [
+                        {
+                            "fact_id": f.fact_id,
+                            "content": f.content[: max_tok * 4],
+                            "importance": getattr(f, "importance", 0.0),
+                        }
+                        for f in pinned
+                    ],
+                    "count": len(pinned),
+                }
+
+            return {"success": False, "error": f"unknown action: {action}"}
+
+        except Exception as exc:
+            logger.exception("core_memory failed")
             return {"success": False, "error": str(exc)}

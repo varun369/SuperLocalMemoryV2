@@ -26,7 +26,7 @@ from superlocalmemory.core.security_primitives import redact_secrets
 logger = logging.getLogger(__name__)
 
 MAX_CALLS_PER_MINUTE = 30
-MAX_RESPONSE_BYTES = 16 * 1024  # 16 KB
+MAX_RESPONSE_BYTES = 64 * 1024  # v3.4.65: raised from 16 KB, configurable via InjectionConfig
 WINDOW_SECONDS = 60.0
 
 
@@ -72,7 +72,11 @@ def _iso_now() -> str:
 
 
 def _cap_memory(memory: dict, *, max_text_bytes: int = 2048) -> dict:
-    """Ensure each memory is bounded and redacted."""
+    """Ensure each memory is bounded and redacted.
+
+    v3.4.65: max_text_bytes default kept small for backward compat;
+    callers should pass cfg.per_memory_max_tokens * 4 for full fidelity.
+    """
     text = memory.get("text", "")
     if not isinstance(text, str):
         text = str(text)
@@ -135,7 +139,17 @@ def prestage_context(
             "truncated_count": 0,
         }
 
-    capped = [_cap_memory(m) for m in raw if isinstance(m, dict)]
+    # v3.4.65: use InjectionConfig for per-memory and response caps.
+    try:
+        from superlocalmemory.core.config import SLMConfig
+        cfg_inj = SLMConfig.load().injection
+        per_mem_bytes = cfg_inj.per_memory_max_tokens * 4
+        resp_bytes = cfg_inj.prestage_max_response_bytes
+    except Exception:
+        per_mem_bytes = 2400   # 600 tokens * 4
+        resp_bytes = 64 * 1024
+
+    capped = [_cap_memory(m, max_text_bytes=per_mem_bytes) for m in raw if isinstance(m, dict)]
     capped = capped[:limit]
 
     # Enforce total response size cap (A11/16 KB).
@@ -147,7 +161,7 @@ def prestage_context(
     }
     encoded = json.dumps(response).encode("utf-8")
     truncated = 0
-    while len(encoded) > MAX_RESPONSE_BYTES and response["memories"]:
+    while len(encoded) > resp_bytes and response["memories"]:
         response["memories"].pop()
         truncated += 1
         response["truncated_count"] = truncated

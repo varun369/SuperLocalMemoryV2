@@ -50,6 +50,7 @@ from superlocalmemory.storage.migrations import (
     M012_shadow_observations as _M012,
     M013_bi_temporal_columns as _M013,
     M014_v345_scale_ready as _M014,
+    M015_add_pinned_column as _M015,
 )
 
 # Map migration name → module (used for the optional ``verify(conn)`` hook
@@ -69,6 +70,7 @@ _MODULES = {
     _M012.NAME: _M012,
     _M013.NAME: _M013,
     _M014.NAME: _M014,
+    _M015.NAME: _M015,
 }
 
 logger = logging.getLogger(__name__)
@@ -130,6 +132,8 @@ DEFERRED_MIGRATIONS: list[Migration] = [
     # as M011.
     Migration(name=_M013.NAME, db_target="memory", ddl=_M013.DDL),
     Migration(name=_M014.NAME, db_target="memory", ddl=_M014.DDL),
+    # M015 adds pinned column to atomic_facts (v3.4.65 core-memory pins).
+    Migration(name=_M015.NAME, db_target="memory", ddl=_M015.DDL),
 ]
 
 

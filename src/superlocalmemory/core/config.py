@@ -234,6 +234,50 @@ class MathConfig:
 
 
 # ---------------------------------------------------------------------------
+# Context Injection (v3.4.65)
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class InjectionConfig:
+    """Context-injection budgets & framing (v3.4.65).
+
+    Single source of truth for what reaches the agent at session_init,
+    prestage_context, and the recall hooks. Replaces scattered char caps.
+
+    Budgets are in *estimated tokens* (chars/4 heuristic; see
+    core/injection.estimate_tokens). Mode-aware: A=fast/cheap, C=rich.
+    """
+    enabled: bool = True
+
+    # Mode-aware TOTAL budget (core block + recall), in estimated tokens.
+    total_budget_tokens_a: int = 2000
+    total_budget_tokens_b: int = 4000
+    total_budget_tokens_c: int = 8000
+
+    # Per-memory ceiling (estimated tokens). Whole-memory inclusion until
+    # the total budget is hit; this only clamps a single oversized memory.
+    per_memory_max_tokens: int = 600
+
+    # Core Memory Block (Letta pattern).
+    core_block_enabled: bool = True
+    core_block_max_facts: int = 5
+    core_block_max_tokens: int = 1000
+    core_block_importance_min: float = 0.8
+    core_block_min_access_count: int = 2
+
+    # Lost-in-the-middle: place strongest at top & bottom edges.
+    edge_ordering: bool = True
+
+    # Trust framing. False (shipped) = cautious "reference only" wrapper.
+    # True (Varun personal) = clean "memory context" framing.
+    # redact_secrets ALWAYS runs regardless.
+    trust_first_party: bool = False
+
+    # prestage_context response byte cap (was hardcoded 16 KB).
+    prestage_max_response_bytes: int = 64 * 1024
+
+
+# ---------------------------------------------------------------------------
 # Master Config
 # ---------------------------------------------------------------------------
 
@@ -613,6 +657,7 @@ class SLMConfig:
     parameterization: ParameterizationConfig = field(
         default_factory=ParameterizationConfig,
     )
+    injection: InjectionConfig = field(default_factory=InjectionConfig)
     evolution: EvolutionConfig = field(default_factory=EvolutionConfig)
 
     # v3.4.3: Daemon configuration
@@ -701,6 +746,24 @@ class SLMConfig:
                 if k in EvolutionConfig.__dataclass_fields__
             })
 
+        # V3.4.65: Injection config (additive — defaults if missing from JSON)
+        inj = data.get("injection", {}) or {}
+        config.injection = InjectionConfig(
+            enabled=bool(inj.get("enabled", True)),
+            total_budget_tokens_a=int(inj.get("total_budget_tokens_a", 2000)),
+            total_budget_tokens_b=int(inj.get("total_budget_tokens_b", 4000)),
+            total_budget_tokens_c=int(inj.get("total_budget_tokens_c", 8000)),
+            per_memory_max_tokens=int(inj.get("per_memory_max_tokens", 600)),
+            core_block_enabled=bool(inj.get("core_block_enabled", True)),
+            core_block_max_facts=int(inj.get("core_block_max_facts", 5)),
+            core_block_max_tokens=int(inj.get("core_block_max_tokens", 1000)),
+            core_block_importance_min=float(inj.get("core_block_importance_min", 0.8)),
+            core_block_min_access_count=int(inj.get("core_block_min_access_count", 2)),
+            edge_ordering=bool(inj.get("edge_ordering", True)),
+            trust_first_party=bool(inj.get("trust_first_party", False)),
+            prestage_max_response_bytes=int(inj.get("prestage_max_response_bytes", 64 * 1024)),
+        )
+
         return config
 
     def save(
@@ -773,6 +836,23 @@ class SLMConfig:
             "enabled": self.evolution.enabled,
             "backend": self.evolution.backend,
             "max_evolutions_per_cycle": self.evolution.max_evolutions_per_cycle,
+        }
+
+        # V3.4.65: Persist injection config
+        data["injection"] = {
+            "enabled": self.injection.enabled,
+            "total_budget_tokens_a": self.injection.total_budget_tokens_a,
+            "total_budget_tokens_b": self.injection.total_budget_tokens_b,
+            "total_budget_tokens_c": self.injection.total_budget_tokens_c,
+            "per_memory_max_tokens": self.injection.per_memory_max_tokens,
+            "core_block_enabled": self.injection.core_block_enabled,
+            "core_block_max_facts": self.injection.core_block_max_facts,
+            "core_block_max_tokens": self.injection.core_block_max_tokens,
+            "core_block_importance_min": self.injection.core_block_importance_min,
+            "core_block_min_access_count": self.injection.core_block_min_access_count,
+            "edge_ordering": self.injection.edge_ordering,
+            "trust_first_party": self.injection.trust_first_party,
+            "prestage_max_response_bytes": self.injection.prestage_max_response_bytes,
         }
 
         # Preserve existing V3.3 config sections that aren't in for_mode()

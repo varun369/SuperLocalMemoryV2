@@ -113,19 +113,21 @@ def test_envelope_has_untrusted_boundary_markers(tmp_path: Path) -> None:
         result = _run_hook("what is the plan?", tmp_path)
 
     ctx = result["hookSpecificOutput"]["additionalContext"]
-    assert "[BEGIN UNTRUSTED SLM CONTEXT" in ctx
-    assert "[END UNTRUSTED SLM CONTEXT]" in ctx
+    # v3.4.65: softened wrapper wording
+    assert "[BEGIN MEMORY CONTEXT" in ctx
+    assert "[END MEMORY CONTEXT]" in ctx
 
 
 def test_envelope_includes_slm_auto_recall_header(tmp_path: Path) -> None:
-    """Output includes SLM AUTO-RECALL header for human readability."""
+    """v3.4.65: Output includes shared formatter memory context."""
     fake_results = [{"fact_id": "f1", "content": "memory hit", "score": 0.9}]
     with patch("superlocalmemory.hooks.auto_recall_hook._do_recall",
                return_value=fake_results):
         result = _run_hook("tell me about the project", tmp_path)
 
     ctx = result["hookSpecificOutput"]["additionalContext"]
-    assert "SLM AUTO-RECALL" in ctx
+    # v3.4.65: shared formatter produces "Relevant Memories" and boundary markers
+    assert ("MEMORY CONTEXT" in ctx or "AUTO-RECALL" in ctx)
 
 
 # -----------------------------------------------------------------------

@@ -113,12 +113,13 @@ def test_user_prompt_returns_envelope_on_hit(
     assert "prior work" in inner["additionalContext"]
     # SEC-v2-01: injected context must be wrapped in untrusted-boundary
     # markers so the downstream LLM can refuse embedded instructions.
+    # v3.4.65: softened wrapper wording.
     ac = inner["additionalContext"]
-    assert "[BEGIN UNTRUSTED SLM CONTEXT" in ac
-    assert "[END UNTRUSTED SLM CONTEXT]" in ac
+    assert "[BEGIN MEMORY CONTEXT" in ac
+    assert "[END MEMORY CONTEXT]" in ac
     # The real content must sit between the markers, not before/after.
-    begin_idx = ac.index("[BEGIN UNTRUSTED SLM CONTEXT")
-    end_idx = ac.index("[END UNTRUSTED SLM CONTEXT]")
+    begin_idx = ac.index("[BEGIN MEMORY CONTEXT")
+    end_idx = ac.index("[END MEMORY CONTEXT]")
     assert begin_idx < ac.index("prior work") < end_idx
 
 

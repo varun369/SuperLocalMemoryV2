@@ -159,8 +159,11 @@ class TestToolsActiveUsesPool:
         # fail this test (AttributeError), because our stand-in lacks it.
         class _LightEngine:
             profile_id = "p"
+            mode = "a"
+            config = SimpleNamespace(injection=None)
             _config = SimpleNamespace(mode=SimpleNamespace(value="a"))
             _adaptive_learner = None
+            db = None
 
             # Represent the LIGHT contract: attempts to recall raise.
             def recall(self, *a, **kw):

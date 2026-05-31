@@ -1,6 +1,6 @@
 [project]
 name = "superlocalmemory"
-version = "3.4.64"
+version = "3.4.65"
 description = "Information-geometric agent memory with mathematical guarantees"
 readme = "README.md"
 license = {text = "AGPL-3.0-or-later"}
@@ -89,6 +89,9 @@ ui = [
     "uvicorn>=0.42.0",
     "python-multipart>=0.0.6,<1.0.0",
 ]
+injection = [
+    "tiktoken>=0.8.0",
+]
 learning = [
     "lightgbm>=4.0.0",
 ]
@@ -102,7 +105,7 @@ ingestion = [
     "icalendar>=6.0.0",
 ]
 full = [
-    "superlocalmemory[search,ui,learning,performance,ingestion]",
+    "superlocalmemory[search,ui,learning,performance,ingestion,injection]",
 ]
 dev = [
     "pytest>=8.0",

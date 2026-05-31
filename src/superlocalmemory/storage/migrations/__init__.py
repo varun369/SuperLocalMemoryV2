@@ -23,6 +23,7 @@ from . import (
     M003_migration_log,
     M004_cross_platform_sync_log,
     M005_bandit_tables,
+    M015_add_pinned_column,
 )
 
 # ---------------------------------------------------------------------------

@@ -239,8 +239,25 @@ class DatabaseManager:
             emotional_valence=d.get("emotional_valence", 0.0),
             emotional_arousal=d.get("emotional_arousal", 0.0),
             signal_type=SignalType(d["signal_type"]) if d.get("signal_type") else SignalType.FACTUAL,
+            pinned=bool(d.get("pinned", 0)),
             created_at=d["created_at"],
         )
+
+    def set_pinned(self, fact_id: str, pinned: bool) -> None:
+        """Set or clear the pinned flag on a fact (v3.4.65 core-memory)."""
+        self.execute(
+            "UPDATE atomic_facts SET pinned = ? WHERE fact_id = ?",
+            (1 if pinned else 0, fact_id),
+        )
+
+    def get_pinned(self, profile_id: str) -> list[AtomicFact]:
+        """Return all pinned facts for a profile, highest-importance first."""
+        rows = self.execute(
+            "SELECT * FROM atomic_facts WHERE profile_id = ? AND pinned = 1 "
+            "ORDER BY importance DESC",
+            (profile_id,),
+        )
+        return [self._row_to_fact(r) for r in rows]
 
     def get_all_facts(self, profile_id: str) -> list[AtomicFact]:
         """All facts for a profile, newest first."""

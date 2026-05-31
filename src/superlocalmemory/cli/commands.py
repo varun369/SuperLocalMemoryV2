@@ -2067,14 +2067,18 @@ def cmd_session_context(args: Namespace) -> None:
     This ensures the SessionStart hook completes within its 15s timeout even
     when Ollama requires a 60s+ cold start.  The fast path returns:
       - Core Memory blocks (always-on context)
-      - Recent high-importance memories (last 7 days)
+      - Recent high-importance memories (last N days)
       - Session summary from last session
     Falls back to the full engine path only if --full is passed explicitly.
+
+    v3.4.65: uses shared injection formatter (render_context) for identical
+    output across MCP and CLI surfaces. --json flag returns structured JSON.
     """
     import sqlite3
     from pathlib import Path
     from superlocalmemory.core.config import SLMConfig
 
+    use_json = getattr(args, "json", False)
     use_full = getattr(args, "full", False)
 
     if use_full:
@@ -2093,13 +2097,21 @@ def cmd_session_context(args: Namespace) -> None:
                 query=getattr(args, "query", "") or "recent decisions and important context",
             )
             if context:
-                print(context)
+                if use_json:
+                    from superlocalmemory.cli.json_output import json_print
+                    json_print("session-context", data={"context": context}, next_actions=[
+                        {"command": "slm recall --json <query>", "description": "Search memories"},
+                    ])
+                else:
+                    print(context)
         except Exception as exc:
             logger.debug("session-context (full) failed: %s", exc)
         return
 
     # ── FAST PATH: direct SQLite, no engine, <500ms ──────────────
     try:
+        from superlocalmemory.core.injection import InjectableMemory, render_context
+
         config = SLMConfig.load()
         db_path = config.base_dir / "memory.db"
         if not db_path.exists():
@@ -2108,78 +2120,113 @@ def cmd_session_context(args: Namespace) -> None:
         pid = config.active_profile
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
-        sections = []
 
-        # 1. Core Memory blocks (compiled high-value context)
+        # Collect facts for injection — same queries as pre-v3.4.65 but
+        # mapped into InjectableMemory for the shared formatter.
+        inj_mems: list[InjectableMemory] = []
+
+        # Core Memory blocks (compiled high-value context)
         try:
-            rows = conn.execute(
+            cm_rows = conn.execute(
                 "SELECT block_type, content FROM core_memory_blocks "
                 "WHERE profile_id = ? ORDER BY block_type",
                 (pid,),
             ).fetchall()
-            if rows:
-                blocks = [f"[{r['block_type']}] {r['content']}" for r in rows]
-                sections.append("## Core Memory\n" + "\n".join(blocks))
+            for r in cm_rows:
+                content = f"[{r['block_type']}] {r['content']}"
+                inj_mems.append(InjectableMemory(
+                    content=content, score=1.0, fact_id="",
+                    importance=1.0, access_count=10,
+                    pinned=True,
+                ))
         except sqlite3.OperationalError:
             pass
 
-        # 2. Recent important memories — age gate from --max-age-days (default 30)
+        # Recent important memories — age gate from --max-age-days (default 30)
         max_age = getattr(args, "max_age_days", 30)
         age_clause = (
             f"AND created_at >= datetime('now', '-{int(max_age)} days') "
             if max_age > 0 else ""
         )
         try:
-            rows = conn.execute(
-                "SELECT content, fact_type, created_at FROM atomic_facts "
+            fact_rows = conn.execute(
+                "SELECT fact_id, content, importance, access_count, fact_type FROM atomic_facts "
                 "WHERE profile_id = ? "
                 f"{age_clause}"
                 "AND lifecycle = 'active' "
                 "ORDER BY importance DESC, created_at DESC LIMIT 10",
                 (pid,),
             ).fetchall()
-            if rows:
-                items = []
-                for r in rows:
-                    content = r["content"][:200]
-                    items.append(f"- [{r['fact_type'] or 'fact'}] {content}")
-                sections.append("## Recent Context (7 days)\n" + "\n".join(items))
+            for r in fact_rows:
+                inj_mems.append(InjectableMemory(
+                    content=r["content"],
+                    score=r["importance"] or 0.5,
+                    fact_id=r["fact_id"],
+                    importance=r["importance"] or 0.0,
+                    access_count=r["access_count"] or 0,
+                ))
         except sqlite3.OperationalError:
             pass
 
-        # 3. Session markers (last session summary)
+        # Session markers (last session summary)
         try:
-            rows = conn.execute(
-                "SELECT content, created_at FROM atomic_facts "
+            sess_rows = conn.execute(
+                "SELECT fact_id, content, importance, access_count FROM atomic_facts "
                 "WHERE profile_id = ? AND content LIKE 'Session%' "
                 "ORDER BY created_at DESC LIMIT 3",
                 (pid,),
             ).fetchall()
-            if rows:
-                items = [f"- {r['content'][:150]}" for r in rows]
-                sections.append("## Recent Sessions\n" + "\n".join(items))
-        except sqlite3.OperationalError:
-            pass
-
-        # 4. V3.3 Soft prompts (auto-learned patterns)
-        try:
-            rows = conn.execute(
-                "SELECT category, content FROM soft_prompt_templates "
-                "WHERE profile_id = ? AND active = 1 "
-                "ORDER BY confidence DESC LIMIT 5",
-                (pid,),
-            ).fetchall()
-            if rows:
-                items = [f"- [{r['category']}] {r['content'][:150]}" for r in rows]
-                sections.append("## Learned Patterns\n" + "\n".join(items))
+            for r in sess_rows:
+                inj_mems.append(InjectableMemory(
+                    content=r["content"],
+                    score=r["importance"] or 0.3,
+                    fact_id=r["fact_id"],
+                    importance=r["importance"] or 0.0,
+                    access_count=r["access_count"] or 0,
+                ))
         except sqlite3.OperationalError:
             pass
 
         conn.close()
 
-        if sections:
-            header = f"# SLM Session Context — {config.active_profile}"
-            print(header + "\n\n" + "\n\n".join(sections))
+        if not inj_mems:
+            return
+
+        # V3.3 Soft prompts (auto-learned patterns) — append as high-importance
+        try:
+            conn2 = sqlite3.connect(str(db_path))
+            conn2.row_factory = sqlite3.Row
+            sp_rows = conn2.execute(
+                "SELECT category, content FROM soft_prompt_templates "
+                "WHERE profile_id = ? AND active = 1 "
+                "ORDER BY confidence DESC LIMIT 5",
+                (pid,),
+            ).fetchall()
+            conn2.close()
+            for r in sp_rows:
+                inj_mems.append(InjectableMemory(
+                    content=f"[{r['category']}] {r['content']}",
+                    score=0.7, fact_id="",
+                    importance=0.7, access_count=5,
+                ))
+        except Exception:
+            pass
+
+        cfg_inj = getattr(config, "injection", None)
+        context = render_context(inj_mems, mode=config.mode.value.upper(), cfg=cfg_inj, wrap=True)
+        if context:
+            if use_json:
+                from superlocalmemory.cli.json_output import json_print
+                json_print("session-context", data={
+                    "context": context,
+                    "memory_count": len(inj_mems),
+                    "mode": config.mode.value.upper(),
+                }, next_actions=[
+                    {"command": "slm recall --json <query>", "description": "Search memories"},
+                ])
+            else:
+                print(context)
+
     except Exception as exc:
         logger.debug("session-context (fast) failed: %s", exc)
 

@@ -178,6 +178,9 @@ class AtomicFact:
     # Signal type (V2 compatible)
     signal_type: SignalType = SignalType.FACTUAL
 
+    # v3.4.65: Core Memory Block explicit pin (M015)
+    pinned: bool = False
+
     created_at: str = field(default_factory=_now)
 
 
