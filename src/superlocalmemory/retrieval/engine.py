@@ -195,8 +195,10 @@ class RetrievalEngine:
             except Exception as exc:
                 logger.warning("Bridge discovery: %s", exc)
 
-        # Scene expansion (v3.5.0: batch, time-budgeted)
-        if fused:
+        # Scene expansion (v3.5.0: batch + time-budgeted).
+        # Skip if channels already exceeded the per-recall time budget;
+        # the scene signal is nice-to-have, never worth delaying response.
+        if fused and (_time_e.monotonic() - _e0) < 0.8:
             try:
                 top_ids = [fr.fact_id for fr in fused[:20]]
                 scenes_map = self._db.get_scenes_for_facts_batch(top_ids, profile_id)
@@ -221,7 +223,8 @@ class RetrievalEngine:
         # Research: Microsoft GraphRAG DRIFT, Pistis-RAG cascaded architecture.
         if (self._entity is not None
                 and "entity_graph" not in set(self._config.disabled_channels)
-                and fused):
+                and fused
+                and (_time_e.monotonic() - _e0) < 0.9):
             try:
                 candidate_ids = [fr.fact_id for fr in fused[:100]]
                 eg_scores = self._entity.score_candidates(

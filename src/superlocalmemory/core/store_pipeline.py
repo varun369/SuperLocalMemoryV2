@@ -151,6 +151,19 @@ def run_store(
     if entropy_gate and not entropy_gate.should_pass(content):
         return []
 
+    # v3.5.0: store-side quality gate (H3). Reject prompt-template leakage,
+    # empty placeholders, and other non-memory content BEFORE it enters the
+    # DB. Uses the shared is_low_quality from core/injection so both store
+    # AND injection filter by identical rules. Saves DB IO + recall pollution.
+    try:
+        from superlocalmemory.core.injection import is_low_quality
+        if is_low_quality(content):
+            logger.debug("Store rejected (low-quality content): %s...",
+                         content[:80].replace("\n", " "))
+            return []
+    except Exception:
+        pass  # Best-effort gate; store succeeds if import fails
+
     from superlocalmemory.encoding.temporal_parser import TemporalParser
     parser = temporal_parser or TemporalParser()
     parsed_date = parser.parse_session_date(session_date) if session_date else None
