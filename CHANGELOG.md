@@ -5,6 +5,35 @@ All notable changes to SuperLocalMemory V3 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.61] - 2026-05-31 — Dashboard search fix (in-process engine)
+
+**Fixes dashboard search always timing out** with "signal is aborted without reason".
+
+### Root Cause
+`POST /api/search` (used by the SLM dashboard memories pane) called
+`WorkerPool.shared()` — the legacy subprocess-based worker pool from v3.4.32
+(pre-unified-daemon). This spawned a fresh Python subprocess and loaded the full
+SLM engine cold on **every single search request**, taking 15–20s. The browser's
+AbortController always fired before the response arrived.
+
+The `/recall` HTTP endpoint (used by MCP `session_init`) uses the daemon engine
+directly and is warm at <1s. The dashboard used a completely different code path.
+
+### Fix
+`search_memories` now calls `_get_engine(request).recall()` — the daemon's own
+in-process engine that is already loaded and shares the warm SQLite page cache.
+Falls back to direct LIKE text search if engine is unavailable during startup.
+
+### Result
+Dashboard search: **<1s warm** (was >15s → browser abort).
+GitHub sync failure shown in sidebar is a separate backup connectivity issue,
+unrelated to search.
+
+### Changed
+- `server/routes/memories.py`: `search_memories` uses daemon engine, not WorkerPool
+
+---
+
 ## [3.4.60] - 2026-05-31 — Daemon OpenMP Crash Hotfix
 
 **Hotfix for v3.4.59.** Forces `OMP_NUM_THREADS=1` and `KMP_DUPLICATE_LIB_OK=TRUE`

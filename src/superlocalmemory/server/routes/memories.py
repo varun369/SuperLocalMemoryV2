@@ -398,27 +398,47 @@ async def get_graph(
 
 @router.post("/api/search")
 async def search_memories(request: Request, body: SearchRequest):
-    """Semantic search via subprocess worker pool (memory-isolated).
+    """Semantic search using the daemon's in-process engine.
 
-    v3.4.32: marks recall in-flight so the pending materializer yields.
+    v3.4.61: Replaced WorkerPool.shared() (subprocess-based, cold-starts on
+    every request, always >15s) with the daemon's own engine that is already
+    loaded and warm. WorkerPool.shared() was legacy from v3.4.32 before the
+    unified daemon architecture. Using the daemon engine matches what the /recall
+    HTTP endpoint does and shares its warm SQLite page cache, bringing dashboard
+    search from >15s timeout to <1s warm.
+
+    Falls back to direct DB LIKE search if engine is unavailable.
     """
     from superlocalmemory.core.recall_gate import begin_recall, end_recall
     begin_recall()
     try:
-        from superlocalmemory.core.worker_pool import WorkerPool
-        pool = WorkerPool.shared()
-        result = pool.recall(body.query, limit=body.limit)
-
-        if result.get("ok"):
+        # Use the daemon engine directly — already loaded, shares warm cache
+        engine = _get_engine(request)
+        if engine is not None:
+            import time as _time
+            t0 = _time.monotonic()
+            response = engine.recall(body.query, limit=body.limit)
+            elapsed_ms = round((_time.monotonic() - t0) * 1000, 1)
+            results = []
+            for r in response.results[: body.limit]:
+                results.append({
+                    "fact_id": r.fact.fact_id,
+                    "memory_id": getattr(r.fact, "memory_id", ""),
+                    "content": r.fact.content[:300],
+                    "score": round(r.score, 4),
+                    "confidence": round(getattr(r, "confidence", 0.0), 4),
+                    "channel_scores": getattr(r, "channel_scores", {}),
+                    "created_at": getattr(r.fact, "created_at", ""),
+                })
             return {
                 "query": body.query,
-                "results": result.get("results", []),
-                "total": result.get("result_count", 0),
-                "query_type": result.get("query_type", "unknown"),
-                "retrieval_time_ms": result.get("retrieval_time_ms", 0),
+                "results": results,
+                "total": len(results),
+                "query_type": getattr(response, "query_type", "semantic"),
+                "retrieval_time_ms": elapsed_ms,
             }
 
-        # Fallback: direct DB text search (no engine needed)
+        # Fallback: direct DB text search (engine not yet initialised)
         conn = get_db_connection()
         conn.row_factory = dict_factory
         cursor = conn.cursor()
