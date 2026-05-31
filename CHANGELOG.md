@@ -5,6 +5,21 @@ All notable changes to SuperLocalMemory V3 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.62] - 2026-05-31 — Recall engine pre-warm on startup
+
+Adds a `recall-warmup` background thread that fires one full 6-channel recall
+immediately after daemon startup. This loads the graph_edges table (~100 MB,
+347K rows) into SQLite's page cache before the first user query arrives.
+
+Without this, cold first query = 15-24s (reading graph_edges from disk).
+After this warmup, all queries hit warm cache at <2s — for both MCP and dashboard.
+Warmup is non-blocking (daemon stays available), fires after embedding warm.
+
+### Changed
+- `server/unified_daemon.py`: `_warmup_recall()` thread fires after `_warmup_embedder()`
+
+---
+
 ## [3.4.61] - 2026-05-31 — Dashboard search fix (in-process engine)
 
 **Fixes dashboard search always timing out** with "signal is aborted without reason".

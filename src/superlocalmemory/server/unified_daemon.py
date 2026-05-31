@@ -574,7 +574,37 @@ async def lifespan(application: FastAPI):
                     logger.info("Embedding worker pre-warmed (model resident, keep_alive=-1)")
             except Exception as exc:
                 logger.warning("Embedding warmup failed: %s", exc)
+
+        def _warmup_recall():
+            """v3.4.62: Fire a full 6-channel recall after embedding warms up.
+
+            Loads the graph_edges table (347K rows, ~100 MB) into the SQLite
+            page cache. Without this, the first user query takes 15-24s because
+            it reads graph_edges from disk. After this warmup completes, all
+            subsequent queries hit the warm page cache at <2s.
+
+            Runs after embedding warm (embed first so recall can use it).
+            Named 'recall-warmup' so it appears clearly in thread dumps.
+            """
+            import time as _t
+            # Wait for embedder to finish first (embed is needed by semantic channel)
+            for _ in range(60):
+                if _embedding_warm:
+                    break
+                _t.sleep(0.5)
+            try:
+                t0 = _t.monotonic()
+                response = engine.recall("memory recall performance", limit=1)
+                elapsed = round((_t.monotonic() - t0) * 1000)
+                logger.info(
+                    "Recall engine pre-warmed in %dms — graph page cache now hot "
+                    "(results=%d)", elapsed, len(response.results),
+                )
+            except Exception as exc:
+                logger.warning("Recall warmup failed (non-fatal): %s", exc)
+
         threading.Thread(target=_warmup_embedder, daemon=True, name="embed-warmup").start()
+        threading.Thread(target=_warmup_recall, daemon=True, name="recall-warmup").start()
 
         # v3.4.37: QueueConsumer uses daemon's engine directly via adapter.
         # Previously routed through WorkerPool → recall_worker subprocess,
