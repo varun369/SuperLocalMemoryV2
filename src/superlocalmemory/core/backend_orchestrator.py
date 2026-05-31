@@ -62,7 +62,7 @@ class BackendOrchestrator:
     def __init__(self, config: SLMConfig, db: DatabaseManager) -> None:
         self._config = config
         self._db = db
-        self._data_dir = Path(config.data_dir)
+        self._data_dir = Path(getattr(config, "data_dir", None) or config.base_dir)
         self._cozo: Any = None
         self._lancedb: Any = None
         self._tiers: Any = None
@@ -236,22 +236,28 @@ class BackendOrchestrator:
     # ------------------------------------------------------------------
 
     def _detect_cozo(self) -> bool:
-        if self._config.get("graph_backend") == "sqlite":
+        gb = getattr(self._config, "graph_backend", "auto") or "auto"
+        if gb == "sqlite":
             return False
-        try:
-            import pycozo  # noqa: F401
-            return True
-        except ImportError:
-            return False
+        if gb in ("auto", "cozo"):
+            try:
+                import pycozo  # noqa: F401
+                return True
+            except ImportError:
+                return False
+        return False
 
     def _detect_lancedb(self) -> bool:
-        if self._config.get("vector_backend") == "sqlite-vec":
+        vb = getattr(self._config, "vector_backend", "auto") or "auto"
+        if vb == "sqlite-vec":
             return False
-        try:
-            import lancedb  # noqa: F401
-            return True
-        except ImportError:
-            return False
+        if vb in ("auto", "lancedb"):
+            try:
+                import lancedb  # noqa: F401
+                return True
+            except ImportError:
+                return False
+        return False
 
     # ------------------------------------------------------------------
     # Internal: Init

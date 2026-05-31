@@ -469,6 +469,36 @@ async def lifespan(application: FastAPI):
         _engine = engine
         logger.info("Unified daemon: MemoryEngine initialized (mode=%s)", config.mode.value)
 
+        # v3.5.0: Backend Orchestrator — CozoDB (graph) + LanceDB (vector) backends.
+        # Initialise AFTER engine so the retrieval channels exist to receive backends.
+        # Migrates edges/embeddings automatically; fail-soft (non-blocking).
+        _cozo_backend = None
+        _lancedb_backend = None
+        try:
+            from superlocalmemory.core.backend_orchestrator import (
+                BackendOrchestrator, set_orchestrator,
+            )
+            orch = BackendOrchestrator(config=config, db=engine._db)
+            orch.on_daemon_start()
+            set_orchestrator(orch)
+            _cozo_backend = orch.get_graph_backend()
+            _lancedb_backend = orch.get_vector_backend()
+            # Inject CozoDB into entity_graph channel (already has the param).
+            re = getattr(engine, '_retrieval_engine', None)
+            if re is not None:
+                eg = getattr(re, '_entity', None)
+                if eg is not None and _cozo_backend is not None:
+                    try:
+                        eg._cozo = _cozo_backend
+                        logger.info("CozoDB backend wired into entity_graph channel")
+                    except Exception as exc:
+                        logger.warning("CozoDB channel injection failed: %s", exc)
+            logger.info("BackendOrchestrator: ready (cozo=%s, lancedb=%s)",
+                         "active" if _cozo_backend else "off",
+                         "active" if _lancedb_backend else "off")
+        except Exception as exc:
+            logger.warning("BackendOrchestrator init failed (non-fatal): %s", exc)
+
         # LLD-07 §4 — deferred migrations (e.g. M006 reward column) need to
         # run AFTER MemoryEngine.initialize() has bootstrapped runtime tables
         # like action_outcomes. Non-fatal by contract.

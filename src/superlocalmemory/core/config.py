@@ -658,6 +658,9 @@ class SLMConfig:
         default_factory=ParameterizationConfig,
     )
     injection: InjectionConfig = field(default_factory=InjectionConfig)
+    # v3.5.0: scaling backends — "sqlite" / "cozo" / "auto" / "lancedb" / "sqlite-vec" / "auto".
+    graph_backend: str = "auto"       # "auto" = cozo if pycozo installed, else sqlite
+    vector_backend: str = "auto"      # "auto" = lancedb if installed, else sqlite-vec
     evolution: EvolutionConfig = field(default_factory=EvolutionConfig)
 
     # v3.4.3: Daemon configuration
