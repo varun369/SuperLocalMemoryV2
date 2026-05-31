@@ -603,8 +603,58 @@ async def lifespan(application: FastAPI):
             except Exception as exc:
                 logger.warning("Recall warmup failed (non-fatal): %s", exc)
 
+        def _backfill_vector_store():
+            """v3.5.0: index facts whose embeddings exist in atomic_facts but
+            are missing from the sqlite-vec store. Facts stored before dual-write
+            was complete were never indexed, so semantic + hopfield only saw a
+            fraction of the corpus (observed: 5.8k indexed of 17.2k embedded).
+            Idempotent (skips when the store is already complete), non-blocking,
+            fail-soft. Runs once after a 3.5.0 upgrade, then no-ops every restart.
+            """
+            import time as _t
+            from pathlib import Path as _P
+            for _ in range(120):
+                if _embedding_warm:
+                    break
+                _t.sleep(0.5)
+            try:
+                from superlocalmemory.retrieval.vector_store import (
+                    VectorStore, VectorStoreConfig,
+                )
+                db = engine._db
+                db_path = getattr(db, "db_path", None) or getattr(db, "_db_path", None)
+                if db_path is None:
+                    return
+                dim = getattr(getattr(config, "embedding", None), "dimension", 768) or 768
+                vs = VectorStore(_P(db_path), VectorStoreConfig(dimension=dim))
+                if not vs.available:
+                    return
+                try:
+                    profiles = list(db.list_profiles()) or ["default"]
+                except Exception:
+                    profiles = ["default"]
+                for pid in profiles:
+                    facts = db.get_all_facts(pid)
+                    with_emb = [
+                        (f.fact_id, getattr(f, "profile_id", pid) or pid, f.embedding)
+                        for f in facts
+                        if getattr(f, "embedding", None) and len(f.embedding) == dim
+                    ]
+                    if not with_emb:
+                        continue
+                    if vs.count(pid) >= int(len(with_emb) * 0.98):
+                        continue  # already complete — no-op
+                    n = vs.rebuild_from_facts(with_emb)
+                    logger.info(
+                        "VS backfill[%s]: indexed %d of %d embedded facts",
+                        pid, n, len(with_emb),
+                    )
+            except Exception as exc:
+                logger.warning("Vector store backfill failed (non-fatal): %s", exc)
+
         threading.Thread(target=_warmup_embedder, daemon=True, name="embed-warmup").start()
         threading.Thread(target=_warmup_recall, daemon=True, name="recall-warmup").start()
+        threading.Thread(target=_backfill_vector_store, daemon=True, name="vs-backfill").start()
 
         # v3.4.37: QueueConsumer uses daemon's engine directly via adapter.
         # Previously routed through WorkerPool → recall_worker subprocess,
