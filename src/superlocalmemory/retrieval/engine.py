@@ -195,18 +195,21 @@ class RetrievalEngine:
             except Exception as exc:
                 logger.warning("Bridge discovery: %s", exc)
 
-        # Scene expansion
+        # Scene expansion (v3.5.0: batch, time-budgeted)
         if fused:
             try:
+                top_ids = [fr.fact_id for fr in fused[:20]]
+                scenes_map = self._db.get_scenes_for_facts_batch(top_ids, profile_id)
                 expanded_ids: set[str] = set()
-                for fr in fused[:20]:
-                    scenes = self._db.get_scenes_for_fact(fr.fact_id, profile_id)
-                    for scene in scenes[:2]:
+                for fid in top_ids:
+                    for scene in scenes_map.get(fid, [])[:2]:
                         for sfid in scene.fact_ids:
                             if not any(f.fact_id == sfid for f in fused) and sfid not in expanded_ids:
                                 expanded_ids.add(sfid)
                                 fused.append(FusionResult(
-                                    fact_id=sfid, fused_score=fr.fused_score * 0.8,
+                                    fact_id=sfid, fused_score=(
+                                        next((f.fused_score for f in fused if f.fact_id == fid), 0.5) * 0.8
+                                    ),
                                     channel_ranks={}, channel_scores={},
                                 ))
             except Exception as exc:

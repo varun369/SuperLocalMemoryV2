@@ -623,6 +623,36 @@ class DatabaseManager:
         )
         return [self._row_to_scene(r) for r in rows]
 
+    def get_scenes_for_facts_batch(
+        self, fact_ids: list[str], profile_id: str,
+    ) -> dict[str, list[MemoryScene]]:
+        """v3.5.0: batch scene lookup — one query replaces N individual LIKE scans.
+
+        The 20 individual ``get_scenes_for_fact`` calls in the retrieval engine's
+        scene expansion path were the single largest recall latency source (~5.7s).
+        This replaces them with a single multi-LIKE OR query. Returns
+        ``{fact_id: [scenes]}`` for facts that belong to at least one scene.
+        """
+        if not fact_ids:
+            return {}
+        clauses = " OR ".join(
+            '(profile_id = ? AND fact_ids_json LIKE ?)' for _ in fact_ids
+        )
+        params: list[str] = []
+        for fid in fact_ids:
+            params.extend((profile_id, f'%"{fid}"%'))
+        rows = self.execute(
+            f"SELECT * FROM memory_scenes WHERE {clauses} ORDER BY last_updated DESC",
+            tuple(params),
+        )
+        out: dict[str, list[MemoryScene]] = {}
+        for r in rows:
+            scene = self._row_to_scene(r)
+            for fid in fact_ids:
+                if fid in (scene.fact_ids or []):
+                    out.setdefault(fid, []).append(scene)
+        return out
+
     def increment_entity_fact_count(self, entity_id: str) -> None:
         """Atomically increment fact_count for a canonical entity."""
         self.execute(
