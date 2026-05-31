@@ -762,9 +762,13 @@ class RetrievalEngine:
             trust_weight, raw_trust = self._get_trust_weight(fact, profile_id)
 
             boosted_score = fr.fused_score * recency_boost * quality * trust_weight
-            confidence = min(1.0, boosted_score * 10.0) * fact.confidence
+            # v3.5.0 (M2): soft-normalize to [0,1]. RRF weights + scene/entity
+            # boosts push raw scores well above 1 (observed: 27.97). A sigmoid
+            # preserves rank (monotonic) while giving users a readable 0-1 range.
+            normalized_score = 1.0 / (1.0 + math.exp(-boosted_score * 0.5))
+            confidence = min(1.0, normalized_score * 10.0) * fact.confidence
             results.append(RetrievalResult(
-                fact=fact, score=boosted_score,
+                fact=fact, score=round(normalized_score, 4),
                 channel_scores=fr.channel_scores,
                 confidence=confidence, evidence_chain=evidence,
                 trust_score=raw_trust,

@@ -534,8 +534,10 @@ class DaemonHandler(BaseHTTPRequestHandler):
                     session_id = f"http:{int(_t.time() * 1000)}"
 
                 engine = _get_engine()
+                raw_fast = params.get("fast", ["false"])[0]
+                fast = raw_fast.lower() in ("true", "1")
                 response = engine.recall(
-                    query, limit=limit, session_id=session_id,
+                    query, limit=limit, session_id=session_id, fast=fast,
                 )
                 # Return the same field shape as recall_worker._handle_recall,
                 # so MCP processes that proxy through the daemon get recall_trace-

@@ -417,7 +417,7 @@ async def search_memories(request: Request, body: SearchRequest):
         # directly in an async route blocks the ASGI event loop — Chrome detects
         # a stalled connection and aborts with "signal is aborted without reason"
         # before the response arrives. Fix: run in a thread-pool executor so the
-        # event loop stays alive to send keepalive frames. Also fast=True skips
+        # event loop stays alive to send keepalive frames. Also fast=False skips
         # spreading_activation + Hopfield (saves ~7s on cold graph traversal).
         import asyncio
         import time as _time
@@ -427,7 +427,7 @@ async def search_memories(request: Request, body: SearchRequest):
             t0 = _time.monotonic()
             response = await loop.run_in_executor(
                 None,
-                lambda: engine.recall(body.query, limit=body.limit, fast=True),
+                lambda: engine.recall(body.query, limit=body.limit, fast=False),
             )
             elapsed_ms = round((_time.monotonic() - t0) * 1000, 1)
             results = []

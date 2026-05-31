@@ -538,7 +538,7 @@ async def recall_trace(request: Request):
         t0 = _time.monotonic()
         response = await loop.run_in_executor(
             None,
-            lambda: engine.recall(query, limit=limit, fast=True),
+            lambda: engine.recall(query, limit=limit, fast=False),
         )
         elapsed_ms = round((_time.monotonic() - t0) * 1000, 1)
 
