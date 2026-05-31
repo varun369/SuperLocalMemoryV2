@@ -87,6 +87,12 @@ class TestBM25ChannelMocked:
         db = MagicMock()
         db.get_all_bm25_tokens.return_value = tokens_map or {}
         db.get_all_facts.return_value = facts or []
+        # v3.5.0: BM25Channel.search() now tries the FTS5 fast path first and
+        # only falls back to the in-memory rank_bm25 path when the FTS5 table
+        # is unavailable. These unit tests validate that in-memory fallback, so
+        # the mock DB simulates a pre-FTS database by raising on execute()
+        # (exactly what SQLite does when atomic_facts_fts does not exist).
+        db.execute.side_effect = Exception("no such table: atomic_facts_fts")
         return db
 
     def test_ensure_loaded_from_tokens(self) -> None:
@@ -211,3 +217,37 @@ class TestBM25ChannelRealDB:
         assert len(results) == 1
         assert results[0][0] == "f1"
         assert results[0][1] > 0.0
+
+
+class TestBM25FTS5Path:
+    """v3.5.0: FTS5 fast path (the production path; in-memory is fallback)."""
+
+    def _fts_db(self, rows):
+        from unittest.mock import MagicMock
+        db = MagicMock()
+        db.execute.return_value = rows  # FTS5 query result rows (dict-able)
+        return db
+
+    def test_fts5_negates_bm25_and_preserves_order(self):
+        # FTS5 bm25() returns negative (lower=better). Channel must negate to
+        # higher=better and keep the DB's ORDER BY rank ordering.
+        rows = [
+            {"fact_id": "f1", "rank": -23.6},
+            {"fact_id": "f2", "rank": -16.8},
+            {"fact_id": "f3", "rank": -5.1},
+        ]
+        ch = BM25Channel(self._fts_db(rows))
+        out = ch.search("context injection", "default", top_k=10)
+        assert out == [("f1", 23.6), ("f2", 16.8), ("f3", 5.1)]
+
+    def test_fts5_empty_tokens_returns_empty(self):
+        ch = BM25Channel(self._fts_db([]))
+        assert ch.search("the a an", "default") == []  # stopwords → no tokens
+
+    def test_fts5_no_matches_returns_empty_no_fallback(self):
+        # FTS table exists but query matches nothing → [] (NOT a fallback).
+        db = self._fts_db([])
+        ch = BM25Channel(db)
+        assert ch.search("zzz nonexistent", "default") == []
+        # get_all_facts (the fallback cold-load) must NOT have been called.
+        db.get_all_facts.assert_not_called()

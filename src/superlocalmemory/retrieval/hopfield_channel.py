@@ -145,18 +145,31 @@ class HopfieldChannel:
             )
             return []
 
-        # Step 4: Get memory matrix
-        memory_matrix, fact_ids = self._get_memory_matrix(profile_id)
+        # Step 4 (v3.5.0 FIX): route by the cheap total_count BEFORE building
+        # the full memory matrix. Previously _get_memory_matrix() loaded and
+        # normalized ALL embeddings (~6s at 17.5k facts) even when the prefilter
+        # path was taken — and that path builds its own ANN sub-matrix and never
+        # uses the full one. So the entire 6s build was wasted on large stores.
+        # Now the full matrix is built ONLY for small stores (<= prefilter_threshold).
+        vs_ok = bool(
+            self._vector_store
+            and getattr(self._vector_store, "available", False)
+        )
+        # v3.5.0 FIX: prefer the bounded ANN-prefilter path whenever a vector
+        # store is available and the corpus is larger than the candidate set.
+        # The full-matrix path loads & L2-normalizes EVERY embedding from SQLite
+        # (~6s at 17.5k facts), so it's only worth it for tiny stores or when no
+        # VS exists. Routing on prefilter_candidates (not prefilter_threshold)
+        # ensures the matrix is always bounded to ~prefilter_candidates rows.
+        if vs_ok and total_count > self._config.prefilter_candidates:
+            return self._search_with_prefilter(q_vec, profile_id, [], top_k)
 
-        # Step 5: Empty check
+        # Tiny store (or no VS): build (cached) full matrix.
+        memory_matrix, fact_ids = self._get_memory_matrix(profile_id)
         if memory_matrix is None or len(fact_ids) == 0:
             return []
-
-        # Step 6/7: Route by size
-        if len(fact_ids) > self._config.prefilter_threshold:
-            return self._search_with_prefilter(
-                q_vec, profile_id, fact_ids, top_k,
-            )
+        if vs_ok and len(fact_ids) > self._config.prefilter_candidates:
+            return self._search_with_prefilter(q_vec, profile_id, fact_ids, top_k)
         return self._search_full_matrix(
             q_vec, memory_matrix, fact_ids, top_k,
         )

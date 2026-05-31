@@ -146,6 +146,43 @@ class BM25Channel:
         # Persist for cold start
         self._db.store_bm25_tokens(fact_id, profile_id, tokens)
 
+    def _fts5_search(
+        self, query: str, profile_id: str, top_k: int = 30,
+    ) -> list[tuple[str, float]]:
+        """v3.5.0: SQLite FTS5 keyword search (C-level indexed, scales to millions).
+
+        Uses the ``atomic_facts_fts`` external-content FTS5 table (kept in sync
+        by INSERT/DELETE/UPDATE triggers). Joins ``atomic_facts`` for profile
+        scoping (FTS table has no profile_id). ``bm25()`` returns a negative
+        score (lower = better match); we negate it to the channel's
+        "higher = better" convention. Returns [] on no matches.
+
+        Raises (OperationalError) if the FTS5 table is absent — the caller
+        then falls back to the legacy in-memory rank_bm25 path.
+        """
+        tokens = tokenize(query)
+        if not tokens:
+            return []
+        # Quote each token so query punctuation can't break FTS5 MATCH syntax;
+        # OR-join for high recall (any token may match).
+        match_expr = " OR ".join('"' + t.replace('"', "") + '"' for t in tokens)
+        sql = (
+            "SELECT af.fact_id AS fact_id, bm25(atomic_facts_fts) AS rank "
+            "FROM atomic_facts_fts "
+            "JOIN atomic_facts af ON af.rowid = atomic_facts_fts.rowid "
+            "WHERE atomic_facts_fts MATCH ? AND af.profile_id = ? "
+            "ORDER BY rank LIMIT ?"
+        )
+        rows = self._db.execute(sql, (match_expr, profile_id, int(top_k)))
+        out: list[tuple[str, float]] = []
+        for r in rows:
+            d = dict(r)
+            fid = d.get("fact_id")
+            if not fid:
+                continue
+            out.append((fid, -float(d.get("rank", 0.0))))
+        return out
+
     def search(
         self,
         query: str,
@@ -164,6 +201,19 @@ class BM25Channel:
         Returns:
             List of (fact_id, bm25_score) sorted by score descending.
         """
+        # v3.5.0: FTS5 fast path — C-level indexed, ~ms, scales to millions.
+        # The legacy in-memory rank_bm25 path rebuilt the whole index over the
+        # entire corpus on every corpus change (11s+ at 17.5k facts, does not
+        # scale). FTS5 (atomic_facts_fts, kept in sync by triggers) replaces it.
+        # Falls back to rank_bm25 ONLY if the FTS5 table is genuinely
+        # unavailable (raises) — e.g. a pre-FTS legacy DB.
+        try:
+            return self._fts5_search(query, profile_id, top_k)
+        except Exception as exc:  # pragma: no cover — legacy/missing FTS table
+            logger.debug(
+                "BM25 FTS5 path unavailable, using rank_bm25 fallback: %s", exc,
+            )
+
         self.ensure_loaded(profile_id)
 
         if not self._corpus:

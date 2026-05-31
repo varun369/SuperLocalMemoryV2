@@ -127,8 +127,20 @@ class RetrievalEngine:
         t0 = time.monotonic()
         self._extra_disabled = set(extra_disabled_channels or ())
 
+        # v3.5.0 diagnostic: stage timing inside retrieval (SLM_RECALL_TIMING=1).
+        import os as _os_e
+        import time as _time_e
+        _et = bool(_os_e.environ.get("SLM_RECALL_TIMING"))
+        _e0 = _time_e.monotonic()
+
+        def _em(_l: str) -> None:
+            if _et:
+                logger.warning("[RECALL-TIMING]   engine.%-16s %.0f ms",
+                               _l, (_time_e.monotonic() - _e0) * 1000.0)
+
         # 1. Classify query, get adaptive weights
         strat = self._strategy.classify(query, self._base_weights)
+        _em("classify")
 
         # Profile shortcut (runs before channel search)
         if self._profile_channel is not None:
@@ -149,12 +161,14 @@ class RetrievalEngine:
 
         # 3. Run 4 channels
         ch_results = self._run_channels(query, profile_id, strat)
+        _em("run_channels")
         if profile_hits:
             ch_results["profile"] = profile_hits
         total = sum(len(v) for v in ch_results.values())
 
         # 3. Single-pass RRF fusion
         fused = weighted_rrf(ch_results, strat.weights, k=self._config.rrf_k)
+        _em("rrf_fusion")
 
         # V3.3.21: Cross-channel intersection boost for multi-hop/temporal queries.
         # Problem: channels work in ISOLATION. "When did Caroline go to X?" needs
@@ -229,10 +243,12 @@ class RetrievalEngine:
             except Exception as exc:
                 logger.warning("Entity graph signal enhancement: %s", exc)
 
+        _em("expand+entity_enh")
         # 4. Load facts for rerank pool
         pool = min(len(fused), max(effective_limit * 3, 30))
         top = fused[:pool]
         facts = self._load_facts(top, profile_id)
+        _em("load_facts")
 
         # V3.3.21: Session diversity for aggregation queries.
         if strat.query_type == "aggregation" and facts:
@@ -250,6 +266,7 @@ class RetrievalEngine:
         if reranker_ready and facts:
             ce_alpha = 0.5 if strat.query_type in ("multi_hop", "temporal") else 0.75
             top = self._apply_reranker(query, top, facts, alpha=ce_alpha)
+        _em(f"rerank(ready={reranker_ready})")
 
         # V3.4.11: Channel diversity — guarantee entity_graph results appear in
         # the final output. Applied AFTER reranker so results can't be pushed out.
@@ -462,6 +479,9 @@ class RetrievalEngine:
         3-5x speedup for the channel phase.
         """
         import concurrent.futures
+        import os as _os_e
+        import time as _time_e
+        _et = bool(_os_e.environ.get("SLM_RECALL_TIMING"))
         out: dict[str, list[tuple[str, float]]] = {}
         # Skip channels listed in disabled_channels (ablation support)
         # V3.4.40: union with per-recall extra_disabled set (e.g. --fast skip)
@@ -492,8 +512,12 @@ class RetrievalEngine:
 
         def _safe_channel(name: str, fn, *args):
             """Run a single channel, returning (name, result_or_None)."""
+            _cs = _time_e.monotonic() if _et else 0.0
             try:
                 res = fn(*args)
+                if _et:
+                    logger.warning("[RECALL-TIMING]     channel.%-16s %.0f ms",
+                                   name, (_time_e.monotonic() - _cs) * 1000.0)
                 return (name, res if res else None)
             except Exception as exc:
                 logger.warning("%s channel: %s", name, exc)

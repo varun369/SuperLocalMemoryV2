@@ -601,12 +601,26 @@ def run_recall(
 
     m = mode or config.mode
 
+    # v3.5.0 diagnostic: per-stage recall timing under SLM_RECALL_TIMING=1.
+    # Zero overhead when the env var is unset. Permanent observability hook.
+    import os as _os_t
+    import time as _time_t
+    _timing = bool(_os_t.environ.get("SLM_RECALL_TIMING"))
+    _t0 = _time_t.monotonic()
+
+    def _mark(_label: str) -> None:
+        if _timing:
+            logger.warning("[RECALL-TIMING] %-22s %.0f ms",
+                           _label, (_time_t.monotonic() - _t0) * 1000.0)
+
     extra_disabled = {"spreading_activation"} if fast else None
     response = retrieval_engine.recall(
         query, profile_id, m, limit,
         extra_disabled_channels=extra_disabled,
     )
+    _mark("retrieval(chan+rerank)")
 
+    _mark("pre-agentic")
     # Agentic sufficiency verification
     # V3.3.19: Only trigger for multi_hop queries in Mode A (rule-based).
     # Single-hop/factual/temporal queries get WORSE with decomposition —
@@ -665,6 +679,7 @@ def run_recall(
             except Exception as exc:
                 logger.debug("Agentic sufficiency skipped: %s", exc)
 
+    _mark("agentic")
     # V3.2: Log access for recalled facts (Phase 1)
     if access_log and response.results:
         try:
@@ -745,6 +760,7 @@ def run_recall(
     except Exception as exc:
         logger.debug("Ranking pipeline skipped: %s", exc)
 
+    _mark("learning+ranking")
     # Reconsolidation: access updates trust + count (neuroscience principle)
     if trust_scorer:
         for r in response.results:
@@ -786,4 +802,5 @@ def run_recall(
     # can validate fact_ids observed in downstream tool output.
     _apply_markers_to_response(response)
 
+    _mark("TOTAL(fisher+trust+markers)")
     return response
