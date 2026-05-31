@@ -2,9 +2,9 @@
   <img src="https://superlocalmemory.com/assets/logo-mark.png" alt="SuperLocalMemory" width="200"/>
 </p>
 
-<h1 align="center">SuperLocalMemory V3.4</h1>
+<h1 align="center">SuperLocalMemory V3.5</h1>
 <p align="center"><strong>Every other AI forgets. Yours won't.</strong><br/><em>Infinite memory for Claude Code, Cursor, Windsurf, and any MCP-compatible AI client.</em></p>
-<p align="center"><code>v3.4.51 "Recency Intelligence"</code> — <strong>Session context is now time-aware.</strong><br>Stale memories from old projects no longer surface. Ebbinghaus decay + FSRS stability. One command: <code>pip install -U superlocalmemory && slm restart</code></p>
+<p align="center"><code>v3.5.0 "Scale-Ready + Context Injection v2"</code> — <strong>Your database auto-migrates. 6-channel recall in &lt;1s. Core Memory Block + explicit pinning. CozoDB + LanceDB on the recall path.</strong><br>No manual migrations. No data loss. One command: <code>pip install -U superlocalmemory && slm restart</code></p>
 <p align="center"><strong>Backed by 3 published research papers</strong> (arXiv preprints + Zenodo-archived) · <a href="https://arxiv.org/abs/2603.02240">arXiv:2603.02240</a> · <a href="https://arxiv.org/abs/2603.14588">arXiv:2603.14588</a> · <a href="https://arxiv.org/abs/2604.04514">arXiv:2604.04514</a></p>
 
 <p align="center">
@@ -183,29 +183,36 @@ slm warmup    # Pre-download embedding model (~500MB, optional)
 pip install superlocalmemory
 ```
 
-### Upgrading to v3.4.5 "Scale-Ready"
+### Upgrading to v3.5.0 "Scale-Ready — CozoDB + LanceDB"
 
-**Migration is automatic.** Upgrade your package, restart the daemon, and your database migrates silently.
+**Migration is automatic.** Upgrade the package, restart the daemon — CozoDB, LanceDB, and the vector store all self-migrate in the background.
 
 ```bash
-# pip users
 pip install -U superlocalmemory
 slm restart
-
-# npm users  
-npm update -g superlocalmemory
-slm restart
-
-# Verify migration
 slm doctor
 ```
 
-No manual commands. No data loss. Your database upgrades in-place with zero downtime. The daemon auto-detects the old version and applies the migration on first start.
+No manual commands. No data loss. Your database upgrades in-place. The daemon applies all migrations (including CozoDB graph, LanceDB vector, and the `pinned` column for Core Memory) on first start after upgrade.
 
-**New capabilities after upgrade:**
-- Tiered storage: memories auto-classified as active/warm/cold/archived
-- Graph pruning: redundant edges removed, queries stay fast at 1M+ connections
-- Optional: `pip install superlocalmemory[cozo,lancedb]` for graph + vector acceleration
+**What you get after upgrading to v3.5.0:**
+- **CozoDB on the recall path** — entity_graph channel routes through the CozoDB backend (auto-detected, no config needed). Millions of graph edges indexed and traversed in milliseconds.
+- **LanceDB vector backend** — embedding search falls through to LanceDB when available (auto-detected, no config needed). Handles millions of vectors.
+- **6-channel recall <1s** — BM25→FTS5 (20ms vs 11s), Hopfield ANN prefilter (0.4s vs 6s), temporal fast-parse (0.25s vs 2.6s). All surfaces (MCP/CLI/Dashboard) use the same daemon path.
+- **Core Memory Block** — always-injected pinned facts (auto-derived + explicit pin/unpin via the `core_memory` MCP tool). Pinned facts surface even when the query doesn't match.
+- **Context Injection v2** — unified formatter, token-budgeted injection (mode-aware 2K/4K/8K), edge-placement ordering, full-fidelity content (no more 200-char stubs).
+- **Score normalization** — all fusion scores mapped to [0, 1] via soft-sigmoid. Monotonic — rank order preserved.
+- **Vector store auto-backfill** — facts with embeddings missing from the vector store are indexed on daemon start. No more "only 1/3 of corpus searchable."
+
+### Release History
+
+| Version | Codename | Key Features |
+|---|---|---|
+| **v3.5.0** | Scale-Ready + Context Injection v2 | CozoDB/LanceDB migration, 6-channel recall <1s, Core Memory Block, BM25→FTS5, context injection v2, score normalization |
+| **v3.4.5** | Scale-Ready (foundation) | Tiered storage (active/warm/cold), graph pruning, BackendOrchestrator scaffolding, CozoDB + LanceDB init + migration code (read path wired in v3.5.0) |
+| **v3.4.51** | Recency Intelligence | Ebbinghaus decay + FSRS stability, age gate, session context time-awareness |
+| **v3.4.22** | Scale-Ready (scaling) | v2 ranking pipeline (LightGBM, bandit ensemble), Hopfield channel, 6-channel parallel execution |
+| **v3.3.x** | Foundation | BM25Plus, Fisher-Rao manifold, sqlite-vec, RRF fusion, cross-encoder rerank. 3 published papers (arXiv 2603.02240 / 2603.14588 / 2604.04514) |
 
 ### First Use
 
