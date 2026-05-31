@@ -556,11 +556,13 @@ class DaemonHandler(BaseHTTPRequestHandler):
                     lifecycle = getattr(r.fact, "lifecycle", None)
                     # v3.5.1: sanitize control chars that break JSON (newlines, tabs in content).
                     clean = r.fact.content.replace("\r", " ").replace("\n", " ").replace("\t", " ")
+                    sc_raw = memory_map.get(r.fact.memory_id, "")
+                    sc_clean = sc_raw.replace("\r", " ").replace("\n", " ").replace("\t", " ") if sc_raw else ""
                     results.append({
                         "fact_id": r.fact.fact_id,
                         "memory_id": r.fact.memory_id,
                         "content": clean,
-                        "source_content": memory_map.get(r.fact.memory_id, ""),
+                        "source_content": sc_clean,
                         "score": round(r.score, 4),
                         "confidence": round(r.confidence, 4),
                         "trust_score": round(r.trust_score, 4),
