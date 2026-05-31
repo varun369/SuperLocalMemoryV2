@@ -5,6 +5,27 @@ All notable changes to SuperLocalMemory V3 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.5] - 2026-05-31 — Write-Through Remember (instant cross-session recall)
+
+### Fixed (CRITICAL — closes the remember→recall window)
+- **Write-through store** (`engine.store_fast`): `remember` now does a synchronous
+  verbatim insert (memory + atomic_fact, FTS5 auto-populated via trigger) **plus a
+  single ~22ms embedding**, so a stored memory is **recallable at rank #1 within
+  ~240ms** — across MCP, CLI, and Dashboard. Previously memories went to `pending.db`
+  and were unrecallable for 1–180s until the async materializer caught up; a
+  parallel/next agent recalling a just-stored memory would miss it.
+- Slow enrichment (LLM fact-extraction, graph edges, entity resolution) stays async
+  in the materializer — only the fast path (verbatim + embedding) is synchronous.
+- Materializer now **enriches** the write-through verbatim fact in place (adds graph/
+  entities) instead of skipping it as a duplicate.
+- MCP `remember` routes through the daemon's write-through `/remember`; falls back to
+  `pending.db` only when the daemon is offline.
+- CLI `slm remember` and Dashboard already route through the daemon → same write-through.
+
+### Tests
+- `test_mcp_remember_tool.py`: updated for write-through (daemon-online → fact_ids;
+  daemon-offline → pending fallback) + new write-through path test. Suite: 4,489 passed.
+
 ## [3.5.0] - 2026-05-31 — Backend Migration + Recall Performance + Context Injection
 
 ### Perf (recall 13.6s → <1s warm)

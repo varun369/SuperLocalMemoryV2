@@ -1582,14 +1582,28 @@ def _register_daemon_routes(application: FastAPI) -> None:
             extra = getattr(req, "metadata", None)
             if isinstance(extra, dict):
                 meta.update(extra)
+            # v3.5.5 WRITE-THROUGH: synchronous verbatim insert → the memory is
+            # keyword/BM25-recallable the instant this returns (~ms). Closes the
+            # recall window so a parallel/next agent finds memories saved seconds
+            # ago. Embedding/graph enrichment is deferred to the materializer.
+            fact_ids: list[str] = []
+            try:
+                fact_ids = engine.store_fast(req.content, metadata=meta)
+            except Exception as fexc:
+                logger.warning("store_fast failed, falling back to pending-only: %s", fexc)
+            # Enqueue for async enrichment (embedding + entities + graph). The
+            # materializer detects the already-inserted verbatim fact and enriches
+            # it in place rather than duplicating.
             pending_id = store_pending(
                 req.content, tags=req.tags or "", metadata=meta,
             )
             return {
                 "ok": True,
+                "fact_ids": fact_ids,
+                "count": len(fact_ids),
                 "pending_id": pending_id,
-                "status": "queued",
-                "note": "materialized async; pass ?wait=true for legacy sync",
+                "status": "stored" if fact_ids else "queued",
+                "note": "write-through: recallable now; enriching async",
             }
         except Exception as exc:
             raise HTTPException(500, detail=str(exc))
@@ -1816,14 +1830,36 @@ def _start_pending_materializer() -> None:
                     try:
                         import hashlib
                         content = item["content"]
-                        # Dedup: skip if identical content already stored.
                         content_hash = hashlib.md5(content.encode()).hexdigest()
+                        # v3.5.5: the write-through path already inserted a
+                        # verbatim fact (recallable via BM25). If it lacks an
+                        # embedding, ENRICH it in place (compute embedding +
+                        # upsert vector store) rather than skipping — otherwise
+                        # the fact would never be semantically searchable.
                         dup = engine._db.execute(
-                            "SELECT 1 FROM atomic_facts WHERE "
-                            "content = ? LIMIT 1",
+                            "SELECT fact_id, embedding FROM atomic_facts "
+                            "WHERE content = ? LIMIT 1",
                             (content,),
                         )
                         if dup:
+                            try:
+                                row = dict(dup[0])
+                                if not row.get("embedding") and engine._embedder:
+                                    emb = engine._embedder.embed(content)
+                                    if emb:
+                                        upd = {"embedding": emb}
+                                        try:
+                                            fm, fv = engine._embedder.compute_fisher_params(emb)
+                                            upd["fisher_mean"] = fm
+                                            upd["fisher_variance"] = fv
+                                        except Exception:
+                                            pass
+                                        engine._db.update_fact(row["fact_id"], upd)
+                                        vs = getattr(engine, "_vector_store", None)
+                                        if vs and getattr(vs, "available", False):
+                                            vs.upsert(row["fact_id"], engine._profile_id, emb)
+                            except Exception as eexc:
+                                logger.debug("enrichment of write-through fact failed: %s", eexc)
                             mark_done(item["id"])
                             continue
                         import json as _json

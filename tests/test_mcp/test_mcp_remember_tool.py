@@ -29,6 +29,14 @@ def _isolate_slm_data_dir(tmp_path, monkeypatch):
     ~/.superlocalmemory/. pending_store honors SLM_DATA_DIR in v3.4.31+."""
     monkeypatch.setenv("SLM_DATA_DIR", str(tmp_path))
 
+@pytest.fixture(autouse=True)
+def _daemon_offline(monkeypatch):
+    """v3.5.5: MCP remember now routes through the daemon (write-through) when
+    available, falling back to pending.db only when the daemon is offline.
+    These tests validate the pending fallback, so force daemon-offline."""
+    import superlocalmemory.cli.daemon as _d
+    monkeypatch.setattr(_d, "is_daemon_running", lambda *a, **k: False)
+
 
 # ---------------------------------------------------------------------------
 # Helper: capture tool functions registered on a mock server
@@ -176,3 +184,22 @@ class TestRememberEdgeCases:
         result = asyncio.run(remember("agent test", agent_id="claude-opus"))
         assert result["success"] is True
         assert result.get("pending") is True
+
+
+class TestRememberWriteThrough:
+    """v3.5.5: when the daemon is up, remember routes through it (write-through)."""
+
+    def test_remember_routes_through_daemon_when_online(self, monkeypatch):
+        import superlocalmemory.cli.daemon as _d
+        monkeypatch.setattr(_d, "is_daemon_running", lambda *a, **k: True)
+        monkeypatch.setattr(
+            _d, "daemon_request",
+            lambda method, path, body=None: {
+                "ok": True, "fact_ids": ["abc123"], "count": 1, "status": "stored",
+            },
+        )
+        remember = _get_remember_tool()
+        result = asyncio.run(remember("write-through fact", tags="t"))
+        assert result["success"] is True
+        assert result["fact_ids"] == ["abc123"]
+        assert result["pending"] is False

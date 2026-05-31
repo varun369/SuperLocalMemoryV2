@@ -110,27 +110,45 @@ def register_core_tools(server, get_engine: Callable) -> None:
         Extracts atomic facts, resolves entities, builds graph edges,
         and indexes for 4-channel retrieval.
         """
+        meta = {
+            "project": project,
+            "importance": importance,
+            "agent_id": agent_id,
+            "session_id": session_id,
+        }
+        # v3.5.5 WRITE-THROUGH: route through the daemon's /remember, which does
+        # a synchronous verbatim insert (memory is keyword/BM25-recallable the
+        # instant this returns) and enqueues async enrichment. This closes the
+        # recall window so a parallel/next agent finds memories saved seconds ago.
+        # Falls back to pending.db only if the daemon is unreachable.
         try:
-            # v3.4.32: Store-first pattern. Write to pending.db and return
-            # immediately. The daemon's pending-materializer thread drains
-            # the queue with recall priority, so concurrent MCP remembers
-            # no longer contend with /search on the shared embedder.
+            from superlocalmemory.cli.daemon import daemon_request, is_daemon_running
+            if is_daemon_running():
+                resp = daemon_request("POST", "/remember", {
+                    "content": content, "tags": tags, "metadata": meta,
+                })
+                if resp and (resp.get("fact_ids") is not None or resp.get("ok")):
+                    fids = resp.get("fact_ids") or []
+                    return {
+                        "success": True,
+                        "fact_ids": fids or [f"pending:{resp.get('pending_id','')}"],
+                        "count": len(fids) if fids else 1,
+                        "pending": not fids,
+                        "message": "Stored (recallable now; enriching async).",
+                    }
+        except Exception as dexc:
+            logger.debug("MCP remember via daemon failed, pending fallback: %s", dexc)
+
+        try:
             from superlocalmemory.cli.pending_store import store_pending
-
-            pending_id = store_pending(content, tags=tags, metadata={
-                "project": project,
-                "importance": importance,
-                "agent_id": agent_id,
-                "session_id": session_id,
-            })
-
+            pending_id = store_pending(content, tags=tags, metadata=meta)
             return {
                 "success": True,
                 "fact_ids": [f"pending:{pending_id}"],
                 "count": 1,
                 "pending": True,
                 "pending_id": pending_id,
-                "message": "Stored — facts will appear in the dashboard shortly.",
+                "message": "Stored — facts will appear shortly (daemon offline).",
             }
         except Exception as exc:
             logger.exception("remember failed")

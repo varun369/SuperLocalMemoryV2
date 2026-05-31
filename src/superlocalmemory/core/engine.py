@@ -369,6 +369,91 @@ class MemoryEngine:
             vector_store=self._vector_store,
         )
 
+    def store_fast(self, content: str, metadata: dict[str, Any] | None = None) -> list[str]:
+        """v3.5.5 WRITE-THROUGH: synchronous verbatim insert for IMMEDIATE recall.
+
+        Full ``store()`` blocks 30-180s on LLM fact-extraction + Ollama embedding
+        + graph building. That created a recall window: a memory stored via the
+        async path sat in pending.db, unrecallable, until the background
+        materializer caught up. An agent storing a decision then immediately
+        recalling it (same session, or a parallel/next session) would miss it.
+
+        store_fast inserts a verbatim AtomicFact (+ memory row) synchronously.
+        The FTS5 ``atomic_facts_fts`` trigger auto-populates on INSERT, so the
+        memory is **keyword/BM25-recallable the instant this returns** (~ms, no
+        LLM, no embedding). Embedding + entities + graph are enriched async by
+        the materializer (which detects facts with NULL embedding).
+
+        Returns real fact_ids immediately. Quality gate rejects template junk.
+        """
+        self._require_full("store_fast")
+        self._ensure_init()
+        import re as _re
+        import uuid as _uuid
+        from datetime import datetime, timezone
+        from superlocalmemory.storage.models import (
+            AtomicFact, FactType, MemoryRecord,
+        )
+        if not content or not content.strip():
+            return []
+        try:
+            from superlocalmemory.core.injection import is_low_quality
+            if is_low_quality(content):
+                return []
+        except Exception:
+            pass
+        now = datetime.now(timezone.utc).isoformat()
+        record = MemoryRecord(
+            profile_id=self._profile_id, content=content,
+            session_date=now[:10], metadata=metadata or {},
+        )
+        self._db.store_memory(record)
+        # Lightweight regex entities (matches store_pipeline verbatim path) so
+        # the entity_graph channel has something to work with before enrichment.
+        ents = sorted(
+            {m.group(1) for m in _re.finditer(
+                r"\b([A-Z][a-z]+(?:\s[A-Z][a-z]+){0,3})\b", content)}
+            | {m.group(1) for m in _re.finditer(r"\b([A-Z]{2,})\b", content)}
+        )
+        # v3.5.5: compute the embedding SYNCHRONOUSLY. A single warm embed is
+        # ~22ms (the 30-180s of full store() was LLM fact-extraction + graph,
+        # NOT embedding). With the embedding present, the semantic channel
+        # scores this fact correctly so it ranks properly IMMEDIATELY — not
+        # just keyword-findable but top-ranked. Graph/entity enrichment stays
+        # async. Embed failure → fact still inserted (keyword-recallable).
+        emb = None
+        fmean = fvar = None
+        try:
+            emb = self._embedder.embed(content) if self._embedder else None
+            if emb:
+                fmean, fvar = self._embedder.compute_fisher_params(emb)
+        except Exception:
+            emb = None
+        fact = AtomicFact(
+            fact_id=_uuid.uuid4().hex[:16], memory_id=record.memory_id,
+            profile_id=self._profile_id, content=content,
+            fact_type=FactType.EPISODIC, entities=ents,
+            observation_date=now[:10], confidence=0.7, importance=0.5,
+            embedding=emb, fisher_mean=fmean, fisher_variance=fvar,
+            created_at=now,
+        )
+        self._db.store_fact(fact)  # FTS5 trigger → immediately BM25-recallable
+        # Upsert to vector store so the semantic channel finds it now.
+        try:
+            vs = getattr(self, "_vector_store", None)
+            if emb and vs and getattr(vs, "available", False):
+                vs.upsert(fact.fact_id, self._profile_id, emb)
+        except Exception:
+            pass
+        # Persist BM25 tokens too (covers the in-memory rank_bm25 fallback path).
+        try:
+            bm25 = getattr(self._retrieval_engine, "_bm25", None)
+            if bm25:
+                bm25.add(fact.fact_id, content, self._profile_id)
+        except Exception:
+            pass
+        return [fact.fact_id]
+
     # -- Recall operations --------------------------------------------------
 
     def recall(
