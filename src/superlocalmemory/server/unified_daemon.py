@@ -617,18 +617,20 @@ async def lifespan(application: FastAPI):
             Named 'recall-warmup' so it appears clearly in thread dumps.
             """
             import time as _t
-            # Wait for embedder to finish first (embed is needed by semantic channel)
             for _ in range(60):
                 if _embedding_warm:
                     break
                 _t.sleep(0.5)
             try:
                 t0 = _t.monotonic()
-                response = engine.recall("memory recall performance", limit=1)
+                # Fire 2 warmup queries: one to load the graph page cache,
+                # second to warm the reranker subprocess + all 6 channels.
+                # Without this, dashboard POST /api/search hits 11s cold.
+                for wq in ("memory recall performance", "context injection retrieval"):
+                    engine.recall(wq, limit=5)
                 elapsed = round((_t.monotonic() - t0) * 1000)
                 logger.info(
-                    "Recall engine pre-warmed in %dms — graph page cache now hot "
-                    "(results=%d)", elapsed, len(response.results),
+                    "Recall engine pre-warmed in %dms", elapsed,
                 )
             except Exception as exc:
                 logger.warning("Recall warmup failed (non-fatal): %s", exc)

@@ -554,10 +554,12 @@ class DaemonHandler(BaseHTTPRequestHandler):
                 for r in response.results[:limit]:
                     fact_type = getattr(r.fact, "fact_type", None)
                     lifecycle = getattr(r.fact, "lifecycle", None)
+                    # v3.5.1: sanitize control chars that break JSON (newlines, tabs in content).
+                    clean = r.fact.content.replace("\r", " ").replace("\n", " ").replace("\t", " ")
                     results.append({
                         "fact_id": r.fact.fact_id,
                         "memory_id": r.fact.memory_id,
-                        "content": r.fact.content[:300],
+                        "content": clean,
                         "source_content": memory_map.get(r.fact.memory_id, ""),
                         "score": round(r.score, 4),
                         "confidence": round(r.confidence, 4),
