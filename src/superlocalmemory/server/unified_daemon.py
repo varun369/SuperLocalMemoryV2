@@ -1794,14 +1794,14 @@ def _start_pending_materializer() -> None:
                     if not _waiting_logged:
                         logger.info("Materializer: waiting for engine to init...")
                         _waiting_logged = True
-                    time.sleep(2.0)
+                    time.sleep(0.5)
                     continue
                 if not _engine_logged:
                     logger.info("Materializer: engine acquired, starting drain loop")
                     _engine_logged = True
-                pending = get_pending(limit=5)
+                pending = get_pending(limit=50)
                 if not pending:
-                    time.sleep(2.0)
+                    time.sleep(1.0)
                     continue
                 logger.info("Materializer: processing %d pending memories", len(pending))
                 for item in pending:
